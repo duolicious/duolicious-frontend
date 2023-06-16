@@ -14,6 +14,7 @@ jobs:
           npm install
           npx patch-package
           npx expo export:web
+          cp _headers web-build/_headers
         env:
           NODE_OPTIONS: --openssl-legacy-provider
           DUO_API_SCHEME: https
