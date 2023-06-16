@@ -14,7 +14,11 @@ jobs:
           npm install
           npx patch-package
           npx expo export:web
-          cp _headers web-build/_headers
+          cat > web-build/_headers <<EOF
+            /*
+              X-Frame-Options: DENY
+              Access-Control-Allow-Origin: ${DUO_API_SCHEME}://${DUO_API_HOST}
+          EOF
         env:
           NODE_OPTIONS: --openssl-legacy-provider
           DUO_API_SCHEME: https
