@@ -13,6 +13,8 @@ jobs:
       - run: |
           set -e
 
+          export NODE_OPTIONS=--openssl-legacy-provider
+
           npm install
           npx patch-package
           npx expo export:web
