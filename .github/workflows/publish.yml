@@ -13,11 +13,14 @@ jobs:
       - run: |
           set -e
 
-          export NODE_OPTIONS=--openssl-legacy-provider
-
           npm install
           npx patch-package
           npx expo export:web
+        env:
+          NODE_OPTIONS: --openssl-legacy-provider
+          DUO_API_SCHEME: https
+          DUO_API_HOST: api.duolicious.app
+          DUO_API_PORT: 443
       - uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
