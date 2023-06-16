@@ -1,0 +1,28 @@
+on: [push]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    name: Publish to Cloudflare Pages
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        uses: actions/setup-node@v3
+
+      - run: |
+          set -e
+
+          npm install
+          npx patch-package
+          npx expo export:web
+
+      - name: Publish to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: a73a8f703a9a1eefac56f84ca6a4c9ac
+          projectName: duolicious
+          directory: web-build
