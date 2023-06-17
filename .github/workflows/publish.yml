@@ -17,13 +17,11 @@ jobs:
           cat > web-build/_headers <<EOF
             /*
               X-Frame-Options: DENY
-              Access-Control-Allow-Origin: ${DUO_API_SCHEME}://${DUO_API_HOST}
+              Access-Control-Allow-Origin: ${DUO_API_URL}
           EOF
         env:
           NODE_OPTIONS: --openssl-legacy-provider
-          DUO_API_SCHEME: https
-          DUO_API_HOST: api.duolicious.app
-          DUO_API_PORT: 443
+          DUO_API_URL: https://api-22szm34g7q-ue.a.run.app
       - uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
