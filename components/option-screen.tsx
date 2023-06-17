@@ -5,6 +5,10 @@ import {
 } from 'react-native';
 import {
   createElement,
+  forwardRef,
+  useCallback,
+  useImperativeHandle,
+  useRef,
   useState,
 } from 'react';
 import { ButtonGroup } from '@rneui/themed';
@@ -19,6 +23,7 @@ import { OtpInput } from './otp-input';
 import { DatePicker } from './date-picker';
 import { LocationSelector as LocationSelector_ } from './location-selector';
 import {
+  OptionGroupOtp,
   OptionGroup,
   isOptionGroupButtons,
   isOptionGroupDate,
@@ -43,6 +48,18 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { CheckChip as CheckChip_, CheckChips as CheckChips_ } from './check-chip';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons/faArrowLeft'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
+import { japi } from '../api/api';
+
+type InputProps = {
+  input,
+  onAnswerGiven,
+  title,
+  showSkipButton
+};
+
+type OtpProps = {
+  input: OptionGroupOtp,
+};
 
 const Buttons = ({input, onPress}) => {
   return <ButtonGroup_
@@ -143,25 +160,52 @@ const GivenName = ({input}) => {
   );
 };
 
-const Otp = ({input}) => {
+const Otp = forwardRef(({input}: OtpProps, ref) => {
+  const [isLoading, setIsLoading] = useState(false);
   const [isCodeIncorrect, setIsCodeIncorrect] = useState(false);
+  const otpRef = useRef<string | undefined>(undefined);
+
+  const requiredCodeLength = 6;
+
+  const onChangeOtp = useCallback((otp: string) => {
+    otpRef.current = otp;
+  }, []);
+
+  const submit = useCallback(async () => {
+    setIsLoading(true);
+
+    if (otpRef.current === undefined) {
+      setIsCodeIncorrect(true);
+    } else if (otpRef.current.length != requiredCodeLength) {
+      setIsCodeIncorrect(true);
+    } else {
+      setIsCodeIncorrect(await input.otp.submit(otpRef.current));
+    }
+
+    setIsLoading(false);
+  }, []);
+
+  useImperativeHandle(ref, () => ({
+    submit: submit
+  }), []);
 
   return (
     <>
-      <OtpInput codeLength={6}/>
+      <OtpInput codeLength={requiredCodeLength} submit={submit}
+        onChangeOtp={onChangeOtp}/>
       <DefaultText
         style={{
           textAlign: 'center',
-          color: '#faa',
-          fontWeight: '600',
+          color: 'white',
           height: 30,
+          opacity: isCodeIncorrect ? 1 : 0,
         }}
       >
-        {isCodeIncorrect ? 'Incorrect code' : ''}
+        Incorrect code. Try Again.
       </DefaultText>
       <ButtonWithCenteredText
         containerStyle={{
-          marginTop: 0,
+          marginTop: 10,
           marginLeft: 20,
           marginRight: 20,
         }}
@@ -171,7 +215,7 @@ const Otp = ({input}) => {
       </ButtonWithCenteredText>
     </>
   );
-};
+});
 
 const LocationSelector = ({input, onPress, showDoneButton}) => {
   return (
@@ -289,7 +333,10 @@ const RangeSlider = ({input}) => {
   />
 };
 
-const InputElement = ({input, onAnswerGiven, title, showSkipButton}) => {
+const InputElement = forwardRef((
+  {input, onAnswerGiven, title, showSkipButton}: InputProps,
+  ref
+) => {
   if (isOptionGroupButtons(input)) {
     return <Buttons input={input} onPress={onAnswerGiven}/>;
   } else if (isOptionGroupVerification(input)) {
@@ -302,9 +349,9 @@ const InputElement = ({input, onAnswerGiven, title, showSkipButton}) => {
   } else if (isOptionGroupGivenName(input)) {
     return <GivenName input={input}/>
   } else if (isOptionGroupOtp(input)) {
-    return <Otp input={input}/>
+    return <Otp ref={ref} input={input}/>
   } else if (isOptionGroupDate(input)) {
-    return <DatePicker/>;
+    return <DatePicker ref={ref}/>;
   } else if (isOptionGroupLocationSelector(input)) {
     return <LocationSelector input={input} onPress={onAnswerGiven}
       showDoneButton={showSkipButton}/>;
@@ -324,9 +371,12 @@ const InputElement = ({input, onAnswerGiven, title, showSkipButton}) => {
   } else {
     throw Error('Unhandled input: ' + JSON.stringify(input));
   }
-};
+});
 
 const OptionScreen = ({navigation, route}) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isValid, setIsValid] = useState(true);
+
   const optionGroups: OptionGroup[] = route?.params?.optionGroups ?? [];
   const showSkipButton: boolean = route?.params?.showSkipButton ?? true;
   const showCloseButton: boolean = route?.params?.showCloseButton ?? true;
@@ -339,6 +389,8 @@ const OptionScreen = ({navigation, route}) => {
 
   const thisOptionGroup = optionGroups[0];
 
+  const inputRef = useRef(undefined);
+
   const {
     title,
     description,
@@ -346,13 +398,26 @@ const OptionScreen = ({navigation, route}) => {
     scrollView,
   } = thisOptionGroup;
 
-  const onAnswerGiven = () => {
+  const onAnswerGiven = useCallback(async () => {
     switch (optionGroups.length) {
       case 0: {
-        throw Error('Expected there to be some titles');
+        throw Error('Expected there to be some option groups');
       }
       case 1: {
-        navigation.popToTop();
+        const submit = inputRef.current?.submit;
+
+        if (submit) {
+          setIsLoading(true);
+          const isValid_ = await submit();
+          if (isValid_) {
+            navigation.popToTop();
+          }
+          setIsValid(isValid_);
+          setIsLoading(false);
+        } else {
+          navigation.popToTop();
+        }
+
         break;
       }
       default: {
@@ -365,7 +430,7 @@ const OptionScreen = ({navigation, route}) => {
         );
       }
     }
-  };
+  }, [inputRef]);
 
   return (
     <View

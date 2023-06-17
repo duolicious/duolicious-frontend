@@ -1,3 +1,5 @@
+import { japi } from '../api/api';
+
 type OptionGroupButtons = {
   buttons: string[],
   initialSelectedIndex?: number,
@@ -9,17 +11,37 @@ type OptionGroupDeletion = 'deletion';
 
 type OptionGroupLocationSelector = 'location-selector';
 
-type OptionGroupGivenName = 'given-name';
+type OptionGroupGivenName = {
+  givenName: {
+    submit: (input: string) => Promise<boolean>
+  }
+};
 
-type OptionGroupDate = 'date';
+type OptionGroupDate = {
+  date: {
+    submit: (input: string) => Promise<boolean>
+  }
+};
 
-type OptionGroupPhotos = 'photos';
+type OptionGroupPhotos = {
+  photos: {
+    submit: (input: any) => Promise<boolean>
+  }
+};
 
-type OptionGroupTextLong = 'text-long';
+type OptionGroupTextLong = {
+  textLong: {
+    submit: (input: string) => Promise<boolean>
+  }
+};
 
 type OptionGroupTextShort = 'text-short';
 
-type OptionGroupOtp = 'otp';
+type OptionGroupOtp = {
+  otp: {
+    submit: (input: string) => Promise<boolean>
+  }
+};
 
 type OptionGroupCheckChips = {
   checkChips: {
@@ -28,7 +50,11 @@ type OptionGroupCheckChips = {
   }[]
 };
 
-type OptionGroupNone = 'none';
+type OptionGroupNone = {
+  none: {
+    submit: () => Promise<boolean>
+  }
+};
 
 type OptionGroupSlider = {
   slider: {
@@ -97,19 +123,19 @@ const isOptionGroupRangeSlider = (x: any): x is OptionGroupRangeSlider => {
 }
 
 const isOptionGroupGivenName = (x: any): x is OptionGroupGivenName => {
-  return x === 'given-name';
+  return JSON.stringify(Object.keys(x)) === JSON.stringify(['givenName']);
 }
 
 const isOptionGroupDate = (x: any): x is OptionGroupDate => {
-  return x === 'date';
+  return JSON.stringify(Object.keys(x)) === JSON.stringify(['date']);
 }
 
 const isOptionGroupPhotos = (x: any): x is OptionGroupPhotos => {
-  return x === 'photos';
+  return JSON.stringify(Object.keys(x)) === JSON.stringify(['photos']);
 }
 
 const isOptionGroupTextLong = (x: any): x is OptionGroupTextLong => {
-  return x === 'text-long';
+  return JSON.stringify(Object.keys(x)) === JSON.stringify(['textLong']);
 }
 
 const isOptionGroupTextShort = (x: any): x is OptionGroupTextShort => {
@@ -117,11 +143,11 @@ const isOptionGroupTextShort = (x: any): x is OptionGroupTextShort => {
 }
 
 const isOptionGroupOtp = (x: any): x is OptionGroupOtp => {
-  return x === 'otp';
+  return JSON.stringify(Object.keys(x)) === JSON.stringify(['otp']);
 }
 
 const isOptionGroupNone = (x: any): x is OptionGroupNone => {
-  return x === 'none';
+  return JSON.stringify(Object.keys(x)) === JSON.stringify(['none']);
 }
 
 const isOptionGroupCheckChips = (x: any): x is OptionGroupCheckChips => {
@@ -392,25 +418,46 @@ const deactivationOptionGroups: OptionGroup[] = [
   {
     title: 'Deactivate Your Account',
     description: 'Are you sure you want to deactivate your account? This will hide you from other users and log you out. The next time you sign in, your account will be reactivated. Press "continue" to deactivate your account.',
-    input: 'none',
+    input: {
+      none: {
+        submit: async () => true
+      }
+    }
   },
 ];
 
+// TODO: Submitters
 const createAccountOptionGroups: OptionGroup[] = [
   {
     title: "Password",
     description: "Enter the one-time password you just received to create an account or sign in",
-    input: 'otp',
+    input: {
+      otp: {
+        submit: async (input) => (await japi(
+          'post',
+          '/check-otp',
+          { otp: input }
+        )).ok
+      }
+    },
   },
   {
     title: "First Name",
     description: "What's your first name?",
-    input: 'given-name',
+    input: {
+      givenName: {
+        submit: async (input: string) => true
+      }
+    },
   },
   {
     title: 'Birth Date',
     description: "What's your birth date?",
-    input: 'date',
+    input: {
+      date: {
+        submit: async (input: string) => true
+      }
+    },
     scrollView: false,
   },
   locationOptionGroup,
@@ -419,17 +466,29 @@ const createAccountOptionGroups: OptionGroup[] = [
   {
     title: 'Photos',
     description: 'Profiles with photos are promoted in search results, but you can add these later.',
-    input: 'photos',
+    input: {
+      photos: {
+        submit: async (input: string) => true
+      }
+    }
   },
   {
     title: 'About',
     description: 'Tell us about yourself...',
-    input: 'text-long',
+    input: {
+      textLong: {
+        submit: async (input: string) => true
+      }
+    }
   },
   {
     title: "Your Profile Looks Delicious! 😋",
     description: "If you want to sweeten it even more, you can always add more info via the \"Profile\" tab, once you've signed in. But for now, you're ready to get started!",
-    input: 'none',
+    input: {
+      none: {
+        submit: async () => true
+      }
+    }
   },
 ];
 
@@ -437,12 +496,20 @@ const contactOptionGroups: OptionGroup[] = [
   {
     title: 'Contact Us',
     description: "Our mission at Duolicious is to help its users meet like-minded people. You can help us achieve that by contacting us here to provide feedback, report abuse, or submit any other concerns or queries you have.",
-    input: 'text-long',
+    input: {
+      textLong: {
+        submit: async () => true
+      }
+    }
   },
   {
     title: 'Message Sent!',
     description: "Thanks for getting in touch. We'll get back to you as soon as possible.",
-    input: 'none',
+    input: {
+      none: {
+        submit: async () => true
+      }
+    }
   }
 ];
 
@@ -761,4 +828,5 @@ export {
   privacySettingsOptionGroups,
   contactOptionGroups,
   hideMeFromStrangersOptionGroup,
+  OptionGroupOtp,
 };

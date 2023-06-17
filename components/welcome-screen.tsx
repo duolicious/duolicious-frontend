@@ -38,11 +38,11 @@ const WelcomeScreen = () => {
 
 const WelcomeScreen_ = ({navigation}) => {
   const [email, setEmail] = useState("");
-  const [buttonIsLoading, setButtonIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [emailNotSent, setEmailNotSent] = useState(false);
 
-  const onPressCreateAccountOrSignIn = async () => {
-    setButtonIsLoading(true);
+  const submit = async () => {
+    setIsLoading(true);
 
     const response = await japi(
       'post',
@@ -50,7 +50,7 @@ const WelcomeScreen_ = ({navigation}) => {
       { email: email }
     );
 
-    setButtonIsLoading(false);
+    setIsLoading(false);
 
     if (response.ok) {
       navigation.navigate(
@@ -127,6 +127,7 @@ const WelcomeScreen_ = ({navigation}) => {
             autoComplete="email"
             value={email}
             onChangeText={setEmail}
+            onSubmitEditing={submit}
           />
           <DefaultText
             style={{
@@ -151,10 +152,10 @@ const WelcomeScreen_ = ({navigation}) => {
           }}
         >
           <ButtonWithCenteredText
-            onPress={onPressCreateAccountOrSignIn}
+            onPress={submit}
             borderWidth={0}
             secondary={true}
-            loading={buttonIsLoading}
+            loading={isLoading}
           >
             Create Account or Sign In
           </ButtonWithCenteredText>
