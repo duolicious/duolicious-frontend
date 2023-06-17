@@ -13,7 +13,7 @@ const api = async (endpoint: string, init?: RequestInit): Promise<Response> => {
     }
   };
 
-  const url = `${API_URL}/${endpoint}`;
+  const url = `${API_URL}${endpoint}`;
 
   console.log(JSON.stringify(url)); // TODO
 

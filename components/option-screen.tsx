@@ -12,12 +12,12 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { ButtonWithCenteredText } from './button/centered-text';
 import { StatusBarSpacer } from './status-bar-spacer';
 import { LabelledSlider } from './labelled-slider';
-import { RangeSlider } from './range-slider';
+import { RangeSlider as RangeSlider_ } from './range-slider';
 import { DefaultText } from './default-text';
 import { DefaultTextInput } from './default-text-input';
 import { OtpInput } from './otp-input';
 import { DatePicker } from './date-picker';
-import { LocationSelector } from './location-selector';
+import { LocationSelector as LocationSelector_ } from './location-selector';
 import {
   OptionGroup,
   isOptionGroupButtons,
@@ -40,191 +40,71 @@ import {
 } from './images';
 import { DefaultLongTextInput } from './default-long-text-input';
 import { LinearGradient } from 'expo-linear-gradient';
-import { CheckChip, CheckChips } from './check-chip';
+import { CheckChip as CheckChip_, CheckChips as CheckChips_ } from './check-chip';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons/faArrowLeft'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 
-const InputElement = ({input, onAnswerGiven, title, showSkipButton}) => {
-  const [isCodeIncorrect, setIsCodeIncorrect] = useState(false);
+const Buttons = ({input, onPress}) => {
+  return <ButtonGroup_
+    buttons={input.buttons}
+    initialSelectedIndex={input.initialSelectedIndex}
+    onPress={onPress}
+  />;
+};
 
-  if (isOptionGroupButtons(input)) {
-    return <ButtonGroup_
-      buttons={input.buttons}
-      initialSelectedIndex={input.initialSelectedIndex}
-      onPress={onAnswerGiven}
-    />;
-  }
-  if (isOptionGroupVerification(input)) {
-    // TODO
-    if (true) {
-      return (
-        <>
-          <DefaultTextInput
-            placeholder="Mobile (with country code)"
-            keyboardType="phone-pad"
-            textContentType="telephoneNumber"
-          />
-          <ButtonWithCenteredText
-            containerStyle={{
-              marginLeft: 20,
-              marginRight: 20,
-            }}
-          >
-            Send SMS
-          </ButtonWithCenteredText>
-        </>
-      );
-    } else {
-      return (
-        <DefaultText
-          style={{
-            textAlign: 'center',
-            fontSize: 22,
-            color: '#444',
-          }}
-        >
-          You're already verified!
-        </DefaultText>
-      );
-    }
-  }
-  if (isOptionGroupSlider(input)) {
+const Verification = ({input}) => {
+  // TODO
+  if (true) {
     return (
       <>
-        <LabelledSlider
-          label={`${title} (${input.slider.unitsLabel})`}
-          minimumValue={input.slider.sliderMin}
-          maximumValue={input.slider.sliderMax}
-          initialValue={input.slider.sliderInitial}
-          step={input.slider.step}
-          addPlusAtMax={input.slider.addPlusAtMax}
-          style={{
-            marginLeft: 20,
-            marginRight: 20,
-          }}
+        <DefaultTextInput
+          placeholder="Mobile (with country code)"
+          keyboardType="phone-pad"
+          textContentType="telephoneNumber"
         />
-        {showSkipButton !== false &&
-          <ButtonWithCenteredText
-            onPress={onAnswerGiven}
-            containerStyle={{
-              marginTop: 30,
-              marginLeft: 20,
-              marginRight: 20,
-            }}
-          >
-            Done
-          </ButtonWithCenteredText>
-        }
-      </>
-    );
-  }
-  if (isOptionGroupDeletion(input)) {
-    return (
-      <ButtonWithCenteredText
-        onPress={onAnswerGiven}
-        containerStyle={{
-          marginTop: 30,
-          marginLeft: 20,
-          marginRight: 20,
-        }}
-      >
-        Yes, delete my account right now
-      </ButtonWithCenteredText>
-    );
-  }
-  if (isOptionGroupGivenName(input)) {
-    return (
-      <DefaultTextInput
-        placeholder="First name"
-        textContentType="givenName"
-        autoComplete="name-given"
-      />
-    );
-  }
-  if (isOptionGroupOtp(input)) {
-    return (
-      <>
-        <OtpInput codeLength={6}/>
-        <DefaultText
-          style={{
-            textAlign: 'center',
-            color: '#faa',
-            fontWeight: '600',
-            height: 30,
-          }}
-        >
-          {isCodeIncorrect ? 'Incorrect code' : ''}
-        </DefaultText>
         <ButtonWithCenteredText
           containerStyle={{
-            marginTop: 0,
             marginLeft: 20,
             marginRight: 20,
           }}
-          fontSize={14}
         >
-          Resend code
+          Send SMS
         </ButtonWithCenteredText>
       </>
     );
-  }
-  if (isOptionGroupDate(input)) {
-    return <DatePicker/>;
-  }
-  if (isOptionGroupLocationSelector(input)) {
+  } else {
     return (
-      <>
-        <LocationSelector/>
-        {showSkipButton === true &&
-          <ButtonWithCenteredText
-            onPress={onAnswerGiven}
-            containerStyle={{
-              zIndex: -1,
-              elevation: -1,
-              marginTop: 30,
-              marginLeft: 20,
-              marginRight: 20,
-            }}
-          >
-            Done
-          </ButtonWithCenteredText>
-        }
-      </>
+      <DefaultText
+        style={{
+          textAlign: 'center',
+          fontSize: 22,
+          color: '#444',
+        }}
+      >
+        You're already verified!
+      </DefaultText>
     );
   }
-  if (isOptionGroupPhotos(input)) {
-    return (
-      <View
+};
+
+const Slider = ({input, onPress, title, showDoneButton}) => {
+  return (
+    <>
+      <LabelledSlider
+        label={`${title} (${input.slider.unitsLabel})`}
+        minimumValue={input.slider.sliderMin}
+        maximumValue={input.slider.sliderMax}
+        initialValue={input.slider.sliderInitial}
+        step={input.slider.step}
+        addPlusAtMax={input.slider.addPlusAtMax}
         style={{
           marginLeft: 20,
           marginRight: 20,
         }}
-      >
-        <SecondaryImages/>
-      </View>
-    );
-  }
-  if (isOptionGroupTextLong(input)) {
-    return <DefaultLongTextInput
-      style={{
-        marginLeft: 20,
-        marginRight: 20,
-      }}
-    />
-  }
-
-  if (isOptionGroupTextShort(input)) {
-    return (
-      <>
-        <DefaultTextInput
-          style={{
-            marginLeft: 20,
-            marginRight: 20,
-          }}
-          placeholder="Type here..."
-        />
+      />
+      {showDoneButton &&
         <ButtonWithCenteredText
-          onPress={onAnswerGiven}
+          onPress={onPress}
           containerStyle={{
             marginTop: 30,
             marginLeft: 20,
@@ -233,63 +113,217 @@ const InputElement = ({input, onAnswerGiven, title, showSkipButton}) => {
         >
           Done
         </ButtonWithCenteredText>
-      </>
-    );
-  }
+      }
+    </>
+  );
+};
 
-  if (isOptionGroupCheckChips(input)) {
-    return (
-      <>
-        <CheckChips
-          style={{
-            marginLeft: 20,
-            marginRight: 20,
-            alignSelf: 'center',
-          }}
-        >
-          {
-            input.checkChips.map((checkChip, i) =>
-              <CheckChip
-                key={i}
-                label={checkChip.label}
-                initialCheckedState={checkChip.checked}
-              />
-            )
-          }
-        </CheckChips>
-        {showSkipButton === true &&
-          <ButtonWithCenteredText
-            onPress={onAnswerGiven}
-            containerStyle={{
-              marginTop: 30,
-              marginLeft: 20,
-              marginRight: 20,
-            }}
-          >
-            Done
-          </ButtonWithCenteredText>
-        }
-      </>
-    );
-  }
-
-  if (isOptionGroupRangeSlider(input)) {
-    return <RangeSlider
-      unitsLabel={input.rangeSlider.unitsLabel}
-      minimumValue={input.rangeSlider.sliderMin}
-      maximumValue={input.rangeSlider.sliderMax}
+const Deletion = ({input, onPress}) => {
+  return (
+    <ButtonWithCenteredText
+      onPress={onPress}
       containerStyle={{
+        marginTop: 30,
         marginLeft: 20,
         marginRight: 20,
       }}
+    >
+      Yes, delete my account right now
+    </ButtonWithCenteredText>
+  );
+};
+
+const GivenName = ({input}) => {
+  return (
+    <DefaultTextInput
+      placeholder="First name"
+      textContentType="givenName"
+      autoComplete="name-given"
     />
-  }
+  );
+};
 
-  if (isOptionGroupNone(input)) {
+const Otp = ({input}) => {
+  const [isCodeIncorrect, setIsCodeIncorrect] = useState(false);
+
+  return (
+    <>
+      <OtpInput codeLength={6}/>
+      <DefaultText
+        style={{
+          textAlign: 'center',
+          color: '#faa',
+          fontWeight: '600',
+          height: 30,
+        }}
+      >
+        {isCodeIncorrect ? 'Incorrect code' : ''}
+      </DefaultText>
+      <ButtonWithCenteredText
+        containerStyle={{
+          marginTop: 0,
+          marginLeft: 20,
+          marginRight: 20,
+        }}
+        fontSize={14}
+      >
+        Resend code
+      </ButtonWithCenteredText>
+    </>
+  );
+};
+
+const LocationSelector = ({input, onPress, showDoneButton}) => {
+  return (
+    <>
+      <LocationSelector_/>
+      {showDoneButton &&
+        <ButtonWithCenteredText
+          onPress={onPress}
+          containerStyle={{
+            zIndex: -1,
+            elevation: -1,
+            marginTop: 30,
+            marginLeft: 20,
+            marginRight: 20,
+          }}
+        >
+          Done
+        </ButtonWithCenteredText>
+      }
+    </>
+  );
+};
+
+const Photos = ({input}) => {
+  return (
+    <View
+      style={{
+        marginLeft: 20,
+        marginRight: 20,
+      }}
+    >
+      <SecondaryImages/>
+    </View>
+  );
+};
+
+const TextLong = ({input}) => {
+  return <DefaultLongTextInput
+    style={{
+      marginLeft: 20,
+      marginRight: 20,
+    }}
+  />
+};
+
+const TextShort = ({input, onPress}) => {
+  return (
+    <>
+      <DefaultTextInput
+        style={{
+          marginLeft: 20,
+          marginRight: 20,
+        }}
+        placeholder="Type here..."
+      />
+      <ButtonWithCenteredText
+        onPress={onPress}
+        containerStyle={{
+          marginTop: 30,
+          marginLeft: 20,
+          marginRight: 20,
+        }}
+      >
+        Done
+      </ButtonWithCenteredText>
+    </>
+  );
+};
+
+const CheckChips = ({input, onPress, showDoneButton}) => {
+  return (
+    <>
+      <CheckChips_
+        style={{
+          marginLeft: 20,
+          marginRight: 20,
+          alignSelf: 'center',
+        }}
+      >
+        {
+          input.checkChips.map((checkChip, i) =>
+            <CheckChip_
+              key={i}
+              label={checkChip.label}
+              initialCheckedState={checkChip.checked}
+            />
+          )
+        }
+      </CheckChips_>
+      {showDoneButton &&
+        <ButtonWithCenteredText
+          onPress={onPress}
+          containerStyle={{
+            marginTop: 30,
+            marginLeft: 20,
+            marginRight: 20,
+          }}
+        >
+          Done
+        </ButtonWithCenteredText>
+      }
+    </>
+  );
+};
+
+const RangeSlider = ({input}) => {
+  return <RangeSlider_
+    unitsLabel={input.rangeSlider.unitsLabel}
+    minimumValue={input.rangeSlider.sliderMin}
+    maximumValue={input.rangeSlider.sliderMax}
+    containerStyle={{
+      marginLeft: 20,
+      marginRight: 20,
+    }}
+  />
+};
+
+const InputElement = ({input, onAnswerGiven, title, showSkipButton}) => {
+  if (isOptionGroupButtons(input)) {
+    return <Buttons input={input} onPress={onAnswerGiven}/>;
+  } else if (isOptionGroupVerification(input)) {
+    return <Verification input={input}/>;
+  } else if (isOptionGroupSlider(input)) {
+    return <Slider input={input} title={title} onPress={onAnswerGiven}
+      showDoneButton={showSkipButton}/>;
+  } else if (isOptionGroupDeletion(input)) {
+    return <Deletion input={input} onPress={onAnswerGiven}/>;
+  } else if (isOptionGroupGivenName(input)) {
+    return <GivenName input={input}/>
+  } else if (isOptionGroupOtp(input)) {
+    return <Otp input={input}/>
+  } else if (isOptionGroupDate(input)) {
+    return <DatePicker/>;
+  } else if (isOptionGroupLocationSelector(input)) {
+    return <LocationSelector input={input} onPress={onAnswerGiven}
+      showDoneButton={showSkipButton}/>;
+  } else if (isOptionGroupPhotos(input)) {
+    return <Photos input={input}/>;
+  } else if (isOptionGroupTextLong(input)) {
+    return <TextLong input={input}/>;
+  } else if (isOptionGroupTextShort(input)) {
+    return <TextShort input={input} onPress={onAnswerGiven}/>;
+  } else if (isOptionGroupCheckChips(input)) {
+    return <CheckChips input={input} onPress={onAnswerGiven}
+      showDoneButton={showSkipButton}/>;
+  } else if (isOptionGroupRangeSlider(input)) {
+    return <RangeSlider input={input}/>;
+  } else if (isOptionGroupNone(input)) {
     return <></>;
+  } else {
+    throw Error('Unhandled input: ' + JSON.stringify(input));
   }
-
-  throw Error('Unhandled input: ' + JSON.stringify(input));
 };
 
 const OptionScreen = ({navigation, route}) => {
