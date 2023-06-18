@@ -230,7 +230,7 @@ const Otp = forwardRef(({input, setIsLoading, onSubmitSuccess}: OtpProps, ref) =
 
   const resend = useCallback(async () => {
     setIsLoadingResend(true);
-    await japi('post', '/resend-otp', {});
+    await japi('post', '/resend-otp');
     setIsLoadingResend(false);
   }, []);
 
@@ -264,13 +264,56 @@ const Otp = forwardRef(({input, setIsLoading, onSubmitSuccess}: OtpProps, ref) =
   );
 });
 
-const LocationSelector = ({input, onPress, showDoneButton}) => {
+const LocationSelector = forwardRef((
+  {
+    input,
+    setIsLoading,
+    onSubmitSuccess,
+    showDoneButton,
+  }: {
+    input,
+    setIsLoading,
+    onSubmitSuccess,
+    showDoneButton,
+  },
+  ref
+) => {
+  const [isInvalid, setIsInvalid] = useState(false);
+  const inputValueRef = useRef<string | undefined>(undefined);
+
+  const onChangeInputValue = useCallback((value: string) => {
+    inputValueRef.current = value;
+  }, []);
+
+  const submit = useCallback(async () => {
+    setIsLoading(true);
+
+    const ok = await input.locationSelector.submit(inputValueRef?.current);
+    setIsInvalid(!ok);
+    ok && onSubmitSuccess();
+
+    setIsLoading(false);
+  }, []);
+
+  useImperativeHandle(ref, () => ({ submit }), []);
   return (
     <>
-      <LocationSelector_/>
+      <LocationSelector_ onChangeText={onChangeInputValue}/>
+      <DefaultText
+        style={{
+          zIndex: -1,
+          elevation: -1,
+          textAlign: 'center',
+          color: 'white',
+          height: 30,
+          opacity: isInvalid ? 1 : 0,
+        }}
+      >
+        Never heard of it! Try again?
+      </DefaultText>
       {showDoneButton &&
         <ButtonWithCenteredText
-          onPress={onPress}
+          onPress={submit}
           containerStyle={{
             zIndex: -1,
             elevation: -1,
@@ -284,7 +327,7 @@ const LocationSelector = ({input, onPress, showDoneButton}) => {
       }
     </>
   );
-};
+});
 
 const Photos = ({input}) => {
   return (
@@ -385,6 +428,7 @@ const InputElement = forwardRef((
   ref
 ) => {
   const props = {ref, input, setIsLoading, onSubmitSuccess};
+  const props1 = {...props, showDoneButton: showSkipButton};
 
   if (isOptionGroupButtons(input)) {
     return <Buttons input={input} onPress={onSubmitSuccess}/>;
@@ -402,8 +446,7 @@ const InputElement = forwardRef((
   } else if (isOptionGroupDate(input)) {
     return <DatePicker {...props}/>;
   } else if (isOptionGroupLocationSelector(input)) {
-    return <LocationSelector input={input} onPress={onSubmitSuccess}
-      showDoneButton={showSkipButton}/>;
+    return <LocationSelector {...props1}/>;
   } else if (isOptionGroupPhotos(input)) {
     return <Photos input={input}/>;
   } else if (isOptionGroupTextLong(input)) {

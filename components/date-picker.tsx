@@ -159,20 +159,18 @@ const DatePicker = forwardRef((
           />
         </View>
       </View>
-      {isInvalid &&
-        <DefaultText
-          style={{
-            textAlign: 'center',
-            color: 'white',
-            height: 30,
-          }}
-        >
-          That doesn't look like a valid date of birth 🤨
-        </DefaultText>
-      }
-      {!isInvalid &&
-        <DefaultText style={{height: 30}}/>
-      }
+      <DefaultText
+        style={{
+          zIndex: -1,
+          elevation: -1,
+          textAlign: 'center',
+          color: 'white',
+          height: 30,
+          opacity: isInvalid ? 1 : 0
+        }}
+      >
+        That doesn't look like a valid date of birth 🤨
+      </DefaultText>
     </>
   );
 });

@@ -110,7 +110,7 @@ const OtpInput = (props: Props) => {
     moveFocusToIndex(joinedInputValues.length);
 
     // Provide OTP to callback
-    props.onChangeOtp(joinedInputValues);
+    props.onChangeOtp(updatedDigits.join(''));
   };
 
   const onFocus = (i: number) => () => {

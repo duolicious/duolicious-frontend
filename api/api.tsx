@@ -15,32 +15,43 @@ const api = async (endpoint: string, init?: RequestInit): Promise<Response> => {
 
   const url = `${API_URL}${endpoint}`;
 
-  console.log(JSON.stringify(url)); // TODO
-
   const init_ = _.merge(
     sessionInit,
     init,
   );
 
-  const response = await fetch(url, init_);
-
-  console.log(JSON.stringify(response)); // TODO
-
-  return response;
+  return await fetch(url, init_);
 };
 
-const japi = async (method: string, endpoint: string, body: any): Promise<Response> => {
-  return await api(
-    endpoint,
-    {
-      method: method.toUpperCase(),
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body)
-    }
+type JapiResponse = {
+  ok: boolean
+  json: any
+}
+
+const japi = async (method: string, endpoint: string, body?: any): Promise<JapiResponse> => {
+  const maybeJson = body === undefined ? {} : {
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body)
+  }
+
+  const init = _.merge(
+    { method: method.toUpperCase() },
+    maybeJson,
   );
+
+  let response;
+  let json;
+
+  try { response = await api(endpoint, init); } catch { }
+  try { json = await response.json(); } catch { }
+
+  return {
+    ok: response?.ok ?? false,
+    json: json,
+  }
 };
 
 export {
