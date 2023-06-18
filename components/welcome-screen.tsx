@@ -50,12 +50,18 @@ const WelcomeScreen_ = ({navigation}) => {
       '/request-otp',
       { email: email }
     );
-    const json = await response.json();
+    const json = await (async () => {
+      try {
+        return await response.json();
+      } catch {
+        return undefined;
+      }
+    })();
 
     setIsLoading(false);
 
     if (response.ok) {
-      await sessionToken(json.session_token);
+      await sessionToken(json?.session_token);
 
       navigation.navigate(
         'Create Account Screen',

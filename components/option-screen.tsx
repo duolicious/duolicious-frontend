@@ -400,7 +400,7 @@ const InputElement = forwardRef((
   } else if (isOptionGroupOtp(input)) {
     return <Otp {...props}/>;
   } else if (isOptionGroupDate(input)) {
-    return <DatePicker ref={ref}/>;
+    return <DatePicker {...props}/>;
   } else if (isOptionGroupLocationSelector(input)) {
     return <LocationSelector input={input} onPress={onSubmitSuccess}
       showDoneButton={showSkipButton}/>;
