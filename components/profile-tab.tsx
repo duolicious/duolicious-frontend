@@ -26,7 +26,7 @@ import {
 } from '../data/option-groups';
 import { Images } from './images';
 import { DefaultText } from './default-text';
-import { sessionToken } from '../lib/session-token';
+import { sessionToken } from '../session-token/session-token';
 
 const Stack = createNativeStackNavigator();
 

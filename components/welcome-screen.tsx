@@ -13,6 +13,7 @@ import { OtpInput } from './otp-input';
 import { createAccountOptionGroups } from '../data/option-groups';
 import { OptionScreen } from './option-screen';
 import { japi } from '../api/api';
+import { sessionToken } from '../session-token/session-token';
 
 // TODO: Pressing enter at enter field should continue
 // TODO: You should use the same pattern as for the profile options
@@ -49,10 +50,13 @@ const WelcomeScreen_ = ({navigation}) => {
       '/request-otp',
       { email: email }
     );
+    const json = await response.json();
 
     setIsLoading(false);
 
     if (response.ok) {
+      await sessionToken(json.session_token);
+
       navigation.navigate(
         'Create Account Screen',
         {

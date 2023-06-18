@@ -52,13 +52,16 @@ import { japi } from '../api/api';
 
 type InputProps = {
   input,
-  onAnswerGiven,
+  setIsLoading,
+  onSubmitSuccess,
   title,
   showSkipButton
 };
 
 type OtpProps = {
   input: OptionGroupOtp,
+  setIsLoading: (x: boolean) => void,
+  onSubmitSuccess: any,
 };
 
 const Buttons = ({input, onPress}) => {
@@ -150,55 +153,97 @@ const Deletion = ({input, onPress}) => {
   );
 };
 
-const GivenName = ({input}) => {
-  return (
-    <DefaultTextInput
-      placeholder="First name"
-      textContentType="givenName"
-      autoComplete="name-given"
-    />
-  );
-};
+const GivenName = forwardRef((
+  {
+    input,
+    setIsLoading,
+    onSubmitSuccess
+  }: {
+    input,
+    setIsLoading,
+    onSubmitSuccess
+  },
+  ref
+) => {
+  const [isInvalid, setIsInvalid] = useState(false);
+  const inputValueRef = useRef<string | undefined>(undefined);
 
-const Otp = forwardRef(({input}: OtpProps, ref) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [isCodeIncorrect, setIsCodeIncorrect] = useState(false);
-  const otpRef = useRef<string | undefined>(undefined);
-
-  const requiredCodeLength = 6;
-
-  const onChangeOtp = useCallback((otp: string) => {
-    otpRef.current = otp;
+  const onChangeInputValue = useCallback((value: string) => {
+    inputValueRef.current = value;
   }, []);
 
   const submit = useCallback(async () => {
     setIsLoading(true);
 
-    if (otpRef.current === undefined) {
-      setIsCodeIncorrect(true);
-    } else if (otpRef.current.length != requiredCodeLength) {
-      setIsCodeIncorrect(true);
-    } else {
-      setIsCodeIncorrect(await input.otp.submit(otpRef.current));
-    }
+    const ok = await input.givenName.submit(inputValueRef?.current);
+    setIsInvalid(!ok);
+    ok && onSubmitSuccess();
 
     setIsLoading(false);
   }, []);
 
-  useImperativeHandle(ref, () => ({
-    submit: submit
-  }), []);
+  useImperativeHandle(ref, () => ({ submit }), []);
 
   return (
     <>
-      <OtpInput codeLength={requiredCodeLength} submit={submit}
-        onChangeOtp={onChangeOtp}/>
+      <DefaultTextInput
+        placeholder="First name"
+        textContentType="givenName"
+        autoComplete="name-given"
+        onChangeText={onChangeInputValue}
+        onSubmitEditing={submit}
+      />
       <DefaultText
         style={{
           textAlign: 'center',
           color: 'white',
           height: 30,
-          opacity: isCodeIncorrect ? 1 : 0,
+          opacity: isInvalid ? 1 : 0,
+        }}
+      >
+        That doesn't look like a real name 🤨
+      </DefaultText>
+    </>
+  );
+});
+
+const Otp = forwardRef(({input, setIsLoading, onSubmitSuccess}: OtpProps, ref) => {
+  const [isLoadingResend, setIsLoadingResend] = useState(false);
+  const [isInvalid, setIsInvalid] = useState(false);
+  const inputValueRef = useRef<string | undefined>(undefined);
+
+  const onChangeInputValue = useCallback((value: string) => {
+    inputValueRef.current = value;
+  }, []);
+
+  const submit = useCallback(async () => {
+    setIsLoading(true);
+
+    const ok = await input.otp.submit(inputValueRef?.current);
+    setIsInvalid(!ok);
+    ok && onSubmitSuccess();
+
+    setIsLoading(false);
+  }, []);
+
+  useImperativeHandle(ref, () => ({ submit }), []);
+
+  const resend = useCallback(async () => {
+    setIsLoadingResend(true);
+    await japi('post', '/resend-otp', {});
+    setIsLoadingResend(false);
+  }, []);
+
+  return (
+    <>
+      <OtpInput codeLength={6} submit={submit}
+        onChangeOtp={onChangeInputValue}/>
+      <DefaultText
+        style={{
+          textAlign: 'center',
+          color: 'white',
+          height: 30,
+          opacity: isInvalid ? 1 : 0,
         }}
       >
         Incorrect code. Try Again.
@@ -210,6 +255,8 @@ const Otp = forwardRef(({input}: OtpProps, ref) => {
           marginRight: 20,
         }}
         fontSize={14}
+        onPress={isLoadingResend ? undefined : resend}
+        loading={isLoadingResend}
       >
         Resend code
       </ButtonWithCenteredText>
@@ -334,35 +381,37 @@ const RangeSlider = ({input}) => {
 };
 
 const InputElement = forwardRef((
-  {input, onAnswerGiven, title, showSkipButton}: InputProps,
+  {input, setIsLoading, onSubmitSuccess, title, showSkipButton}: InputProps,
   ref
 ) => {
+  const props = {ref, input, setIsLoading, onSubmitSuccess};
+
   if (isOptionGroupButtons(input)) {
-    return <Buttons input={input} onPress={onAnswerGiven}/>;
+    return <Buttons input={input} onPress={onSubmitSuccess}/>;
   } else if (isOptionGroupVerification(input)) {
     return <Verification input={input}/>;
   } else if (isOptionGroupSlider(input)) {
-    return <Slider input={input} title={title} onPress={onAnswerGiven}
+    return <Slider input={input} title={title} onPress={onSubmitSuccess}
       showDoneButton={showSkipButton}/>;
   } else if (isOptionGroupDeletion(input)) {
-    return <Deletion input={input} onPress={onAnswerGiven}/>;
+    return <Deletion input={input} onPress={onSubmitSuccess}/>;
   } else if (isOptionGroupGivenName(input)) {
-    return <GivenName input={input}/>
+    return <GivenName {...props}/>
   } else if (isOptionGroupOtp(input)) {
-    return <Otp ref={ref} input={input}/>
+    return <Otp {...props}/>;
   } else if (isOptionGroupDate(input)) {
     return <DatePicker ref={ref}/>;
   } else if (isOptionGroupLocationSelector(input)) {
-    return <LocationSelector input={input} onPress={onAnswerGiven}
+    return <LocationSelector input={input} onPress={onSubmitSuccess}
       showDoneButton={showSkipButton}/>;
   } else if (isOptionGroupPhotos(input)) {
     return <Photos input={input}/>;
   } else if (isOptionGroupTextLong(input)) {
     return <TextLong input={input}/>;
   } else if (isOptionGroupTextShort(input)) {
-    return <TextShort input={input} onPress={onAnswerGiven}/>;
+    return <TextShort input={input} onPress={onSubmitSuccess}/>;
   } else if (isOptionGroupCheckChips(input)) {
-    return <CheckChips input={input} onPress={onAnswerGiven}
+    return <CheckChips input={input} onPress={onSubmitSuccess}
       showDoneButton={showSkipButton}/>;
   } else if (isOptionGroupRangeSlider(input)) {
     return <RangeSlider input={input}/>;
@@ -398,26 +447,13 @@ const OptionScreen = ({navigation, route}) => {
     scrollView,
   } = thisOptionGroup;
 
-  const onAnswerGiven = useCallback(async () => {
+  const onSubmitSuccess = useCallback(async () => {
     switch (optionGroups.length) {
       case 0: {
         throw Error('Expected there to be some option groups');
       }
       case 1: {
-        const submit = inputRef.current?.submit;
-
-        if (submit) {
-          setIsLoading(true);
-          const isValid_ = await submit();
-          if (isValid_) {
-            navigation.popToTop();
-          }
-          setIsValid(isValid_);
-          setIsLoading(false);
-        } else {
-          navigation.popToTop();
-        }
-
+        navigation.popToTop();
         break;
       }
       default: {
@@ -431,6 +467,13 @@ const OptionScreen = ({navigation, route}) => {
       }
     }
   }, [inputRef]);
+
+  const onPressContinue = useCallback(() => {
+    const submit = inputRef.current?.submit;
+    if (!isLoading && submit) {
+      return submit();
+    }
+  }, [isLoading, inputRef.current]);
 
   return (
     <View
@@ -517,8 +560,10 @@ const OptionScreen = ({navigation, route}) => {
         >
           {scrollView === false &&
             <InputElement
+              ref={inputRef}
               input={input}
-              onAnswerGiven={onAnswerGiven}
+              setIsLoading={setIsLoading}
+              onSubmitSuccess={onSubmitSuccess}
               title={title}
               showSkipButton={showSkipButton}/>
           }
@@ -531,8 +576,10 @@ const OptionScreen = ({navigation, route}) => {
               >
                 <View style={{height: 20}}/>
                 <InputElement
+                  ref={inputRef}
                   input={input}
-                  onAnswerGiven={onAnswerGiven}
+                  setIsLoading={setIsLoading}
+                  onSubmitSuccess={onSubmitSuccess}
                   title={title}
                   showSkipButton={showSkipButton}/>
                 <View style={{height: 20}}/>
@@ -573,7 +620,8 @@ const OptionScreen = ({navigation, route}) => {
             borderWidth={buttonBorderWidth}
             backgroundColor={buttonBackgroundColor}
             textColor={buttonTextColor}
-            onPress={onAnswerGiven}
+            onPress={onPressContinue}
+            loading={isLoading}
           >
             {showSkipButton ? 'Skip' : 'Continue'}
           </ButtonWithCenteredText>

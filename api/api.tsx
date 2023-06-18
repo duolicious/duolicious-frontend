@@ -2,7 +2,7 @@ import {
   API_URL,
 } from '../env/env';
 import * as _ from "lodash";
-import { sessionToken } from '../lib/session-token';
+import { sessionToken } from '../session-token/session-token';
 
 const api = async (endpoint: string, init?: RequestInit): Promise<Response> => {
   const existingSessionToken = await sessionToken();

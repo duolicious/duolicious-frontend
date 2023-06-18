@@ -32,7 +32,7 @@ import { WelcomeScreen } from './components/welcome-screen';
 import { SignInScreen } from './components/sign-in-screen';
 import { VisitorsTab } from './components/visitors-tab';
 import { InDepthScreen } from './components/prospect-profile-screen';
-import { sessionToken } from './lib/session-token';
+import { sessionToken } from './session-token/session-token';
 import { api } from './api/api';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
