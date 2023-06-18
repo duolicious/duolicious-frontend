@@ -38,6 +38,7 @@ const LocationSelector = ({onChangeText}) => {
   }, 500), []);
 
   const onChangeTextDebounced = useCallback(async (q) => {
+    onChangeText(q);
     setText(q);
     setLoading(true);
     setDisplayResults(true);
@@ -48,6 +49,7 @@ const LocationSelector = ({onChangeText}) => {
     return (
       <Pressable onPress={() => {
         setDisplayResults(false);
+        onChangeText(text);
         setText(text);
       }}>
         <DefaultText style={{padding: 15}}>{text}</DefaultText>

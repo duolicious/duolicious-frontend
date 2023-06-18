@@ -296,6 +296,7 @@ const LocationSelector = forwardRef((
   }, []);
 
   useImperativeHandle(ref, () => ({ submit }), []);
+
   return (
     <>
       <LocationSelector_ onChangeText={onChangeInputValue}/>
