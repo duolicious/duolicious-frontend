@@ -52,45 +52,27 @@ import { japi } from '../api/api';
 
 type InputProps = {
   input,
+  isLoading,
   setIsLoading,
   onSubmitSuccess,
   title,
   showSkipButton
 };
 
-type OtpProps = {
-  input: OptionGroupOtp,
-  setIsLoading: (x: boolean) => void,
-  onSubmitSuccess: any,
-};
-
-const Buttons = forwardRef((
-  {
-    input,
-    setIsLoading,
-    onSubmitSuccess,
-    showDoneButton,
-  }: {
-    input,
-    setIsLoading,
-    onSubmitSuccess,
-    showDoneButton,
-  },
-  ref
-) => {
+const Buttons = forwardRef((props: InputProps, ref) => {
   const inputValueRef = useRef<string | undefined>(undefined);
 
   const onChangeInputValue = useCallback((value: number) => {
-    inputValueRef.current = input.buttons[value];
+    inputValueRef.current = props.input.buttons[value];
   }, []);
 
   const submit = useCallback(async () => {
-    setIsLoading(true);
+    props.setIsLoading(true);
 
-    const ok = await input.submit(inputValueRef?.current);
-    ok && onSubmitSuccess();
+    const ok = await props.input.submit(inputValueRef?.current);
+    ok && props.onSubmitSuccess();
 
-    setIsLoading(false);
+    props.setIsLoading(false);
   }, []);
 
   useImperativeHandle(ref, () => ({ submit }), []);
@@ -98,12 +80,13 @@ const Buttons = forwardRef((
   return (
     <>
       <ButtonGroup_
-        buttons={input.buttons}
-        initialSelectedIndex={input.initialSelectedIndex}
+        buttons={props.input.buttons}
+        initialSelectedIndex={props.input.initialSelectedIndex}
         onPress={onChangeInputValue}
       />
-      {showDoneButton &&
+      {props.showSkipButton &&
         <ButtonWithCenteredText
+          loading={props.isLoading}
           onPress={submit}
           containerStyle={{
             marginTop: 30,
@@ -199,18 +182,7 @@ const Deletion = ({input, onPress}) => {
   );
 };
 
-const GivenName = forwardRef((
-  {
-    input,
-    setIsLoading,
-    onSubmitSuccess
-  }: {
-    input,
-    setIsLoading,
-    onSubmitSuccess
-  },
-  ref
-) => {
+const GivenName = forwardRef((props: InputProps, ref) => {
   const [isInvalid, setIsInvalid] = useState(false);
   const inputValueRef = useRef<string | undefined>(undefined);
 
@@ -219,13 +191,13 @@ const GivenName = forwardRef((
   }, []);
 
   const submit = useCallback(async () => {
-    setIsLoading(true);
+    props.setIsLoading(true);
 
-    const ok = await input.givenName.submit(inputValueRef?.current);
+    const ok = await props.input.givenName.submit(inputValueRef?.current);
     setIsInvalid(!ok);
-    ok && onSubmitSuccess();
+    ok && props.onSubmitSuccess();
 
-    setIsLoading(false);
+    props.setIsLoading(false);
   }, []);
 
   useImperativeHandle(ref, () => ({ submit }), []);
@@ -253,7 +225,7 @@ const GivenName = forwardRef((
   );
 });
 
-const Otp = forwardRef(({input, setIsLoading, onSubmitSuccess}: OtpProps, ref) => {
+const Otp = forwardRef((props: InputProps, ref) => {
   const [isLoadingResend, setIsLoadingResend] = useState(false);
   const [isInvalid, setIsInvalid] = useState(false);
   const inputValueRef = useRef<string | undefined>(undefined);
@@ -263,13 +235,13 @@ const Otp = forwardRef(({input, setIsLoading, onSubmitSuccess}: OtpProps, ref) =
   }, []);
 
   const submit = useCallback(async () => {
-    setIsLoading(true);
+    props.setIsLoading(true);
 
-    const ok = await input.otp.submit(inputValueRef?.current);
+    const ok = await props.input.otp.submit(inputValueRef?.current);
     setIsInvalid(!ok);
-    ok && onSubmitSuccess();
+    ok && props.onSubmitSuccess();
 
-    setIsLoading(false);
+    props.setIsLoading(false);
   }, []);
 
   useImperativeHandle(ref, () => ({ submit }), []);
@@ -310,20 +282,7 @@ const Otp = forwardRef(({input, setIsLoading, onSubmitSuccess}: OtpProps, ref) =
   );
 });
 
-const LocationSelector = forwardRef((
-  {
-    input,
-    setIsLoading,
-    onSubmitSuccess,
-    showDoneButton,
-  }: {
-    input,
-    setIsLoading,
-    onSubmitSuccess,
-    showDoneButton,
-  },
-  ref
-) => {
+const LocationSelector = forwardRef((props: InputProps, ref) => {
   const [isInvalid, setIsInvalid] = useState(false);
   const inputValueRef = useRef<string | undefined>(undefined);
 
@@ -332,13 +291,13 @@ const LocationSelector = forwardRef((
   }, []);
 
   const submit = useCallback(async () => {
-    setIsLoading(true);
+    props.setIsLoading(true);
 
-    const ok = await input.locationSelector.submit(inputValueRef?.current);
+    const ok = await props.input.locationSelector.submit(inputValueRef?.current);
     setIsInvalid(!ok);
-    ok && onSubmitSuccess();
+    ok && props.onSubmitSuccess();
 
-    setIsLoading(false);
+    props.setIsLoading(false);
   }, []);
 
   useImperativeHandle(ref, () => ({ submit }), []);
@@ -358,8 +317,9 @@ const LocationSelector = forwardRef((
       >
         Never heard of it! Try again?
       </DefaultText>
-      {showDoneButton &&
+      {props.showSkipButton &&
         <ButtonWithCenteredText
+          loading={props.isLoading}
           onPress={submit}
           containerStyle={{
             zIndex: -1,
@@ -422,7 +382,28 @@ const TextShort = ({input, onPress}) => {
   );
 };
 
-const CheckChips = ({input, onPress, showDoneButton}) => {
+const CheckChips = forwardRef((props: InputProps, ref) => {
+  const [isInvalid, setIsInvalid] = useState(false);
+  const inputValueRef = useRef(new Set<string>(
+    props.input.checkChips.flatMap(
+      (checkChip, i) => checkChip.checked ? [checkChip.label] : []
+    )
+  ));
+
+  const submit = useCallback(async () => {
+    props.setIsLoading(true);
+
+    console.log(inputValueRef.current); // TODO
+
+    const ok = await props.input.submit([...inputValueRef.current]);
+    setIsInvalid(!ok);
+    ok && props.onSubmitSuccess();
+
+    props.setIsLoading(false);
+  }, []);
+
+  useImperativeHandle(ref, () => ({ submit }), []);
+
   return (
     <>
       <CheckChips_
@@ -433,18 +414,36 @@ const CheckChips = ({input, onPress, showDoneButton}) => {
         }}
       >
         {
-          input.checkChips.map((checkChip, i) =>
+          props.input.checkChips.map((checkChip, i) =>
             <CheckChip_
               key={i}
               label={checkChip.label}
               initialCheckedState={checkChip.checked}
+              onChange={x => {
+                if (x) {
+                  inputValueRef.current.add(checkChip.label);
+                } else {
+                  inputValueRef.current.delete(checkChip.label);
+                }
+              }}
             />
           )
         }
       </CheckChips_>
-      {showDoneButton &&
+      <DefaultText
+        style={{
+          textAlign: 'center',
+          color: 'white',
+          height: 30,
+          opacity: isInvalid ? 1 : 0,
+        }}
+      >
+        You need to select at least one option
+      </DefaultText>
+      {props.showSkipButton &&
         <ButtonWithCenteredText
-          onPress={onPress}
+          loading={props.isLoading}
+          onPress={submit}
           containerStyle={{
             marginTop: 30,
             marginLeft: 20,
@@ -456,7 +455,7 @@ const CheckChips = ({input, onPress, showDoneButton}) => {
       }
     </>
   );
-};
+});
 
 const RangeSlider = ({input}) => {
   return <RangeSlider_
@@ -470,45 +469,39 @@ const RangeSlider = ({input}) => {
   />
 };
 
-const InputElement = forwardRef((
-  {input, setIsLoading, onSubmitSuccess, title, showSkipButton}: InputProps,
-  ref
-) => {
-  const props = {ref, input, setIsLoading, onSubmitSuccess};
-  const props1 = {...props, showDoneButton: showSkipButton};
+const InputElement = forwardRef((props: InputProps, ref) => {
+  const props1 = {ref, ...props};
 
-  if (isOptionGroupButtons(input)) {
+  if (isOptionGroupButtons(props.input)) {
     return <Buttons {...props1}/>;
-  } else if (isOptionGroupVerification(input)) {
-    return <Verification input={input}/>;
-  } else if (isOptionGroupSlider(input)) {
-    return <Slider input={input} title={title} onPress={onSubmitSuccess}
-      showDoneButton={showSkipButton}/>;
-  } else if (isOptionGroupDeletion(input)) {
-    return <Deletion input={input} onPress={onSubmitSuccess}/>;
-  } else if (isOptionGroupGivenName(input)) {
-    return <GivenName {...props}/>
-  } else if (isOptionGroupOtp(input)) {
-    return <Otp {...props}/>;
-  } else if (isOptionGroupDate(input)) {
-    return <DatePicker {...props}/>;
-  } else if (isOptionGroupLocationSelector(input)) {
+  } else if (isOptionGroupVerification(props.input)) {
+    return <Verification {...props1}/>;
+  } else if (isOptionGroupSlider(props.input)) {
+    return <Slider {...props1}/>;
+  } else if (isOptionGroupDeletion(props.input)) {
+    return <Deletion {...props1}/>;
+  } else if (isOptionGroupGivenName(props.input)) {
+    return <GivenName {...props1}/>
+  } else if (isOptionGroupOtp(props.input)) {
+    return <Otp {...props1}/>;
+  } else if (isOptionGroupDate(props.input)) {
+    return <DatePicker {...props1}/>;
+  } else if (isOptionGroupLocationSelector(props.input)) {
     return <LocationSelector {...props1}/>;
-  } else if (isOptionGroupPhotos(input)) {
-    return <Photos input={input}/>;
-  } else if (isOptionGroupTextLong(input)) {
-    return <TextLong input={input}/>;
-  } else if (isOptionGroupTextShort(input)) {
-    return <TextShort input={input} onPress={onSubmitSuccess}/>;
-  } else if (isOptionGroupCheckChips(input)) {
-    return <CheckChips input={input} onPress={onSubmitSuccess}
-      showDoneButton={showSkipButton}/>;
-  } else if (isOptionGroupRangeSlider(input)) {
-    return <RangeSlider input={input}/>;
-  } else if (isOptionGroupNone(input)) {
+  } else if (isOptionGroupPhotos(props.input)) {
+    return <Photos {...props1}/>;
+  } else if (isOptionGroupTextLong(props.input)) {
+    return <TextLong {...props1}/>;
+  } else if (isOptionGroupTextShort(props.input)) {
+    return <TextShort {...props1}/>;
+  } else if (isOptionGroupCheckChips(props.input)) {
+    return <CheckChips {...props1}/>;
+  } else if (isOptionGroupRangeSlider(props.input)) {
+    return <RangeSlider {...props1}/>;
+  } else if (isOptionGroupNone(props.input)) {
     return <></>;
   } else {
-    throw Error('Unhandled input: ' + JSON.stringify(input));
+    throw Error('Unhandled input: ' + JSON.stringify(props.input));
   }
 });
 
@@ -652,6 +645,7 @@ const OptionScreen = ({navigation, route}) => {
             <InputElement
               ref={inputRef}
               input={input}
+              isLoading={isLoading}
               setIsLoading={setIsLoading}
               onSubmitSuccess={onSubmitSuccess}
               title={title}
@@ -668,6 +662,7 @@ const OptionScreen = ({navigation, route}) => {
                 <InputElement
                   ref={inputRef}
                   input={input}
+                  isLoading={isLoading}
                   setIsLoading={setIsLoading}
                   onSubmitSuccess={onSubmitSuccess}
                   title={title}

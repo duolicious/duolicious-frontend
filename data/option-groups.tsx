@@ -105,6 +105,20 @@ type OptionGroup = {
   scrollView?: boolean,
 };
 
+
+const hasExactKeys = (obj, keys) => {
+    // If the number of keys in the object and the keys array don't match, return false
+    if (Object.keys(obj).length !== keys.length) return false;
+
+    // Check whether each key in the keys array exists in the object
+    for (let i = 0; i < keys.length; i++) {
+        if (!obj.hasOwnProperty(keys[i])) return false;
+    }
+
+    // If all keys are found, return true
+    return true;
+}
+
 const isOptionGroupButtons = (x: any): x is OptionGroupButtons => {
   return (x as OptionGroupButtons)?.buttons !== undefined;
 }
@@ -118,31 +132,31 @@ const isOptionGroupDeletion = (x: any): x is OptionGroupDeletion => {
 }
 
 const isOptionGroupLocationSelector = (x: any): x is OptionGroupLocationSelector => {
-  return JSON.stringify(Object.keys(x)) === JSON.stringify(['locationSelector']);
+  return hasExactKeys(x, ['locationSelector']);
 }
 
 const isOptionGroupSlider = (x: any): x is OptionGroupSlider => {
-  return JSON.stringify(Object.keys(x)) === JSON.stringify(['slider']);
+  return hasExactKeys(x, ['slider']);
 };
 
 const isOptionGroupRangeSlider = (x: any): x is OptionGroupRangeSlider => {
-  return JSON.stringify(Object.keys(x)) === JSON.stringify(['rangeSlider']);
+  return hasExactKeys(x, ['rangeSlider']);
 }
 
 const isOptionGroupGivenName = (x: any): x is OptionGroupGivenName => {
-  return JSON.stringify(Object.keys(x)) === JSON.stringify(['givenName']);
+  return hasExactKeys(x, ['givenName']);
 }
 
 const isOptionGroupDate = (x: any): x is OptionGroupDate => {
-  return JSON.stringify(Object.keys(x)) === JSON.stringify(['date']);
+  return hasExactKeys(x, ['date']);
 }
 
 const isOptionGroupPhotos = (x: any): x is OptionGroupPhotos => {
-  return JSON.stringify(Object.keys(x)) === JSON.stringify(['photos']);
+  return hasExactKeys(x, ['photos']);
 }
 
 const isOptionGroupTextLong = (x: any): x is OptionGroupTextLong => {
-  return JSON.stringify(Object.keys(x)) === JSON.stringify(['textLong']);
+  return hasExactKeys(x, ['textLong']);
 }
 
 const isOptionGroupTextShort = (x: any): x is OptionGroupTextShort => {
@@ -150,15 +164,15 @@ const isOptionGroupTextShort = (x: any): x is OptionGroupTextShort => {
 }
 
 const isOptionGroupOtp = (x: any): x is OptionGroupOtp => {
-  return JSON.stringify(Object.keys(x)) === JSON.stringify(['otp']);
+  return hasExactKeys(x, ['otp']);
 }
 
 const isOptionGroupNone = (x: any): x is OptionGroupNone => {
-  return JSON.stringify(Object.keys(x)) === JSON.stringify(['none']);
+  return hasExactKeys(x, ['none', 'submit']);
 }
 
 const isOptionGroupCheckChips = (x: any): x is OptionGroupCheckChips => {
-  return JSON.stringify(Object.keys(x)) === JSON.stringify(['checkChips']);
+  return hasExactKeys(x, ['checkChips', 'submit']);
 }
 
 const genders = [
@@ -469,21 +483,6 @@ const createAccountOptionGroups: OptionGroup[] = [
       }
     },
   },
-
-  // TODO: Delete
-  _.merge(
-    genderOptionGroup,
-    {
-      input: {
-        submit: async (input) => (await japi(
-          'patch',
-          '/onboardee-info',
-          { gender: input }
-        )).ok
-      }
-    }
-  ),
-
   {
     title: 'Birth Date',
     description: "What's your birth date?",
