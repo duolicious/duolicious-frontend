@@ -29,7 +29,6 @@ import InboxTab from './components/inbox-tab';
 import { ConversationScreen } from './components/conversation-screen';
 import { GalleryScreen, ProspectProfileScreen } from './components/prospect-profile-screen';
 import { WelcomeScreen } from './components/welcome-screen';
-import { SignInScreen } from './components/sign-in-screen';
 import { VisitorsTab } from './components/visitors-tab';
 import { InDepthScreen } from './components/prospect-profile-screen';
 import { sessionToken } from './session-token/session-token';

@@ -1,5 +1,5 @@
 import * as _ from "lodash";
-import { japi } from '../api/api';
+import { mapi, japi } from '../api/api';
 
 type OptionGroupButtons = {
   buttons: string[],
@@ -31,7 +31,7 @@ type OptionGroupDate = {
 
 type OptionGroupPhotos = {
   photos: {
-    submit: (input: any) => Promise<boolean>
+    submit: (filename: string, pathOrBase64: string) => Promise<boolean>
   }
 };
 
@@ -177,11 +177,7 @@ const genderOptionGroup: OptionGroup = {
   description: "What's your gender?",
   input: {
     buttons: genders,
-    submit: async (input) => (await japi(
-      'patch',
-      '/onboardee-info',
-      { gender: input }
-    )).ok
+    submit: async (input) => true
   }
 };
 
@@ -459,7 +455,6 @@ const deactivationOptionGroups: OptionGroup[] = [
   },
 ];
 
-// TODO: Submitters
 const createAccountOptionGroups: OptionGroup[] = [
   {
     title: "Password",
@@ -474,19 +469,21 @@ const createAccountOptionGroups: OptionGroup[] = [
       }
     },
   },
-  {
-    title: "First Name",
-    description: "What's your first name?",
-    input: {
-      givenName: {
+
+  // TODO: Delete
+  _.merge(
+    genderOptionGroup,
+    {
+      input: {
         submit: async (input) => (await japi(
           'patch',
           '/onboardee-info',
-          { name: input }
+          { gender: input }
         )).ok
       }
-    },
-  },
+    }
+  ),
+
   {
     title: 'Birth Date',
     description: "What's your birth date?",
@@ -519,13 +516,11 @@ const createAccountOptionGroups: OptionGroup[] = [
     genderOptionGroup,
     {
       input: {
-        locationSelector: {
-          submit: async (input) => (await japi(
-            'patch',
-            '/onboardee-info',
-            { gender: input }
-          )).ok
-        }
+        submit: async (input) => (await japi(
+          'patch',
+          '/onboardee-info',
+          { gender: input }
+        )).ok
       }
     }
   ),
@@ -533,22 +528,38 @@ const createAccountOptionGroups: OptionGroup[] = [
     otherPeoplesGendersOptionGroup,
     {
       input: {
-        locationSelector: {
-          submit: async (input) => (await japi(
-            'patch',
-            '/onboardee-info',
-            { other_peoples_genders: input }
-          )).ok
-        }
+        submit: async (input) => (await japi(
+          'patch',
+          '/onboardee-info',
+          { other_peoples_genders: input }
+        )).ok
       }
     }
   ),
+  {
+    title: "First Name",
+    description: "What's your first name?",
+    input: {
+      givenName: {
+        submit: async (input) => (await japi(
+          'patch',
+          '/onboardee-info',
+          { name: input }
+        )).ok
+      }
+    },
+  },
   {
     title: 'Photos',
     description: 'Profiles with photos are promoted in search results, but you can add these later.',
     input: {
       photos: {
-        submit: async (input: string) => true
+        submit: async (filename, pathOrBase64) => (await mapi(
+          'patch',
+          '/onboardee-info',
+          filename,
+          pathOrBase64
+        )).ok
       }
     }
   },
@@ -570,7 +581,10 @@ const createAccountOptionGroups: OptionGroup[] = [
     description: "If you want to sweeten it even more, you can always add more info via the \"Profile\" tab, once you've signed in. But for now, you're ready to get started!",
     input: {
       none: {
-        submit: async () => true
+        submit: async () => (await japi(
+          'patch',
+          '/finish-onboarding',
+        )).ok
       }
     }
   },

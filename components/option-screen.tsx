@@ -64,13 +64,59 @@ type OtpProps = {
   onSubmitSuccess: any,
 };
 
-const Buttons = ({input, onPress}) => {
-  return <ButtonGroup_
-    buttons={input.buttons}
-    initialSelectedIndex={input.initialSelectedIndex}
-    onPress={onPress}
-  />;
-};
+const Buttons = forwardRef((
+  {
+    input,
+    setIsLoading,
+    onSubmitSuccess,
+    showDoneButton,
+  }: {
+    input,
+    setIsLoading,
+    onSubmitSuccess,
+    showDoneButton,
+  },
+  ref
+) => {
+  const inputValueRef = useRef<string | undefined>(undefined);
+
+  const onChangeInputValue = useCallback((value: number) => {
+    inputValueRef.current = input.buttons[value];
+  }, []);
+
+  const submit = useCallback(async () => {
+    setIsLoading(true);
+
+    const ok = await input.submit(inputValueRef?.current);
+    ok && onSubmitSuccess();
+
+    setIsLoading(false);
+  }, []);
+
+  useImperativeHandle(ref, () => ({ submit }), []);
+
+  return (
+    <>
+      <ButtonGroup_
+        buttons={input.buttons}
+        initialSelectedIndex={input.initialSelectedIndex}
+        onPress={onChangeInputValue}
+      />
+      {showDoneButton &&
+        <ButtonWithCenteredText
+          onPress={submit}
+          containerStyle={{
+            marginTop: 30,
+            marginLeft: 20,
+            marginRight: 20,
+          }}
+        >
+          Done
+        </ButtonWithCenteredText>
+      }
+    </>
+  );
+});
 
 const Verification = ({input}) => {
   // TODO
@@ -432,7 +478,7 @@ const InputElement = forwardRef((
   const props1 = {...props, showDoneButton: showSkipButton};
 
   if (isOptionGroupButtons(input)) {
-    return <Buttons input={input} onPress={onSubmitSuccess}/>;
+    return <Buttons {...props1}/>;
   } else if (isOptionGroupVerification(input)) {
     return <Verification input={input}/>;
   } else if (isOptionGroupSlider(input)) {

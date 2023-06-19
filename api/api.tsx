@@ -3,8 +3,13 @@ import {
 } from '../env/env';
 import * as _ from "lodash";
 import { sessionToken } from '../session-token/session-token';
+import { Buffer } from "buffer";
 
-const api = async (endpoint: string, init?: RequestInit): Promise<Response> => {
+const api = async (
+  method: string,
+  endpoint: string,
+  init?: RequestInit
+): Promise<Response> => {
   const existingSessionToken = await sessionToken();
 
   const sessionInit = existingSessionToken === null ? {} : {
@@ -16,6 +21,7 @@ const api = async (endpoint: string, init?: RequestInit): Promise<Response> => {
   const url = `${API_URL}${endpoint}`;
 
   const init_ = _.merge(
+    { method: method.toUpperCase() },
     sessionInit,
     init,
   );
@@ -28,8 +34,12 @@ type JapiResponse = {
   json: any
 }
 
-const japi = async (method: string, endpoint: string, body?: any): Promise<JapiResponse> => {
-  const maybeJson = body === undefined ? {} : {
+const japi = async (
+  method: string,
+  endpoint: string,
+  body?: any
+): Promise<JapiResponse> => {
+  const init = body === undefined ? {} : {
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
@@ -37,15 +47,10 @@ const japi = async (method: string, endpoint: string, body?: any): Promise<JapiR
     body: JSON.stringify(body)
   }
 
-  const init = _.merge(
-    { method: method.toUpperCase() },
-    maybeJson,
-  );
-
   let response;
   let json;
 
-  try { response = await api(endpoint, init); } catch { }
+  try { response = await api(method, endpoint, init); } catch { }
   try { json = await response.json(); } catch { }
 
   return {
@@ -54,7 +59,52 @@ const japi = async (method: string, endpoint: string, body?: any): Promise<JapiR
   }
 };
 
+const mapi = async (
+  method: string,
+  endpoint: string,
+  filename: string,
+  pathOrBase64: string
+): Promise<Response> => {
+
+  const formData = (() => {
+    const formData = new FormData();
+
+    if (filename.startsWith('file://')) {
+      // If we're on a mobile device, Expo will provide a path to a file.
+      formData.append(
+        filename,
+        {
+          uri: pathOrBase64,
+          name: filename,
+          type: 'image/jpg',
+        } as any
+      );
+    } else {
+      // If we're on a web browser device, Expo will provide a base64-encoded
+      // string.
+      const binary = atob(pathOrBase64);
+      const array = new Uint8Array(binary.length);
+      for (var i = 0; i < binary.length; i++) {
+          array[i] = binary.charCodeAt(i);
+      }
+      const blob = new Blob([array], { type: 'application/octet-stream' });
+      formData.append(filename, blob);
+    }
+
+    return formData;
+  })();
+
+  const init = {
+    method: method,
+    headers: {},
+    body: formData,
+  };
+
+  return await api(method, endpoint, init);
+};
+
 export {
   api,
   japi,
+  mapi,
 };
