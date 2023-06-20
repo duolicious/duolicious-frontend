@@ -215,7 +215,7 @@ const GivenName = forwardRef((props: InputProps, ref) => {
         style={{
           textAlign: 'center',
           color: 'white',
-          height: 30,
+          marginTop: 5,
           opacity: isInvalid ? 1 : 0,
         }}
       >
@@ -260,7 +260,6 @@ const Otp = forwardRef((props: InputProps, ref) => {
         style={{
           textAlign: 'center',
           color: 'white',
-          height: 30,
           opacity: isInvalid ? 1 : 0,
         }}
       >
@@ -311,7 +310,7 @@ const LocationSelector = forwardRef((props: InputProps, ref) => {
           elevation: -1,
           textAlign: 'center',
           color: 'white',
-          height: 30,
+          marginTop: 5,
           opacity: isInvalid ? 1 : 0,
         }}
       >
@@ -349,14 +348,52 @@ const Photos = ({input}) => {
   );
 };
 
-const TextLong = ({input}) => {
-  return <DefaultLongTextInput
-    style={{
-      marginLeft: 20,
-      marginRight: 20,
-    }}
-  />
-};
+const TextLong = forwardRef((props: InputProps, ref) => {
+  const [isInvalid, setIsInvalid] = useState(false);
+
+  const inputValueRef = useRef<string | undefined>(undefined);
+
+  const onChangeInputValue = useCallback((value: string) => {
+    inputValueRef.current = value;
+  }, []);
+
+  const submit = useCallback(async () => {
+    props.setIsLoading(true);
+
+    const ok = await props.input.textLong.submit(inputValueRef?.current);
+    setIsInvalid(!ok);
+    ok && props.onSubmitSuccess();
+
+    props.setIsLoading(false);
+  }, []);
+
+  useImperativeHandle(ref, () => ({ submit }), []);
+
+  return (
+    <>
+      <DefaultLongTextInput
+        style={{
+          marginLeft: 20,
+          marginRight: 20,
+        }}
+        onChangeText={onChangeInputValue}
+        onSubmitEditing={submit}
+      />
+      {props.input?.textLong?.invalidMsg &&
+        <DefaultText
+          style={{
+            marginTop: 5,
+            textAlign: 'center',
+            color: 'white',
+            opacity: isInvalid ? 1 : 0,
+          }}
+        >
+          {props.input?.textLong?.invalidMsg}
+        </DefaultText>
+      }
+    </>
+  );
+});
 
 const TextShort = ({input, onPress}) => {
   return (
@@ -434,7 +471,6 @@ const CheckChips = forwardRef((props: InputProps, ref) => {
         style={{
           textAlign: 'center',
           color: 'white',
-          height: 30,
           opacity: isInvalid ? 1 : 0,
         }}
       >

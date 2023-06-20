@@ -38,6 +38,7 @@ type OptionGroupPhotos = {
 type OptionGroupTextLong = {
   textLong: {
     submit: (input: string) => Promise<boolean>
+    invalidMsg?: string
   }
 };
 
@@ -483,6 +484,23 @@ const createAccountOptionGroups: OptionGroup[] = [
       }
     },
   },
+
+  // TODO
+  {
+    title: 'About',
+    description: 'Tell us about yourself...',
+    input: {
+      textLong: {
+        submit: async (input) => (await japi(
+          'patch',
+          '/onboardee-info',
+          { about: input }
+        )).ok,
+        invalidMsg: "Gotta write something",
+      }
+    }
+  },
+
   {
     title: 'Birth Date',
     description: "What's your birth date?",
@@ -571,7 +589,8 @@ const createAccountOptionGroups: OptionGroup[] = [
           'patch',
           '/onboardee-info',
           { about: input }
-        )).ok
+        )).ok,
+        invalidMsg: "Gotta write something",
       }
     }
   },
