@@ -32,6 +32,7 @@ type OptionGroupDate = {
 type OptionGroupPhotos = {
   photos: {
     submit: (filename: string, pathOrBase64: string) => Promise<boolean>
+    delete: (filename: string) => Promise<boolean>
   }
 };
 
@@ -487,22 +488,27 @@ const createAccountOptionGroups: OptionGroup[] = [
 
   // TODO
   {
-    title: 'About',
-    description: 'Tell us about yourself...',
+    title: 'Step 6 of 7: Photos',
+    description: 'Profiles with photos are promoted in search results, but you can add these later.',
     input: {
-      textLong: {
-        submit: async (input) => (await japi(
+      photos: {
+        submit: async (filename, pathOrBase64) => (await mapi(
           'patch',
           '/onboardee-info',
-          { about: input }
+          filename,
+          pathOrBase64
         )).ok,
-        invalidMsg: "Gotta write something",
+        delete: async (filename) => (await japi(
+          'delete',
+          '/onboardee-info',
+          filename
+        )).ok
       }
     }
   },
 
   {
-    title: 'Birth Date',
+    title: 'Step 1 of 7: Birth Date',
     description: "What's your birth date?",
     input: {
       date: {
@@ -518,6 +524,7 @@ const createAccountOptionGroups: OptionGroup[] = [
   _.merge(
     locationOptionGroup,
     {
+      title: 'Step 2 of 7: ' + locationOptionGroup.title,
       input: {
         locationSelector: {
           submit: async (input) => (await japi(
@@ -532,6 +539,7 @@ const createAccountOptionGroups: OptionGroup[] = [
   _.merge(
     genderOptionGroup,
     {
+      title: 'Step 3 of 7: ' + genderOptionGroup.title,
       input: {
         submit: async (input) => (await japi(
           'patch',
@@ -544,6 +552,7 @@ const createAccountOptionGroups: OptionGroup[] = [
   _.merge(
     otherPeoplesGendersOptionGroup,
     {
+      title: 'Step 4 of 7: ' + otherPeoplesGendersOptionGroup.title,
       input: {
         submit: async (input) => (await japi(
           'patch',
@@ -554,7 +563,7 @@ const createAccountOptionGroups: OptionGroup[] = [
     }
   ),
   {
-    title: "First Name",
+    title: "Step 5 of 7: First Name",
     description: "What's your first name?",
     input: {
       givenName: {
@@ -567,7 +576,7 @@ const createAccountOptionGroups: OptionGroup[] = [
     },
   },
   {
-    title: 'Photos',
+    title: 'Step 6 of 7: Photos',
     description: 'Profiles with photos are promoted in search results, but you can add these later.',
     input: {
       photos: {
@@ -576,12 +585,17 @@ const createAccountOptionGroups: OptionGroup[] = [
           '/onboardee-info',
           filename,
           pathOrBase64
+        )).ok,
+        delete: async (filename) => (await japi(
+          'delete',
+          '/onboardee-info',
+          filename
         )).ok
       }
     }
   },
   {
-    title: 'About',
+    title: 'Step 7 of 7: About',
     description: 'Tell us about yourself...',
     input: {
       textLong: {

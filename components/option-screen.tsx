@@ -335,7 +335,9 @@ const LocationSelector = forwardRef((props: InputProps, ref) => {
   );
 });
 
-const Photos = ({input}) => {
+const Photos = forwardRef((props: InputProps, ref) => {
+  const [isInvalid, setIsInvalid] = useState(false);
+
   return (
     <View
       style={{
@@ -343,10 +345,26 @@ const Photos = ({input}) => {
         marginRight: 20,
       }}
     >
-      <SecondaryImages/>
+      <SecondaryImages
+        input={props.input}
+        firstFileNumber={1}
+        setIsLoading={props.setIsLoading}
+        setIsInvalid={setIsInvalid}
+      />
+      <DefaultText
+        style={{
+          textAlign: 'center',
+          color: 'white',
+          marginTop: 5,
+          opacity: isInvalid ? 1 : 0,
+        }}
+      >
+        Something went wrong. Make sure your images are smaller than 10MB and
+        5000x5000 pixels.
+      </DefaultText>
     </View>
   );
-};
+});
 
 const TextLong = forwardRef((props: InputProps, ref) => {
   const [isInvalid, setIsInvalid] = useState(false);

@@ -69,7 +69,7 @@ const mapi = async (
   const formData = (() => {
     const formData = new FormData();
 
-    if (filename.startsWith('file://')) {
+    if (pathOrBase64.startsWith('file://')) {
       // If we're on a mobile device, Expo will provide a path to a file.
       formData.append(
         filename,
@@ -82,7 +82,8 @@ const mapi = async (
     } else {
       // If we're on a web browser device, Expo will provide a base64-encoded
       // string.
-      const binary = atob(pathOrBase64);
+      const base64Data = pathOrBase64.split(',')[1];
+      const binary = atob(base64Data);
       const array = new Uint8Array(binary.length);
       for (var i = 0; i < binary.length; i++) {
           array[i] = binary.charCodeAt(i);
@@ -95,8 +96,6 @@ const mapi = async (
   })();
 
   const init = {
-    method: method,
-    headers: {},
     body: formData,
   };
 
