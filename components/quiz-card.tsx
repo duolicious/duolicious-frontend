@@ -344,17 +344,18 @@ const NonInteractiveQuizCard = ({children, ...props}) => {
             >
               {showTutorial && questionNumber === 1 &&
                 <DefaultText style={{fontSize: adjustedFontSize * 0.8}}>
-                  👋 Welcome to Duolicious Q&A, where we ask you oodles of
-                  questions in the quest to unearth your perfect match! Let's
-                  start with an easy one:
+                  👋 Welcome to Duolicious Q&A, where we pick your brain and
+                  probe your psyche, all in the quest to unearth your perfect
+                  match! Let's start with an easy one:
                   {'\n\n'}
                 </DefaultText>
               }
               {showTutorial && questionNumber === 2 &&
                 <DefaultText style={{fontSize: adjustedFontSize * 0.8}}>
-                  Amazing answer! We'll use that to improve your best matches
-                  here{'\u00A0'}☝️, and also when you search{'\u00A0'}🔎. Each
-                  answer makes your best matches even better, so keep at it!
+                  Amazing answer! The best we've ever seen, in fact.  We'll use
+                  that answer to improve your best matches here{'\u00A0'}☝️, and
+                  when you search{'\u00A0'}🔎. Each answer makes your best
+                  matches even better, so keep swiping!
                   {'\n\n'}
                 </DefaultText>
               }
@@ -366,17 +367,18 @@ const NonInteractiveQuizCard = ({children, ...props}) => {
               }
               {showTutorial && questionNumber === 4 &&
                 <DefaultText style={{fontSize: adjustedFontSize * 0.8}}>
-                  All the questions we ask have been carefully graded by our
-                  smartypants AI on how well they help us pick your matches.
-                  Even the silly and edgy questions are there to help us pick
-                  the folks who get you and filter-out the one's who don't!
+                  We only ask questions which our smartypants AI said are good
+                  for figuring out your match. Even the questions that seem
+                  silly are all part of our genius scheme find the folks who get
+                  you (and filter-out the ones who don't).
                   {'\n\n'}
                 </DefaultText>
               }
               {showTutorial && questionNumber === 5 &&
                 <DefaultText style={{fontSize: adjustedFontSize * 0.8}}>
-                  But if a question is too silly or edgy for you, you can always
-                  skip a question altogether by dragging a card downwards.
+                  ...But. If a question is too silly or controversial for you
+                  then you can always skip a question by dragging a card
+                  downwards.
                   {'\n\n'}
                 </DefaultText>
               }
@@ -391,7 +393,7 @@ const NonInteractiveQuizCard = ({children, ...props}) => {
               }
               {showTutorial && questionNumber === 7 &&
                 <DefaultText style={{fontSize: adjustedFontSize * 0.8}}>
-                  Nice! Looks like you've got the hang of it!  We're gonna zip
+                  Nice! Looks like you've got the hang of it.  We're gonna zip
                   it and let you find your match{'\u00A0'}💑. Happy swiping!
                   {'\n\n'}
                 </DefaultText>
