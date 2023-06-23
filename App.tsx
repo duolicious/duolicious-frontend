@@ -127,7 +127,7 @@ const App = () => {
         setAppState('signed-out');
       } else {
         setAppState(
-          (await japi('post', '/check-session-token')).ok ?
+          (await japi('post', '/check-session-token'))?.json?.onboarded ?
           'signed-in' :
           'signed-out');
       }

@@ -480,7 +480,7 @@ const createAccountOptionGroups: OptionGroup[] = [
       otp: {
         submit: async (input) => {
           const response = await japi('post', '/check-otp', { otp: input });
-          if (response.json.onboarded === true) {
+          if (response?.json?.onboarded) {
             setAppState('signed-in');
           }
           return response.ok;
@@ -490,7 +490,7 @@ const createAccountOptionGroups: OptionGroup[] = [
   },
   {
     title: 'Step 1 of 7: Birth Date',
-    description: "What's your birth date?",
+    description: "When were you born?",
     input: {
       date: {
         submit: async (input) => (await japi(
@@ -503,6 +503,8 @@ const createAccountOptionGroups: OptionGroup[] = [
     scrollView: false,
   },
   _.merge(
+    {},
+    locationOptionGroup,
     {
       title: 'Step 2 of 7: ' + locationOptionGroup.title,
       input: {
@@ -515,9 +517,10 @@ const createAccountOptionGroups: OptionGroup[] = [
         }
       }
     },
-    locationOptionGroup,
   ),
   _.merge(
+    {},
+    genderOptionGroup,
     {
       title: 'Step 3 of 7: ' + genderOptionGroup.title,
       input: {
@@ -528,9 +531,10 @@ const createAccountOptionGroups: OptionGroup[] = [
         )).ok
       }
     },
-    genderOptionGroup
   ),
   _.merge(
+    {},
+    otherPeoplesGendersOptionGroup,
     {
       title: 'Step 4 of 7: ' + otherPeoplesGendersOptionGroup.title,
       input: {
@@ -541,7 +545,6 @@ const createAccountOptionGroups: OptionGroup[] = [
         )).ok
       }
     },
-    otherPeoplesGendersOptionGroup,
   ),
   {
     title: "Step 5 of 7: First Name",
