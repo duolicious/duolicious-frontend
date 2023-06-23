@@ -100,7 +100,7 @@ const UserImage = ({input, fileNumber, setIsLoading, setIsInvalid}) => {
     setIsLoading(true);
     setIsLoading_(true);
 
-    if (await input.photos.delete(String(fileNumber))) {
+    if (await input.photos.delete(fileNumber)) {
       setImage(null);
       setIsLoading(false);
       setIsLoading_(false);

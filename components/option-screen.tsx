@@ -338,6 +338,15 @@ const LocationSelector = forwardRef((props: InputProps, ref) => {
 const Photos = forwardRef((props: InputProps, ref) => {
   const [isInvalid, setIsInvalid] = useState(false);
 
+
+  const submit = useCallback(async () => {
+    if (!props.isLoading) {
+      props.onSubmitSuccess();
+    }
+  }, [props.isLoading]);
+
+  useImperativeHandle(ref, () => ({ submit }), []);
+
   return (
     <View
       style={{
@@ -523,6 +532,21 @@ const RangeSlider = ({input}) => {
   />
 };
 
+const None = forwardRef((props: InputProps, ref) => {
+  const submit = useCallback(async () => {
+    props.setIsLoading(true);
+
+    const ok = await props.input.none.submit();
+    ok && props.onSubmitSuccess();
+
+    props.setIsLoading(false);
+  }, []);
+
+  useImperativeHandle(ref, () => ({ submit }), []);
+
+  return <></>;
+});
+
 const InputElement = forwardRef((props: InputProps, ref) => {
   const props1 = {ref, ...props};
 
@@ -553,7 +577,7 @@ const InputElement = forwardRef((props: InputProps, ref) => {
   } else if (isOptionGroupRangeSlider(props.input)) {
     return <RangeSlider {...props1}/>;
   } else if (isOptionGroupNone(props.input)) {
-    return <></>;
+    return <None {...props1}/>;
   } else {
     throw Error('Unhandled input: ' + JSON.stringify(props.input));
   }

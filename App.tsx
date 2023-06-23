@@ -32,7 +32,7 @@ import { WelcomeScreen } from './components/welcome-screen';
 import { VisitorsTab } from './components/visitors-tab';
 import { InDepthScreen } from './components/prospect-profile-screen';
 import { sessionToken } from './session-token/session-token';
-import { api } from './api/api';
+import { japi } from './api/api';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 // TODO: Sign-up cards?
@@ -89,8 +89,11 @@ const HomeTabs = () => {
   );
 };
 
+let appState;
+let setAppState;
+
 const App = () => {
-  const [appState, setAppState] = useState<
+  [appState, setAppState] = useState<
     'loading' | 'signed-out' | 'signed-in'
   >('loading');
 
@@ -119,17 +122,15 @@ const App = () => {
         console.warn(e);
       }
 
-      setAppState('signed-out');
-
-      // const existingSessionToken = await sessionToken();
-      // if (existingSessionToken === null) {
-      //   setAppState('signed-out');
-      // } else {
-      //   setAppState(
-      //     (await api('/check-session-token', {method: 'POST'})).ok ?
-      //     'signed-in' :
-      //     'signed-out');
-      // }
+      const existingSessionToken = await sessionToken();
+      if (existingSessionToken === null) {
+        setAppState('signed-out');
+      } else {
+        setAppState(
+          (await japi('post', '/check-session-token')).ok ?
+          'signed-in' :
+          'signed-out');
+      }
     })();
   }, []);
 
@@ -213,3 +214,7 @@ const App = () => {
 };
 
 export default App;
+export {
+  appState,
+  setAppState
+};

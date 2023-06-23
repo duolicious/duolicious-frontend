@@ -5,11 +5,16 @@ import * as _ from "lodash";
 import { sessionToken } from '../session-token/session-token';
 import { Buffer } from "buffer";
 
+type ApiResponse = {
+  ok: boolean
+  json: any
+};
+
 const api = async (
   method: string,
   endpoint: string,
   init?: RequestInit
-): Promise<Response> => {
+): Promise<ApiResponse> => {
   const existingSessionToken = await sessionToken();
 
   const sessionInit = existingSessionToken === null ? {} : {
@@ -26,31 +31,10 @@ const api = async (
     init,
   );
 
-  return await fetch(url, init_);
-};
-
-type JapiResponse = {
-  ok: boolean
-  json: any
-}
-
-const japi = async (
-  method: string,
-  endpoint: string,
-  body?: any
-): Promise<JapiResponse> => {
-  const init = body === undefined ? {} : {
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body)
-  }
-
   let response;
   let json;
 
-  try { response = await api(method, endpoint, init); } catch { }
+  try { response = await fetch(url, init_); } catch { }
   try { json = await response.json(); } catch { }
 
   return {
@@ -59,12 +43,28 @@ const japi = async (
   }
 };
 
+const japi = async (
+  method: string,
+  endpoint: string,
+  body?: any
+): Promise<ApiResponse> => {
+  const init = body === undefined ? {} : {
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body)
+  }
+
+  return await api(method, endpoint, init);
+};
+
 const mapi = async (
   method: string,
   endpoint: string,
   filename: string,
   pathOrBase64: string
-): Promise<Response> => {
+): Promise<ApiResponse> => {
 
   const formData = (() => {
     const formData = new FormData();

@@ -1,5 +1,6 @@
 import * as _ from "lodash";
 import { mapi, japi } from '../api/api';
+import { setAppState } from '../App';
 
 type OptionGroupButtons = {
   buttons: string[],
@@ -170,7 +171,7 @@ const isOptionGroupOtp = (x: any): x is OptionGroupOtp => {
 }
 
 const isOptionGroupNone = (x: any): x is OptionGroupNone => {
-  return hasExactKeys(x, ['none', 'submit']);
+  return hasExactKeys(x, ['none']);
 }
 
 const isOptionGroupCheckChips = (x: any): x is OptionGroupCheckChips => {
@@ -477,36 +478,16 @@ const createAccountOptionGroups: OptionGroup[] = [
     description: "Enter the one-time password you just received to create an account or sign in",
     input: {
       otp: {
-        submit: async (input) => (await japi(
-          'post',
-          '/check-otp',
-          { otp: input }
-        )).ok
+        submit: async (input) => {
+          const response = await japi('post', '/check-otp', { otp: input });
+          if (response.json.onboarded === true) {
+            setAppState('signed-in');
+          }
+          return response.ok;
+        }
       }
     },
   },
-
-  // TODO
-  {
-    title: 'Step 6 of 7: Photos',
-    description: 'Profiles with photos are promoted in search results, but you can add these later.',
-    input: {
-      photos: {
-        submit: async (filename, pathOrBase64) => (await mapi(
-          'patch',
-          '/onboardee-info',
-          filename,
-          pathOrBase64
-        )).ok,
-        delete: async (filename) => (await japi(
-          'delete',
-          '/onboardee-info',
-          filename
-        )).ok
-      }
-    }
-  },
-
   {
     title: 'Step 1 of 7: Birth Date',
     description: "What's your birth date?",
@@ -522,7 +503,6 @@ const createAccountOptionGroups: OptionGroup[] = [
     scrollView: false,
   },
   _.merge(
-    locationOptionGroup,
     {
       title: 'Step 2 of 7: ' + locationOptionGroup.title,
       input: {
@@ -534,10 +514,10 @@ const createAccountOptionGroups: OptionGroup[] = [
           )).ok
         }
       }
-    }
+    },
+    locationOptionGroup,
   ),
   _.merge(
-    genderOptionGroup,
     {
       title: 'Step 3 of 7: ' + genderOptionGroup.title,
       input: {
@@ -547,10 +527,10 @@ const createAccountOptionGroups: OptionGroup[] = [
           { gender: input }
         )).ok
       }
-    }
+    },
+    genderOptionGroup
   ),
   _.merge(
-    otherPeoplesGendersOptionGroup,
     {
       title: 'Step 4 of 7: ' + otherPeoplesGendersOptionGroup.title,
       input: {
@@ -560,7 +540,8 @@ const createAccountOptionGroups: OptionGroup[] = [
           { other_peoples_genders: input }
         )).ok
       }
-    }
+    },
+    otherPeoplesGendersOptionGroup,
   ),
   {
     title: "Step 5 of 7: First Name",
@@ -589,7 +570,7 @@ const createAccountOptionGroups: OptionGroup[] = [
         delete: async (filename) => (await japi(
           'delete',
           '/onboardee-info',
-          filename
+          { files: [filename] }
         )).ok
       }
     }
@@ -613,10 +594,13 @@ const createAccountOptionGroups: OptionGroup[] = [
     description: "If you want to sweeten it even more, you can always add more info via the \"Profile\" tab, once you've signed in. But for now, you're ready to get started!",
     input: {
       none: {
-        submit: async () => (await japi(
-          'patch',
-          '/finish-onboarding',
-        )).ok
+        submit: async () => {
+          const response = await japi('post', '/finish-onboarding');
+          if (response.ok) {
+            setAppState('signed-in');
+          };
+          return response.ok;
+        }
       }
     }
   },

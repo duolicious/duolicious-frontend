@@ -165,7 +165,7 @@ const DatePicker = forwardRef((
           elevation: -1,
           textAlign: 'center',
           color: 'white',
-          height: 30,
+          marginTop: 5,
           opacity: isInvalid ? 1 : 0
         }}
       >
