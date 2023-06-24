@@ -59,6 +59,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 // TODO: Sign-up page should say "Step 1/5"
 // TODO: Add placeholders for profile pictures. The placeholders should appear upon 404
 // TODO: X-Frame-Options: DENY
+// TODO: Try minifying the app
 
 
 SplashScreen.preventAutoHideAsync();
