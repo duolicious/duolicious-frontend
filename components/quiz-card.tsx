@@ -10,6 +10,7 @@ import {
 import {
   memo,
   useCallback,
+  useEffect,
   useState,
 } from 'react';
 import CheckBox from './check-box';
@@ -184,8 +185,11 @@ const QuizCard = ({
     onChangeAnswerPublicly,
     imageBackgroundStyle,
     nonInteractiveContainerStyle,
+    onMount,
     ...rest
   } = props;
+
+  useEffect(() => onMount(questionNumber), []);
 
   return (
     <TinderCard
