@@ -170,12 +170,11 @@ const App = () => {
   const fetchSignInState = useCallback(async () => {
     const existingSessionToken = await sessionToken();
     if (existingSessionToken === null) {
-      setIsSignedIn('signed-out');
+      setIsSignedIn(false);
     } else {
       setIsSignedIn(
-        (await japi('post', '/check-session-token'))?.json?.onboarded ?
-        'signed-in' :
-        'signed-out');
+        (await japi('post', '/check-session-token'))?.json?.onboarded ?? false
+      );
     }
   }, []);
 
@@ -247,11 +246,7 @@ const App = () => {
             }}
           >
             {
-              isSignedIn !== 'signed-in' ? (
-                <>
-                  <Tab.Screen name="Welcome" component={WelcomeScreen} />
-                </>
-              ) : (
+              isSignedIn ? (
                 <>
                   <Tab.Screen name="Home" component={HomeTabs} />
 
@@ -260,6 +255,10 @@ const App = () => {
                   <Tab.Screen name="Conversation Screen" component={ConversationScreen} />
                   <Tab.Screen name="Gallery Screen" component={GalleryScreen} />
                   <Tab.Screen name="Prospect Profile Screen" component={ProspectProfileScreen} />
+                </>
+              ) : (
+                <>
+                  <Tab.Screen name="Welcome" component={WelcomeScreen} />
                 </>
               )
             }
