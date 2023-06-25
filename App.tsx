@@ -1,15 +1,16 @@
 import {
+  Animated,
   ActivityIndicator,
   LayoutAnimation,
   Platform,
   StatusBar,
   Text,
   UIManager,
-  View,
 } from 'react-native';
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 import {
@@ -93,20 +94,43 @@ const HomeTabs = () => {
   );
 };
 
-const Loading = () => {
-  return (
-    <View
-      style={{
-        alignItems: 'center',
-        flexDirection: 'column',
-        justifyContent: 'space-around',
-        flexGrow: 1,
-        backgroundColor: '#70f',
-      }}
-    >
-      <ActivityIndicator size={60} color="white"/>
-    </View>
-  );
+const WebSplashScreen = ({loading}) => {
+  const [isFaded, setIsFaded] = useState(false);
+  const opacity = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (!loading) {
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }).start(() => setIsFaded(true));
+    }
+  }, [loading]);
+
+  if (Platform.OS !== 'web' || isFaded) {
+    return <></>;
+  } else {
+    return (
+      <Animated.View
+        style={{
+          position: 'absolute',
+          top: 0,
+          bottom: 0,
+          left: 0,
+          right: 0,
+          alignItems: 'center',
+          flexDirection: 'column',
+          justifyContent: 'space-around',
+          backgroundColor: '#70f',
+          opacity: opacity,
+          zIndex: 999,
+        }}
+      >
+        <ActivityIndicator size={60} color="white"/>
+      </Animated.View>
+    );
+  }
 };
 
 let isSignedIn;
@@ -173,10 +197,6 @@ const App = () => {
     }
   }, [isLoading]);
 
-  if (isLoading) {
-    return <Loading/>;
-  }
-
   const linking = {
     prefixes: [],
     getStateFromPath: getStateFromPath,
@@ -199,50 +219,55 @@ const App = () => {
   };
 
   return (
-    <NavigationContainer
-      linking={linking}
-      theme={{
-        ...DefaultTheme,
-        colors: {
-          ...DefaultTheme.colors,
-          background: 'white',
-        },
-      }}
-      onReady={onLayoutRootView}
-      documentTitle={{
-        formatter: () => "Duolicious"
-      }}
-    >
-      <StatusBar
-        translucent={true}
-        backgroundColor="transparent"
-        barStyle="dark-content"
-      />
-      <Stack.Navigator
-        screenOptions={{
-          headerShown: false,
-          presentation: 'modal',
-        }}
-      >
-        {
-          isSignedIn !== 'signed-in' ? (
-            <>
-              <Tab.Screen name="Welcome" component={WelcomeScreen} />
-            </>
-          ) : (
-            <>
-              <Tab.Screen name="Home" component={HomeTabs} />
+    <>
+      {!isLoading &&
+        <NavigationContainer
+          linking={linking}
+          theme={{
+            ...DefaultTheme,
+            colors: {
+              ...DefaultTheme.colors,
+              background: 'white',
+            },
+          }}
+          onReady={onLayoutRootView}
+          documentTitle={{
+            formatter: () => "Duolicious"
+          }}
+        >
+          <StatusBar
+            translucent={true}
+            backgroundColor="transparent"
+            barStyle="dark-content"
+          />
+          <Stack.Navigator
+            screenOptions={{
+              headerShown: false,
+              presentation: 'modal',
+            }}
+          >
+            {
+              isSignedIn !== 'signed-in' ? (
+                <>
+                  <Tab.Screen name="Welcome" component={WelcomeScreen} />
+                </>
+              ) : (
+                <>
+                  <Tab.Screen name="Home" component={HomeTabs} />
 
-              <Tab.Screen name="TODO" component={ProspectProfileScreen} />
+                  <Tab.Screen name="TODO" component={ProspectProfileScreen} />
 
-              <Tab.Screen name="Conversation Screen" component={ConversationScreen} />
-              <Tab.Screen name="Gallery Screen" component={GalleryScreen} />
-              <Tab.Screen name="Prospect Profile Screen" component={ProspectProfileScreen} />
-            </>
-          )
-        }
-      </Stack.Navigator>
-    </NavigationContainer>
+                  <Tab.Screen name="Conversation Screen" component={ConversationScreen} />
+                  <Tab.Screen name="Gallery Screen" component={GalleryScreen} />
+                  <Tab.Screen name="Prospect Profile Screen" component={ProspectProfileScreen} />
+                </>
+              )
+            }
+          </Stack.Navigator>
+        </NavigationContainer>
+      }
+      <WebSplashScreen loading={isLoading}/>
+    </>
   );
 };
 
