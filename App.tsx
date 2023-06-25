@@ -1,8 +1,11 @@
 import {
+  ActivityIndicator,
   LayoutAnimation,
   Platform,
   StatusBar,
+  Text,
   UIManager,
+  View,
 } from 'react-native';
 import {
   useCallback,
@@ -90,59 +93,88 @@ const HomeTabs = () => {
   );
 };
 
-let appState;
-let setAppState;
+const Loading = () => {
+  return (
+    <View
+      style={{
+        alignItems: 'center',
+        flexDirection: 'column',
+        justifyContent: 'space-around',
+        flexGrow: 1,
+        backgroundColor: '#70f',
+      }}
+    >
+      <ActivityIndicator size={60} color="white"/>
+    </View>
+  );
+};
+
+let isSignedIn;
+let setIsSignedIn;
 
 const App = () => {
-  [appState, setAppState] = useState<
-    'loading' | 'signed-out' | 'signed-in'
-  >('loading');
+  const [isLoading, setIsLoading] = useState(true);
+  [isSignedIn, setIsSignedIn] = useState(false);
+
+  const loadFonts = useCallback(async () => {
+    await Font.loadAsync({
+      Trueno: require('./assets/fonts/TruenoRound.otf'),
+      TruenoBold: require('./assets/fonts/TruenoRoundBd.otf'),
+
+      MontserratBlack: require('./assets/fonts/montserrat/static/Montserrat-Black.ttf'),
+      MontserratBold: require('./assets/fonts/montserrat/static/Montserrat-Bold.ttf'),
+      MontserratExtraBold: require('./assets/fonts/montserrat/static/Montserrat-ExtraBold.ttf'),
+      MontserratExtraLight: require('./assets/fonts/montserrat/static/Montserrat-ExtraLight.ttf'),
+      MontserratLight: require('./assets/fonts/montserrat/static/Montserrat-Light.ttf'),
+      MontserratMedium: require('./assets/fonts/montserrat/static/Montserrat-Medium.ttf'),
+      MontserratRegular: require('./assets/fonts/montserrat/static/Montserrat-Regular.ttf'),
+      MontserratSemiBold: require('./assets/fonts/montserrat/static/Montserrat-SemiBold.ttf'),
+      MontserratThin: require('./assets/fonts/montserrat/static/Montserrat-Thin.ttf'),
+    });
+  }, []);
+
+  const lockScreenOrientation = useCallback(async () => {
+    try {
+      if (Platform.OS === 'ios' || Platform.OS === 'android') {
+        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT);
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+  }, []);
+
+  const fetchSignInState = useCallback(async () => {
+    const existingSessionToken = await sessionToken();
+    if (existingSessionToken === null) {
+      setIsSignedIn('signed-out');
+    } else {
+      setIsSignedIn(
+        (await japi('post', '/check-session-token'))?.json?.onboarded ?
+        'signed-in' :
+        'signed-out');
+    }
+  }, []);
 
   useEffect(() => {
     (async () => {
-      try {
-        await Font.loadAsync({
-          Trueno: require('./assets/fonts/TruenoRound.otf'),
-          TruenoBold: require('./assets/fonts/TruenoRoundBd.otf'),
+      await Promise.all([
+        loadFonts(),
+        lockScreenOrientation(),
+        fetchSignInState(),
+      ]);
 
-          MontserratBlack: require('./assets/fonts/montserrat/static/Montserrat-Black.ttf'),
-          MontserratBold: require('./assets/fonts/montserrat/static/Montserrat-Bold.ttf'),
-          MontserratExtraBold: require('./assets/fonts/montserrat/static/Montserrat-ExtraBold.ttf'),
-          MontserratExtraLight: require('./assets/fonts/montserrat/static/Montserrat-ExtraLight.ttf'),
-          MontserratLight: require('./assets/fonts/montserrat/static/Montserrat-Light.ttf'),
-          MontserratMedium: require('./assets/fonts/montserrat/static/Montserrat-Medium.ttf'),
-          MontserratRegular: require('./assets/fonts/montserrat/static/Montserrat-Regular.ttf'),
-          MontserratSemiBold: require('./assets/fonts/montserrat/static/Montserrat-SemiBold.ttf'),
-          MontserratThin: require('./assets/fonts/montserrat/static/Montserrat-Thin.ttf'),
-        });
-
-        if (Platform.OS === 'ios' || Platform.OS === 'android') {
-          await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT);
-        }
-      } catch (e) {
-        console.warn(e);
-      }
-
-      const existingSessionToken = await sessionToken();
-      if (existingSessionToken === null) {
-        setAppState('signed-out');
-      } else {
-        setAppState(
-          (await japi('post', '/check-session-token'))?.json?.onboarded ?
-          'signed-in' :
-          'signed-out');
-      }
+      setIsLoading(false);
     })();
   }, []);
 
   const onLayoutRootView = useCallback(async () => {
-    if (appState !== 'loading') {
+    if (!isLoading) {
       await SplashScreen.hideAsync();
     }
-  }, [appState !== 'loading']);
+  }, [isLoading]);
 
-  if (appState === 'loading') {
-    return null;
+  if (isLoading) {
+    return <Loading/>;
   }
 
   const linking = {
@@ -193,7 +225,7 @@ const App = () => {
         }}
       >
         {
-          appState !== 'signed-in' ? (
+          isSignedIn !== 'signed-in' ? (
             <>
               <Tab.Screen name="Welcome" component={WelcomeScreen} />
             </>
@@ -216,6 +248,6 @@ const App = () => {
 
 export default App;
 export {
-  appState,
-  setAppState
+  isSignedIn,
+  setIsSignedIn
 };
