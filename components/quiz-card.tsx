@@ -381,8 +381,8 @@ const NonInteractiveQuizCard = ({children, ...props}) => {
               {showTutorial && questionNumber === 5 &&
                 <DefaultText style={{fontSize: adjustedFontSize * 0.8}}>
                   ...But. If a question is too silly or controversial for you
-                  (or you just don't have strong feelings about it), then you
-                  can always skip a question by dragging a card downwards.
+                  (or you're just on the fence), then you can always skip a
+                  question by dragging a card downwards.
                   {'\n\n'}
                 </DefaultText>
               }

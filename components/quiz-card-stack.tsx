@@ -661,20 +661,24 @@ const QuizCardStack = (props) => {
 
       previouslySwipedCard.ref.current.restoreCard();
 
-      apiQueue.addTask(
-        async () => await japi(
-          'delete',
-          '/answer',
-          { question_id: previouslySwipedCard.questionNumber }
-        )
-      );
+      const previousSwipeDirection = previouslySwipedCard.swipeDirection;
 
-      if (
-        previouslySwipedCard.swipeDirection === 'left' ||
-        previouslySwipedCard.swipeDirection === 'right'
-      ) {
-        removeNextProspectInPlace(stateRef, triggerRender);
-      }
+      apiQueue.addTask(
+        async () => {
+          await japi(
+            'delete',
+            '/answer',
+            { question_id: previouslySwipedCard.questionNumber }
+          );
+
+          if (
+            previousSwipeDirection === 'left' ||
+            previousSwipeDirection === 'right'
+          ) {
+            removeNextProspectInPlace(stateRef, triggerRender);
+          }
+        }
+      );
 
       previouslySwipedCard.swipeDirection = undefined;
 
@@ -721,16 +725,16 @@ const QuizCardStack = (props) => {
           }
         );
 
+        if (direction === 'left' || direction === 'right') {
+          addNextProspectsInPlace(stateRef, triggerRender);
+        }
+
         addNextCardsInPlace(
           stateRef,
           undefined,
           triggerRender,
           onTopCardChanged
         );
-
-        if (direction === 'left' || direction === 'right') {
-          addNextProspectsInPlace(stateRef, triggerRender);
-        }
       }
     );
 
