@@ -99,8 +99,11 @@ const fetchNextQuestions = async (n: number = 10, o: number = 0): Promise<{
   }));
 };
 
-var matchPercentage = 0; // TODO Delete me
-const randomProspect = (): ProspectState => {
+const prospectState = (
+  userId: number,
+  uuid: string,
+  matchPercentage: number
+): ProspectState => {
   const animation = new Animated.Value(0);
 
   const interpolatedLeft = animation.interpolate({
@@ -129,8 +132,9 @@ const randomProspect = (): ProspectState => {
   });
 
   return {
-    userId: getRandomInt(99),
-    matchPercentage: matchPercentage++,
+    userId: userId,
+    uuid: uuid,
+    matchPercentage: matchPercentage,
     style: {
       transform: [
         { scale: interpolatedScale },
@@ -144,9 +148,20 @@ const randomProspect = (): ProspectState => {
 };
 
 const fetchNBestProspects = async (n: number): Promise<ProspectState[]> => {
-  await delay(getRandomInt(3000)); // Simulate network delay TODO
+  const response = n === 1 ?
+    await japi('get', '/search') :
+    await japi('get', `/search?n=${n}&o=0`);
 
-  return [...Array(n)].map(randomProspect);
+  if (!response.ok) {
+    return [];
+  }
+
+  response.json.reverse();
+  return response.json.map(x => prospectState(
+    x.prospect_person_id,
+    x.profile_photo_uuid,
+    x.match_percentage
+  ));
 };
 
 type StackState = {
@@ -179,6 +194,7 @@ type CardState = {
 
 type ProspectState = {
   userId: number
+  uuid: string
   matchPercentage: number
   style: {
     transform: [
@@ -297,21 +313,6 @@ const addNextProspectsInPlace = async (
 
   prospects.push(...await fetchNBestProspects(n));
 
-  Animated.parallel(
-    getBestProspects(prospects).map((prospect, i) => {
-      return Animated.timing(prospect.animation, {
-        toValue: i,
-        duration: 500,
-        useNativeDriver: false,
-      })
-    })
-  ).start();
-
-  const offscreenProspect = prospects[prospects.length - 5];
-  if (offscreenProspect) {
-    offscreenProspect.animation.setValue(3);
-  }
-
   callback && callback();
 };
 
@@ -349,20 +350,30 @@ const getBestProspects = (prospects: ProspectState[]) => {
 
 const Prospects = ({
   navigation,
+  topCardIndex,
   prospect1,
   prospect2,
   prospect3,
   prospect4,
 }: {
   navigation: any,
+  topCardIndex: number,
   prospect1: ProspectState | undefined,
   prospect2: ProspectState | undefined,
   prospect3: ProspectState | undefined,
   prospect4: ProspectState | undefined,
 }) => {
+  const animatedTranslateY = useRef(new Animated.Value(0)).current;
+
+  const translateY = animatedTranslateY.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-150, 0],
+    extrapolate: 'clamp',
+  });
+
   const lgColors = useRef([
     'rgb(255, 255, 255)',
-    'rgba(255, 255, 255, 0.1)',
+    'rgba(255, 255, 255, 0.75)',
     'transparent',
   ]).current;
   const lgLocations = useRef([
@@ -374,16 +385,19 @@ const Prospects = ({
     width: '100%',
     zIndex: 999,
     paddingTop: 5,
-    paddingBottom: 10,
+    paddingBottom: 15,
   }).current;
 
-  const v1Style = useRef<StyleProp<ViewStyle>>({
+  const v1Style = useRef<Animated.WithAnimatedValue<StyleProp<ViewStyle>>>({
     marginLeft: 5,
     marginRight: 5,
     flexDirection: 'row',
     alignSelf: 'center',
     width: '100%',
     maxWidth: 600,
+    transform: [
+      { translateY: translateY },
+    ],
   }).current;
 
   const dcViewStyle = useRef<StyleProp<ViewStyle>>({
@@ -405,7 +419,7 @@ const Prospects = ({
     elevation: 6,
   }).current;
 
-  const Prospect = useCallback(({style, userId, matchPercentage}) => (
+  const Prospect = useCallback(({style, userId, uuid, matchPercentage}) => (
     <Animated.View
       style={{
         position: 'absolute',
@@ -418,6 +432,7 @@ const Prospects = ({
       <Avatar
         navigation={navigation}
         userId={userId}
+        uuid={uuid}
         percentage={matchPercentage}
         shadow={true}
       />
@@ -457,52 +472,6 @@ const Prospects = ({
     </Animated.View>
   ), []);
 
-  const BestMatches = useCallback(() => (
-    <View
-      style={{
-        width: '100%',
-        maxWidth: 600,
-        alignSelf: 'center',
-      }}
-    >
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginTop: 5,
-        }}
-      >
-        <View
-          style={{
-            height: 1,
-            flexGrow: 1,
-            backgroundColor: 'black',
-            marginLeft: 5,
-            marginRight: 5,
-          }}
-        />
-        <DefaultText
-          style={{
-            textAlign: 'center',
-            fontWeight: '500',
-          }}
-        >
-          Best Matches Based on Q&A
-        </DefaultText>
-        <View
-          style={{
-            height: 1,
-            flexGrow: 1,
-            backgroundColor: 'black',
-            marginLeft: 5,
-            marginRight: 5,
-          }}
-        />
-      </View>
-    </View>
-  ), []);
-
   const bestMatchPercentage = prospect1?.matchPercentage;
   const bestProspects = [
     prospect1,
@@ -511,6 +480,23 @@ const Prospects = ({
     prospect4,
   ].filter(prospect => prospect);
 
+  useEffect(() => {
+    Animated.parallel([
+      ...bestProspects.map((prospect, i) => {
+        return Animated.timing(prospect.animation, {
+          toValue: i,
+          duration: 500,
+          useNativeDriver: false,
+        })
+      }),
+      Animated.timing(animatedTranslateY, {
+        toValue: bestProspects.some(Boolean) ? 1 : 0,
+        duration: 500,
+        useNativeDriver: false,
+      })
+    ]).start();
+  }, [prospect1, prospect2, prospect3, prospect4]);
+
   return (
     <LinearGradient
       colors={lgColors}
@@ -518,13 +504,14 @@ const Prospects = ({
       style={lgStyle}
     >
       <StatusBarSpacer extraHeight={0}/>
-      <View style={v1Style}>
+      <Animated.View style={v1Style}>
         {
           bestProspects.map((prospect, i) =>
             <Prospect
-              key={`${prospect.userId}-${prospect.matchPercentage}`}
+              key={String(topCardIndex - i)}
               style={prospect.style}
               userId={prospect.userId}
+              uuid={prospect.uuid}
               matchPercentage={prospect.matchPercentage} />
           )
         }
@@ -534,14 +521,13 @@ const Prospects = ({
         {
           bestProspects.map((prospect, i) =>
             <ProspectDonutPercentage
-              key={`${prospect.userId}-${prospect.matchPercentage}`}
+              key={String(topCardIndex - i)}
               donutOpacity={prospect.donutOpacity}
               matchPercentage={prospect.matchPercentage}
             />
           )
         }
-      </View>
-      <BestMatches/>
+      </Animated.View>
     </LinearGradient>
   );
 };
@@ -726,7 +712,7 @@ const QuizCardStack = (props) => {
         );
 
         if (direction === 'left' || direction === 'right') {
-          addNextProspectsInPlace(stateRef, triggerRender);
+          await addNextProspectsInPlace(stateRef, triggerRender);
         }
 
         addNextCardsInPlace(
@@ -768,6 +754,7 @@ const QuizCardStack = (props) => {
     <>
       <ProspectsMemo
         navigation={navigation}
+        topCardIndex={stateRef.prospects.length - 1}
         prospect1={stateRef.prospects[stateRef.prospects.length - 1]}
         prospect2={stateRef.prospects[stateRef.prospects.length - 2]}
         prospect3={stateRef.prospects[stateRef.prospects.length - 3]}
