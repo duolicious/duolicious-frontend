@@ -314,8 +314,6 @@ const Columns = ({children, ...rest}) => {
 const ProspectProfileScreen = ({navigation, route}) => {
   const navigationRef = useRef(undefined);
 
-  console.log(route); // TODO
-
   return (
     <>
       <Stack.Navigator
