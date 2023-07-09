@@ -90,12 +90,20 @@ const fetchNextQuestions = async (n: number = 10, o: number = 0): Promise<{
 }[]> => {
   const response = await api('GET', `/next-questions?n=${n}&o=${o}`);
 
+  const clamp = (min, max, x) => Math.min(max, Math.max(min, x));
+
+  const percentage = (numerator: number, denominator_b: number): string => {
+    return Math.round(
+      100 * clamp(0, 99, numerator / (numerator + denominator_b + 1e-5))
+    ).toString()
+  };
+
   return response.json.map(q => ({
     id: q.id,
     question: q.question,
     topic: q.topic,
-    yesPercentage: Math.round(q.count_yes / (q.count_yes + q.count_no + 1e-5)).toString(),
-    noPercentage:  Math.round(q.count_no  / (q.count_yes + q.count_no + 1e-5)).toString(),
+    yesPercentage: percentage(q.count_yes, q.count_no),
+    noPercentage:  percentage(q.count_no, q.count_yes),
   }));
 };
 
@@ -623,6 +631,9 @@ const QuizCardStack = (props) => {
       const cards = stateRef.cards;
       const topCardIndex = stateRef.topCardIndex;
       const topCard = cards[topCardIndex];
+      if (topCard === undefined) {
+        return;
+      }
       const topCardRef = topCard.ref.current;
       if (topCardRef) {
         topCard.ref.current.swipe(direction);

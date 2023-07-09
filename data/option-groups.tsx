@@ -877,24 +877,24 @@ const searchInteractionsOptionGroups: OptionGroup[] = [
     title: "People You've Messaged",
     description: "Would you like search results to include people you already messaged?",
     input: {
-      button: ['Yes', 'No'],
-      submit: async (input: string[]) => true
+      buttons: ['Yes', 'No'],
+      submit: async (input: string) => true
     },
   },
   {
     title: "People You've Hidden",
     description: "Would you like search results to include people you hidden?",
     input: {
-      button: ['Yes', 'No'],
-      submit: async (input: string[]) => true
+      buttons: ['Yes', 'No'],
+      submit: async (input: string) => true
     },
   },
   {
     title: "People You've Blocked",
     description: "Would you like to include people you blocked?",
     input: {
-      button: ['Yes', 'No'],
-      submit: async (input: string[]) => true
+      buttons: ['Yes', 'No'],
+      submit: async (input: string) => true
     },
   },
 ];
