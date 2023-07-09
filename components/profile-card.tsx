@@ -51,26 +51,31 @@ const ProfileCard = ({userName, userAge, matchPercentage, imageUuid, userId, ...
             ...rest.innerStyle,
           }}
         >
-          <Skeleton
-            style={{
-              position: 'absolute',
-              zIndex: -999,
-              width: '100%',
-              height: '100%',
-              borderRadius: 0,
-            }}
-          />
+          {imageUuid &&
+            <Skeleton
+              style={{
+                position: 'absolute',
+                zIndex: -999,
+                width: '100%',
+                height: '100%',
+                borderRadius: 0,
+              }}
+            />
+          }
           <ImageBackground
-            source={{uri: `${IMAGES_URL}/450-${imageUuid}.jpg`}}
+            source={imageUuid && {uri: `${IMAGES_URL}/450-${imageUuid}.jpg`}}
             style={{
               width: '100%',
+              backgroundColor: imageUuid ? undefined : '#ccc',
               height: undefined,
               aspectRatio: 1,
             }}
           >
             <LinearGradient
               colors={[
-                'rgba(0, 0, 0, 0.2)',
+                imageUuid ? 'rgba(0, 0, 0, 0.2)' : 'transparent',
+                'transparent',
+                'transparent',
                 'transparent',
                 'transparent',
                 'rgba(0, 0, 0, 0.2)',
@@ -78,8 +83,16 @@ const ProfileCard = ({userName, userAge, matchPercentage, imageUuid, userId, ...
               ]}
               style={{
                 height: '100%',
+                justifyContent: 'center',
+                alignItems: 'center',
               }}
-            />
+              >
+              {!imageUuid &&
+                <DefaultText style={{fontSize: 100, color: '#eee'}}>
+                  {userName[0] ?? ''}
+                </DefaultText>
+              }
+            </LinearGradient>
           </ImageBackground>
           <UserDetails
             userName={userName}
