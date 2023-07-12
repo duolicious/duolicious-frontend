@@ -268,7 +268,7 @@ const Chart = ({name1, percentage1, name2, percentage2, ...props}) => {
         }}
       >
         <DefaultText style={{color: '#888'}}>
-          {expanded ? 'Hide' : ''} Details
+          {expanded ? 'Hide ' : ''}Details
         </DefaultText>
         <Ionicons
           style={{
@@ -352,11 +352,13 @@ const Chart = ({name1, percentage1, name2, percentage2, ...props}) => {
                 justifyContent: 'space-between',
               }}
             >
-              <DefaultText style={{ fontWeight: '500'}}>
+              <DefaultText style={{ fontWeight: '500', flex: 1 }}>
                 {minLabel}
               </DefaultText>
-              {!expanded && <TraitInfoButton/>}
-              <DefaultText style={{ fontWeight: '500'}}>
+              <View style={{flex: 1}}>
+                {!expanded && <TraitInfoButton/>}
+              </View>
+              <DefaultText style={{ fontWeight: '500', flex: 1, textAlign: 'right' }}>
                 {maxLabel}
               </DefaultText>
             </View>
