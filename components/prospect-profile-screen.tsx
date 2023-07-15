@@ -172,13 +172,23 @@ const FloatingProfileInteractionButton = ({
   );
 };
 
-const FloatingHideButton = ({navigation}) => {
-  const [isHidden, setIsHidden] = useState(false);
+const FloatingHideButton = ({navigation, userId, isHidden}) => {
+  const [isHiddenState, setIsHiddenState] = useState<
+    boolean | undefined
+  >(isHidden);
+
+  useEffect(() => {
+    setIsHiddenState(isHidden);
+  }, [isHidden]);
 
   const onPress = useCallback(() => {
-    setIsHidden(isHidden => !isHidden);
-    navigation.goBack();
-  }, []);
+    setIsHiddenState(!isHiddenState);
+
+    if (isHiddenState === true ) api('post', `/unhide/${userId}`);
+    if (isHiddenState === false) api('post', `/hide/${userId}`);
+
+    if (isHiddenState === false) navigation.goBack();
+  }, [isHiddenState]);
 
   return (
     <FloatingProfileInteractionButton
@@ -186,14 +196,14 @@ const FloatingHideButton = ({navigation}) => {
       onPress={onPress}
       backgroundColor="white"
     >
-      {isHidden && <RotateCcw
+      {isHiddenState === true && <RotateCcw
           stroke="#70f"
           strokeWidth={3}
           height={24}
           width={24}
         />
       }
-      {!isHidden && <X
+      {isHiddenState === false && <X
           stroke="#70f"
           strokeWidth={3}
           height={24}
@@ -204,7 +214,7 @@ const FloatingHideButton = ({navigation}) => {
   );
 };
 
-const FloatingSendIntroButton = ({navigation}) => {
+const FloatingSendIntroButton = ({navigation, userId}) => {
   const onPress = useCallback(() => {
     navigation.navigate('Conversation Screen')
   }, [navigation]);
@@ -274,20 +284,27 @@ const SeeQAndAButton = ({navigation, name, countAnswers}) => {
   );
 };
 
-const BlockButton = ({name}) => {
-  const [blocked, setBlocked] = useState(false);
+const BlockButton = ({name, userId, isBlocked}) => {
+  const [isBlockedState, setIsBlockedState] = useState(false);
 
-  const toggleBlocked = () => {
-    setBlocked(blocked => !blocked);
-  };
+  useEffect(() => {
+    setIsBlockedState(isBlocked);
+  }, [isBlocked]);
 
-  const text = blocked
+  const onPress = useCallback(() => {
+    setIsBlockedState(!isBlockedState);
+
+    if (isBlockedState === true ) api('post', `/unblock/${userId}`);
+    if (isBlockedState === false) api('post', `/block/${userId}`);
+  }, [isBlockedState]);
+
+  const text = isBlockedState
     ? `You have blocked and reported ${name}. Press to unblock ${name}.` :
     `Block and report ${name}`;
 
   return (
     <Pressable
-      onPress={toggleBlocked}
+      onPress={onPress}
       style={{
         marginTop: 20,
         marginBottom: 20,
@@ -301,7 +318,7 @@ const BlockButton = ({name}) => {
           overflow: 'hidden',
         }}
       >
-        {text}
+        {name === undefined ? '...' : text}
       </DefaultText>
     </Pressable>
   );
@@ -378,6 +395,8 @@ type UserData = {
   smoking: string | null,
   star_sign: string | null,
   wants_kids: string | null,
+  is_hidden: boolean,
+  is_blocked: boolean,
 };
 
 const Content = (navigationRef, userId) => ({navigation, ...props}) => {
@@ -430,6 +449,7 @@ const Content = (navigationRef, userId) => ({navigation, ...props}) => {
         <Shadow/>
         <Body
           navigation={navigation}
+          userId={userId}
           data={data}
         />
         <SendIntroButtonSpacer/>
@@ -448,8 +468,8 @@ const Content = (navigationRef, userId) => ({navigation, ...props}) => {
         }}
         pointerEvents="box-none"
       >
-        <FloatingHideButton navigation={navigation} />
-        <FloatingSendIntroButton navigation={navigation} />
+        <FloatingHideButton navigation={navigation} userId={userId} isHidden={data?.is_hidden}/>
+        <FloatingSendIntroButton navigation={navigation} userId={userId} />
       </View>
     </>
   );
@@ -578,9 +598,11 @@ const Basics = ({children}) => {
 
 const Body = ({
   navigation,
+  userId,
   data,
 }: {
   navigation: any,
+  userId: number,
   data: UserData | undefined,
 }) => {
   return (
@@ -660,7 +682,7 @@ const Body = ({
           name={data?.name}
           countAnswers={data?.count_answers}
         />
-        <BlockButton name={data?.name}/>
+        <BlockButton name={data?.name} userId={userId} isBlocked={data?.is_blocked} />
       </View>
     </>
   );
