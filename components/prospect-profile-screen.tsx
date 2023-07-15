@@ -25,6 +25,8 @@ import { InDepthScreen } from './in-depth-screen';
 import { SendIntroButtonSpacer } from './send-intro-button-spacer';
 import { ButtonWithCenteredText } from './button/centered-text';
 import { api } from '../api/api';
+import { cmToFeetInchesStr } from '../units/units';
+import { units } from '../App';
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
@@ -366,7 +368,7 @@ type UserData = {
   drugs: string | null,
   exercise: string | null,
   has_kids: string | null,
-  height_cm: string | null,
+  height_cm: number | null,
   long_distance: string | null,
   looking_for: string | null,
   occupation: string | null,
@@ -644,8 +646,10 @@ const Body = ({
           {data?.exercise &&
             <Basic icon="barbell">{data.exercise} Exercises</Basic>}
 
-          { /* TODO */ }
-          <Basic icon={faRulerVertical}>179 cm</Basic>
+          {data?.height_cm && units === 'Metric' &&
+            <Basic icon={faRulerVertical}>{data.height_cm} cm</Basic>}
+          {data?.height_cm && units === 'Imperial' &&
+            <Basic icon={faRulerVertical}>{cmToFeetInchesStr(data.height_cm)}</Basic>}
         </Basics>
         <Title>About {data?.name ?? '...'}</Title>
         <DefaultText>
