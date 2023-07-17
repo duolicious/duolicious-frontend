@@ -17,13 +17,15 @@ import {
 import { TopNavBar } from './top-nav-bar';
 import { DefaultText } from './default-text';
 import { ButtonGroup } from './button-group';
-import { SendIntroButtonSpacer } from './send-intro-button-spacer';
 import { AnsweredQuizCard } from './quiz-card';
 import { DefaultFlatList } from './default-flat-list';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ArrowLeft, ArrowRight } from "react-native-feather";
 import { Chart } from './chart';
+import { useFocusEffect } from '@react-navigation/native';
+import { api } from '../api/api';
 
+// TODO: Delete me
 function getRandomInt(max) {
   return Math.floor(Math.random() * max);
 }
@@ -181,13 +183,19 @@ const fetchAnswersPage = async (n: number): Promise<any[]> => {
   });
 };
 
-const fetchPersonalityPage = (m: number) => async (n: number): Promise<any[]> => {
+const fetchPersonalityPage = (userId: number, m: number) => async (n: number): Promise<any[]> => {
+  const topics = ['mbti', 'big5', 'attachment', 'politics', 'other'];
+  const topic = topics[m];
+
   if (n === 1) {
-    if (m === 0) return [{id: 'a', kind: 'mbti'}];
-    if (m === 1) return [{id: 'b', kind: 'big-5'}];
-    if (m === 2) return [{id: 'd', kind: 'attachment-style'}];
-    if (m === 3) return [{id: 'c', kind: 'politics'}];
-    if (m === 4) return [{id: 'e', kind: 'other'}];
+    const response = await api('get', `/personality-comparison/${userId}/${topic}`);
+
+    if (response.json === undefined) return undefined;
+
+    return [{
+      kind: topic,
+      data: response.json,
+    }];
   }
   return [];
 };
@@ -215,12 +223,12 @@ const InDepthScreen = (navigationRef, userId) => ({navigation}) => {
             Are you gay? Are you gay? Are you gay? Are you and Shane gay?
           </AnsweredQuizCardMemo>;
       case 'mbti':
-        return <MbtiMemo/>;
-      case 'big-5':
+        return <MbtiMemo data={item.data}/>;
+      case 'big5':
         return <Big5Memo/>;
       case 'politics':
         return <PoliticsMemo/>;
-      case 'attachment-style':
+      case 'attachment':
         return <AttachmentStyleMemo/>;
       case 'other':
         return <OtherTraitsMemo/>;
@@ -240,7 +248,7 @@ const InDepthScreen = (navigationRef, userId) => ({navigation}) => {
     endText={
       idx1 === 1 ? undefined : "No More Q&A Answers to Show"}
     fetchPage={
-      idx1 === 1 ? fetchPersonalityPage(idx4) : fetchAnswersPage}
+      idx1 === 1 ? fetchPersonalityPage(userId, idx4) : fetchAnswersPage}
     ListHeaderComponent={
       <Header
         name="Rahim"
@@ -259,49 +267,24 @@ const InDepthScreen = (navigationRef, userId) => ({navigation}) => {
   />;
 };
 
-const Mbti = () => {
+const Mbti = ({data}) => {
+  console.log(data); // TODO
   return (
     <View style={sideMargins}>
-      <Chart
-        minLabel="Introversion"
-        maxLabel="Extraversion"
-        name1="You"
-        ratio1={0.00}
-        name2="Rahim"
-        ratio2={undefined}
-      >
-        Measures a person's preference for engaging with the world, ranging from drawing energy from social interactions and being action-oriented (Extraversion) to finding energy in solitude and focusing on thoughts and feelings (Introversion).
-      </Chart>
-      <Chart
-        minLabel="Thinking"
-        maxLabel="Feeling"
-        name1="You"
-        ratio1={undefined}
-        name2="Rahim"
-        ratio2={1.00}
-      >
-        Reflects a person's decision-making style, encompassing both logical, objective analysis and rationality (Thinking) as well as empathy, values, and consideration for others' emotions (Feeling).
-      </Chart>
-      <Chart
-        minLabel="Sensing"
-        maxLabel="Intuition"
-        name1="You"
-        ratio1={0.50}
-        name2="Rahim"
-        ratio2={-1.0}
-      >
-        Represents an individual's preferred way of processing information, covering the spectrum from focusing on concrete, tangible details and experiences (Sensing) to exploring abstract concepts, patterns, and possibilities (Intuition).
-      </Chart>
-      <Chart
-        minLabel="Judging"
-        maxLabel="Perceiving"
-        name1="You"
-        ratio1={0.66}
-        name2="Rahim"
-        ratio2={0.97}
-      >
-        Captures an individual's approach to organizing and structuring their life, ranging from preferring a planned, orderly, and decisive lifestyle (Judging) to embracing spontaneity, flexibility, and adaptability (Perceiving).
-      </Chart>
+      {data.map((trait) =>
+        <Chart
+          key={JSON.stringify(trait)}
+          dimensionName={trait.min_label ? undefined : trait.name}
+          minLabel={trait.min_label}
+          maxLabel={trait.max_label}
+          name1={trait.name1 ?? undefined}
+          percentage1={trait.percentage1 ?? undefined}
+          name2={trait.name2 ?? undefined}
+          percentage2={trait.percentage2 ?? undefined}
+        >
+          {trait.description}
+        </Chart>
+      )}
     </View>
   );
 };

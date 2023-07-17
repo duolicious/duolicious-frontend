@@ -22,7 +22,6 @@ import { DonutChart } from './donut-chart';
 import { Title } from './title';
 import { Shadow } from './shadow';
 import { InDepthScreen } from './in-depth-screen';
-import { SendIntroButtonSpacer } from './send-intro-button-spacer';
 import { ButtonWithCenteredText } from './button/centered-text';
 import { api } from '../api/api';
 import { cmToFeetInchesStr } from '../units/units';
@@ -138,6 +137,7 @@ const FloatingProfileInteractionButton = ({
         marginLeft: 20,
         marginRight: 20,
         marginBottom: 14,
+        marginTop: 14,
       }}
       onPressIn={fadeOut}
       onPressOut={fadeIn}
@@ -306,15 +306,14 @@ const BlockButton = ({name, userId, isBlocked}) => {
     <Pressable
       onPress={onPress}
       style={{
-        marginTop: 20,
-        marginBottom: 20,
+        marginTop: 100,
+        marginBottom: 100,
+        alignSelf: 'center',
       }}
     >
       <DefaultText
         style={{
-          padding: 20,
           color: '#777',
-          textAlign: 'center',
           overflow: 'hidden',
         }}
       >
@@ -431,6 +430,7 @@ const Content = (navigationRef, userId) => ({navigation, ...props}) => {
           width: '100%',
           maxWidth: 600,
           alignSelf: 'center',
+          paddingBottom: 100,
         }}
       >
         <ProspectProfileCard
@@ -452,7 +452,6 @@ const Content = (navigationRef, userId) => ({navigation, ...props}) => {
           userId={userId}
           data={data}
         />
-        <SendIntroButtonSpacer/>
       </ScrollView>
       <View
         style={{
@@ -468,8 +467,14 @@ const Content = (navigationRef, userId) => ({navigation, ...props}) => {
         }}
         pointerEvents="box-none"
       >
-        <FloatingHideButton navigation={navigation} userId={userId} isHidden={data?.is_hidden}/>
-        <FloatingSendIntroButton navigation={navigation} userId={userId} />
+        <View
+          style={{
+            flexDirection: 'row',
+          }}
+        >
+          <FloatingHideButton navigation={navigation} userId={userId} isHidden={data?.is_hidden}/>
+          <FloatingSendIntroButton navigation={navigation} userId={userId} />
+        </View>
       </View>
     </>
   );
