@@ -25,11 +25,6 @@ import { Chart } from './chart';
 import { useFocusEffect } from '@react-navigation/native';
 import { api } from '../api/api';
 
-// TODO: Delete me
-function getRandomInt(max) {
-  return Math.floor(Math.random() * max);
-}
-
 const sideMargins: StyleProp<ViewStyle> = {
   marginLeft: 10,
   marginRight: 10,
@@ -223,15 +218,11 @@ const InDepthScreen = (navigationRef, userId) => ({navigation}) => {
             Are you gay? Are you gay? Are you gay? Are you and Shane gay?
           </AnsweredQuizCardMemo>;
       case 'mbti':
-        return <MbtiMemo data={item.data}/>;
       case 'big5':
-        return <Big5Memo/>;
       case 'politics':
-        return <PoliticsMemo/>;
       case 'attachment':
-        return <AttachmentStyleMemo/>;
       case 'other':
-        return <OtherTraitsMemo/>;
+        return <ChartsMemo data={item.data}/>;
     }
   }, []);
 
@@ -267,8 +258,7 @@ const InDepthScreen = (navigationRef, userId) => ({navigation}) => {
   />;
 };
 
-const Mbti = ({data}) => {
-  console.log(data); // TODO
+const Charts = ({data}) => {
   return (
     <View style={sideMargins}>
       {data.map((trait) =>
@@ -289,199 +279,7 @@ const Mbti = ({data}) => {
   );
 };
 
-const Big5 = () => {
-  return (
-    <View style={sideMargins}>
-      <Chart
-        dimensionName="Openness to Experience"
-        name1="You"
-        ratio1={0.49}
-        name2="Rahim"
-        ratio2={0.51}
-      >
-        Describes a person's orientation towards new ideas, experiences, and feelings, capturing the spectrum from embracing novelty and change to appreciating tradition and predictability.
-      </Chart>
-      <Chart
-        dimensionName="Conscientiousness"
-        name1="You"
-        ratio1={0.51}
-        name2="Rahim"
-        ratio2={0.49}
-      >
-        Represents an individual's approach to organization, reliability, and goal-setting, encompassing both highly structured and responsible behavior as well as a more flexible and spontaneous approach.
-      </Chart>
-      <Chart
-        dimensionName="Extraversion"
-        name1="You"
-        ratio1={0.89}
-        name2="Rahim"
-        ratio2={0.19}
-      >
-        Reflects a person's social preferences, acknowledging that people vary in their need for social interaction, from enjoying solitude and introspection to actively seeking engagement with others.
-      </Chart>
-      <Chart
-        dimensionName="Agreeableness"
-        name1="You"
-        ratio1={0.89}
-        name2="Rahim"
-        ratio2={0.19}
-      >
-        Captures an individual's range of social behaviors, from demonstrating empathy, cooperation, and consideration for others to expressing assertiveness and independence in social situations.
-      </Chart>
-      <Chart
-        dimensionName="Neuroticism"
-        name1="You"
-        ratio1={0.89}
-        name2="Rahim"
-        ratio2={0.19}
-      >
-        Depicts the diversity in how people experience and cope with emotions, spanning the range from calmness and emotional steadiness to sensitivity and emotional responsiveness.
-      </Chart>
-    </View>
-  );
-};
-
-const AttachmentStyle = () => {
-  return (
-    <View style={sideMargins}>
-      <Chart
-        dimensionName="Anxious"
-        name1="You"
-        ratio1={0.98}
-        name2="Rahim"
-        ratio2={0.07}
-      >
-        Measures the extent to which a person seeks reassurance and fears abandonment in close relationships. If a person scores low on this and the "avoidant" scale, they're said to be "securely" attached. Secure attachment is associated with longer, more stable relationships.
-      </Chart>
-      <Chart
-        dimensionName="Avoidant"
-        name1="You"
-        ratio1={0.89}
-        name2="Rahim"
-        ratio2={0.03}
-      >
-        Measures the preference for emotional distance and self-reliance in relationships. If a person scores low on this and the "anxious" scale, they're said to be "securely" attached. Secure attachment is associated with longer, more stable relationships.
-      </Chart>
-    </View>
-  );
-};
-
-const Politics = () => {
-  return (
-    <View style={sideMargins}>
-      <Chart
-        minLabel="Individualism"
-        maxLabel="Collectivism"
-        name1="You"
-        ratio1={0.66}
-        name2="Rahim"
-        ratio2={-0.75}
-      >
-        Measures a person's preference for individual rights and freedoms versus collective good and social cohesion.
-      </Chart>
-      <Chart
-        minLabel="Libertarianism"
-        maxLabel="Authoritarianism"
-        name1="You"
-        ratio1={-0.66}
-        name2="Rahim"
-        ratio2={0.75}
-      >
-        Measures preference for individual liberties and minimal government intervention versus strong central authority and extensive government control.
-      </Chart>
-      <Chart
-        minLabel="Environmentalism"
-        maxLabel="Anthropocentrism"
-        name1="You"
-        ratio1={0.66}
-        name2="Rahim"
-        ratio2={0.75}
-      >
-        Measures prioritization of preserving the environment and non-human species versus human-centered resource utilization and economic development.
-      </Chart>
-      <Chart
-        minLabel="Isolationism"
-        maxLabel="Internationalism"
-        name1="You"
-        ratio1={1.00}
-        name2="Rahim"
-        ratio2={0.00}
-      >
-        Measures preference for national self-reliance and limited global engagement versus active participation in international affairs and cooperation.
-      </Chart>
-      <Chart
-        minLabel="Security"
-        maxLabel="Freedom"
-        name1="You"
-        ratio1={1.00}
-        name2="Rahim"
-        ratio2={0.00}
-      >
-        Measures how much a person values national security and public safety versus individual freedoms and civil liberties.
-      </Chart>
-      <Chart
-        minLabel="Non-interventionism"
-        maxLabel="Interventionism"
-        name1="You"
-        ratio1={1.00}
-        name2="Rahim"
-        ratio2={0.00}
-      >
-        Measures a person's preference for an active foreign policy with military and diplomatic interventions versus a non-interventionist approach that emphasizes diplomacy and trade.
-      </Chart>
-      <Chart
-        minLabel="Equity"
-        maxLabel="Meritocracy"
-        name1="You"
-        ratio1={1.00}
-        name2="Rahim"
-        ratio2={0.00}
-      >
-        Measures a person's preference for a system that rewards individuals based on their abilities and achievements versus a system that prioritizes fairness and equal opportunities for everyone.
-      </Chart>
-    </View>
-  );
-};
-
-const OtherTraits = () => {
-  return (
-    <View style={sideMargins}>
-      {
-        [
-          'Empathy',
-          'Honesty',
-          'Humility',
-          'Independence',
-          'Optimism',
-          'Patience',
-          'Persistence',
-          'Playfulness',
-          'Adherence to Own Principles',
-          'Rationality',
-          'Religiosity',
-          'Self-acceptance',
-          'Sex-focus',
-          'Thriftiness',
-          'Thrill-seeking',
-        ].map((trait, i) => <Chart
-            key={i}
-            dimensionName={trait}
-            name1="You"
-            ratio1={getRandomInt(100) / 100}
-            name2="Rahim"
-            ratio2={getRandomInt(100) / 100}
-          />
-        )
-      }
-    </View>
-  );
-};
-
-const MbtiMemo = memo(Mbti);
-const Big5Memo = memo(Big5);
-const PoliticsMemo = memo(Politics);
-const AttachmentStyleMemo = memo(AttachmentStyle);
-const OtherTraitsMemo = memo(OtherTraits);
+const ChartsMemo = memo(Charts);
 
 export {
   InDepthScreen,
