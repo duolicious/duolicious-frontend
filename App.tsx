@@ -57,6 +57,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 // TODO: X-Frame-Options: DENY
 // TODO: Try minifying the app
 // TODO: Quiz card stack doesn't update after logging out
+// TODO: What happens if you leave the app to get the OTP from your emails?
 
 
 SplashScreen.preventAutoHideAsync();

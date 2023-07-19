@@ -84,7 +84,7 @@ const ButtonWithCenteredText = ({children, ...rest}) => {
       onPressOut={
         () => isEnabledRef.current && unfade()}
       onPress={
-        () => isEnabledRef.current && onPress && onPress()}
+        () => isEnabledRef.current && !loading && onPress && onPress()}
     >
       <Animated.View
         style={{
