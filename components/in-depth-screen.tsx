@@ -183,7 +183,7 @@ const fetchPersonalityPage = (userId: number, m: number) => async (n: number): P
   const topic = topics[m];
 
   if (n === 1) {
-    const response = await api('get', `/personality-comparison/${userId}/${topic}`);
+    const response = await api('get', `/compare-answers/${userId}/${topic}`);
 
     if (response.json === undefined) return undefined;
 
