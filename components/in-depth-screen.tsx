@@ -127,21 +127,21 @@ const Header = ({
         </DefaultText>
       </TopNavBar>
       <ButtonGroup
-        buttons={['Q&A Answers\n(342)', 'Personality']}
+        buttons={['Q&A Answers', 'Personality']}
         selectedIndex={idx1}
         onPress={onChangeIdx1}
         containerStyle={sideMargins}
       />
       {idx1 === 0 && <>
         <ButtonGroup
-          buttons={['All\n(342)', 'Agree\n(332)', 'Disagree\n(10)', 'Unanswered\n(0)']}
+          buttons={['All', 'Agree', 'Disagree', 'Unanswered']}
           selectedIndex={idx2}
           onPress={onChangeIdx2}
           containerStyle={sideMargins}
           secondary={true}
         />
         <ButtonGroup
-          buttons={['All\n(342)', 'Values\n(0)', 'Sex\n(342)', 'Interp.\n(0)', 'Other\n(0)']}
+          buttons={['All', 'Values', 'Sex', 'Interp.', 'Other']}
           selectedIndex={idx3}
           onPress={onChangeIdx3}
           containerStyle={sideMargins}
