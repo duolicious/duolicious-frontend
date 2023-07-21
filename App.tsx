@@ -185,7 +185,10 @@ const App = () => {
   }, []);
 
   const updateReferrerId = useCallback(async () => {
-    setReferrerId((await Linking.getInitialURL()).match(/\/me\/(\d+)$/)?.at(1));
+    const initialUrl = await Linking.getInitialURL();
+    const match = initialUrl.match(/\/me\/(\d+)$/);
+    const referrerId_ = match ? match[1] : undefined;
+    setReferrerId(referrerId_);
   }, []);
 
   useEffect(() => {

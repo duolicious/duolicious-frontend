@@ -30,17 +30,18 @@ const sideMargins: StyleProp<ViewStyle> = {
   marginRight: 10,
 };
 
-const answeredQuizCard = (props: {
+const AnsweredQuizCard_ = (props: {
   children: any,
   questionNumber: number
   topic: string,
   user1: string,
-  answer1: string,
+  answer1: boolean | null,
   user2: string,
-  answer2: string,
+  answer2: boolean | null,
+  answer2Publicly: boolean,
 }) => <AnsweredQuizCard {...props}/>;
 
-const AnsweredQuizCardMemo = memo(answeredQuizCard);
+const AnsweredQuizCardMemo = memo(AnsweredQuizCard_);
 
 const Subtitle = ({children}) => {
   return (
@@ -172,10 +173,31 @@ const Header = ({
   );
 };
 
-const fetchAnswersPage = async (n: number): Promise<any[]> => {
-  return [...Array(10)].map((_, i) => {
-    return {id: `${i + 10 * n}`, kind: 'answer'}
-  });
+const fetchAnswersPage = (
+  userId: number,
+  agreement: string,
+  topic: string,
+) => async (
+  pageNumber: number,
+): Promise<any[]> => {
+  const resultsPerPage = 10;
+  const offset = resultsPerPage * (pageNumber - 1);
+
+  const response = await api(
+    'get',
+    `/compare-answers/${userId}` +
+    `?topic=${topic}` +
+    `&agreement=${agreement}` +
+    `&n=${resultsPerPage}` +
+    `&o=${offset}`
+  );
+
+  const responseList = response.ok ? response.json : [];
+
+  return responseList.map(item => ({
+    kind: 'answer',
+    item: item,
+  }));
 };
 
 const fetchPersonalityPage = (userId: number, m: number) => async (n: number): Promise<any[]> => {
@@ -183,7 +205,7 @@ const fetchPersonalityPage = (userId: number, m: number) => async (n: number): P
   const topic = topics[m];
 
   if (n === 1) {
-    const response = await api('get', `/compare-answers/${userId}/${topic}`);
+    const response = await api('get', `/compare-personalities/${userId}/${topic}`);
 
     if (response.json === undefined) return undefined;
 
@@ -208,14 +230,15 @@ const InDepthScreen = (navigationRef, userId) => ({navigation}) => {
     switch (item.kind) {
       case 'answer':
         return <AnsweredQuizCardMemo
-            questionNumber={1}
-            topic="Ethics"
-            user1="Rahim"
-            answer1="yes"
+            questionNumber={item.item.question_id}
+            topic={item.item.topic}
+            user1={item.item.prospect_name}
+            answer1={item.item.prospect_answer}
             user2="You"
-            answer2={undefined}
+            answer2={item.item.person_answer}
+            answer2Publicly={item.item.person_public_}
           >
-            Are you gay? Are you gay? Are you gay? Are you and Shane gay?
+            {item.item.question}
           </AnsweredQuizCardMemo>;
       case 'mbti':
       case 'big5':
@@ -235,11 +258,18 @@ const InDepthScreen = (navigationRef, userId) => ({navigation}) => {
     dataKey={
       idx1 === 1 ? `${idx1}-${idx4}` : `${idx1}-${idx2}-${idx3}`}
     emptyText={
-      idx1 === 1 ? undefined : "No Q&A Answers to Show"}
+      idx1 === 1 ? undefined : "No Q&A answers to show"}
     endText={
-      idx1 === 1 ? undefined : "No More Q&A Answers to Show"}
+      idx1 === 1 ? undefined : "No more Q&A answers to show"}
     fetchPage={
-      idx1 === 1 ? fetchPersonalityPage(userId, idx4) : fetchAnswersPage}
+      idx1 === 1 ?
+      fetchPersonalityPage(userId, idx4) :
+      fetchAnswersPage(
+        userId,
+        ['all', 'agree', 'disagree', 'unanswered'][idx2],
+        ['all', 'values', 'sex', 'interpersonal', 'other'][idx3],
+      )
+    }
     ListHeaderComponent={
       <Header
         name="Rahim"
