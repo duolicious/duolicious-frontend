@@ -39,6 +39,7 @@ type DefaultFlatListProps<ItemT> =
     FlatListProps<ItemT> & {
       emptyText: string,
       endText?: string,
+      endTextStyle?: StyleProp<ViewStyle>,
       fetchPage: (pageNumber: number) => Promise<ItemT[]>,
       firstPage?: number,
       initialNumberOfPages?: number
@@ -187,11 +188,14 @@ const DefaultFlatList = forwardRef(<ItemT,>(props: DefaultFlatListProps<ItemT>, 
     if (props.endText) {
       return (
         <Notice
-          style={{
-            marginTop: 5,
-            marginBottom: 5,
-            marginRight: 0,
-          }}
+          style={[
+            {
+              marginTop: 5,
+              marginBottom: 5,
+              marginRight: 0,
+            },
+            props.endTextStyle,
+          ]}
         >
           <DefaultText style={{color: '#70f'}} >
             {props.endText}
