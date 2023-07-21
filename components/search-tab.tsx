@@ -136,8 +136,8 @@ const SearchScreen_ = ({navigation}) => {
     const item: PageItem = x.item;
     return (
       <ProfileCardMemo
-        userName={item.name}
-        userAge={item.age}
+        name={item.name}
+        age={item.age}
         imageUuid={item.profile_photo_uuid}
         userId={item.prospect_person_id}
         matchPercentage={item.match_percentage}

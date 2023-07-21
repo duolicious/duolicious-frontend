@@ -326,7 +326,6 @@ const ProspectProfileScreen = ({navigation, route}) => {
   const navigationRef = useRef(undefined);
   const userId = route.params.userId;
 
-  // TODO: Pass userId as params
   return (
     <>
       <Stack.Navigator
@@ -336,7 +335,7 @@ const ProspectProfileScreen = ({navigation, route}) => {
           animation: 'slide_from_right',
         }}
       >
-        <Stack.Screen name="Prospect Profile" component={Content(navigationRef, userId)} />
+        <Stack.Screen name="Prospect Profile" component={Content(navigationRef)} />
         <Stack.Screen name="In-Depth" component={InDepthScreen(navigationRef)} />
       </Stack.Navigator>
       <View
@@ -383,8 +382,10 @@ type UserData = {
   is_blocked: boolean,
 };
 
-const Content = (navigationRef, userId) => ({navigation, ...props}) => {
+const Content = (navigationRef) => ({navigation, route, ...props}) => {
   navigationRef.current = navigation;
+
+  const userId = route.params.userId;
 
   const [data, setData] = useState<UserData | undefined>(undefined);
 
