@@ -217,9 +217,12 @@ const fetchPersonalityPage = (userId: number, m: number) => async (n: number): P
   return [];
 };
 
-const InDepthScreen = (navigationRef, userId) => ({navigation}) => {
+const InDepthScreen = (navigationRef) => ({navigation, route}) => {
   if (navigationRef)
     navigationRef.current = navigation;
+
+  const userId = route.params.userId;
+  const name = route.params.name ?? '';
 
   const [idx1, setIdx1] = useState(0);
   const [idx2, setIdx2] = useState(0);
@@ -275,7 +278,7 @@ const InDepthScreen = (navigationRef, userId) => ({navigation}) => {
     }
     ListHeaderComponent={
       <Header
-        name="Rahim"
+        name={name}
         idx1={idx1}
         idx2={idx2}
         idx3={idx3}

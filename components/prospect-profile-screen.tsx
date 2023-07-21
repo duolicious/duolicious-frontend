@@ -47,22 +47,6 @@ const isIconDefinition = (x: any): x is IconDefinition => {
   return x.iconName !== undefined;
 };
 
-function getRandomInt(max) {
-  return Math.floor(Math.random() * max);
-}
-
-const reasonablePerson1 = () => {
-  return `I'm a reasonable person. A very reasonable person. My existence is characterized by suffering and if I wanted to sick my internet trolls on Channel 4 then there'd be nothing but broken windows and riots. Wouldn't that be fun?
-
-Look the fuck out.
-
-`;
-};
-
-const reasonablePersonN = (n: number) => {
-  return [...Array(n).keys()].map(reasonablePerson1).join('').trim();
-};
-
 const goToGallery = (navigation, imageUuids) => () => {
   if ((imageUuids ?? []).length > 0) {
     navigation.navigate('Gallery Screen', { imageUuids } );
@@ -234,7 +218,7 @@ const FloatingSendIntroButton = ({navigation, userId}) => {
   );
 };
 
-const SeeQAndAButton = ({navigation, name, countAnswers}) => {
+const SeeQAndAButton = ({navigation, userId, name, countAnswers}) => {
   const containerStyle = useRef({
     marginTop: 40,
     marginLeft: 10,
@@ -262,8 +246,8 @@ const SeeQAndAButton = ({navigation, name, countAnswers}) => {
   ).current;
 
   const onPress = useCallback(() => {
-    navigation.navigate('In-Depth');
-  }, []);
+    navigation.navigate('In-Depth', { userId, name });
+  }, [userId, name]);
 
   const determiner = String(name).endsWith('s') ? "'" : "'s";
 
@@ -342,6 +326,7 @@ const ProspectProfileScreen = ({navigation, route}) => {
   const navigationRef = useRef(undefined);
   const userId = route.params.userId;
 
+  // TODO: Pass userId as params
   return (
     <>
       <Stack.Navigator
@@ -352,7 +337,7 @@ const ProspectProfileScreen = ({navigation, route}) => {
         }}
       >
         <Stack.Screen name="Prospect Profile" component={Content(navigationRef, userId)} />
-        <Stack.Screen name="In-Depth" component={InDepthScreen(navigationRef, userId)} />
+        <Stack.Screen name="In-Depth" component={InDepthScreen(navigationRef)} />
       </Stack.Navigator>
       <View
         style={{
@@ -489,8 +474,8 @@ const ProspectUserDetails = ({
   userLocation,
 }) => {
   const onPressDonutChart = useCallback(() => {
-    navigation.navigate('In-Depth', { userId });
-  }, [userId]);
+    navigation.navigate('In-Depth', { userId, name });
+  }, [userId, name]);
 
   return (
     <View
@@ -684,6 +669,7 @@ const Body = ({
         </DefaultText>
         <SeeQAndAButton
           navigation={navigation}
+          userId={userId}
           name={data?.name}
           countAnswers={data?.count_answers}
         />
