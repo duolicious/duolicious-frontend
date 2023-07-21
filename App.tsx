@@ -1,11 +1,9 @@
 import {
   ActivityIndicator,
   Animated,
-  LayoutAnimation,
   Linking,
   Platform,
   StatusBar,
-  Text,
   UIManager,
 } from 'react-native';
 import {
@@ -17,8 +15,6 @@ import {
 import {
   DefaultTheme,
   NavigationContainer,
-  getPathFromState,
-  getStateFromPath,
 } from '@react-navigation/native';
 
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -35,7 +31,6 @@ import { TraitsTab } from './components/traits-tab';
 import { ConversationScreen } from './components/conversation-screen';
 import { GalleryScreen, ProspectProfileScreen } from './components/prospect-profile-screen';
 import { WelcomeScreen } from './components/welcome-screen';
-import { InDepthScreen } from './components/prospect-profile-screen';
 import { sessionToken } from './session-token/session-token';
 import { japi } from './api/api';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
