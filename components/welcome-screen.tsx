@@ -82,8 +82,10 @@ const WelcomeScreen_ = ({navigation}) => {
       borderWidth={0}
       secondary={true}
       containerStyle={{
-        height: undefined,
+        marginTop: 5,
+        marginBottom: 5,
         margin: 5,
+        height: undefined,
       }}
       backgroundColor="rgb(228, 204, 255)"
       textStyle={{
