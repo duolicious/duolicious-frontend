@@ -580,7 +580,7 @@ const createAccountOptionGroups: OptionGroup[] = [
     }
   },
   {
-    title: "You're Looking Like Snack 😋",
+    title: "You're Looking Like A Snack 😋",
     description: "",
     input: {
       none: {
