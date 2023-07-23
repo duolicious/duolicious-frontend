@@ -19,6 +19,7 @@ import { DefaultText } from './default-text';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { faPaperPlane } from '@fortawesome/free-solid-svg-icons/faPaperPlane'
 import { DefaultFlatList } from './default-flat-list';
+import { sendMessage } from '../xmpp/xmpp';
 
 function getRandomInt(max) {
   return Math.floor(Math.random() * max);
@@ -110,6 +111,10 @@ const ConversationScreen = ({navigation}) => {
       fromCurrentUser: true,
     };
     listRef.current.append(message);
+
+
+    // TODO: Different recipient
+    sendMessage("1", text);
   }, []);
 
   return (

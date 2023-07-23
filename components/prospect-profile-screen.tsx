@@ -25,7 +25,7 @@ import { InDepthScreen } from './in-depth-screen';
 import { ButtonWithCenteredText } from './button/centered-text';
 import { api } from '../api/api';
 import { cmToFeetInchesStr } from '../units/units';
-import { units } from '../App';
+import { signedInUser } from '../App';
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
@@ -659,9 +659,9 @@ const Body = ({
           {data?.exercise &&
             <Basic icon="barbell">{data.exercise} Exercises</Basic>}
 
-          {data?.height_cm && units === 'Metric' &&
+          {data?.height_cm && signedInUser.units === 'Metric' &&
             <Basic icon={faRulerVertical}>{data.height_cm} cm</Basic>}
-          {data?.height_cm && units === 'Imperial' &&
+          {data?.height_cm && signedInUser.units === 'Imperial' &&
             <Basic icon={faRulerVertical}>{cmToFeetInchesStr(data.height_cm)}</Basic>}
         </Basics>
         <Title>About {data?.name ?? '...'}</Title>
