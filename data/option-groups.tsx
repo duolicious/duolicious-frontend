@@ -1,7 +1,7 @@
 import * as _ from "lodash";
 import { mapi, japi } from '../api/api';
 import { setSignedInUser } from '../App';
-import { sessionToken } from '../session-token/session-token';
+import { sessionToken } from '../kv-storage/session-token';
 
 type OptionGroupButtons = {
   buttons: string[],

@@ -1,6 +1,7 @@
 import {
   Animated,
   Image,
+  ListRenderItemInfo,
   Pressable,
   ScrollView,
   TextInput,
@@ -19,102 +20,45 @@ import { DefaultText } from './default-text';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { faPaperPlane } from '@fortawesome/free-solid-svg-icons/faPaperPlane'
 import { DefaultFlatList } from './default-flat-list';
-import { sendMessage } from '../xmpp/xmpp';
+import {
+  onReceiveMessage,
+  requestArchived,
+  sendMessage,
+  Message,
+} from '../xmpp/xmpp';
+import {
+  IMAGES_URL,
+} from '../env/env';
 
-function getRandomInt(max) {
-  return Math.floor(Math.random() * max);
-}
+// TODO: Inbox notification indicator needs to light up when you get a message
+// TODO: Need to load list of people you've messaged
+// TODO: Implement a way to differentiate message requests from established conversations
 
-type Message = {
-  text: string;
-  fromCurrentUser: boolean;
-  state?: "Read" | "Delivered"
-};
+const ConversationScreen = ({navigation, route}) => {
+  const [messages, setMessages] = useState<Message[]>([]);
 
-const messages: Message[] = [
-  {text: "hey bb, do u want fuk? 😊", fromCurrentUser: false},
-  {text:
-    "Certainly, my good fellow! I, indeed, would like what you colloquially " +
-    "refer to as \"fuk\". For clarity, I would like to engage with sexual " +
-    "intercourse with you, for this is a dating site! And that's what we " +
-    "good men on dating sites do! Yes indeed! ",
-    fromCurrentUser: true
-  },
-  {
-    text: "ur place or mine? 😊",
-    fromCurrentUser: true
-  },
-  {
-    text: "Let us perform the act in public!",
-    fromCurrentUser: true,
-  },
-  {text: "omggosshh",
-  fromCurrentUser: false
-  },
-  {
-    text: "ur a sicko !",
-    fromCurrentUser: false
-  },
-  {text: "blocked!",
-    fromCurrentUser: false
-  },
-  {
-    text: 
-      "My good man, please do not block me! I must confess that I am " +
-      "currently on the brink of suicide. I am taking several quite strong " +
-      "anti-depressants and my dog has a rare form of cancer. " +
-      "\n\n" +
-      "My penis is a paltry 4.5 inches. What is arguably saddest about this " +
-      "is that I have measured its length using the imperial system. I know " +
-      "that ending it all would be kindest on *me*, but sometimes I wonder if " +
-      "ending it all would be kindest on others too. What keeps me alive is " +
-      "the hope that my presence may be a burden towards others. I hate " +
-      "others even more than I hate myself. The thought that my existence may " +
-      "trouble others emboldens me to get out of bed. ",
-    fromCurrentUser: true
-  },
-  {text: 
-    "ur so weird, but ur pics are cute. Hm.",
-    fromCurrentUser: false,
-  },
-  {text: 
-    "fuck it. meet you in the park near the lake 😊",
-    fromCurrentUser: false,
-  },
-  {
-    text: "hoorah",
-    fromCurrentUser: true,
-    // state: "Read"
-  },
-];
-
-// TODO
-const delay = async (ms: number) => {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-const fetchPage = async (n: number): Promise<Message[]> => {
-  await delay(500);
-
-  if (n <= 0)
-    return [];
-
-  return messages;
-};
-
-const ConversationScreen = ({navigation}) => {
-  const listRef = useRef(null);
+  const userId: number = route?.params?.userId;
+  const name: string = route?.params?.name;
+  const imageUuid: number = route?.params?.imageUuid; // TODO: Use a smaller image
 
   const onPressSend = useCallback((text: string) => {
     const message: Message = {
       text: text,
+      from: '',
+      to: '',
       fromCurrentUser: true,
     };
-    listRef.current.append(message);
+    setMessages(messages => [...messages, message]);
+    sendMessage(userId, message.text);
+  }, []);
 
+  useEffect(() => {
+    onReceiveMessage((message: Message) => {
+      setMessages(messages => [...messages, message]);
+    });
 
-    // TODO: Different recipient
-    sendMessage("1", text);
+    requestArchived(userId);
+    // TODO: unbind on unmount
   }, []);
 
   return (
@@ -148,7 +92,7 @@ const ConversationScreen = ({navigation}) => {
           }}
         >
           <Image
-            source={{uri: `https://randomuser.me/api/portraits/men/${getRandomInt(99)}.jpg`}}
+            source={imageUuid && {uri: `${IMAGES_URL}/450-${imageUuid}.jpg`}}
             style={{
               width: 30,
               height: 30,
@@ -164,15 +108,27 @@ const ConversationScreen = ({navigation}) => {
               fontSize: 20,
             }}
           >
-            Rahim
+            {name ?? '...'}
           </DefaultText>
         </View>
       </TopNavBar>
+      <ScrollView>
+        {messages.map((x, i) =>
+          <SpeechBubble
+            key={i}
+            fromCurrentUser={x.fromCurrentUser}
+          >
+            {x.text}
+          </SpeechBubble>
+        )}
+      </ScrollView>
+
+      {/*
       <DefaultFlatList
         innerRef={listRef}
-        emptyText="This is the start of your conversation with Rahim."
+        emptyText={`This is the start of your conversation with ${name}.`}
         fetchPage={fetchPage}
-        renderItem={(x) =>
+        renderItem={(x: ListRenderItemInfo<Message>) =>
           <SpeechBubble
             fromCurrentUser={x.item.fromCurrentUser}
             state={x.item.state}
@@ -184,6 +140,8 @@ const ConversationScreen = ({navigation}) => {
         inverted={true}
         firstPage={10}
       />
+      <DefaultFlatList
+      */}
       <TextInputWithButton onPress={onPressSend}/>
     </>
   );

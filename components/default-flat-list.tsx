@@ -300,10 +300,11 @@ const DefaultFlatList = forwardRef(<ItemT,>(props: DefaultFlatListProps<ItemT>, 
     scrollToEndNTimes.current[dataKey] = 1;
     setDatas(datas => {
       const newDatas = {...datas};
-      newDatas[dataKey] = [...newDatas[dataKey], item];
+      newDatas[dataKey] = [...(newDatas[dataKey] ?? []), item];
       return newDatas;
     });
   }, [dataKey]);
+
   if (props.innerRef) {
     props.innerRef.current = { append };
   }

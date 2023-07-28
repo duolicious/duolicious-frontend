@@ -32,7 +32,8 @@ import { TraitsTab } from './components/traits-tab';
 import { ConversationScreen } from './components/conversation-screen';
 import { GalleryScreen, ProspectProfileScreen } from './components/prospect-profile-screen';
 import { WelcomeScreen } from './components/welcome-screen';
-import { sessionToken } from './session-token/session-token';
+import { sessionToken } from './kv-storage/session-token';
+import { deviceId } from './kv-storage/device-id';
 import { japi } from './api/api';
 import { login, logout } from './xmpp/xmpp';
 
@@ -124,14 +125,14 @@ const WebSplashScreen = ({loading}) => {
   }
 };
 
-let referrerId: string | undefined;
-let setReferrerId: React.Dispatch<React.SetStateAction<typeof referrerId>>;
-
 type SignedInUser = {
   personId: number
   units: 'Metric' | 'Imperial'
   sessionToken: string
 };
+
+let referrerId: string | undefined;
+let setReferrerId: React.Dispatch<React.SetStateAction<typeof referrerId>>;
 
 let signedInUser: SignedInUser | undefined;
 let setSignedInUser: React.Dispatch<React.SetStateAction<typeof signedInUser>>;
@@ -207,11 +208,17 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    if (signedInUser?.personId && signedInUser?.sessionToken) {
-      login(String(signedInUser.personId), signedInUser.sessionToken);
-    } else {
-      logout();
-    }
+    (async () => {
+      if (signedInUser?.personId && signedInUser?.sessionToken) {
+        login(
+          String(signedInUser.personId),
+          signedInUser.sessionToken,
+          await deviceId(),
+        );
+      } else {
+        logout();
+      }
+    })();
   }, [signedInUser?.personId, signedInUser?.sessionToken]);
 
   const onLayoutRootView = useCallback(async () => {

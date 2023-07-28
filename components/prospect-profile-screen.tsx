@@ -198,10 +198,10 @@ const FloatingHideButton = ({navigation, userId, isHidden}) => {
   );
 };
 
-const FloatingSendIntroButton = ({navigation, userId}) => {
+const FloatingSendIntroButton = ({navigation, userId, name, imageUuid}) => {
   const onPress = useCallback(() => {
-    navigation.navigate('Conversation Screen')
-  }, [navigation]);
+    navigation.navigate('Conversation Screen', { userId, name, imageUuid });
+  }, [navigation, userId, name, imageUuid]);
 
   return (
     <FloatingProfileInteractionButton
@@ -458,8 +458,17 @@ const Content = (navigationRef) => ({navigation, route, ...props}) => {
             flexDirection: 'row',
           }}
         >
-          <FloatingHideButton navigation={navigation} userId={userId} isHidden={data?.is_hidden}/>
-          <FloatingSendIntroButton navigation={navigation} userId={userId} />
+          <FloatingHideButton
+            navigation={navigation}
+            userId={userId}
+            isHidden={data?.is_hidden}
+          />
+          <FloatingSendIntroButton
+            navigation={navigation}
+            userId={userId}
+            name={data?.name}
+            imageUuid={imageUuid}
+          />
         </View>
       </View>
     </>
