@@ -100,7 +100,8 @@ const InboxTab_ = ({navigation}) => {
   ), []);
 
   useEffect(() => {
-    fetchInbox();
+    // TODO
+    fetchInbox(console.log);
   }, []);
 
   return (

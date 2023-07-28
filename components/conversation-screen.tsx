@@ -34,7 +34,7 @@ import {
 // TODO: Need to load list of people you've messaged
 // TODO: Implement a way to differentiate message requests from established conversations
 // TODO: Check if it scrolls to the bottom on mobile devices after the messages first load, and after you send a message
-// TODO: Re-add the ability to load old messages
+// TODO: Re-add the ability to load old messages past the first page
 
 const ConversationScreen = ({navigation, route}) => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -56,6 +56,7 @@ const ConversationScreen = ({navigation, route}) => {
       text: text,
       from: '',
       to: '',
+      id: '',
       fromCurrentUser: true,
     };
     setMessages(messages => [...messages, message]);
