@@ -20,6 +20,7 @@ import { Notice } from './notice';
 import { OptionScreen } from './option-screen';
 import { hideMeFromStrangersOptionGroup } from '../data/option-groups';
 import { DefaultFlatList } from './default-flat-list';
+import { fetchInbox } from '../xmpp/xmpp';
 
 const Stack = createNativeStackNavigator();
 
@@ -97,6 +98,10 @@ const InboxTab_ = ({navigation}) => {
       unread={x.index < 2}
     />
   ), []);
+
+  useEffect(() => {
+    fetchInbox();
+  }, []);
 
   return (
     <>

@@ -22,7 +22,7 @@ import { faPaperPlane } from '@fortawesome/free-solid-svg-icons/faPaperPlane'
 import { DefaultFlatList } from './default-flat-list';
 import {
   onReceiveMessage,
-  requestArchived,
+  fetchMessages,
   sendMessage,
   Message,
 } from '../xmpp/xmpp';
@@ -33,6 +33,8 @@ import {
 // TODO: Inbox notification indicator needs to light up when you get a message
 // TODO: Need to load list of people you've messaged
 // TODO: Implement a way to differentiate message requests from established conversations
+// TODO: Check if it scrolls to the bottom on mobile devices after the messages first load, and after you send a message
+// TODO: Re-add the ability to load old messages
 
 const ConversationScreen = ({navigation, route}) => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -40,6 +42,14 @@ const ConversationScreen = ({navigation, route}) => {
   const userId: number = route?.params?.userId;
   const name: string = route?.params?.name;
   const imageUuid: number = route?.params?.imageUuid; // TODO: Use a smaller image
+
+  const listRef = useRef(null)
+
+  const scrollToEnd = useCallback(() => {
+    if (listRef.current) {
+      listRef.current.scrollToEnd({animated: true});
+    }
+  }, [listRef.current]);
 
   const onPressSend = useCallback((text: string) => {
     const message: Message = {
@@ -53,12 +63,15 @@ const ConversationScreen = ({navigation, route}) => {
   }, []);
 
   useEffect(() => {
-    onReceiveMessage((message: Message) => {
-      setMessages(messages => [...messages, message]);
-    });
-
-    requestArchived(userId);
     // TODO: unbind on unmount
+    onReceiveMessage(
+      (msg) => setMessages(msgs => [...msgs, msg])
+    );
+
+    fetchMessages(
+      userId,
+      (msgs1) => setMessages(msgs2 => [...msgs2, ...msgs1])
+    );
   }, []);
 
   return (
@@ -112,7 +125,11 @@ const ConversationScreen = ({navigation, route}) => {
           </DefaultText>
         </View>
       </TopNavBar>
-      <ScrollView>
+      <ScrollView
+        ref={listRef}
+        onLayout={scrollToEnd}
+        onContentSizeChange={scrollToEnd}
+      >
         {messages.map((x, i) =>
           <SpeechBubble
             key={i}

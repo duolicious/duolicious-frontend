@@ -9,9 +9,12 @@ import { DOMParser } from 'xmldom';
 import xpath from 'xpath';
 
 import { signedInUser } from '../App';
+import { getRandomString } from '../random/string';
 
 // TODO: Clients are duplicating messages an infinite number of times
 // TODO: It seems like, if client has never been online before, they can't receive messages
+// TODO: Add loading indicator
+// TODO: Scroll to bottom after each message
 
 type Message = {
   text: string
@@ -60,77 +63,61 @@ const login = (username: string, password: string, resource: string) => {
 }
 
 const sendMessage = async (recipientPersonId: number, message: string) => {
-  const messageXml = parse(`
-    <message type="chat" to="${recipientPersonId}@duolicious.app">
-      <body>${message}</body>
-    </message>
-  `);
+  const messageXml = xml(
+    "message",
+    { type: "chat", to: `${recipientPersonId}@duolicious.app` },
+    xml("body", {}, message),
+  );
 
   await xmpp.send(messageXml);
 };
 
 // TODO: Filter by person ID
 const onReceiveMessage = (listener: (message: Message) => void) => {
-  if (xmpp) {
-    xmpp.on("stanza", async (stanza: Element) => {
-      const doc = new DOMParser().parseFromString(
-        stanza.toString(),
-        'text/xml'
-      );
+  if (!xmpp) return false;
 
-      const node = xpath.select1(
-        `(` +
-          `/*[name()='message'][@type='chat']/*[name()='body']` +
-          ` | ` +
-          `/*[name()='message']` +
-          `/*[name()='result']` +
-          `/*[name()='forwarded']` +
-          `/*[name()='message'][@type='chat']` +
-          `/*[name()='body']` +
-        `)/parent::*`
-        ,
-        doc,
-      );
+  xmpp.on("stanza", async (stanza: Element) => {
+    const doc = new DOMParser().parseFromString(stanza.toString(), 'text/xml');
 
-      if (!xpath.isNodeLike(node)) return;
+    const node = xpath.select1(
+      `/*[name()='message'][@type='chat']/*[name()='body']`,
+      doc,
+    );
 
-      const from = xpath.select1(
-        `string(./@from)`,
-        node,
-      );
+    if (!xpath.isNodeLike(node)) return;
 
-      const to = xpath.select1(
-        `string(./@to)`,
-        node,
-      );
+    const from = xpath.select1(`string(./parent::*/@from)`, node);
+    const to = xpath.select1(`string(./parent::*/@to)`, node);
+    const bodyText = xpath.select1(`string(./text())`, node);
 
-      const bodyText = xpath.select1(
-        `string(./*[name()='body']/text())`,
-        node,
-      );
+    if (!from) return;
+    if (!to) return;
+    if (!bodyText) return;
 
-      if (!from) return;
-      if (!to) return;
-      if (!bodyText) return;
-
-      listener({
-        text: bodyText.toString(),
-        from: from.toString(),
-        to: to.toString(),
-        fromCurrentUser: from.toString().startsWith(
-          `${signedInUser?.personId}@`
-        ),
-      });
+    listener({
+      text: bodyText.toString(),
+      from: from.toString(),
+      to: to.toString(),
+      fromCurrentUser: from.toString().startsWith(
+        `${signedInUser?.personId}@`
+      ),
     });
-  }
+  });
 
-  return Boolean(xmpp);
+  return true;
 }
 
-const requestArchived = async (withPersonId: number) => {
-  const stanza = parse(`
-    <iq type='set' id='query1'>
-      <query xmlns='urn:xmpp:mam:2'>
+const fetchMessages = async (
+  withPersonId: number,
+  callback: (messages: Message[]) => void,
+) => {
+  if (!xmpp) return false;
+
+  const queryId = getRandomString(10);
+
+  const queryStanza = parse(`
+    <iq type='set' id='${queryId}'>
+      <query xmlns='urn:xmpp:mam:2'  queryid='${queryId}'>
         <x xmlns='jabber:x:data' type='submit'>
           <field var='FORM_TYPE'>
             <value>urn:xmpp:mam:2</value>
@@ -141,11 +128,78 @@ const requestArchived = async (withPersonId: number) => {
         </x>
         <set xmlns='http://jabber.org/protocol/rsm'>
           <max>50</max>
+          <before/>
         </set>
       </query>
     </iq>
-    `);
+  `);
 
+  const collected: Message[] = [];
+
+  const maybeCollect = (stanza: Element) => {
+    const doc = new DOMParser().parseFromString(stanza.toString(), 'text/xml');
+
+    const node = xpath.select1(
+      `/*[name()='message']` +
+      `/*[name()='result'][@queryid='${queryId}']` +
+      `/*[name()='forwarded']` +
+      `/*[name()='message'][@type='chat']` +
+      `/*[name()='body']` +
+      `/parent::*[not(.//*[name()='stanza-id'])]`,
+      doc,
+    );
+
+    if (!xpath.isNodeLike(node)) return;
+
+    const from = xpath.select1(`string(./@from)`, node);
+    const to = xpath.select1(`string(./@to)`, node);
+    const bodyText = xpath.select1(`string(./*[name()='body']/text())`, node);
+
+    if (!from) return;
+    if (!to) return;
+    if (!bodyText) return;
+
+    collected.push({
+      text: bodyText.toString(),
+      from: from.toString(),
+      to: to.toString(),
+      fromCurrentUser: from.toString().startsWith(
+        `${signedInUser?.personId}@`
+      ),
+    });
+  };
+
+  const maybeFin = (stanza: Element) => {
+    const doc = new DOMParser().parseFromString(stanza.toString(), 'text/xml');
+
+    const node = xpath.select1(
+      `/*[name()='iq'][@type='result'][@id='${queryId}']` +
+      `/*[name()='fin']`,
+      doc,
+    );
+
+    if (!xpath.isNodeLike(node)) return;
+
+    callback(collected);
+
+    xmpp.removeListener("stanza", maybeCollect);
+    xmpp.removeListener("stanza", maybeFin);
+  };
+
+  xmpp.addListener("stanza", maybeCollect);
+  xmpp.addListener("stanza", maybeFin);
+
+  await xmpp.send(queryStanza);
+};
+
+// TODO:
+const fetchInbox = async () => {
+  // TODO unique id
+  const stanza = parse(`
+    <iq type='set' id='10bca'>
+      <inbox xmlns='erlang-solutions.com:xmpp:inbox:0' queryid='b6'/>
+    </iq>
+  `);
   await xmpp.send(stanza);
 };
 
@@ -161,6 +215,7 @@ export {
   login,
   logout,
   onReceiveMessage,
-  requestArchived,
+  fetchMessages,
   sendMessage,
+  fetchInbox,
 };
