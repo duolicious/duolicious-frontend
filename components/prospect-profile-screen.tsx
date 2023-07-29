@@ -156,7 +156,7 @@ const FloatingProfileInteractionButton = ({
   );
 };
 
-const FloatingHideButton = ({navigation, userId, isHidden}) => {
+const FloatingHideButton = ({navigation, personId, isHidden}) => {
   const [isHiddenState, setIsHiddenState] = useState<
     boolean | undefined
   >(isHidden);
@@ -168,8 +168,8 @@ const FloatingHideButton = ({navigation, userId, isHidden}) => {
   const onPress = useCallback(() => {
     setIsHiddenState(!isHiddenState);
 
-    if (isHiddenState === true ) api('post', `/unhide/${userId}`);
-    if (isHiddenState === false) api('post', `/hide/${userId}`);
+    if (isHiddenState === true ) api('post', `/unhide/${personId}`);
+    if (isHiddenState === false) api('post', `/hide/${personId}`);
 
     if (isHiddenState === false) navigation.goBack();
   }, [isHiddenState]);
@@ -198,10 +198,10 @@ const FloatingHideButton = ({navigation, userId, isHidden}) => {
   );
 };
 
-const FloatingSendIntroButton = ({navigation, userId, name, imageUuid}) => {
+const FloatingSendIntroButton = ({navigation, personId, name, imageUuid}) => {
   const onPress = useCallback(() => {
-    navigation.navigate('Conversation Screen', { userId, name, imageUuid });
-  }, [navigation, userId, name, imageUuid]);
+    navigation.navigate('Conversation Screen', { personId, name, imageUuid });
+  }, [navigation, personId, name, imageUuid]);
 
   return (
     <FloatingProfileInteractionButton
@@ -218,7 +218,7 @@ const FloatingSendIntroButton = ({navigation, userId, name, imageUuid}) => {
   );
 };
 
-const SeeQAndAButton = ({navigation, userId, name, countAnswers}) => {
+const SeeQAndAButton = ({navigation, personId, name, countAnswers}) => {
   const containerStyle = useRef({
     marginTop: 40,
     marginLeft: 10,
@@ -246,8 +246,8 @@ const SeeQAndAButton = ({navigation, userId, name, countAnswers}) => {
   ).current;
 
   const onPress = useCallback(() => {
-    navigation.navigate('In-Depth', { userId, name });
-  }, [userId, name]);
+    navigation.navigate('In-Depth', { personId, name });
+  }, [personId, name]);
 
   const determiner = String(name).endsWith('s') ? "'" : "'s";
 
@@ -268,7 +268,7 @@ const SeeQAndAButton = ({navigation, userId, name, countAnswers}) => {
   );
 };
 
-const BlockButton = ({name, userId, isBlocked}) => {
+const BlockButton = ({name, personId, isBlocked}) => {
   const [isBlockedState, setIsBlockedState] = useState(false);
 
   useEffect(() => {
@@ -278,8 +278,8 @@ const BlockButton = ({name, userId, isBlocked}) => {
   const onPress = useCallback(() => {
     setIsBlockedState(!isBlockedState);
 
-    if (isBlockedState === true ) api('post', `/unblock/${userId}`);
-    if (isBlockedState === false) api('post', `/block/${userId}`);
+    if (isBlockedState === true ) api('post', `/unblock/${personId}`);
+    if (isBlockedState === false) api('post', `/block/${personId}`);
   }, [isBlockedState]);
 
   const text = isBlockedState
@@ -324,7 +324,7 @@ const Columns = ({children, ...rest}) => {
 
 const ProspectProfileScreen = ({navigation, route}) => {
   const navigationRef = useRef(undefined);
-  const userId = route.params.userId;
+  const personId = route.params.personId;
 
   return (
     <>
@@ -385,17 +385,17 @@ type UserData = {
 const Content = (navigationRef) => ({navigation, route, ...props}) => {
   navigationRef.current = navigation;
 
-  const userId = route.params.userId;
+  const personId = route.params.personId;
 
   const [data, setData] = useState<UserData | undefined>(undefined);
 
   useEffect(() => {
     setData(undefined);
     (async () => {
-      const response = await api('get', `/prospect-profile/${userId}`);
+      const response = await api('get', `/prospect-profile/${personId}`);
       setData(response?.json);
     })();
-  }, [userId]);
+  }, [personId]);
 
   const imageUuid = data === undefined ?
     undefined :
@@ -426,7 +426,7 @@ const Content = (navigationRef) => ({navigation, route, ...props}) => {
         />
         <ProspectUserDetails
           navigation={navigation}
-          userId={userId}
+          personId={personId}
           name={data?.name}
           age={data?.age}
           matchPercentage={data?.match_percentage}
@@ -435,7 +435,7 @@ const Content = (navigationRef) => ({navigation, route, ...props}) => {
         <Shadow/>
         <Body
           navigation={navigation}
-          userId={userId}
+          personId={personId}
           data={data}
         />
       </ScrollView>
@@ -460,12 +460,12 @@ const Content = (navigationRef) => ({navigation, route, ...props}) => {
         >
           <FloatingHideButton
             navigation={navigation}
-            userId={userId}
+            personId={personId}
             isHidden={data?.is_hidden}
           />
           <FloatingSendIntroButton
             navigation={navigation}
-            userId={userId}
+            personId={personId}
             name={data?.name}
             imageUuid={imageUuid}
           />
@@ -477,15 +477,15 @@ const Content = (navigationRef) => ({navigation, route, ...props}) => {
 
 const ProspectUserDetails = ({
   navigation,
-  userId,
+  personId,
   name,
   age,
   matchPercentage,
   userLocation,
 }) => {
   const onPressDonutChart = useCallback(() => {
-    navigation.navigate('In-Depth', { userId, name });
-  }, [userId, name]);
+    navigation.navigate('In-Depth', { personId, name });
+  }, [personId, name]);
 
   return (
     <View
@@ -598,11 +598,11 @@ const Basics = ({children}) => {
 
 const Body = ({
   navigation,
-  userId,
+  personId,
   data,
 }: {
   navigation: any,
-  userId: number,
+  personId: number,
   data: UserData | undefined,
 }) => {
   return (
@@ -679,11 +679,11 @@ const Body = ({
         </DefaultText>
         <SeeQAndAButton
           navigation={navigation}
-          userId={userId}
+          personId={personId}
           name={data?.name}
           countAnswers={data?.count_answers}
         />
-        <BlockButton name={data?.name} userId={userId} isBlocked={data?.is_blocked} />
+        <BlockButton name={data?.name} personId={personId} isBlocked={data?.is_blocked} />
       </View>
     </>
   );

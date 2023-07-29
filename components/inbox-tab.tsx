@@ -123,7 +123,7 @@ const InboxTab_ = ({navigation}) => {
     <InboxItemMemo
       wasRead={x.item.lastMessageRead}
       name={x.item.name}
-      userId={x.item.personId}
+      personId={x.item.personId}
       imageUuid={x.item.imageUuid}
       matchPercentage={x.item.matchPercentage}
       lastMessage={x.item.lastMessage}

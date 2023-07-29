@@ -33,7 +33,7 @@ const formatChatTimestamp = (date: Date): string => {
 const InboxItem = ({
   wasRead,
   name,
-  userId,
+  personId,
   imageUuid,
   matchPercentage,
   lastMessage,
@@ -41,7 +41,7 @@ const InboxItem = ({
 }: {
   wasRead: boolean
   name: string
-  userId: number
+  personId: number
   imageUuid: string | null
   matchPercentage: number
   lastMessage: string
@@ -75,8 +75,8 @@ const InboxItem = ({
 
   const onPress = useCallback(() => navigation.navigate(
     'Conversation Screen',
-    { userId, name, imageUuid }
-  ), [userId, name, imageUuid]);
+    { personId, name, imageUuid }
+  ), [personId, name, imageUuid]);
 
   return (
     <Pressable

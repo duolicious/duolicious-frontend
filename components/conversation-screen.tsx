@@ -40,7 +40,7 @@ import {
 const ConversationScreen = ({navigation, route}) => {
   const [messages, setMessages] = useState<Message[]>([]);
 
-  const userId: number = route?.params?.userId;
+  const personId: number = route?.params?.personId;
   const name: string = route?.params?.name;
   const imageUuid: number = route?.params?.imageUuid; // TODO: Use a smaller image
 
@@ -61,11 +61,11 @@ const ConversationScreen = ({navigation, route}) => {
       fromCurrentUser: true,
     };
     setMessages(messages => [...messages, message]);
-    sendMessage(userId, message.text);
+    sendMessage(personId, message.text);
   }, []);
 
   const _fetchMessages = useCallback(async () => {
-    const messages = await fetchMessages(userId);
+    const messages = await fetchMessages(personId);
     setMessages(existingMessages => [...existingMessages, ...messages])
   }, []);
 
@@ -133,6 +133,12 @@ const ConversationScreen = ({navigation, route}) => {
         ref={listRef}
         onLayout={scrollToEnd}
         onContentSizeChange={scrollToEnd}
+        contentContainerStyle={{
+          paddingTop: 10,
+          maxWidth: 600,
+          width: '100%',
+          alignSelf: 'center',
+        }}
       >
         {messages.map((x, i) =>
           <SpeechBubble
@@ -189,6 +195,9 @@ const TextInputWithButton = ({onPress}) => {
       style={{
         flexDirection: 'row',
         padding: 10,
+        maxWidth: 600,
+        width: '100%',
+        alignSelf: 'center',
       }}
     >
       <TextInput
