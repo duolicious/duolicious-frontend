@@ -1,9 +1,12 @@
 import {
+  ActivityIndicator,
   Animated,
   Image,
+  ImageBackground,
   ListRenderItemInfo,
   Pressable,
   ScrollView,
+  Text,
   TextInput,
   View,
 } from 'react-native';
@@ -32,15 +35,13 @@ import {
 
 // TODO: Check if it scrolls to the bottom on mobile devices after the messages first load, and after you send a message
 // TODO: Re-add the ability to load old messages past the first page
-// TODO: "This is the start of you your chat history with X"
-// TODO: Loading indicator
 
 const ConversationScreen = ({navigation, route}) => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[] | null>(null);
 
   const personId: number = route?.params?.personId;
   const name: string = route?.params?.name;
-  const imageUuid: number = route?.params?.imageUuid; // TODO: Use a smaller image
+  const imageUuid: number = route?.params?.imageUuid;
 
   const listRef = useRef(null)
 
@@ -58,13 +59,13 @@ const ConversationScreen = ({navigation, route}) => {
       id: '',
       fromCurrentUser: true,
     };
-    setMessages(messages => [...messages, message]);
+    setMessages(messages => [...(messages ?? []), message]);
     sendMessage(personId, message.text);
   }, []);
 
   const _fetchMessages = useCallback(async () => {
     const messages = await fetchMessages(personId);
-    setMessages(existingMessages => [...existingMessages, ...messages])
+    setMessages(existingMessages => [...(existingMessages ?? []), ...messages])
   }, []);
 
   useEffect(() => {
@@ -124,26 +125,84 @@ const ConversationScreen = ({navigation, route}) => {
           </DefaultText>
         </View>
       </TopNavBar>
-      <ScrollView
-        ref={listRef}
-        onLayout={scrollToEnd}
-        onContentSizeChange={scrollToEnd}
-        contentContainerStyle={{
-          paddingTop: 10,
-          maxWidth: 600,
-          width: '100%',
+      {messages === null &&
+        <View style={{height: '100%', justifyContent: 'center', alignItems: 'center'}}>
+          <ActivityIndicator size="large" color="#70f" />
+        </View>
+      }
+      {messages !== null && messages.length === 0 &&
+        <View style={{
+          flexGrow: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
           alignSelf: 'center',
-        }}
-      >
-        {messages.map((x, i) =>
-          <SpeechBubble
-            key={i}
-            fromCurrentUser={x.fromCurrentUser}
+        }}>
+          <ImageBackground
+            source={imageUuid && {uri: `${IMAGES_URL}/450-${imageUuid}.jpg`}}
+            style={{
+              height: 200,
+              width: 200,
+              margin: 2,
+              borderRadius: 999,
+              borderColor: 'white',
+              backgroundColor: imageUuid ? 'white' : '#f1e5ff',
+              overflow: 'hidden',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
           >
-            {x.text}
-          </SpeechBubble>
-        )}
-      </ScrollView>
+            {!imageUuid &&
+              <Ionicons
+                style={{fontSize: 40, color: 'rgba(119, 0, 255, 0.2)'}}
+                name={'person'}
+              />
+            }
+          </ImageBackground>
+          <Text
+            style={{
+              marginTop: 10,
+              marginBottom: 10,
+              fontFamily: 'Trueno',
+              textAlign: 'center',
+              marginLeft: '25%',
+              marginRight: '25%',
+            }}
+          >
+            This is the start of your conversation with {name}
+          </Text>
+          <DefaultText
+            style={{
+              textAlign: 'center',
+              marginLeft: '15%',
+              marginRight: '15%',
+            }}
+          >
+            Intros on Duolicious need to be totally unique! Try asking {name} about something interesting on their profile...
+          </DefaultText>
+        </View>
+      }
+      {messages !== null && messages.length > 0 &&
+        <ScrollView
+          ref={listRef}
+          onLayout={scrollToEnd}
+          onContentSizeChange={scrollToEnd}
+          contentContainerStyle={{
+            paddingTop: 10,
+            maxWidth: 600,
+            width: '100%',
+            alignSelf: 'center',
+          }}
+        >
+          {messages.map((x, i) =>
+            <SpeechBubble
+              key={i}
+              fromCurrentUser={x.fromCurrentUser}
+            >
+              {x.text}
+            </SpeechBubble>
+          )}
+        </ScrollView>
+      }
       <TextInputWithButton onPress={onPressSend}/>
     </>
   );

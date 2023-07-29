@@ -13,9 +13,6 @@ import { getRandomString } from '../random/string';
 
 import { deviceId } from '../kv-storage/device-id';
 
-// TODO: It seems like, if client has never been online before, they can't receive messages
-// TODO: Add loading indicator
-// TODO: Update unread message indicator in tab bar
 // TODO: Catch more exceptions. If a network request fails, that shouldn't crash the app.
 
 type Message = {
