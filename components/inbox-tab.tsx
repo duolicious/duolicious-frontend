@@ -23,6 +23,9 @@ import { hideMeFromStrangersOptionGroup } from '../data/option-groups';
 import { DefaultFlatList } from './default-flat-list';
 import { Inbox, Conversation, observeInbox } from '../xmpp/xmpp';
 
+// TODO: When you open an intro in the UI then navigate back to the inbox, the inbox should update, showing that the message has been read
+// TODO: Sort intros by match percentage
+
 const Stack = createNativeStackNavigator();
 
 const InboxItemMemo = memo(InboxItem);
