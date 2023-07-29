@@ -166,13 +166,15 @@ const FloatingHideButton = ({navigation, personId, isHidden}) => {
   }, [isHidden]);
 
   const onPress = useCallback(() => {
+    if (personId === undefined) return;
+
     setIsHiddenState(!isHiddenState);
 
     if (isHiddenState === true ) api('post', `/unhide/${personId}`);
     if (isHiddenState === false) api('post', `/hide/${personId}`);
 
     if (isHiddenState === false) navigation.goBack();
-  }, [isHiddenState]);
+  }, [isHiddenState, personId]);
 
   return (
     <FloatingProfileInteractionButton
@@ -200,6 +202,8 @@ const FloatingHideButton = ({navigation, personId, isHidden}) => {
 
 const FloatingSendIntroButton = ({navigation, personId, name, imageUuid}) => {
   const onPress = useCallback(() => {
+    if (personId === undefined) return;
+
     navigation.navigate('Conversation Screen', { personId, name, imageUuid });
   }, [navigation, personId, name, imageUuid]);
 
@@ -209,11 +213,13 @@ const FloatingSendIntroButton = ({navigation, personId, name, imageUuid}) => {
       onPress={onPress}
       backgroundColor="#70f"
     >
-      <FontAwesomeIcon
-        icon={faPaperPlane}
-        size={24}
-        style={{color: 'white'}}
-      />
+      {personId !== undefined &&
+        <FontAwesomeIcon
+          icon={faPaperPlane}
+          size={24}
+          style={{color: 'white'}}
+        />
+      }
     </FloatingProfileInteractionButton>
   );
 };
@@ -484,6 +490,9 @@ const ProspectUserDetails = ({
   userLocation,
 }) => {
   const onPressDonutChart = useCallback(() => {
+    if (personId === undefined) return;
+    if (name === undefined) return;
+
     navigation.navigate('In-Depth', { personId, name });
   }, [personId, name]);
 
