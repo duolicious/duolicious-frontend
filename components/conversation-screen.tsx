@@ -63,16 +63,18 @@ const ConversationScreen = ({navigation, route}) => {
     sendMessage(userId, message.text);
   }, []);
 
+  const _fetchMessages = useCallback(async () => {
+    const messages = await fetchMessages(userId);
+    setMessages(existingMessages => [...existingMessages, ...messages])
+  }, []);
+
   useEffect(() => {
     // TODO: unbind on unmount
     onReceiveMessage(
       (msg) => setMessages(msgs => [...msgs, msg])
     );
 
-    fetchMessages(
-      userId,
-      (msgs1) => setMessages(msgs2 => [...msgs2, ...msgs1])
-    );
+    _fetchMessages();
   }, []);
 
   return (

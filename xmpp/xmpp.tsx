@@ -69,9 +69,9 @@ const login = (username: string, password: string, resource: string) => {
   });
 
 
-  // TODO
   xmpp.on("stanza", async (stanza) => {
-    console.log(stanza.toString());
+    // TODO
+    // console.log(stanza.toString());
   });
 
   xmpp.on("online", async () => {
@@ -97,18 +97,22 @@ const markDisplayed = async (message: Message) => {
 
 const sendMessage = async (recipientPersonId: number, message: string) => {
   const id = getRandomString(40);
+  const jid = `${recipientPersonId}@duolicious.app`;
 
   const messageXml = xml(
     "message",
-    { type: "chat", to: `${recipientPersonId}@duolicious.app`, id: id },
+    { type: "chat", to: jid, id: id },
     xml("body", {}, message),
   );
 
   await xmpp.send(messageXml);
+
+  // TODO: Reduce the number of times this is called
+  await moveToChats(jid);
 };
 
 // TODO: Filter by person ID
-const onReceiveMessage = (listener: (message: Message) => void) => {
+const onReceiveMessage = (callback: (message: Message) => void) => {
   if (!xmpp) return false;
 
   xmpp.on("stanza", async (stanza: Element) => {
@@ -139,24 +143,38 @@ const onReceiveMessage = (listener: (message: Message) => void) => {
       fromCurrentUser: from.toString().startsWith(`${signedInUser?.personId}@`),
     };
 
-    listener(message);
+    callback(message);
     markDisplayed(message);
   });
 
   return true;
 }
 
-const fetchMessages = async (
+const moveToChats = async (jid: string) => {
+  const queryId = getRandomString(10);
+
+  const queryStanza = parse(`
+    <iq id='${queryId}' type='set'>
+      <query xmlns='erlang-solutions.com:xmpp:inbox:0#conversation' jid='${jid}'>
+        <box>chats</box>
+      </query>
+    </iq>
+  `);
+
+  return await xmpp.send(queryStanza);
+};
+
+const _fetchMessages = async (
   withPersonId: number,
-  callback: (messages: Message[]) => void,
+  callback: (messages: Message[] | undefined) => void,
 ) => {
-  if (!xmpp) return false;
+  if (!xmpp) return callback(undefined);
 
   const queryId = getRandomString(10);
 
   const queryStanza = parse(`
     <iq type='set' id='${queryId}'>
-      <query xmlns='urn:xmpp:mam:2'  queryid='${queryId}'>
+      <query xmlns='urn:xmpp:mam:2' queryid='${queryId}'>
         <x xmlns='jabber:x:data' type='submit'>
           <field var='FORM_TYPE'>
             <value>urn:xmpp:mam:2</value>
@@ -239,19 +257,34 @@ const fetchMessages = async (
   await xmpp.send(queryStanza);
 };
 
+const fetchMessages = async (
+  withPersonId: number
+): Promise<Message[] | undefined> => {
+  return new Promise((resolve) => _fetchMessages(withPersonId, resolve));
+};
+
 // TODO:
-const fetchInbox = async (callback: (inbox: Inbox) => void) => {
-  if (!xmpp) return false;
+const _fetchBox = async (
+  box: string,
+  callback: (conversations: Conversations | undefined) => void,
+) => {
+  if (!xmpp) {
+    return callback(undefined);
+  }
 
   const queryId = getRandomString(10);
 
   const queryStanza = parse(`
     <iq type='set' id='${queryId}'>
-      <inbox xmlns='erlang-solutions.com:xmpp:inbox:0' queryid='${queryId}'/>
+      <inbox xmlns='erlang-solutions.com:xmpp:inbox:0' queryid='${queryId}'>
+        <x xmlns='jabber:x:data' type='form'>
+          <field type='text-single' var='box'><value>${box}</value></field>
+        </x>
+      </inbox>
     </iq>
   `);
 
-  const conversations: Conversation[] = [];
+  const conversationList: Conversation[] = [];
 
   const maybeCollect = (stanza: Element) => {
     const doc = new DOMParser().parseFromString(stanza.toString(), 'text/xml');
@@ -268,6 +301,7 @@ const fetchInbox = async (callback: (inbox: Inbox) => void) => {
     if (!xpath.isNodeLike(node)) return;
 
     const from = xpath.select1(`string(./parent::*/@from)`, node);
+    const to = xpath.select1(`string(./parent::*/@to)`, node);
     const bodyText = xpath.select1(`string(./text())`, node);
     const numUnread = xpath.select1(`string(.//ancestor::*/@unread)`, node);
     const timestamp = xpath.select1(`string(//*/@stamp)`, node);
@@ -277,8 +311,12 @@ const fetchInbox = async (callback: (inbox: Inbox) => void) => {
     if (numUnread === null) return;
     if (timestamp === null) return;
 
+    const fromCurrentUser = from.toString().startsWith(
+      `${signedInUser?.personId}@`);
+
     // Some of these need to be fetched from via the API
-    const personId = parseInt(from.toString().split('@')[0]);
+    const personId = parseInt(
+      (fromCurrentUser ? to : from).toString().split('@')[0]);
     const name = '';
     const matchPercentage = 0;
     const imageUuid = '';
@@ -296,7 +334,7 @@ const fetchInbox = async (callback: (inbox: Inbox) => void) => {
       lastMessageTimestamp,
     };
 
-    conversations.push(conversation);
+    conversationList.push(conversation);
   };
 
   const maybeFin = (stanza: Element) => {
@@ -310,31 +348,15 @@ const fetchInbox = async (callback: (inbox: Inbox) => void) => {
 
     if (!xpath.isNodeLike(node)) return;
 
-    const chatsConversationList: Conversation[] = conversations;
-    const numUnreadChats = conversations.reduce((acc, conversation) =>
-      acc + (conversation.lastMessageRead ? 0 : 1),
-      0
-    );
-
-    // TODO: Separate intros from regular conversations
-    const introsConversationList: Conversation[] = [];
-    const numUnreadIntros = 0;
-
-    const chatsConversations: Conversations = {
-      conversations: chatsConversationList,
-      numUnread: numUnreadChats,
+    const conversations: Conversations = {
+      conversations: conversationList,
+      numUnread: conversationList.reduce(
+        (acc, conversation) => acc + (conversation.lastMessageRead ? 0 : 1),
+        0
+      ),
     };
 
-    const introsConversations: Conversations = {
-      conversations: introsConversationList,
-      numUnread: numUnreadIntros,
-    };
-
-    // TODO: Fetch missing data from server
-    callback({
-      chats: chatsConversations,
-      intros: introsConversations,
-    });
+    callback(conversations);
 
     xmpp.removeListener("stanza", maybeCollect);
     xmpp.removeListener("stanza", maybeFin);
@@ -344,6 +366,17 @@ const fetchInbox = async (callback: (inbox: Inbox) => void) => {
   xmpp.addListener("stanza", maybeFin);
 
   await xmpp.send(queryStanza);
+};
+
+const fetchBox = async (box: string): Promise<Conversations | undefined> => {
+  return new Promise((resolve) => _fetchBox(box, resolve));
+};
+
+const fetchInbox = async (): Promise<Inbox> => {
+  return {
+    chats: await fetchBox('chats'),
+    intros: await fetchBox('inbox'),
+  };
 };
 
 const logout = async () => {

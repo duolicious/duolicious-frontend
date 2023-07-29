@@ -101,7 +101,7 @@ const InboxTab_ = ({navigation}) => {
 
   useEffect(() => {
     // TODO
-    fetchInbox(console.log);
+    (async () => console.log(await fetchInbox()))();
   }, []);
 
   return (
