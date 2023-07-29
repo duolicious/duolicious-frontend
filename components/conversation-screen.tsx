@@ -30,8 +30,6 @@ import {
   IMAGES_URL,
 } from '../env/env';
 
-// TODO: Need to load list of people you've messaged
-// TODO: Implement a way to differentiate message requests from established conversations
 // TODO: Check if it scrolls to the bottom on mobile devices after the messages first load, and after you send a message
 // TODO: Re-add the ability to load old messages past the first page
 // TODO: "This is the start of you your chat history with X"
@@ -70,12 +68,9 @@ const ConversationScreen = ({navigation, route}) => {
   }, []);
 
   useEffect(() => {
-    // TODO: unbind on unmount
-    onReceiveMessage(
-      (msg) => setMessages(msgs => [...msgs, msg])
-    );
-
     _fetchMessages();
+
+    return onReceiveMessage((msg) => setMessages(msgs => [...msgs, msg]));
   }, []);
 
   return (

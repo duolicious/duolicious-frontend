@@ -22,11 +22,38 @@ import { OptionScreen } from './option-screen';
 import { hideMeFromStrangersOptionGroup } from '../data/option-groups';
 import { DefaultFlatList } from './default-flat-list';
 import { Inbox, Conversation, observeInbox } from '../xmpp/xmpp';
+import { api } from '../api/api';
 
 // TODO: When you open an intro in the UI then navigate back to the inbox, the inbox should update, showing that the message has been read
 // TODO: Sort intros by match percentage
+// TODO: Blocking people should remove them from the inbox
 
 const Stack = createNativeStackNavigator();
+
+const populateConversationList = async (
+  conversationList: Conversation[]
+): Promise<Conversation[]> => {
+  const personIds: number[] = conversationList.map(c => c.personId);
+
+  const query = personIds.map(id => `prospect-person-id=${id}`).join('&');
+  // TODO: Better error handling
+  const response = conversationList.length === 0 ?
+    [] :
+    (await api('get', `/inbox-info?${query}`)).json;
+
+  const personIdToInfo = response.reduce((obj, item) => {
+    obj[item.person_id] = item;
+    return obj;
+  }, {});
+
+  return conversationList.map((c: Conversation) => ({
+    ...c,
+    personId: personIdToInfo[c.personId].person_id,
+    name: personIdToInfo[c.personId].name,
+    matchPercentage: personIdToInfo[c.personId].match_percentage,
+    imageUuid: personIdToInfo[c.personId].image_uuid,
+  }));
+}
 
 const InboxItemMemo = memo(InboxItem);
 
@@ -99,7 +126,6 @@ const InboxTab_ = ({navigation}) => {
   ) => async (
     n: number
   ): Promise<Conversation[]> => {
-    // TODO: Handle cases where inbox is undefined or empty
     // TODO: Handle case where inbox is updated
     if (inbox === undefined) {
       return [];
@@ -113,7 +139,8 @@ const InboxTab_ = ({navigation}) => {
       pageSize * n
     );
 
-    return page
+
+    return await populateConversationList(page);
   };
 
   const fetchChatsPage  = fetchInboxPage('chats');

@@ -29,11 +29,11 @@ type Message = {
 type Conversation = {
   personId: number
   name: string
-  matchPercentage: number,
-  imageUuid: string | null,
+  matchPercentage: number
+  imageUuid: string | null
   lastMessage: string
   lastMessageRead: boolean
-  lastMessageTimestamp: Date,
+  lastMessageTimestamp: Date
 };
 
 type Conversations = {
@@ -136,10 +136,13 @@ const sendMessage = async (recipientPersonId: number, message: string) => {
 };
 
 // TODO: Filter by person ID
-const onReceiveMessage = (callback: (message: Message) => void) => {
-  if (!_xmpp) return false;
+const onReceiveMessage = (
+  callback: (message: Message) => void
+): (() => void) | undefined => {
+  if (!_xmpp)
+    return undefined;
 
-  _xmpp.on("stanza", async (stanza: Element) => {
+  const _onReceiveMessage = async (stanza: Element) => {
     const doc = new DOMParser().parseFromString(stanza.toString(), 'text/xml');
 
     const node = xpath.select1(
@@ -169,9 +172,10 @@ const onReceiveMessage = (callback: (message: Message) => void) => {
 
     callback(message);
     markDisplayed(message);
-  });
+  };
 
-  return true;
+  _xmpp.addListener("stanza", _onReceiveMessage);
+  return () => _xmpp.removeListener("stanza", _onReceiveMessage);
 }
 
 const moveToChats = async (jid: string) => {
