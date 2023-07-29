@@ -11,9 +11,12 @@ import xpath from 'xpath';
 import { signedInUser } from '../App';
 import { getRandomString } from '../random/string';
 
+import { deviceId } from '../kv-storage/device-id';
+
 // TODO: It seems like, if client has never been online before, they can't receive messages
 // TODO: Add loading indicator
 // TODO: Update unread message indicator in tab bar
+// TODO: Catch more exceptions. If a network request fails, that shouldn't crash the app.
 
 type Message = {
   text: string
@@ -41,9 +44,29 @@ type Conversations = {
 type Inbox = {
   chats: Conversations
   intros: Conversations
+  numUnread: number
 };
 
-let xmpp: Client | undefined;
+let _xmpp: Client | undefined;
+
+let _inbox: Inbox | undefined;
+const _inboxObservers: Set<(inbox: Inbox | undefined) => void> = new Set();
+
+const observeInbox = (callback: (inbox: Inbox | undefined) => void): void => {
+  if (_inboxObservers.has(callback))
+    return;
+
+  _inboxObservers.add(callback);
+
+  if (_inbox !== undefined)
+    callback(_inbox);
+};
+
+const setInbox = (inbox: Inbox | undefined): void => {
+  _inbox = inbox;
+  console.log('New inbox', inbox); // TODO
+  _inboxObservers.forEach((observer) => observer(inbox));
+};
 
 const select1 = (query: string, stanza: Element): xpath.SelectedValue => {
   const stanzaString = stanza.toString();
@@ -51,39 +74,40 @@ const select1 = (query: string, stanza: Element): xpath.SelectedValue => {
   return xpath.select1(query, doc);
 };
 
-const login = (username: string, password: string, resource: string) => {
-  xmpp = client({
+const login = async (username: string, password: string) => {
+  _xmpp = client({
     service: CHAT_URL,
     domain: "duolicious.app",
     username: username,
     password: password,
-    resource: resource,
+    resource: await deviceId(),
   });
 
-  xmpp.on("error", (err) => {
+  _xmpp.on("error", (err) => {
     console.error(err);
   });
 
-  xmpp.on("offline", () => {
+  _xmpp.on("offline", () => {
     console.log("offline");
   });
 
 
-  xmpp.on("stanza", async (stanza) => {
+  _xmpp.on("stanza", async (stanza) => {
     // TODO
     // console.log(stanza.toString());
   });
 
-  xmpp.on("online", async () => {
-    await xmpp.send(xml("presence", { type: "available" }));
+  _xmpp.on("online", async () => {
+    await _xmpp.send(xml("presence", { type: "available" }));
     console.log("online");
   });
 
-  xmpp.start().catch(console.error);
+  await _xmpp.start().catch(console.error);
+  await refreshInbox();
 }
 
 const markDisplayed = async (message: Message) => {
-  if (!xmpp) return;
+  if (!_xmpp) return;
   if (message.fromCurrentUser) return;
 
   const stanza = parse(`
@@ -92,7 +116,7 @@ const markDisplayed = async (message: Message) => {
     </message>
   `);
 
-  await xmpp.send(stanza);
+  await _xmpp.send(stanza);
 };
 
 const sendMessage = async (recipientPersonId: number, message: string) => {
@@ -105,7 +129,7 @@ const sendMessage = async (recipientPersonId: number, message: string) => {
     xml("body", {}, message),
   );
 
-  await xmpp.send(messageXml);
+  await _xmpp.send(messageXml);
 
   // TODO: Reduce the number of times this is called
   await moveToChats(jid);
@@ -113,9 +137,9 @@ const sendMessage = async (recipientPersonId: number, message: string) => {
 
 // TODO: Filter by person ID
 const onReceiveMessage = (callback: (message: Message) => void) => {
-  if (!xmpp) return false;
+  if (!_xmpp) return false;
 
-  xmpp.on("stanza", async (stanza: Element) => {
+  _xmpp.on("stanza", async (stanza: Element) => {
     const doc = new DOMParser().parseFromString(stanza.toString(), 'text/xml');
 
     const node = xpath.select1(
@@ -161,14 +185,14 @@ const moveToChats = async (jid: string) => {
     </iq>
   `);
 
-  return await xmpp.send(queryStanza);
+  return await _xmpp.send(queryStanza);
 };
 
 const _fetchMessages = async (
   withPersonId: number,
   callback: (messages: Message[] | undefined) => void,
 ) => {
-  if (!xmpp) return callback(undefined);
+  if (!_xmpp) return callback(undefined);
 
   const queryId = getRandomString(10);
 
@@ -247,14 +271,14 @@ const _fetchMessages = async (
       markDisplayed(lastMessage);
     }
 
-    xmpp.removeListener("stanza", maybeCollect);
-    xmpp.removeListener("stanza", maybeFin);
+    _xmpp.removeListener("stanza", maybeCollect);
+    _xmpp.removeListener("stanza", maybeFin);
   };
 
-  xmpp.addListener("stanza", maybeCollect);
-  xmpp.addListener("stanza", maybeFin);
+  _xmpp.addListener("stanza", maybeCollect);
+  _xmpp.addListener("stanza", maybeFin);
 
-  await xmpp.send(queryStanza);
+  await _xmpp.send(queryStanza);
 };
 
 const fetchMessages = async (
@@ -268,7 +292,7 @@ const _fetchBox = async (
   box: string,
   callback: (conversations: Conversations | undefined) => void,
 ) => {
-  if (!xmpp) {
+  if (!_xmpp) {
     return callback(undefined);
   }
 
@@ -358,40 +382,51 @@ const _fetchBox = async (
 
     callback(conversations);
 
-    xmpp.removeListener("stanza", maybeCollect);
-    xmpp.removeListener("stanza", maybeFin);
+    _xmpp.removeListener("stanza", maybeCollect);
+    _xmpp.removeListener("stanza", maybeFin);
   };
 
-  xmpp.addListener("stanza", maybeCollect);
-  xmpp.addListener("stanza", maybeFin);
+  _xmpp.addListener("stanza", maybeCollect);
+  _xmpp.addListener("stanza", maybeFin);
 
-  await xmpp.send(queryStanza);
+  await _xmpp.send(queryStanza);
 };
 
 const fetchBox = async (box: string): Promise<Conversations | undefined> => {
   return new Promise((resolve) => _fetchBox(box, resolve));
 };
 
-const fetchInbox = async (): Promise<Inbox> => {
-  return {
-    chats: await fetchBox('chats'),
-    intros: await fetchBox('inbox'),
+const refreshInbox = async (): Promise<void> => {
+  const chats = await fetchBox('chats');
+  const intros = await fetchBox('inbox');
+  const numUnread = chats.numUnread + intros.numUnread;
+
+  const inbox: Inbox = {
+    chats,
+    intros,
+    numUnread,
   };
+
+  setInbox(inbox);
 };
 
 const logout = async () => {
-  if (xmpp) {
-    await xmpp.send(xml("presence", { type: "unavailable" }));
-    xmpp.stop().catch(console.error);
+  if (_xmpp) {
+    await _xmpp.send(xml("presence", { type: "unavailable" }));
+    await _xmpp.stop().catch(console.error);
+    setInbox(undefined);
   }
 };
 
 export {
+  Conversation,
+  Conversations,
+  Inbox,
   Message,
+  fetchMessages,
   login,
   logout,
+  observeInbox,
   onReceiveMessage,
-  fetchMessages,
   sendMessage,
-  fetchInbox,
 };

@@ -33,7 +33,6 @@ import { ConversationScreen } from './components/conversation-screen';
 import { GalleryScreen, ProspectProfileScreen } from './components/prospect-profile-screen';
 import { WelcomeScreen } from './components/welcome-screen';
 import { sessionToken } from './kv-storage/session-token';
-import { deviceId } from './kv-storage/device-id';
 import { japi } from './api/api';
 import { login, logout } from './xmpp/xmpp';
 
@@ -210,11 +209,7 @@ const App = () => {
   useEffect(() => {
     (async () => {
       if (signedInUser?.personId && signedInUser?.sessionToken) {
-        login(
-          String(signedInUser.personId),
-          signedInUser.sessionToken,
-          await deviceId(),
-        );
+        login(String(signedInUser.personId), signedInUser.sessionToken);
       } else {
         logout();
       }
