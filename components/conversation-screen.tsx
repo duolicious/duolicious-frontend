@@ -160,7 +160,7 @@ const ConversationScreen = ({navigation, route}) => {
           </ImageBackground>
           <Text
             style={{
-              marginTop: 10,
+              marginTop: 20,
               marginBottom: 10,
               fontFamily: 'Trueno',
               textAlign: 'center',

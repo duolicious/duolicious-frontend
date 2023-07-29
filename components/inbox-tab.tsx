@@ -26,7 +26,8 @@ import { api } from '../api/api';
 
 // TODO: When you open an intro in the UI then navigate back to the inbox, the inbox should update, showing that the message has been read
 // TODO: Sort intros by match percentage
-// TODO: Blocking people should remove them from the inbox
+// TODO: Blocking people should remove them from the each others' inbox
+// TODO: r9k
 
 const Stack = createNativeStackNavigator();
 
