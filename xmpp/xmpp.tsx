@@ -30,7 +30,7 @@ type Conversation = {
   personId: number
   name: string
   matchPercentage: number,
-  imageUuid: string,
+  imageUuid: string | null,
   lastMessage: string
   lastMessageRead: boolean
   lastMessageTimestamp: Date,
@@ -343,7 +343,7 @@ const _fetchBox = async (
       (fromCurrentUser ? to : from).toString().split('@')[0]);
     const name = '';
     const matchPercentage = 0;
-    const imageUuid = '';
+    const imageUuid = null;
     const lastMessage = bodyText.toString();
     const lastMessageRead = numUnread.toString() === '0';
     const lastMessageTimestamp = new Date(timestamp.toString());

@@ -30,11 +30,12 @@ import {
   IMAGES_URL,
 } from '../env/env';
 
-// TODO: Inbox notification indicator needs to light up when you get a message
 // TODO: Need to load list of people you've messaged
 // TODO: Implement a way to differentiate message requests from established conversations
 // TODO: Check if it scrolls to the bottom on mobile devices after the messages first load, and after you send a message
 // TODO: Re-add the ability to load old messages past the first page
+// TODO: "This is the start of you your chat history with X"
+// TODO: Loading indicator
 
 const ConversationScreen = ({navigation, route}) => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -142,26 +143,6 @@ const ConversationScreen = ({navigation, route}) => {
           </SpeechBubble>
         )}
       </ScrollView>
-
-      {/*
-      <DefaultFlatList
-        innerRef={listRef}
-        emptyText={`This is the start of your conversation with ${name}.`}
-        fetchPage={fetchPage}
-        renderItem={(x: ListRenderItemInfo<Message>) =>
-          <SpeechBubble
-            fromCurrentUser={x.item.fromCurrentUser}
-            state={x.item.state}
-          >
-            {x.item.text}
-          </SpeechBubble>
-        }
-        disableRefresh={true}
-        inverted={true}
-        firstPage={10}
-      />
-      <DefaultFlatList
-      */}
       <TextInputWithButton onPress={onPressSend}/>
     </>
   );

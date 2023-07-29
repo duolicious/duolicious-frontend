@@ -27,6 +27,7 @@
     "@types/xmldom": "^0.1.31",
     "@types/xmpp__client": "^0.13.0",
     "@xmpp/client": "^0.13.1",
+    "date-fns": "^2.30.0",
     "expo": "~47.0.9",
     "expo-checkbox": "~2.2.2",
     "expo-clipboard": "~4.0.1",

@@ -1,4 +1,6 @@
 import {
+  ListRenderItemInfo,
+  ActivityIndicator,
   Animated,
   Pressable,
   StyleSheet,
@@ -19,6 +21,7 @@ import { Notice } from './notice';
 import { OptionScreen } from './option-screen';
 import { hideMeFromStrangersOptionGroup } from '../data/option-groups';
 import { DefaultFlatList } from './default-flat-list';
+import { Inbox, Conversation, observeInbox } from '../xmpp/xmpp';
 
 const Stack = createNativeStackNavigator();
 
@@ -39,9 +42,12 @@ const InboxTab = ({navigation}) => {
 };
 
 const InboxTab_ = ({navigation}) => {
-  const [typeIndex, setTypeIndex] = useState(0);
+  const [sectionIndex, setSectionIndex] = useState(0);
   const [sortByIndex, setSortByIndex] = useState(0);
   const [isTooManyTapped, setIsTooManyTapped] = useState(false);
+  const [inbox, setInbox] = useState<Inbox | undefined>(undefined);
+
+  observeInbox(setInbox);
 
   const buttonOpacity = useRef(new Animated.Value(0)).current;
 
@@ -61,8 +67,8 @@ const InboxTab_ = ({navigation}) => {
     }).start();
   }, []);
 
-  const setTypeIndex_ = useCallback((value) => {
-    setTypeIndex(value);
+  const setSectionIndex_ = useCallback((value) => {
+    setSectionIndex(value);
 
     if (value === 1) {
       fadeIn();
@@ -85,15 +91,40 @@ const InboxTab_ = ({navigation}) => {
     setIsTooManyTapped(true);
   }, []);
 
-  const onPressInboxItem = useCallback(
-    () => navigation.navigate('Conversation Screen'),
-    []
-  );
+  const fetchInboxPage = (
+    sectionName: 'chats' | 'intros'
+  ) => async (
+    n: number
+  ): Promise<Conversation[]> => {
+    // TODO: Handle cases where inbox is undefined or empty
+    // TODO: Handle case where inbox is updated
+    if (inbox === undefined) {
+      return [];
+    }
 
-  const renderItem = useCallback((x) => (
+    const section = sectionName === 'chats' ? inbox.chats : inbox.intros;
+
+    const pageSize = 10;
+    const page = section.conversations.slice(
+      pageSize * (n - 1),
+      pageSize * n
+    );
+
+    return page
+  };
+
+  const fetchChatsPage  = fetchInboxPage('chats');
+  const fetchIntrosPage = fetchInboxPage('intros');
+
+  const renderItem = useCallback((x: ListRenderItemInfo<Conversation>) => (
     <InboxItemMemo
-      onPress={onPressInboxItem}
-      unread={x.index < 2}
+      wasRead={x.item.lastMessageRead}
+      name={x.item.name}
+      userId={x.item.personId}
+      imageUuid={x.item.imageUuid}
+      matchPercentage={x.item.matchPercentage}
+      lastMessage={x.item.lastMessage}
+      lastMessageTimestamp={x.item.lastMessageTimestamp}
     />
   ), []);
 
@@ -109,58 +140,72 @@ const InboxTab_ = ({navigation}) => {
           Inbox
         </DefaultText>
       </TopNavBar>
-      <DefaultFlatList
-        emptyText="You haven't received any messages yet"
-        endText="No more messages to show"
-        fetchPage={async (): Promise<any[]> => await Array(1)}
-        ListHeaderComponent={
-          <>
-            <ButtonGroup
-              buttons={['Chats\n(2)', 'Intros\n(2)']}
-              selectedIndex={typeIndex}
-              onPress={setTypeIndex_}
-              containerStyle={{
-                marginTop: 5,
-                marginLeft: 20,
-                marginRight: 20,
-              }}
-            />
-            <Animated.View
-              style={{
-                opacity: buttonOpacity,
-              }}
-              pointerEvents={typeIndex === 1 ? 'auto' : 'none'}
-            >
+      {inbox === undefined &&
+        <View style={{height: '100%', justifyContent: 'center', alignItems: 'center'}}>
+          <ActivityIndicator size="large" color="#70f" />
+        </View>
+      }
+      {inbox !== undefined &&
+        <DefaultFlatList
+          emptyText={
+            sectionIndex === 0 ?
+            "No chats to show" :
+            "No intros to show"}
+          endText="No more messages to show"
+          fetchPage={sectionIndex === 0 ? fetchChatsPage : fetchIntrosPage}
+          dataKey={String(sectionIndex)}
+          ListHeaderComponent={
+            <>
               <ButtonGroup
-                buttons={['Latest First', 'Best Matches First']}
-                selectedIndex={sortByIndex}
-                onPress={setSortByIndex_}
-                secondary={true}
+                buttons={[
+                  'Chats'  + (inbox?.chats?.numUnread  ? ` (${inbox.chats.numUnread})`  : ''),
+                  'Intros' + (inbox?.intros?.numUnread ? ` (${inbox.intros.numUnread})` : '')
+                ]}
+                selectedIndex={sectionIndex}
+                onPress={setSectionIndex_}
                 containerStyle={{
-                  flexGrow: 1,
+                  marginTop: 5,
                   marginLeft: 20,
                   marginRight: 20,
                 }}
               />
-            </Animated.View>
-            {!isTooManyTapped &&
-              <Notice
-                onPress={onPressTooMany}
+              <Animated.View
                 style={{
-                  marginBottom: 5,
+                  opacity: buttonOpacity,
                 }}
+                pointerEvents={sectionIndex === 1 ? 'auto' : 'none'}
               >
-                <DefaultText style={{color: '#70f', textAlign: 'center'}} >
-                  Getting too many intros? You can keep your profile hidden and
-                  make the first move instead 🕵️. Press here to change your privacy
-                  settings.
-                </DefaultText>
-              </Notice>
-            }
-          </>
-        }
-        renderItem={renderItem}
-      />
+                <ButtonGroup
+                  buttons={['Latest First', 'Best Matches First']}
+                  selectedIndex={sortByIndex}
+                  onPress={setSortByIndex_}
+                  secondary={true}
+                  containerStyle={{
+                    flexGrow: 1,
+                    marginLeft: 20,
+                    marginRight: 20,
+                  }}
+                />
+              </Animated.View>
+              {!isTooManyTapped &&
+                <Notice
+                  onPress={onPressTooMany}
+                  style={{
+                    marginBottom: 5,
+                  }}
+                >
+                  <DefaultText style={{color: '#70f', textAlign: 'center'}} >
+                    Getting too many intros? You can keep your profile hidden and
+                    make the first move instead 🕵️. Press here to change your privacy
+                    settings.
+                  </DefaultText>
+                </Notice>
+              }
+            </>
+          }
+          renderItem={renderItem}
+        />
+      }
     </>
   );
 };
