@@ -18,6 +18,7 @@ import { deleteFromArray } from '../util/util';
 // TODO: Catch more exceptions. If a network request fails, that shouldn't crash the app.
 // TODO: Update inbox when:  message send, message read, message received, intro replied to
 // TODO: Update match percentages when user answers some questions
+// TODO: When someone opens two windows, display a warning
 
 type Message = {
   text: string
@@ -119,6 +120,102 @@ const jidToPersonId = (jid: string): number =>
 const personIdToJid = (personId: number): string =>
   `${personId}@duolicious.app`;
 
+const setInboxSent = (recipientPersonId: number, message: string) => {
+  setInbox(async (inbox) => {
+    if (!inbox) return inbox;
+
+    const chatsConversation =
+      inbox.chats.conversationsMap[recipientPersonId] as Conversation | undefined;
+    const introsConversation =
+      inbox.intros.conversationsMap[recipientPersonId] as Conversation | undefined;
+
+    inbox.chats.numUnread  -= (
+      chatsConversation ?.lastMessageRead ?? true) ? 0 : 1;
+    inbox.intros.numUnread -= (
+      introsConversation?.lastMessageRead ?? true) ? 0 : 1;
+
+    inbox.numUnread = (
+      inbox.chats.numUnread +
+      inbox.intros.numUnread);
+
+    const updatedConversation: Conversation = {
+      personId: recipientPersonId,
+      name: '',
+      matchPercentage: 0,
+      imageUuid: null,
+      ...chatsConversation,
+      ...introsConversation,
+      lastMessage: message,
+      lastMessageRead: true,
+      lastMessageTimestamp: new Date(),
+    };
+
+    // It's a new conversation!
+    if (!chatsConversation && !introsConversation) {
+      await populateConversation(updatedConversation);
+    }
+
+    // Add it to chats if it wasn't already there
+    if (!chatsConversation) {
+      // Add conversation into chats
+      inbox.chats.conversations.push(updatedConversation);
+      inbox.chats.conversationsMap[recipientPersonId] = updatedConversation;
+
+      // Remove conversation from intros
+      deleteFromArray(inbox.intros.conversations, introsConversation);
+      delete inbox.intros.conversationsMap[recipientPersonId];
+    }
+    // Update existing chat otherwise
+    else {
+      Object.assign(chatsConversation, updatedConversation);
+    }
+
+    // We could've returned `inbox` instead of a shallow copy. But then it
+    // wouldn't trigger re-renders when passed to a useState setter.
+    return {...inbox};
+  });
+};
+
+const setInboxOpened = (recipientPersonId: number) => {
+  setInbox((inbox: Inbox) => {
+    if (!inbox) return inbox;
+
+    const chatsConversation =
+      inbox.chats.conversationsMap[recipientPersonId] as Conversation | undefined;
+    const introsConversation =
+      inbox.intros.conversationsMap[recipientPersonId] as Conversation | undefined;
+
+    // It's a new conversation!
+    if (!chatsConversation && !introsConversation) {
+      return inbox;
+    }
+
+    inbox.chats.numUnread  -= (
+      chatsConversation ?.lastMessageRead ?? true) ? 0 : 1;
+    inbox.intros.numUnread -= (
+      introsConversation?.lastMessageRead ?? true) ? 0 : 1;
+
+    inbox.numUnread = (
+      inbox.chats.numUnread +
+      inbox.intros.numUnread);
+
+    const updatedConversation = {
+      ...chatsConversation,
+      ...introsConversation,
+      lastMessageRead: true,
+    } as Conversation;
+
+    if (chatsConversation)
+      Object.assign(chatsConversation, updatedConversation);
+    if (introsConversation)
+      Object.assign(introsConversation, updatedConversation);
+
+    // We could've returned `inbox` instead of a shallow copy. But then it
+    // wouldn't trigger re-renders when passed to a useState setter.
+    return {...inbox};
+  });
+};
+
 const select1 = (query: string, stanza: Element): xpath.SelectedValue => {
   const stanzaString = stanza.toString();
   const doc = new DOMParser().parseFromString(stanzaString, 'text/xml');
@@ -190,62 +287,7 @@ const sendMessage = async (recipientPersonId: number, message: string) => {
     // // TODO: Reduce the number of times this is called
     // await moveToChats(jid);
 
-    setInbox(async (inbox) => {
-      if (!inbox) return inbox;
-
-      const chatsConversation =
-        inbox.chats.conversationsMap[recipientPersonId] as Conversation | undefined;
-      const introsConversation =
-        inbox.intros.conversationsMap[recipientPersonId] as Conversation | undefined;
-
-      const updatedConversation: Conversation = {
-        personId: recipientPersonId,
-        name: '',
-        matchPercentage: 0,
-        imageUuid: null,
-        ...chatsConversation,
-        ...introsConversation,
-        lastMessage: message,
-        lastMessageRead: true,
-        lastMessageTimestamp: new Date(),
-      };
-
-      // It's a new conversation!
-      if (!chatsConversation && !introsConversation) {
-        await populateConversation(updatedConversation);
-      }
-
-      // Add it to chats if it wasn't already there
-      if (!chatsConversation) {
-        // Add conversation into chats
-        inbox.chats.conversations.push(updatedConversation);
-        inbox.chats.conversationsMap[recipientPersonId] = updatedConversation;
-
-        // Remove conversation from intros
-        deleteFromArray(inbox.intros.conversations, introsConversation);
-        delete inbox.intros.conversationsMap[recipientPersonId];
-      }
-      // Update existing chat otherwise
-      else {
-        Object.assign(
-          inbox.chats.conversationsMap[recipientPersonId],
-          updatedConversation,
-        );
-      }
-
-      inbox.chats.numUnread  -= (
-        chatsConversation ?.lastMessageRead ?? true) ? 0 : 1;
-      inbox.intros.numUnread -= (
-        introsConversation?.lastMessageRead ?? true) ? 0 : 1;
-
-      inbox.numUnread = (
-        inbox.chats.numUnread +
-        inbox.intros.numUnread);
-
-      // We could've returned `inbox` instead of a shallow copy. But then it
-      // wouldn't trigger re-renders when passed to a useState setter.
-      return {...inbox};
-    });
+    setInboxSent(recipientPersonId, message);
   }
 };
 
@@ -561,4 +603,5 @@ export {
   onReceiveMessage,
   sendMessage,
   setInbox,
+  setInboxOpened,
 };
