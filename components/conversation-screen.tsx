@@ -73,10 +73,6 @@ const ConversationScreen = ({navigation, route}) => {
   }, []);
 
   useEffect(() => {
-    setInbox((inbox: Inbox) => {
-      return inbox;
-    });
-
     _fetchMessages();
 
     return onReceiveMessage(

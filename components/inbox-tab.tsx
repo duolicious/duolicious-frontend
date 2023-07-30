@@ -62,7 +62,7 @@ const InboxTab_ = ({navigation}) => {
       toValue: 0.0,
       duration: 500,
       useNativeDriver: false,
-    }).start(() => console.log('finished fading out'));
+    }).start();
   }, []);
 
   const fadeIn = useCallback(() => {
@@ -70,7 +70,7 @@ const InboxTab_ = ({navigation}) => {
       toValue: 1.0,
       duration: 500,
       useNativeDriver: false,
-    }).start(() => console.log('finished fading in'));
+    }).start();
   }, []);
 
   const setSectionIndex_ = useCallback((value) => setSectionIndex(value), []);
@@ -88,6 +88,7 @@ const InboxTab_ = ({navigation}) => {
 
   useEffect(() => void listRef.current.refresh(), [sectionIndex]);
   useEffect(() => void listRef.current.refresh(), [sortByIndex]);
+  useEffect(() => void listRef.current.refresh(), [inbox]);
 
   const fetchInboxPage = (
     sectionName: 'chats' | 'intros'

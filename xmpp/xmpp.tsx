@@ -13,9 +13,11 @@ import { getRandomString } from '../random/string';
 
 import { deviceId } from '../kv-storage/device-id';
 import { api } from '../api/api';
+import { deleteFromArray } from '../util/util';
 
 // TODO: Catch more exceptions. If a network request fails, that shouldn't crash the app.
-// TODO: Update inbox when: message received, message read, intro replied to
+// TODO: Update inbox when: message received, message read, message send, intro replied to
+// TODO: Update match percentages when user answers some questions
 
 type Message = {
   text: string
@@ -64,10 +66,10 @@ const observeInbox = (callback: (inbox: Inbox | undefined) => void): void => {
     callback(_inbox);
 };
 
-const setInbox = (
-  setter: (inbox: Inbox | undefined) => Inbox | undefined
-): void => {
-  _inbox = setter(_inbox);
+const setInbox = async (
+  setter: (inbox: Inbox | undefined) => Promise<Inbox | undefined> | Inbox | undefined
+): Promise<void> => {
+  _inbox = await setter(_inbox);
   console.log('New inbox', _inbox); // TODO
   _inboxObservers.forEach((observer) => observer(_inbox));
 };
@@ -105,6 +107,17 @@ const populateConversationList = async (
     c.imageUuid = personIdToInfo[c.personId].image_uuid;
   });
 };
+
+const populateConversation = async (
+  conversation: Conversation
+): Promise<void> => {
+  await populateConversationList([conversation]);
+};
+
+const jidToPersonId = (jid: string): number =>
+  parseInt(jid.split('@')[0]);
+const personIdToJid = (personId: number): string =>
+  `${personId}@duolicious.app`;
 
 const select1 = (query: string, stanza: Element): xpath.SelectedValue => {
   const stanzaString = stanza.toString();
@@ -156,12 +169,13 @@ const markDisplayed = async (message: Message) => {
     </message>
   `);
 
-  await _xmpp.send(stanza);
+  return; // TODO
+  // await _xmpp.send(stanza);
 };
 
 const sendMessage = async (recipientPersonId: number, message: string) => {
   const id = getRandomString(40);
-  const jid = `${recipientPersonId}@duolicious.app`;
+  const jid = personIdToJid(recipientPersonId);
 
   const messageXml = xml(
     "message",
@@ -170,9 +184,68 @@ const sendMessage = async (recipientPersonId: number, message: string) => {
   );
 
   if (_xmpp) {
-    await _xmpp.send(messageXml);
-    // TODO: Reduce the number of times this is called
-    await moveToChats(jid);
+    // TODO
+    // await _xmpp.send(messageXml);
+
+    // // TODO: Reduce the number of times this is called
+    // await moveToChats(jid);
+
+    setInbox(async (inbox) => {
+      if (!inbox) return inbox;
+
+      const chatsConversation =
+        inbox.chats.conversationsMap[recipientPersonId] as Conversation | undefined;
+      const introsConversation =
+        inbox.intros.conversationsMap[recipientPersonId] as Conversation | undefined;
+
+      const updatedConversation: Conversation = {
+        personId: recipientPersonId,
+        name: '',
+        matchPercentage: 0,
+        imageUuid: null,
+        ...chatsConversation,
+        ...introsConversation,
+        lastMessage: message,
+        lastMessageRead: true,
+        lastMessageTimestamp: new Date(),
+      };
+
+      // It's a new conversation!
+      if (!chatsConversation && !introsConversation) {
+        await populateConversation(updatedConversation);
+      }
+
+      // Add it to chats if it wasn't already there
+      if (!chatsConversation) {
+        // Add conversation into chats
+        inbox.chats.conversations.push(updatedConversation);
+        inbox.chats.conversationsMap[recipientPersonId] = updatedConversation;
+
+        // Remove conversation from intros
+        deleteFromArray(inbox.intros.conversations, introsConversation);
+        delete inbox.intros.conversationsMap[recipientPersonId];
+      }
+      // Update existing chat otherwise
+      else {
+        Object.assign(
+          inbox.chats.conversationsMap[recipientPersonId],
+          updatedConversation,
+        );
+      }
+
+      inbox.chats.numUnread  -= (
+        chatsConversation ?.lastMessageRead ?? true) ? 0 : 1;
+      inbox.intros.numUnread -= (
+        introsConversation?.lastMessageRead ?? true) ? 0 : 1;
+
+      inbox.numUnread = (
+        inbox.chats.numUnread +
+        inbox.intros.numUnread);
+
+      // We could've returned `inbox` instead of a shallow copy. But then it
+      // wouldn't trigger re-renders when passed to a useState setter.
+      return {...inbox};
+    });
   }
 };
 
@@ -208,7 +281,7 @@ const onReceiveMessage = (
       from: from.toString(),
       to: to.toString(),
       id: id.toString(),
-      fromCurrentUser: from.toString().startsWith(`${signedInUser?.personId}@`),
+      fromCurrentUser: jidToPersonId(from.toString()) == signedInUser?.personId,
     };
 
     callback(message);
@@ -251,7 +324,7 @@ const _fetchMessages = async (
             <value>urn:xmpp:mam:2</value>
           </field>
           <field var='with'>
-            <value>${withPersonId}@duolicious.app</value>
+            <value>${personIdToJid(withPersonId)}</value>
           </field>
         </x>
         <set xmlns='http://jabber.org/protocol/rsm'>
