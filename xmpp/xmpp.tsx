@@ -16,7 +16,7 @@ import { api } from '../api/api';
 import { deleteFromArray } from '../util/util';
 
 // TODO: Catch more exceptions. If a network request fails, that shouldn't crash the app.
-// TODO: Update inbox when: message received, message read, message send, intro replied to
+// TODO: Update inbox when:  message send, message read, message received, intro replied to
 // TODO: Update match percentages when user answers some questions
 
 type Message = {
