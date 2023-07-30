@@ -130,9 +130,9 @@ const DefaultFlatList = forwardRef(<ItemT,>(props: DefaultFlatListProps<ItemT>, 
       if (pageNumberToFetch === firstPage) {
         newDatas[dataKey] = page;
       } else if (props.inverted) {
-        newDatas[dataKey] = [...page, ...newDatas[dataKey]];
+        newDatas[dataKey] = [...page, ...(newDatas[dataKey] ?? [])];
       } else {
-        newDatas[dataKey] = [...newDatas[dataKey], ...page];
+        newDatas[dataKey] = [...(newDatas[dataKey] ?? []), ...page];
       }
       return newDatas;
     })

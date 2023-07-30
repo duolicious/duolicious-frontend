@@ -16,7 +16,7 @@ import { api } from '../api/api';
 import { deleteFromArray } from '../util/util';
 
 // TODO: Catch more exceptions. If a network request fails, that shouldn't crash the app.
-// TODO: Update inbox when:  message send, message read, intro replied to, message received
+// TODO: Update inbox when: message send, message read, intro replied to, message received
 // TODO: Update match percentages when user answers some questions
 // TODO: When someone opens two windows, display a warning
 
@@ -39,6 +39,7 @@ type Conversation = {
 };
 
 type ConversationsMap = { [key: string]: Conversation };
+type MarkDisplayedMap = { [key: string]: number };
 
 type Conversations = {
   conversations: Conversation[]
@@ -49,12 +50,22 @@ type Conversations = {
 type Inbox = {
   chats: Conversations
   intros: Conversations
+  markDisplayedMap: MarkDisplayedMap
   numUnread: number
 };
 
+const emtpyInbox = (): Inbox => ({
+  chats: {
+    conversations: [], conversationsMap: {}, numUnread: 0 },
+  intros: {
+    conversations: [], conversationsMap: {}, numUnread: 0 },
+  markDisplayedMap: {},
+  numUnread: 0,
+});
+
 let _xmpp: Client | undefined;
 
-let _inbox: Inbox | undefined;
+let _inbox: Inbox = emtpyInbox();
 const _inboxObservers: Set<(inbox: Inbox | undefined) => void> = new Set();
 
 const observeInbox = (callback: (inbox: Inbox | undefined) => void): void => {
@@ -68,7 +79,7 @@ const observeInbox = (callback: (inbox: Inbox | undefined) => void): void => {
 };
 
 const setInbox = async (
-  setter: (inbox: Inbox | undefined) => Promise<Inbox | undefined> | Inbox | undefined
+  setter: (inbox: Inbox) => Promise<Inbox> | Inbox
 ): Promise<void> => {
   _inbox = await setter(_inbox);
   console.log('New inbox', _inbox); // TODO
@@ -113,6 +124,15 @@ const populateConversation = async (
   conversation: Conversation
 ): Promise<void> => {
   await populateConversationList([conversation]);
+};
+
+const inboxToPersonIds = (inbox: Inbox): number[] => {
+  const personIds = new Set<number>();
+
+  inbox.chats .conversations.forEach((c) => personIds.add(c.personId));
+  inbox.intros.conversations.forEach((c) => personIds.add(c.personId));
+
+  return [...personIds];
 };
 
 const jidToPersonId = (jid: string): number =>
@@ -178,8 +198,6 @@ const setInboxSent = (recipientPersonId: number, message: string) => {
 
 const setInboxOpened = (recipientPersonId: number) => {
   setInbox((inbox: Inbox) => {
-    if (!inbox) return inbox;
-
     const chatsConversation =
       inbox.chats.conversationsMap[recipientPersonId] as Conversation | undefined;
     const introsConversation =
@@ -256,7 +274,7 @@ const login = async (username: string, password: string) => {
   await refreshInbox();
 }
 
-const markDisplayed = async (message: Message) => {
+const _markDisplayed = async (message: Message) => {
   if (!_xmpp) return;
   if (message.fromCurrentUser) return;
 
@@ -266,8 +284,48 @@ const markDisplayed = async (message: Message) => {
     </message>
   `);
 
-  return; // TODO
-  // await _xmpp.send(stanza);
+  await _xmpp.send(stanza);
+};
+
+const _hasMarkDisplayedListener = (personId: number): boolean => {
+  if (!_inbox) return false;
+
+  return (_inbox.markDisplayedMap[personId] ?? 0) > 0;
+};
+
+const _addMarkDisplayedListener = (personId: number) => {
+  setInbox((inbox: Inbox) => {
+    const newInbox = {
+      ...inbox,
+      markDisplayedMap: {
+        ...inbox.markDisplayedMap,
+        [personId]: (inbox.markDisplayedMap[personId] ?? 0) + 1
+      }
+    };
+
+    return newInbox;
+  });
+};
+
+const _removeMarkDisplayedListener = (personId: number) => {
+  setInbox((inbox: Inbox) => {
+    const newInbox = {
+      ...inbox,
+      markDisplayedMap: {
+        ...inbox.markDisplayedMap,
+        [personId]: (inbox.markDisplayedMap[personId] ?? 0) - 1
+      }
+    };
+
+    if (newInbox.markDisplayedMap[personId] < 0) {
+      throw Error(
+        'Tried to remove non-existent mark-displayed listener for ' +
+        personId
+      );
+    }
+
+    return newInbox;
+  });
 };
 
 const sendMessage = async (recipientPersonId: number, message: string) => {
@@ -281,11 +339,10 @@ const sendMessage = async (recipientPersonId: number, message: string) => {
   );
 
   if (_xmpp) {
-    // TODO
-    // await _xmpp.send(messageXml);
+    await _xmpp.send(messageXml);
 
-    // // TODO: Reduce the number of times this is called
-    // await moveToChats(jid);
+    // TODO: Reduce the number of times this is called
+    await moveToChats(jid);
 
     setInboxSent(recipientPersonId, message);
   }
@@ -294,9 +351,19 @@ const sendMessage = async (recipientPersonId: number, message: string) => {
 const onReceiveMessage = (
   callback: (message: Message) => void,
   onlyFromId?: number,
+  doMarkDisplayed: boolean = true,
 ): (() => void) | undefined => {
   if (!_xmpp)
     return undefined;
+
+  if (doMarkDisplayed) {
+    if (onlyFromId === undefined) {
+      const personIds = _inbox ? inboxToPersonIds(_inbox) : [];
+      personIds.forEach(_addMarkDisplayedListener);
+    } else {
+      _addMarkDisplayedListener(onlyFromId);
+    }
+  }
 
   const _onReceiveMessage = async (stanza: Element) => {
     const doc = new DOMParser().parseFromString(stanza.toString(), 'text/xml');
@@ -332,11 +399,27 @@ const onReceiveMessage = (
     };
 
     callback(message);
-    markDisplayed(message);
+    if (doMarkDisplayed) {
+      _markDisplayed(message);
+    }
+  };
+
+  const _removeListener = () => {
+    if (!_xmpp) return;
+    _xmpp.removeListener("stanza", _onReceiveMessage);
+
+    if (doMarkDisplayed) {
+      if (onlyFromId === undefined) {
+        const personIds = _inbox ? inboxToPersonIds(_inbox) : [];
+        personIds.forEach(_removeMarkDisplayedListener);
+      } else {
+        _removeMarkDisplayedListener(onlyFromId);
+      }
+    }
   };
 
   _xmpp.addListener("stanza", _onReceiveMessage);
-  return () => _xmpp ? _xmpp.removeListener("stanza", _onReceiveMessage) : {};
+  return _removeListener;
 }
 
 const moveToChats = async (jid: string) => {
@@ -358,6 +441,7 @@ const moveToChats = async (jid: string) => {
 const _fetchMessages = async (
   withPersonId: number,
   callback: (messages: Message[] | undefined) => void,
+  doMarkDisplayed: boolean = true,
 ) => {
   if (!_xmpp) return callback(undefined);
 
@@ -435,8 +519,8 @@ const _fetchMessages = async (
     callback(collected);
 
     const lastMessage = collected[collected.length - 1];
-    if (lastMessage) {
-      markDisplayed(lastMessage);
+    if (lastMessage && doMarkDisplayed) {
+      _markDisplayed(lastMessage);
     }
 
     if (_xmpp) {
@@ -576,22 +660,19 @@ const refreshInbox = async (): Promise<void> => {
   const intros = await fetchBox('inbox'); if (!intros) return;
   const numUnread = chats.numUnread + intros.numUnread;
 
-  chats.conversations
-
-  const inbox: Inbox = {
+  setInbox((inbox: Inbox) => ({
     chats,
     intros,
+    markDisplayedMap: inbox.markDisplayedMap,
     numUnread,
-  };
-
-  setInbox(() => inbox);
+  }));
 };
 
 const logout = async () => {
   if (_xmpp) {
     await _xmpp.send(xml("presence", { type: "unavailable" }));
     await _xmpp.stop().catch(console.error);
-    setInbox(() => undefined);
+    setInbox(emtpyInbox);
   }
 };
 
