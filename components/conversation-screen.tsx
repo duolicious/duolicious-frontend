@@ -35,7 +35,6 @@ import {
   IMAGES_URL,
 } from '../env/env';
 
-// TODO: Check if it scrolls to the bottom on mobile devices after the messages first load, and after you send a message
 // TODO: Re-add the ability to load old messages past the first page
 
 const ConversationScreen = ({navigation, route}) => {
@@ -238,11 +237,11 @@ const TextInputWithButton = ({onPress}) => {
 
   const [text, setText] = useState("");
 
-  const sendMessage = useCallback(() => {
+  const sendMessage = useCallback(async () => {
     const trimmed = text.trim();
     if (trimmed) {
-      onPress(trimmed)
       setText("");
+      await onPress(trimmed);
     }
   }, [text]);
 

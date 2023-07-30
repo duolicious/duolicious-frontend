@@ -17,7 +17,7 @@ import { deleteFromArray } from '../util/util';
 
 // TODO: Catch more exceptions. If a network request fails, that shouldn't crash the app.
 // TODO: Update match percentages when user answers some questions
-// TODO: When someone opens two windows, display a warning
+// TODO: When someone opens two windows, display a warning. Or get multiple sessions working
 
 type Message = {
   text: string
@@ -352,6 +352,9 @@ const sendMessage = async (recipientPersonId: number, message: string) => {
   );
 
   if (_xmpp) {
+    // TODO: This can produce `Error: INVALID_STATE_ERR`. Messages which
+    // couldn't be send should be indicated in the UI as such, or at least not
+    // freeze the UI.
     await _xmpp.send(messageXml);
 
     // TODO: Reduce the number of times this is called
