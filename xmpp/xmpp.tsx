@@ -191,48 +191,9 @@ const setInboxSent = (recipientPersonId: number, message: string) => {
   });
 };
 
-const setInboxOpened = (recipientPersonId: number) => {
-  setInbox((inbox: Inbox) => {
-    const chatsConversation =
-      inbox.chats.conversationsMap[recipientPersonId] as Conversation | undefined;
-    const introsConversation =
-      inbox.intros.conversationsMap[recipientPersonId] as Conversation | undefined;
-
-    // It's a new conversation!
-    if (!chatsConversation && !introsConversation) {
-      return inbox;
-    }
-
-    inbox.chats.numUnread  -= (
-      chatsConversation ?.lastMessageRead ?? true) ? 0 : 1;
-    inbox.intros.numUnread -= (
-      introsConversation?.lastMessageRead ?? true) ? 0 : 1;
-
-    inbox.numUnread = (
-      inbox.chats.numUnread +
-      inbox.intros.numUnread);
-
-    const updatedConversation = {
-      ...chatsConversation,
-      ...introsConversation,
-      lastMessageRead: true,
-    } as Conversation;
-
-    if (chatsConversation)
-      Object.assign(chatsConversation, updatedConversation);
-    if (introsConversation)
-      Object.assign(introsConversation, updatedConversation);
-
-    // We could've returned `inbox` instead of a shallow copy. But then it
-    // wouldn't trigger re-renders when passed to a useState setter.
-    return {...inbox};
-  });
-};
-
 const setInboxRecieved = async (
   fromPersonId: number,
   message: string,
-  doRead: boolean
 ) => {
   await setInbox(async (inbox: Inbox) => {
     const chatsConversation =
@@ -241,16 +202,17 @@ const setInboxRecieved = async (
       inbox.intros.conversationsMap[fromPersonId] as Conversation | undefined;
 
     inbox.chats.numUnread += (
-        !doRead &&
-        chatsConversation &&
-        (chatsConversation?.lastMessageRead ?? true)
+        // The received message is the continuation of a 'chats' conversation
+        // whose last message was read
+        chatsConversation && chatsConversation.lastMessageRead
       ) ? 1 : 0;
 
     inbox.intros.numUnread += (
-        !doRead &&
-        introsConversation &&
-        (introsConversation?.lastMessageRead ?? true) ||
-        !introsConversation
+        // The received message is the continuation of an 'intro' conversation
+        // whose last message was read
+        introsConversation && introsConversation.lastMessageRead ||
+        // The received message is new
+        !introsConversation && !chatsConversation
       ) ? 1 : 0;
 
     inbox.numUnread = inbox.chats.numUnread + inbox.intros.numUnread;
@@ -263,7 +225,7 @@ const setInboxRecieved = async (
       ...chatsConversation,
       ...introsConversation,
       lastMessage: message,
-      lastMessageRead: doRead,
+      lastMessageRead: false,
       lastMessageTimestamp: new Date(),
     };
 
@@ -276,6 +238,44 @@ const setInboxRecieved = async (
     } else if (chatsConversation) {
       Object.assign(chatsConversation, updatedConversation);
     } else if (introsConversation) {
+      Object.assign(introsConversation, updatedConversation);
+    }
+
+    // We could've returned `inbox` instead of a shallow copy. But then it
+    // wouldn't trigger re-renders when passed to a useState setter.
+    return {...inbox};
+  });
+};
+
+const setInboxDisplayed = async (fromPersonId: number) => {
+  await setInbox(async (inbox: Inbox) => {
+    const chatsConversation =
+      inbox.chats.conversationsMap[fromPersonId] as Conversation | undefined;
+    const introsConversation =
+      inbox.intros.conversationsMap[fromPersonId] as Conversation | undefined;
+
+    inbox.chats.numUnread -=
+        (chatsConversation?.lastMessageRead ?? true) ?
+        0 :
+        1;
+
+    inbox.intros.numUnread -=
+        (introsConversation?.lastMessageRead ?? true) ?
+        0 :
+        1;
+
+    inbox.numUnread = inbox.chats.numUnread + inbox.intros.numUnread;
+
+    const updatedConversation = {
+      ...chatsConversation,
+      ...introsConversation,
+      lastMessageRead: true,
+    };
+
+    if (chatsConversation) {
+      Object.assign(chatsConversation, updatedConversation);
+    }
+    if (introsConversation) {
       Object.assign(introsConversation, updatedConversation);
     }
 
@@ -338,6 +338,7 @@ const _markDisplayed = async (message: Message) => {
   `);
 
   await _xmpp.send(stanza);
+  await setInboxDisplayed(jidToPersonId(message.from));
 };
 
 const sendMessage = async (recipientPersonId: number, message: string) => {
@@ -403,7 +404,6 @@ const onReceiveMessage = (
     await setInboxRecieved(
       jidToPersonId(from.toString()),
       bodyText.toString(),
-      otherPersonId !== undefined
     );
     if (otherPersonId !== undefined) {
       await _markDisplayed(message);
@@ -504,7 +504,7 @@ const _fetchConversation = async (
     });
   };
 
-  const maybeFin = (stanza: Element) => {
+  const maybeFin = async (stanza: Element) => {
     const doc = new DOMParser().parseFromString(stanza.toString(), 'text/xml');
 
     const node = xpath.select1(
@@ -519,7 +519,7 @@ const _fetchConversation = async (
 
     const lastMessage = collected[collected.length - 1];
     if (lastMessage) {
-      _markDisplayed(lastMessage);
+      await _markDisplayed(lastMessage);
     }
 
     if (_xmpp) {
@@ -686,5 +686,4 @@ export {
   onReceiveMessage,
   sendMessage,
   setInbox,
-  setInboxOpened,
 };

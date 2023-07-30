@@ -30,7 +30,6 @@ import {
   onReceiveMessage,
   sendMessage,
   setInbox,
-  setInboxOpened,
 } from '../xmpp/xmpp';
 import {
   IMAGES_URL,
@@ -79,8 +78,6 @@ const ConversationScreen = ({navigation, route}) => {
   );
 
   useEffect(() => {
-    setInboxOpened(personId);
-
     _fetchConversation();
 
     return onReceiveMessage(_onReceiveMessage, personId);
