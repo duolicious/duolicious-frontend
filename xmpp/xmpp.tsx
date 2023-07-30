@@ -12,8 +12,10 @@ import { signedInUser } from '../App';
 import { getRandomString } from '../random/string';
 
 import { deviceId } from '../kv-storage/device-id';
+import { api } from '../api/api';
 
 // TODO: Catch more exceptions. If a network request fails, that shouldn't crash the app.
+// TODO: Update inbox when: message received, message read, intro replied to
 
 type Message = {
   text: string
@@ -33,8 +35,11 @@ type Conversation = {
   lastMessageTimestamp: Date
 };
 
+type ConversationsMap = { [key: string]: Conversation };
+
 type Conversations = {
   conversations: Conversation[]
+  conversationsMap: ConversationsMap
   numUnread: number
 };
 
@@ -59,10 +64,46 @@ const observeInbox = (callback: (inbox: Inbox | undefined) => void): void => {
     callback(_inbox);
 };
 
-const setInbox = (inbox: Inbox | undefined): void => {
-  _inbox = inbox;
-  console.log('New inbox', inbox); // TODO
-  _inboxObservers.forEach((observer) => observer(inbox));
+const setInbox = (
+  setter: (inbox: Inbox | undefined) => Inbox | undefined
+): void => {
+  _inbox = setter(_inbox);
+  console.log('New inbox', _inbox); // TODO
+  _inboxObservers.forEach((observer) => observer(_inbox));
+};
+
+const conversationListToMap = (
+  conversationList: Conversation[]
+): ConversationsMap => {
+  return conversationList.reduce<ConversationsMap>(
+    (obj, item) => { obj[item.personId] = item; return obj; },
+    {}
+  );
+
+};
+
+const populateConversationList = async (
+  conversationList: Conversation[]
+): Promise<void> => {
+  const personIds: number[] = conversationList.map(c => c.personId);
+
+  const query = personIds.map(id => `prospect-person-id=${id}`).join('&');
+  // TODO: Better error handling
+  const response = conversationList.length === 0 ?
+    [] :
+    (await api('get', `/inbox-info?${query}`)).json;
+
+  const personIdToInfo = response.reduce((obj, item) => {
+    obj[item.person_id] = item;
+    return obj;
+  }, {});
+
+  conversationList.forEach((c: Conversation) => {
+    c.personId = personIdToInfo[c.personId].person_id;
+    c.name = personIdToInfo[c.personId].name;
+    c.matchPercentage = personIdToInfo[c.personId].match_percentage;
+    c.imageUuid = personIdToInfo[c.personId].image_uuid;
+  });
 };
 
 const select1 = (query: string, stanza: Element): xpath.SelectedValue => {
@@ -95,8 +136,10 @@ const login = async (username: string, password: string) => {
   });
 
   _xmpp.on("online", async () => {
-    await _xmpp.send(xml("presence", { type: "available" }));
-    console.log("online");
+    if (_xmpp) {
+      await _xmpp.send(xml("presence", { type: "available" }));
+      console.log("online");
+    }
   });
 
   await _xmpp.start().catch(console.error);
@@ -126,10 +169,11 @@ const sendMessage = async (recipientPersonId: number, message: string) => {
     xml("body", {}, message),
   );
 
-  await _xmpp.send(messageXml);
-
-  // TODO: Reduce the number of times this is called
-  await moveToChats(jid);
+  if (_xmpp) {
+    await _xmpp.send(messageXml);
+    // TODO: Reduce the number of times this is called
+    await moveToChats(jid);
+  }
 };
 
 // TODO: Filter by person ID
@@ -172,10 +216,12 @@ const onReceiveMessage = (
   };
 
   _xmpp.addListener("stanza", _onReceiveMessage);
-  return () => _xmpp.removeListener("stanza", _onReceiveMessage);
+  return () => _xmpp ? _xmpp.removeListener("stanza", _onReceiveMessage) : {};
 }
 
 const moveToChats = async (jid: string) => {
+  if (!_xmpp) return;
+
   const queryId = getRandomString(10);
 
   const queryStanza = parse(`
@@ -240,6 +286,7 @@ const _fetchMessages = async (
 
     if (from === null) return;
     if (to === null) return;
+    if (id === null) return;
     if (bodyText === null) return;
 
     const fromCurrentUser = from.toString().startsWith(
@@ -272,8 +319,10 @@ const _fetchMessages = async (
       markDisplayed(lastMessage);
     }
 
-    _xmpp.removeListener("stanza", maybeCollect);
-    _xmpp.removeListener("stanza", maybeFin);
+    if (_xmpp) {
+      _xmpp.removeListener("stanza", maybeCollect);
+      _xmpp.removeListener("stanza", maybeFin);
+    }
   };
 
   _xmpp.addListener("stanza", maybeCollect);
@@ -332,6 +381,7 @@ const _fetchBox = async (
     const timestamp = xpath.select1(`string(//*/@stamp)`, node);
 
     if (from === null) return;
+    if (to === null) return;
     if (bodyText === null) return;
     if (numUnread === null) return;
     if (timestamp === null) return;
@@ -362,7 +412,7 @@ const _fetchBox = async (
     conversationList.push(conversation);
   };
 
-  const maybeFin = (stanza: Element) => {
+  const maybeFin = async (stanza: Element) => {
     const doc = new DOMParser().parseFromString(stanza.toString(), 'text/xml');
 
     const node = xpath.select1(
@@ -375,16 +425,21 @@ const _fetchBox = async (
 
     const conversations: Conversations = {
       conversations: conversationList,
+      conversationsMap: conversationListToMap(conversationList),
       numUnread: conversationList.reduce(
         (acc, conversation) => acc + (conversation.lastMessageRead ? 0 : 1),
         0
       ),
     };
 
+    await populateConversationList(conversations.conversations);
+
     callback(conversations);
 
-    _xmpp.removeListener("stanza", maybeCollect);
-    _xmpp.removeListener("stanza", maybeFin);
+    if (_xmpp) {
+      _xmpp.removeListener("stanza", maybeCollect);
+      _xmpp.removeListener("stanza", maybeFin);
+    }
   };
 
   _xmpp.addListener("stanza", maybeCollect);
@@ -398,9 +453,11 @@ const fetchBox = async (box: string): Promise<Conversations | undefined> => {
 };
 
 const refreshInbox = async (): Promise<void> => {
-  const chats = await fetchBox('chats');
-  const intros = await fetchBox('inbox');
+  const chats  = await fetchBox('chats'); if (!chats)  return;
+  const intros = await fetchBox('inbox'); if (!intros) return;
   const numUnread = chats.numUnread + intros.numUnread;
+
+  chats.conversations
 
   const inbox: Inbox = {
     chats,
@@ -408,14 +465,14 @@ const refreshInbox = async (): Promise<void> => {
     numUnread,
   };
 
-  setInbox(inbox);
+  setInbox(() => inbox);
 };
 
 const logout = async () => {
   if (_xmpp) {
     await _xmpp.send(xml("presence", { type: "unavailable" }));
     await _xmpp.stop().catch(console.error);
-    setInbox(undefined);
+    setInbox(() => undefined);
   }
 };
 
@@ -430,4 +487,5 @@ export {
   observeInbox,
   onReceiveMessage,
   sendMessage,
+  setInbox,
 };

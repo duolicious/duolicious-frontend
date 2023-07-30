@@ -29,7 +29,6 @@ const formatChatTimestamp = (date: Date): string => {
   }
 }
 
-
 const InboxItem = ({
   wasRead,
   name,

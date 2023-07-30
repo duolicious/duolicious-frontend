@@ -9,6 +9,7 @@ import {
 import {
   memo,
   useCallback,
+  useEffect,
   useRef,
   useState,
 } from 'react';
@@ -22,39 +23,12 @@ import { OptionScreen } from './option-screen';
 import { hideMeFromStrangersOptionGroup } from '../data/option-groups';
 import { DefaultFlatList } from './default-flat-list';
 import { Inbox, Conversation, observeInbox } from '../xmpp/xmpp';
-import { api } from '../api/api';
 
 // TODO: When you open an intro in the UI then navigate back to the inbox, the inbox should update, showing that the message has been read
-// TODO: Sort intros by match percentage
-// TODO: Blocking people should remove them from the each others' inbox
+// TODO: Blocking people should remove them from each others' inboxes
 // TODO: r9k
 
 const Stack = createNativeStackNavigator();
-
-const populateConversationList = async (
-  conversationList: Conversation[]
-): Promise<Conversation[]> => {
-  const personIds: number[] = conversationList.map(c => c.personId);
-
-  const query = personIds.map(id => `prospect-person-id=${id}`).join('&');
-  // TODO: Better error handling
-  const response = conversationList.length === 0 ?
-    [] :
-    (await api('get', `/inbox-info?${query}`)).json;
-
-  const personIdToInfo = response.reduce((obj, item) => {
-    obj[item.person_id] = item;
-    return obj;
-  }, {});
-
-  return conversationList.map((c: Conversation) => ({
-    ...c,
-    personId: personIdToInfo[c.personId].person_id,
-    name: personIdToInfo[c.personId].name,
-    matchPercentage: personIdToInfo[c.personId].match_percentage,
-    imageUuid: personIdToInfo[c.personId].image_uuid,
-  }));
-}
 
 const InboxItemMemo = memo(InboxItem);
 
@@ -77,6 +51,7 @@ const InboxTab_ = ({navigation}) => {
   const [sortByIndex, setSortByIndex] = useState(0);
   const [isTooManyTapped, setIsTooManyTapped] = useState(false);
   const [inbox, setInbox] = useState<Inbox | undefined>(undefined);
+  const listRef = useRef<any>(undefined);
 
   observeInbox(setInbox);
 
@@ -87,7 +62,7 @@ const InboxTab_ = ({navigation}) => {
       toValue: 0.0,
       duration: 500,
       useNativeDriver: false,
-    }).start();
+    }).start(() => console.log('finished fading out'));
   }, []);
 
   const fadeIn = useCallback(() => {
@@ -95,22 +70,11 @@ const InboxTab_ = ({navigation}) => {
       toValue: 1.0,
       duration: 500,
       useNativeDriver: false,
-    }).start();
+    }).start(() => console.log('finished fading in'));
   }, []);
 
-  const setSectionIndex_ = useCallback((value) => {
-    setSectionIndex(value);
-
-    if (value === 1) {
-      fadeIn();
-    } else {
-      fadeOut();
-    }
-  }, []);
-
-  const setSortByIndex_ = useCallback((value) => {
-    setSortByIndex(value);
-  }, []);
+  const setSectionIndex_ = useCallback((value) => setSectionIndex(value), []);
+  const setSortByIndex_  = useCallback((value) => setSortByIndex(value), []);
 
   const onPressTooMany = useCallback(() => {
     navigation.navigate(
@@ -121,6 +85,9 @@ const InboxTab_ = ({navigation}) => {
     );
     setIsTooManyTapped(true);
   }, []);
+
+  useEffect(() => void listRef.current.refresh(), [sectionIndex]);
+  useEffect(() => void listRef.current.refresh(), [sortByIndex]);
 
   const fetchInboxPage = (
     sectionName: 'chats' | 'intros'
@@ -134,18 +101,86 @@ const InboxTab_ = ({navigation}) => {
 
     const section = sectionName === 'chats' ? inbox.chats : inbox.intros;
 
+    const a = section.conversations[0];
+
+
     const pageSize = 10;
-    const page = section.conversations.slice(
-      pageSize * (n - 1),
-      pageSize * n
-    );
+    const page = [...section.conversations]
+      .sort((a, b) =>
+        (sectionName === 'intros' && sortByIndex === 1) ?
+          (b.matchPercentage - a.matchPercentage) :
+          (+b.lastMessageTimestamp - +a.lastMessageTimestamp)
+      )
+      .slice(
+        pageSize * (n - 1),
+        pageSize * n
+      );
 
-
-    return await populateConversationList(page);
+    return page;
   };
 
   const fetchChatsPage  = fetchInboxPage('chats');
   const fetchIntrosPage = fetchInboxPage('intros');
+
+  const ListHeaderComponent = () => {
+    useEffect(() => {
+      if (sectionIndex === 1) {
+        fadeIn();
+      } else {
+        fadeOut();
+      }
+    }, [sectionIndex]);
+
+    return (
+      <>
+        <ButtonGroup
+          buttons={[
+            'Chats'  + (inbox?.chats?.numUnread  ? ` (${inbox.chats.numUnread})`  : ''),
+            'Intros' + (inbox?.intros?.numUnread ? ` (${inbox.intros.numUnread})` : '')
+          ]}
+          selectedIndex={sectionIndex}
+          onPress={setSectionIndex_}
+          containerStyle={{
+            marginTop: 5,
+            marginLeft: 20,
+            marginRight: 20,
+          }}
+        />
+        <Animated.View
+          style={{
+            opacity: buttonOpacity,
+          }}
+          pointerEvents={sectionIndex === 1 ? 'auto' : 'none'}
+        >
+          <ButtonGroup
+            buttons={['Latest First', 'Best Matches First']}
+            selectedIndex={sortByIndex}
+            onPress={setSortByIndex_}
+            secondary={true}
+            containerStyle={{
+              flexGrow: 1,
+              marginLeft: 20,
+              marginRight: 20,
+            }}
+          />
+        </Animated.View>
+        {!isTooManyTapped && sectionIndex === 1 && inbox && inbox.intros.numUnread >= 5 &&
+          <Notice
+            onPress={onPressTooMany}
+            style={{
+              marginBottom: 5,
+            }}
+          >
+            <DefaultText style={{color: '#70f', textAlign: 'center'}} >
+              Getting too many intros? You can keep your profile hidden and
+              make the first move instead 🕵️. Press here to change your privacy
+              settings.
+            </DefaultText>
+          </Notice>
+        }
+      </>
+    );
+  };
 
   const renderItem = useCallback((x: ListRenderItemInfo<Conversation>) => (
     <InboxItemMemo
@@ -178,6 +213,7 @@ const InboxTab_ = ({navigation}) => {
       }
       {inbox !== undefined &&
         <DefaultFlatList
+          ref={listRef}
           emptyText={
             sectionIndex === 0 ?
             "No chats to show" :
@@ -185,55 +221,7 @@ const InboxTab_ = ({navigation}) => {
           endText="No more messages to show"
           fetchPage={sectionIndex === 0 ? fetchChatsPage : fetchIntrosPage}
           dataKey={String(sectionIndex)}
-          ListHeaderComponent={
-            <>
-              <ButtonGroup
-                buttons={[
-                  'Chats'  + (inbox?.chats?.numUnread  ? ` (${inbox.chats.numUnread})`  : ''),
-                  'Intros' + (inbox?.intros?.numUnread ? ` (${inbox.intros.numUnread})` : '')
-                ]}
-                selectedIndex={sectionIndex}
-                onPress={setSectionIndex_}
-                containerStyle={{
-                  marginTop: 5,
-                  marginLeft: 20,
-                  marginRight: 20,
-                }}
-              />
-              <Animated.View
-                style={{
-                  opacity: buttonOpacity,
-                }}
-                pointerEvents={sectionIndex === 1 ? 'auto' : 'none'}
-              >
-                <ButtonGroup
-                  buttons={['Latest First', 'Best Matches First']}
-                  selectedIndex={sortByIndex}
-                  onPress={setSortByIndex_}
-                  secondary={true}
-                  containerStyle={{
-                    flexGrow: 1,
-                    marginLeft: 20,
-                    marginRight: 20,
-                  }}
-                />
-              </Animated.View>
-              {!isTooManyTapped &&
-                <Notice
-                  onPress={onPressTooMany}
-                  style={{
-                    marginBottom: 5,
-                  }}
-                >
-                  <DefaultText style={{color: '#70f', textAlign: 'center'}} >
-                    Getting too many intros? You can keep your profile hidden and
-                    make the first move instead 🕵️. Press here to change your privacy
-                    settings.
-                  </DefaultText>
-                </Notice>
-              }
-            </>
-          }
+          ListHeaderComponent={ListHeaderComponent}
           renderItem={renderItem}
         />
       }

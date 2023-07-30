@@ -24,10 +24,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { faPaperPlane } from '@fortawesome/free-solid-svg-icons/faPaperPlane'
 import { DefaultFlatList } from './default-flat-list';
 import {
-  onReceiveMessage,
-  fetchMessages,
-  sendMessage,
+  Inbox,
   Message,
+  fetchMessages,
+  onReceiveMessage,
+  sendMessage,
+  setInbox,
 } from '../xmpp/xmpp';
 import {
   IMAGES_URL,
@@ -43,7 +45,7 @@ const ConversationScreen = ({navigation, route}) => {
   const name: string = route?.params?.name;
   const imageUuid: number = route?.params?.imageUuid;
 
-  const listRef = useRef(null)
+  const listRef = useRef<any>(null)
 
   const scrollToEnd = useCallback(() => {
     if (listRef.current) {
@@ -65,13 +67,21 @@ const ConversationScreen = ({navigation, route}) => {
 
   const _fetchMessages = useCallback(async () => {
     const messages = await fetchMessages(personId);
-    setMessages(existingMessages => [...(existingMessages ?? []), ...messages])
+    setMessages(existingMessages =>
+      [...(existingMessages ?? []), ...(messages ?? [])]
+    );
   }, []);
 
   useEffect(() => {
+    setInbox((inbox: Inbox) => {
+      return inbox;
+    });
+
     _fetchMessages();
 
-    return onReceiveMessage((msg) => setMessages(msgs => [...msgs, msg]));
+    return onReceiveMessage(
+      (msg) => setMessages(msgs => [...(msgs ?? []), msg])
+    );
   }, []);
 
   return (

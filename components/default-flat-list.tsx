@@ -73,7 +73,7 @@ const ActivityIndicator_ = () => {
 }
 
 const DefaultFlatList = forwardRef(<ItemT,>(props: DefaultFlatListProps<ItemT>, ref) => {
-  const flatList = useRef(null);
+  const flatList = useRef<any>(null);
   const [datas, setDatas] = useState<{[dataKey: string]: ItemT[]} >({});
   const [isRefreshing, setIsRefreshing] = useState(false);
   const lastFetchedPageNumbers = useRef<{[dataKey: string]: number} >({});
@@ -157,12 +157,12 @@ const DefaultFlatList = forwardRef(<ItemT,>(props: DefaultFlatListProps<ItemT>, 
 
     setDatas(datas => {
       const newDatas = {...datas};
-      newDatas[dataKey] = undefined;
+      delete newDatas[dataKey];
       return newDatas;
     });
 
-    lastFetchedPageNumbers.current[dataKey] = undefined;
-    lastFetchedPages.current[dataKey] = undefined;
+    delete lastFetchedPageNumbers.current[dataKey];
+    delete lastFetchedPages.current[dataKey];
 
     await fetchNextPage();
 
@@ -313,7 +313,7 @@ const DefaultFlatList = forwardRef(<ItemT,>(props: DefaultFlatListProps<ItemT>, 
     contentContainerStyle.current = [style, props.contentContainerStyle];
   }
 
-  useImperativeHandle(ref, () => ({ refresh: onRefresh }), []);
+  useImperativeHandle(ref, () => ({ refresh: onRefresh }), [onRefresh]);
 
   useEffect(() => {
     if (
