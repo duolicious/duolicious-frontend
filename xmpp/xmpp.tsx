@@ -16,7 +16,7 @@ import { api } from '../api/api';
 import { deleteFromArray } from '../util/util';
 
 // TODO: Catch more exceptions. If a network request fails, that shouldn't crash the app.
-// TODO: Update inbox when:  message send, message read, message received, intro replied to
+// TODO: Update inbox when:  message send, message read, intro replied to, message received
 // TODO: Update match percentages when user answers some questions
 // TODO: When someone opens two windows, display a warning
 
@@ -291,9 +291,9 @@ const sendMessage = async (recipientPersonId: number, message: string) => {
   }
 };
 
-// TODO: Filter by person ID
 const onReceiveMessage = (
-  callback: (message: Message) => void
+  callback: (message: Message) => void,
+  onlyFromId?: number,
 ): (() => void) | undefined => {
   if (!_xmpp)
     return undefined;
@@ -317,6 +317,11 @@ const onReceiveMessage = (
     if (to === null) return;
     if (id === null) return;
     if (bodyText === null) return;
+
+    if (
+      onlyFromId !== undefined &&
+      onlyFromId !== jidToPersonId(from.toString())
+    ) return;
 
     const message: Message = {
       text: bodyText.toString(),
@@ -452,7 +457,6 @@ const fetchMessages = async (
   return new Promise((resolve) => _fetchMessages(withPersonId, resolve));
 };
 
-// TODO:
 const _fetchBox = async (
   box: string,
   callback: (conversations: Conversations | undefined) => void,

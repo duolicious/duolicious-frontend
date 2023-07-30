@@ -73,15 +73,18 @@ const ConversationScreen = ({navigation, route}) => {
     );
   }, []);
 
+  const _onReceiveMessage = useCallback(
+    (msg) => setMessages(msgs => [...(msgs ?? []), msg]),
+    []
+  );
+
   useEffect(() => {
     setInboxOpened(personId);
 
     _fetchMessages();
 
-    return onReceiveMessage(
-      (msg) => setMessages(msgs => [...(msgs ?? []), msg])
-    );
-  }, []);
+    return onReceiveMessage(_onReceiveMessage, personId);
+  }, [_onReceiveMessage, personId]);
 
   return (
     <>
