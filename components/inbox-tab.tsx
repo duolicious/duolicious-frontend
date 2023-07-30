@@ -107,11 +107,17 @@ const InboxTab_ = ({navigation}) => {
 
     const pageSize = 10;
     const page = [...section.conversations]
-      .sort((a, b) =>
-        (sectionName === 'intros' && sortByIndex === 1) ?
-          (b.matchPercentage - a.matchPercentage) :
-          (+b.lastMessageTimestamp - +a.lastMessageTimestamp)
-      )
+      .sort((a, b) => {
+        if (
+          sectionName === 'intros' &&
+          sortByIndex === 1 &&
+          a.matchPercentage !== b.matchPercentage
+        ) {
+          return b.matchPercentage - a.matchPercentage
+        } else {
+          return +b.lastMessageTimestamp - +a.lastMessageTimestamp
+        }
+      })
       .slice(
         pageSize * (n - 1),
         pageSize * n
