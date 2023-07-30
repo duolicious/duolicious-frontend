@@ -173,8 +173,8 @@ const ConversationScreen = ({navigation, route}) => {
               marginBottom: 10,
               fontFamily: 'Trueno',
               textAlign: 'center',
-              marginLeft: '25%',
-              marginRight: '25%',
+              marginLeft: '15%',
+              marginRight: '15%',
             }}
           >
             This is the start of your conversation with {name}
@@ -182,11 +182,11 @@ const ConversationScreen = ({navigation, route}) => {
           <DefaultText
             style={{
               textAlign: 'center',
-              marginLeft: '15%',
-              marginRight: '15%',
+              marginLeft: '10%',
+              marginRight: '10%',
             }}
           >
-            Intros on Duolicious need to be totally unique! Try asking {name} about something interesting on their profile...
+            Intros on Duolicious have to be totally unique! Try asking {name} about something interesting on their profile...
           </DefaultText>
         </View>
       }
