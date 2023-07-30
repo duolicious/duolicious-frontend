@@ -26,7 +26,7 @@ import { DefaultFlatList } from './default-flat-list';
 import {
   Inbox,
   Message,
-  fetchMessages,
+  fetchConversation,
   onReceiveMessage,
   sendMessage,
   setInbox,
@@ -66,8 +66,8 @@ const ConversationScreen = ({navigation, route}) => {
     sendMessage(personId, message.text);
   }, []);
 
-  const _fetchMessages = useCallback(async () => {
-    const messages = await fetchMessages(personId);
+  const _fetchConversation = useCallback(async () => {
+    const messages = await fetchConversation(personId);
     setMessages(existingMessages =>
       [...(existingMessages ?? []), ...(messages ?? [])]
     );
@@ -81,7 +81,7 @@ const ConversationScreen = ({navigation, route}) => {
   useEffect(() => {
     setInboxOpened(personId);
 
-    _fetchMessages();
+    _fetchConversation();
 
     return onReceiveMessage(_onReceiveMessage, personId);
   }, [_onReceiveMessage, personId]);

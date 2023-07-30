@@ -16,7 +16,6 @@ import { api } from '../api/api';
 import { deleteFromArray } from '../util/util';
 
 // TODO: Catch more exceptions. If a network request fails, that shouldn't crash the app.
-// TODO: Update inbox when: message send, message read, intro replied to, message received
 // TODO: Update match percentages when user answers some questions
 // TODO: When someone opens two windows, display a warning
 
@@ -50,7 +49,6 @@ type Conversations = {
 type Inbox = {
   chats: Conversations
   intros: Conversations
-  markDisplayedMap: MarkDisplayedMap
   numUnread: number
 };
 
@@ -59,7 +57,6 @@ const emtpyInbox = (): Inbox => ({
     conversations: [], conversationsMap: {}, numUnread: 0 },
   intros: {
     conversations: [], conversationsMap: {}, numUnread: 0 },
-  markDisplayedMap: {},
   numUnread: 0,
 });
 
@@ -142,8 +139,6 @@ const personIdToJid = (personId: number): string =>
 
 const setInboxSent = (recipientPersonId: number, message: string) => {
   setInbox(async (inbox) => {
-    if (!inbox) return inbox;
-
     const chatsConversation =
       inbox.chats.conversationsMap[recipientPersonId] as Conversation | undefined;
     const introsConversation =
@@ -234,6 +229,62 @@ const setInboxOpened = (recipientPersonId: number) => {
   });
 };
 
+const setInboxRecieved = async (
+  fromPersonId: number,
+  message: string,
+  doRead: boolean
+) => {
+  await setInbox(async (inbox: Inbox) => {
+    const chatsConversation =
+      inbox.chats.conversationsMap[fromPersonId] as Conversation | undefined;
+    const introsConversation =
+      inbox.intros.conversationsMap[fromPersonId] as Conversation | undefined;
+
+    inbox.chats.numUnread += (
+        !doRead &&
+        chatsConversation &&
+        (chatsConversation?.lastMessageRead ?? true)
+      ) ? 1 : 0;
+
+    inbox.intros.numUnread += (
+        !doRead &&
+        introsConversation &&
+        (introsConversation?.lastMessageRead ?? true) ||
+        !introsConversation
+      ) ? 1 : 0;
+
+    inbox.numUnread = inbox.chats.numUnread + inbox.intros.numUnread;
+
+    const updatedConversation: Conversation = {
+      personId: fromPersonId,
+      name: '',
+      matchPercentage: 0,
+      imageUuid: null,
+      ...chatsConversation,
+      ...introsConversation,
+      lastMessage: message,
+      lastMessageRead: doRead,
+      lastMessageTimestamp: new Date(),
+    };
+
+    if (!chatsConversation && !introsConversation) {
+      // It's a new conversation! Put 'er in the intros!
+      await populateConversation(updatedConversation);
+
+      inbox.intros.conversations.push(updatedConversation);
+      inbox.intros.conversationsMap[fromPersonId] = updatedConversation;
+    } else if (chatsConversation) {
+      Object.assign(chatsConversation, updatedConversation);
+    } else if (introsConversation) {
+      Object.assign(introsConversation, updatedConversation);
+    }
+
+    // We could've returned `inbox` instead of a shallow copy. But then it
+    // wouldn't trigger re-renders when passed to a useState setter.
+    return {...inbox};
+  });
+};
+
 const select1 = (query: string, stanza: Element): xpath.SelectedValue => {
   const stanzaString = stanza.toString();
   const doc = new DOMParser().parseFromString(stanzaString, 'text/xml');
@@ -270,6 +321,8 @@ const login = async (username: string, password: string) => {
     }
   });
 
+  onReceiveMessage(); // Updates inbox
+
   await _xmpp.start().catch(console.error);
   await refreshInbox();
 }
@@ -285,47 +338,6 @@ const _markDisplayed = async (message: Message) => {
   `);
 
   await _xmpp.send(stanza);
-};
-
-const _hasMarkDisplayedListener = (personId: number): boolean => {
-  if (!_inbox) return false;
-
-  return (_inbox.markDisplayedMap[personId] ?? 0) > 0;
-};
-
-const _addMarkDisplayedListener = (personId: number) => {
-  setInbox((inbox: Inbox) => {
-    const newInbox = {
-      ...inbox,
-      markDisplayedMap: {
-        ...inbox.markDisplayedMap,
-        [personId]: (inbox.markDisplayedMap[personId] ?? 0) + 1
-      }
-    };
-
-    return newInbox;
-  });
-};
-
-const _removeMarkDisplayedListener = (personId: number) => {
-  setInbox((inbox: Inbox) => {
-    const newInbox = {
-      ...inbox,
-      markDisplayedMap: {
-        ...inbox.markDisplayedMap,
-        [personId]: (inbox.markDisplayedMap[personId] ?? 0) - 1
-      }
-    };
-
-    if (newInbox.markDisplayedMap[personId] < 0) {
-      throw Error(
-        'Tried to remove non-existent mark-displayed listener for ' +
-        personId
-      );
-    }
-
-    return newInbox;
-  });
 };
 
 const sendMessage = async (recipientPersonId: number, message: string) => {
@@ -349,21 +361,11 @@ const sendMessage = async (recipientPersonId: number, message: string) => {
 };
 
 const onReceiveMessage = (
-  callback: (message: Message) => void,
-  onlyFromId?: number,
-  doMarkDisplayed: boolean = true,
+  callback?: (message: Message) => void,
+  otherPersonId?: number,
 ): (() => void) | undefined => {
   if (!_xmpp)
     return undefined;
-
-  if (doMarkDisplayed) {
-    if (onlyFromId === undefined) {
-      const personIds = _inbox ? inboxToPersonIds(_inbox) : [];
-      personIds.forEach(_addMarkDisplayedListener);
-    } else {
-      _addMarkDisplayedListener(onlyFromId);
-    }
-  }
 
   const _onReceiveMessage = async (stanza: Element) => {
     const doc = new DOMParser().parseFromString(stanza.toString(), 'text/xml');
@@ -386,8 +388,8 @@ const onReceiveMessage = (
     if (bodyText === null) return;
 
     if (
-      onlyFromId !== undefined &&
-      onlyFromId !== jidToPersonId(from.toString())
+      otherPersonId !== undefined &&
+      otherPersonId !== jidToPersonId(from.toString())
     ) return;
 
     const message: Message = {
@@ -398,24 +400,22 @@ const onReceiveMessage = (
       fromCurrentUser: jidToPersonId(from.toString()) == signedInUser?.personId,
     };
 
-    callback(message);
-    if (doMarkDisplayed) {
-      _markDisplayed(message);
+    await setInboxRecieved(
+      jidToPersonId(from.toString()),
+      bodyText.toString(),
+      otherPersonId !== undefined
+    );
+    if (otherPersonId !== undefined) {
+      await _markDisplayed(message);
+    }
+    if (callback !== undefined) {
+      callback(message);
     }
   };
 
   const _removeListener = () => {
     if (!_xmpp) return;
     _xmpp.removeListener("stanza", _onReceiveMessage);
-
-    if (doMarkDisplayed) {
-      if (onlyFromId === undefined) {
-        const personIds = _inbox ? inboxToPersonIds(_inbox) : [];
-        personIds.forEach(_removeMarkDisplayedListener);
-      } else {
-        _removeMarkDisplayedListener(onlyFromId);
-      }
-    }
   };
 
   _xmpp.addListener("stanza", _onReceiveMessage);
@@ -438,10 +438,9 @@ const moveToChats = async (jid: string) => {
   return await _xmpp.send(queryStanza);
 };
 
-const _fetchMessages = async (
+const _fetchConversation = async (
   withPersonId: number,
   callback: (messages: Message[] | undefined) => void,
-  doMarkDisplayed: boolean = true,
 ) => {
   if (!_xmpp) return callback(undefined);
 
@@ -519,7 +518,7 @@ const _fetchMessages = async (
     callback(collected);
 
     const lastMessage = collected[collected.length - 1];
-    if (lastMessage && doMarkDisplayed) {
+    if (lastMessage) {
       _markDisplayed(lastMessage);
     }
 
@@ -535,10 +534,10 @@ const _fetchMessages = async (
   await _xmpp.send(queryStanza);
 };
 
-const fetchMessages = async (
+const fetchConversation = async (
   withPersonId: number
 ): Promise<Message[] | undefined> => {
-  return new Promise((resolve) => _fetchMessages(withPersonId, resolve));
+  return new Promise((resolve) => _fetchConversation(withPersonId, resolve));
 };
 
 const _fetchBox = async (
@@ -663,7 +662,6 @@ const refreshInbox = async (): Promise<void> => {
   setInbox((inbox: Inbox) => ({
     chats,
     intros,
-    markDisplayedMap: inbox.markDisplayedMap,
     numUnread,
   }));
 };
@@ -681,7 +679,7 @@ export {
   Conversations,
   Inbox,
   Message,
-  fetchMessages,
+  fetchConversation,
   login,
   logout,
   observeInbox,
