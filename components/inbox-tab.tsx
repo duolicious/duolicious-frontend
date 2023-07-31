@@ -225,6 +225,9 @@ const InboxTab_ = ({navigation}) => {
             "No chats to show" :
             "No intros to show"}
           endText="No more messages to show"
+          endTextStyle={{
+            marginRight: 5,
+          }}
           fetchPage={sectionIndex === 0 ? fetchChatsPage : fetchIntrosPage}
           dataKey={String(sectionIndex)}
           ListHeaderComponent={ListHeaderComponent}

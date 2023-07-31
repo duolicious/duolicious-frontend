@@ -37,7 +37,7 @@ const loadMoreStyle = {
 type DefaultFlatListProps<ItemT> =
   Omit<
     FlatListProps<ItemT> & {
-      emptyText: string,
+      emptyText?: string,
       endText?: string,
       endTextStyle?: StyleProp<ViewStyle>,
       fetchPage: (pageNumber: number) => Promise<ItemT[]>,
