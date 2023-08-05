@@ -152,22 +152,21 @@ const DefaultFlatList = forwardRef(<ItemT,>(props: DefaultFlatListProps<ItemT>, 
     });
   }, [fetchNextPage]);
 
-  const onRefresh_ = useCallback(async () => {
+  const onRefresh_ = useCallback(() => {
+    if (isRefreshing) return;
+
     setIsRefreshing(true);
 
-    setDatas(datas => {
-      const newDatas = {...datas};
-      delete newDatas[dataKey];
-      return newDatas;
-    });
+    const newDatas = {...datas};
+    delete newDatas[dataKey];
 
     delete lastFetchedPageNumbers.current[dataKey];
     delete lastFetchedPages.current[dataKey];
 
-    await fetchNextPage();
+    setDatas(newDatas);
 
     setIsRefreshing(false);
-  }, [fetchNextPage, dataKey]);
+  }, [setIsRefreshing, isRefreshing, datas, dataKey]);
   const onRefresh = props.disableRefresh === true ? undefined : onRefresh_;
 
   const ListEmptyComponent = useCallback(() => {

@@ -40,10 +40,11 @@ import { getRandomString } from '../random/string';
 // TODO: Re-add the ability to load old messages past the first page
 
 const ConversationScreen = ({navigation, route}) => {
+  const [messageFetchTimeout, setMessageFetchTimeout] = useState(false);
   const [messages, setMessages] = useState<Message[] | null>(null);
   const [lastMessageStatus, setLastMessageStatus] = useState<
-    MessageStatus
-  >('sent');
+    MessageStatus | null
+  >(null);
 
   const personId: number = route?.params?.personId;
   const name: string = route?.params?.name;
@@ -65,6 +66,7 @@ const ConversationScreen = ({navigation, route}) => {
       id: getRandomString(40),
       fromCurrentUser: true,
     };
+    setLastMessageStatus(null);
     const messageStatus = await sendMessage(
       personId,
       message.text,
@@ -78,10 +80,13 @@ const ConversationScreen = ({navigation, route}) => {
   }, [personId, messages]);
 
   const _fetchConversation = useCallback(async () => {
-    const messages = await fetchConversation(personId);
-    setMessages(existingMessages =>
-      [...(existingMessages ?? []), ...(messages ?? [])]
-    );
+    const _messages = await fetchConversation(personId);
+    setMessageFetchTimeout(_messages === 'timeout');
+    if (_messages !== 'timeout') {
+      setMessages(existingMessages =>
+        [...(existingMessages ?? []), ...(_messages ?? [])]
+      );
+    }
   }, []);
 
   const _onReceiveMessage = useCallback(
@@ -146,9 +151,18 @@ const ConversationScreen = ({navigation, route}) => {
           </DefaultText>
         </View>
       </TopNavBar>
-      {messages === null &&
-        <View style={{height: '100%', justifyContent: 'center', alignItems: 'center'}}>
+      {messages === null && !messageFetchTimeout &&
+        <View style={{flexGrow: 1, justifyContent: 'center', alignItems: 'center'}}>
           <ActivityIndicator size="large" color="#70f" />
+        </View>
+      }
+      {messages === null && messageFetchTimeout &&
+        <View style={{flexGrow: 1, justifyContent: 'center', alignItems: 'center'}}>
+          <DefaultText
+            style={{fontFamily: 'Trueno'}}
+          >
+            You're offline
+          </DefaultText>
         </View>
       }
       {messages !== null && messages.length === 0 &&
@@ -231,17 +245,19 @@ const ConversationScreen = ({navigation, route}) => {
           width: '100%',
           alignSelf: 'center',
           textAlign: 'center',
-          opacity: lastMessageStatus === 'sent' ? 0 : 1,
+          opacity: lastMessageStatus === 'sent' || lastMessageStatus === null ? 0 : 1,
           color: lastMessageStatus === 'timeout' ? 'red' : '#70f',
           ...(lastMessageStatus === 'timeout' ? {} : { fontFamily: 'Trueno' }),
         }}
       >
         {lastMessageStatus === 'timeout' ?
-          "Message couldn't be delivered" :
+          "Message not delivered. Are you online?" :
           "Someone already used that intro! Try again!"
         }
       </DefaultText>
-      <TextInputWithButton onPress={onPressSend}/>
+      {!messageFetchTimeout &&
+        <TextInputWithButton onPress={onPressSend}/>
+      }
     </>
   );
 };
@@ -354,15 +370,22 @@ const TextInputWithButton = ({
                 backgroundColor: 'rgb(228, 204, 255)',
                 borderRadius: 999,
                 opacity: opacity,
-                paddingRight: 5,
-                paddingBottom: 5,
               }}
             >
-              <FontAwesomeIcon
-                icon={faPaperPlane}
-                size={20}
-                color="#70f"
-              />
+              {isLoading &&
+                <ActivityIndicator size="large" color="#70f" />
+              }
+              {!isLoading &&
+                <FontAwesomeIcon
+                  icon={faPaperPlane}
+                  size={20}
+                  color="#70f"
+                  style={{
+                    marginRight: 5,
+                    marginBottom: 5,
+                  }}
+                />
+              }
             </Animated.View>
           </Pressable>
         </View>

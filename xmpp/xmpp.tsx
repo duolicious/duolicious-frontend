@@ -300,39 +300,46 @@ const select1 = (query: string, stanza: Element): xpath.SelectedValue => {
 };
 
 const login = async (username: string, password: string) => {
-  _xmpp = client({
-    service: CHAT_URL,
-    domain: "duolicious.app",
-    username: username,
-    password: password,
-    resource: await deviceId(),
-  });
+  try {
+    _xmpp = client({
+      service: CHAT_URL,
+      domain: "duolicious.app",
+      username: username,
+      password: password,
+      resource: await deviceId(),
+    });
 
-  _xmpp.on("error", (err) => {
-    console.error(err);
-  });
+    _xmpp.on("error", (err) => {
+      console.error(err);
+    });
 
-  _xmpp.on("offline", () => {
-    console.log("offline");
-  });
+    _xmpp.on("offline", () => {
+      console.log("offline");
+    });
 
 
-  _xmpp.on("input", async (stanza) => {
-    // TODO
-    console.log(stanza.toString());
-  });
+    _xmpp.on("input", async (stanza) => {
+      // TODO
+      console.log(stanza.toString());
+    });
 
-  _xmpp.on("online", async () => {
-    if (_xmpp) {
-      await _xmpp.send(xml("presence", { type: "available" }));
-      console.log("online");
-    }
-  });
+    _xmpp.on("online", async () => {
+      if (_xmpp) {
+        await _xmpp.send(xml("presence", { type: "available" }));
+        console.log("online");
+      }
+    });
 
-  onReceiveMessage(); // Updates inbox
+    onReceiveMessage(); // Updates inbox
 
-  await _xmpp.start().catch(console.error);
-  await refreshInbox();
+    await _xmpp.start();
+
+    await refreshInbox();
+  } catch (e) {
+    _xmpp = undefined;
+
+    console.error(e);
+  }
 }
 
 const _markDisplayed = async (message: Message) => {
@@ -504,9 +511,9 @@ const moveToChats = async (personId: number) => {
 
 const _fetchConversation = async (
   withPersonId: number,
-  callback: (messages: Message[] | undefined) => void,
+  callback: (messages: Message[] | 'timeout') => void,
 ) => {
-  if (!_xmpp) return callback(undefined);
+  if (!_xmpp) return callback('timeout');
 
   const queryId = getRandomString(10);
 
@@ -600,8 +607,13 @@ const _fetchConversation = async (
 
 const fetchConversation = async (
   withPersonId: number
-): Promise<Message[] | undefined> => {
-  return new Promise((resolve) => _fetchConversation(withPersonId, resolve));
+): Promise<Message[] | undefined | 'timeout'> => {
+  const __fetchConversation = new Promise(
+    (resolve: (messages: Message[] | undefined | 'timeout') => void) =>
+      _fetchConversation(withPersonId, resolve)
+    );
+
+  return await withTimeout(5000, __fetchConversation);
 };
 
 const _fetchBox = async (
