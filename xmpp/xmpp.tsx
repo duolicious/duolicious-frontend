@@ -13,11 +13,17 @@ import { getRandomString } from '../random/string';
 
 import { deviceId } from '../kv-storage/device-id';
 import { api } from '../api/api';
-import { deleteFromArray } from '../util/util';
+import { deleteFromArray, withTimeout } from '../util/util';
 
 // TODO: Catch more exceptions. If a network request fails, that shouldn't crash the app.
 // TODO: Update match percentages when user answers some questions
 // TODO: When someone opens two windows, display a warning. Or get multiple sessions working
+// TODO: Intros should be the first tab
+
+type MessageStatus =
+  | 'sent'
+  | 'not unique'
+  | 'timeout'
 
 type Message = {
   text: string
@@ -173,6 +179,8 @@ const setInboxSent = (recipientPersonId: number, message: string) => {
     // Add it to chats if it wasn't already there
     if (!chatsConversation) {
       // Add conversation into chats
+      await moveToChats(recipientPersonId);
+
       inbox.chats.conversations.push(updatedConversation);
       inbox.chats.conversationsMap[recipientPersonId] = updatedConversation;
 
@@ -309,9 +317,9 @@ const login = async (username: string, password: string) => {
   });
 
 
-  _xmpp.on("stanza", async (stanza) => {
+  _xmpp.on("input", async (stanza) => {
     // TODO
-    // console.log(stanza.toString());
+    console.log(stanza.toString());
   });
 
   _xmpp.on("online", async () => {
@@ -341,27 +349,78 @@ const _markDisplayed = async (message: Message) => {
   await setInboxDisplayed(jidToPersonId(message.from));
 };
 
-const sendMessage = async (recipientPersonId: number, message: string) => {
+const _sendMessage = async (
+  recipientPersonId: number,
+  message: string,
+  callback: (messageStatus: Omit<MessageStatus, 'unsent: error'>) => void,
+  checkUniqueness: boolean,
+): Promise<void> => {
+  if (!_xmpp) return;
+
   const id = getRandomString(40);
   const jid = personIdToJid(recipientPersonId);
 
   const messageXml = xml(
     "message",
-    { type: "chat", to: jid, id: id },
+    {
+      type: "chat",
+      to: jid,
+      id: id,
+      check_uniqueness: checkUniqueness ? 'true' : 'false',
+    },
     xml("body", {}, message),
+    xml("request", { xmlns: 'urn:xmpp:receipts' }),
   );
 
-  if (_xmpp) {
-    // TODO: This can produce `Error: INVALID_STATE_ERR`. Messages which
-    // couldn't be send should be indicated in the UI as such, or at least not
-    // freeze the UI.
+  const messageStatusListener = (input: Element) => {
+    const doc = (() => {
+      try {
+        return new DOMParser().parseFromString(input.toString(), 'text/xml');
+      } catch {}
+    })();
+
+    if (!doc) return;
+
+    const notUniqueNode = xpath.select1(
+      `/*[name()='duo_message_not_unique'][@id='${id}']`,
+      doc
+    );
+
+    const messageDeliveredNode = xpath.select1(
+      `/*[name()='duo_message_delivered'][@id='${id}']`,
+      doc
+    );
+
+    if (notUniqueNode) {
+      callback('unsent: not unique');
+    } else if (messageDeliveredNode) {
+      setInboxSent(recipientPersonId, message);
+      callback('sent');
+    }
+
+    if (_xmpp) {
+      _xmpp.removeListener("input", messageStatusListener);
+    }
+  };
+
+  _xmpp.addListener("input", messageStatusListener);
+
+  try {
     await _xmpp.send(messageXml);
+  } catch {}
+};
 
-    // TODO: Reduce the number of times this is called
-    await moveToChats(jid);
+const sendMessage = async (
+  recipientPersonId: number,
+  message: string,
+  checkUniqueness: boolean = false,
+): Promise<MessageStatus> => {
+  const __sendMessage = new Promise(
+    (resolve: (messageStatus: MessageStatus) => void) =>
+      _sendMessage(recipientPersonId, message, resolve, checkUniqueness)
+  );
 
-    setInboxSent(recipientPersonId, message);
-  }
+  return await withTimeout(5000, __sendMessage);
 };
 
 const onReceiveMessage = (
@@ -425,8 +484,10 @@ const onReceiveMessage = (
   return _removeListener;
 }
 
-const moveToChats = async (jid: string) => {
+const moveToChats = async (personId: number) => {
   if (!_xmpp) return;
+
+  const jid = personIdToJid(personId);
 
   const queryId = getRandomString(10);
 

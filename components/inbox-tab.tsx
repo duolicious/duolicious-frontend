@@ -94,7 +94,6 @@ const InboxTab_ = ({navigation}) => {
   ) => async (
     n: number
   ): Promise<Conversation[]> => {
-    // TODO: Handle case where inbox is updated
     if (inbox === undefined) {
       return [];
     }
