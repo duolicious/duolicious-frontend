@@ -743,6 +743,7 @@ export {
   Conversations,
   Inbox,
   Message,
+  MessageStatus,
   fetchConversation,
   login,
   logout,

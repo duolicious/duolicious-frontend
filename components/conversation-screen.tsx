@@ -26,6 +26,7 @@ import { DefaultFlatList } from './default-flat-list';
 import {
   Inbox,
   Message,
+  MessageStatus,
   fetchConversation,
   onReceiveMessage,
   sendMessage,
@@ -34,11 +35,15 @@ import {
 import {
   IMAGES_URL,
 } from '../env/env';
+import { getRandomString } from '../random/string';
 
 // TODO: Re-add the ability to load old messages past the first page
 
 const ConversationScreen = ({navigation, route}) => {
   const [messages, setMessages] = useState<Message[] | null>(null);
+  const [lastMessageStatus, setLastMessageStatus] = useState<
+    MessageStatus
+  >('sent');
 
   const personId: number = route?.params?.personId;
   const name: string = route?.params?.name;
@@ -52,17 +57,25 @@ const ConversationScreen = ({navigation, route}) => {
     }
   }, [listRef.current]);
 
-  const onPressSend = useCallback((text: string) => {
+  const onPressSend = useCallback(async (text: string): Promise<MessageStatus> => {
     const message: Message = {
       text: text,
       from: '',
       to: '',
-      id: '',
+      id: getRandomString(40),
       fromCurrentUser: true,
     };
-    setMessages(messages => [...(messages ?? []), message]);
-    sendMessage(personId, message.text);
-  }, []);
+    const messageStatus = await sendMessage(
+      personId,
+      message.text,
+      messages === null || messages.length === 0
+    );
+    if (messageStatus === 'sent') {
+      setMessages(messages => [...(messages ?? []), message]);
+    }
+    setLastMessageStatus(messageStatus);
+    return messageStatus;
+  }, [personId, messages]);
 
   const _fetchConversation = useCallback(async () => {
     const messages = await fetchConversation(personId);
@@ -185,7 +198,8 @@ const ConversationScreen = ({navigation, route}) => {
               marginRight: '10%',
             }}
           >
-            Intros on Duolicious have to be totally unique! Try asking {name} about something interesting on their profile...
+            Intros on Duolicious have to be totally unique! Try
+            asking {name} about something interesting on their profile...
           </DefaultText>
         </View>
       }
@@ -201,9 +215,9 @@ const ConversationScreen = ({navigation, route}) => {
             alignSelf: 'center',
           }}
         >
-          {messages.map((x, i) =>
+          {messages.map((x) =>
             <SpeechBubble
-              key={i}
+              key={x.id}
               fromCurrentUser={x.fromCurrentUser}
             >
               {x.text}
@@ -211,13 +225,34 @@ const ConversationScreen = ({navigation, route}) => {
           )}
         </ScrollView>
       }
+      <DefaultText
+        style={{
+          maxWidth: 600,
+          width: '100%',
+          alignSelf: 'center',
+          textAlign: 'center',
+          opacity: lastMessageStatus === 'sent' ? 0 : 1,
+          color: lastMessageStatus === 'timeout' ? 'red' : '#70f',
+          ...(lastMessageStatus === 'timeout' ? {} : { fontFamily: 'Trueno' }),
+        }}
+      >
+        {lastMessageStatus === 'timeout' ?
+          "Message couldn't be delivered" :
+          "Someone already used that intro! Try again!"
+        }
+      </DefaultText>
       <TextInputWithButton onPress={onPressSend}/>
     </>
   );
 };
 
-const TextInputWithButton = ({onPress}) => {
+const TextInputWithButton = ({
+  onPress,
+}: {
+  onPress: (text: string) => Promise<MessageStatus>,
+}) => {
   const opacity = useRef(new Animated.Value(1)).current;
+  const [isLoading, setIsLoading] = useState(false);
 
   const fadeIn = useCallback(() => {
     Animated.timing(opacity, {
@@ -240,8 +275,12 @@ const TextInputWithButton = ({onPress}) => {
   const sendMessage = useCallback(async () => {
     const trimmed = text.trim();
     if (trimmed) {
-      setText("");
-      await onPress(trimmed);
+      setIsLoading(true);
+      const messageStatus = await onPress(trimmed);
+      if (messageStatus === 'sent') {
+        setText("");
+      }
+      setIsLoading(false);
     }
   }, [text]);
 
@@ -273,6 +312,7 @@ const TextInputWithButton = ({onPress}) => {
           flexGrow: 1,
           marginRight: 5,
         }}
+        readOnly={isLoading}
         value={text}
         onChangeText={setText}
         onKeyPress={onKeyPress}
