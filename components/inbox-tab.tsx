@@ -25,7 +25,6 @@ import { DefaultFlatList } from './default-flat-list';
 import { Inbox, Conversation, observeInbox } from '../xmpp/xmpp';
 
 // TODO: Blocking people should remove them from each others' inboxes
-// TODO: r9k
 
 const Stack = createNativeStackNavigator();
 
