@@ -94,8 +94,6 @@ const InboxTab_ = ({navigation}) => {
   ) => async (
     n: number
   ): Promise<Conversation[]> => {
-    console.log('fetchInboxPage:', sectionName, n); // TODO
-
     if (inbox === undefined) {
       return [];
     }

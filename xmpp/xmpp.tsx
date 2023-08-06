@@ -85,7 +85,6 @@ const setInbox = async (
   setter: (inbox: Inbox) => Promise<Inbox> | Inbox
 ): Promise<void> => {
   _inbox = await setter(_inbox);
-  console.log('New inbox', _inbox); // TODO
   _inboxObservers.forEach((observer) => observer(_inbox));
 };
 
@@ -313,21 +312,11 @@ const login = async (username: string, password: string) => {
       console.error(err);
     });
 
-    _xmpp.on("offline", () => {
-      console.log("offline");
-    });
-
-
-    _xmpp.on("input", async (stanza) => {
-      // TODO
-      console.log(stanza.toString());
-    });
 
     _xmpp.on("online", async () => {
       if (_xmpp) {
         await _xmpp.send(xml("presence", { type: "available" }));
         await refreshInbox();
-        console.log("online");
       }
     });
 
