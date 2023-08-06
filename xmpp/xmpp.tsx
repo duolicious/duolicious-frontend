@@ -326,6 +326,7 @@ const login = async (username: string, password: string) => {
     _xmpp.on("online", async () => {
       if (_xmpp) {
         await _xmpp.send(xml("presence", { type: "available" }));
+        await refreshInbox();
         console.log("online");
       }
     });
@@ -333,8 +334,6 @@ const login = async (username: string, password: string) => {
     onReceiveMessage(); // Updates inbox
 
     await _xmpp.start();
-
-    await refreshInbox();
   } catch (e) {
     _xmpp = undefined;
 
