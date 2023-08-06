@@ -17,7 +17,7 @@ jobs:
           cat > web-build/_headers <<EOF
             /*
               X-Frame-Options: DENY
-              Access-Control-Allow-Origin: *
+              Access-Control-Allow-Origin: ${DUO_API_URL}
           EOF
         env:
           NODE_OPTIONS: --openssl-legacy-provider
