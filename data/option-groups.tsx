@@ -43,7 +43,12 @@ type OptionGroupTextLong = {
   }
 };
 
-type OptionGroupTextShort = 'text-short';
+type OptionGroupTextShort = {
+  textShort: {
+    submit: (input: string) => Promise<boolean>
+    invalidMsg?: string
+  }
+};
 
 type OptionGroupOtp = {
   otp: {
@@ -158,7 +163,7 @@ const isOptionGroupTextLong = (x: any): x is OptionGroupTextLong => {
 }
 
 const isOptionGroupTextShort = (x: any): x is OptionGroupTextShort => {
-  return x === 'text-short';
+  return hasExactKeys(x, ['textShort']);
 }
 
 const isOptionGroupOtp = (x: any): x is OptionGroupOtp => {
@@ -251,7 +256,12 @@ const basicsOptionGroups: OptionGroup[] = [
   {
     title: 'Occupation',
     description: "What's your profession?",
-    input: 'text-short',
+    input: {
+      textShort: {
+        submit: async (input: string) => true,
+        invalidMsg: 'Try again',
+      }
+    }
   },
   {
     title: 'Height',
@@ -428,8 +438,23 @@ const notificationSettingsOptionGroups: OptionGroup[] = [
 const deletionOptionGroups: OptionGroup[] = [
   {
     title: 'Delete Your Account',
-    description: 'Are you sure you want to delete your account? Type "delete" to confirm.',
-    input: 'text-short',
+    description: `Are you sure you want to delete your account? This will immediately log you out and permanently delete your account data. If you're sure, type "delete" to confirm.`,
+    input: {
+      textShort: {
+        submit: async (input: string) => {
+          if ((input ?? '').trim() !== 'delete') return false;
+
+          const response = await japi('delete', '/account');
+
+          if (!response.ok) return false;
+
+          setSignedInUser(undefined);
+
+          return true;
+        },
+        invalidMsg: 'Try again',
+      }
+    }
   },
 ];
 
@@ -586,6 +611,7 @@ const createAccountOptionGroups: OptionGroup[] = [
           const response = await japi('post', '/finish-onboarding');
           if (response.ok) {
             setSignedInUser((signedInUser) => ({
+              sessionToken: '',
               ...signedInUser,
               personId: response?.json?.person_id,
               units: response?.json?.units === 'Imperial' ? 'Imperial' : 'Metric',

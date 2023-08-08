@@ -390,7 +390,28 @@ const TextLong = forwardRef((props: InputProps, ref) => {
   );
 });
 
-const TextShort = ({input, onPress}) => {
+const TextShort = forwardRef((props: InputProps, ref) => {
+  const [isInvalid, setIsInvalid] = useState(false);
+
+  const inputValueRef = useRef<string>('');
+
+  const onChangeInputValue = useCallback((value: string) => {
+    inputValueRef.current = value;
+  }, []);
+
+  const submit = useCallback(async () => {
+    setIsInvalid(false);
+    props.setIsLoading(true);
+
+    const ok = await props.input.textShort.submit(inputValueRef?.current);
+    setIsInvalid(!ok);
+    ok && props.onSubmitSuccess();
+
+    props.setIsLoading(false);
+  }, []);
+
+  useImperativeHandle(ref, () => ({ submit }), []);
+
   return (
     <>
       <DefaultTextInput
@@ -398,12 +419,26 @@ const TextShort = ({input, onPress}) => {
           marginLeft: 20,
           marginRight: 20,
         }}
+        onChangeText={onChangeInputValue}
+        onSubmitEditing={submit}
         placeholder="Type here..."
       />
+      {props.input?.textShort?.invalidMsg &&
+        <DefaultText
+          style={{
+            marginTop: 5,
+            textAlign: 'center',
+            color: 'red',
+            opacity: isInvalid ? 1 : 0,
+          }}
+        >
+          {props.input?.textShort?.invalidMsg}
+        </DefaultText>
+      }
       <ButtonWithCenteredText
-        onPress={onPress}
+        onPress={submit}
         containerStyle={{
-          marginTop: 30,
+          marginTop: 15,
           marginLeft: 20,
           marginRight: 20,
         }}
@@ -412,7 +447,7 @@ const TextShort = ({input, onPress}) => {
       </ButtonWithCenteredText>
     </>
   );
-};
+});
 
 const CheckChips = forwardRef((props: InputProps, ref) => {
   const [isInvalid, setIsInvalid] = useState(false);
