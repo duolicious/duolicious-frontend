@@ -148,7 +148,7 @@ const Deletion = ({input, onPress}) => {
 
 const GivenName = forwardRef((props: InputProps, ref) => {
   const [isInvalid, setIsInvalid] = useState(false);
-  const inputValueRef = useRef<string | undefined>(undefined);
+  const inputValueRef = useRef<string>('');
 
   const onChangeInputValue = useCallback((value: string) => {
     inputValueRef.current = value;
@@ -193,7 +193,7 @@ const GivenName = forwardRef((props: InputProps, ref) => {
 const Otp = forwardRef((props: InputProps, ref) => {
   const [isLoadingResend, setIsLoadingResend] = useState(false);
   const [isInvalid, setIsInvalid] = useState(false);
-  const inputValueRef = useRef<string | undefined>(undefined);
+  const inputValueRef = useRef<string>('');
 
   const onChangeInputValue = useCallback((value: string) => {
     inputValueRef.current = value;
@@ -249,7 +249,7 @@ const Otp = forwardRef((props: InputProps, ref) => {
 
 const LocationSelector = forwardRef((props: InputProps, ref) => {
   const [isInvalid, setIsInvalid] = useState(false);
-  const inputValueRef = useRef<string | undefined>(undefined);
+  const inputValueRef = useRef<string>('');
 
   const onChangeInputValue = useCallback((value: string) => {
     inputValueRef.current = value;
@@ -345,7 +345,7 @@ const Photos = forwardRef((props: InputProps, ref) => {
 const TextLong = forwardRef((props: InputProps, ref) => {
   const [isInvalid, setIsInvalid] = useState(false);
 
-  const inputValueRef = useRef<string | undefined>(undefined);
+  const inputValueRef = useRef<string>('');
 
   const onChangeInputValue = useCallback((value: string) => {
     inputValueRef.current = value;
