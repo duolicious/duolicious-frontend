@@ -16,7 +16,6 @@ import { Title } from './title';
 import { DefaultLongTextInput } from './default-long-text-input';
 import {
   basicsOptionGroups,
-  contactOptionGroups,
   deactivationOptionGroups,
   deletionOptionGroups,
   generalSettingsOptionGroups,
@@ -125,10 +124,7 @@ const About = ({navigation}) => {
       <Title>Delete Your Account</Title>
       <Button_ optionGroups={deletionOptionGroups} setting=""/>
 
-      <Title>Contact Us</Title>
-      <Button_ optionGroups={contactOptionGroups} setting="" showSkipButton={false}/>
-
-      <Title style={{textAlign: 'center', color: '#999'}}>About</Title>
+      <Title style={{marginTop: 40, textAlign: 'center', color: '#999'}}>About</Title>
       <Pressable
         onPress={() => Linking.openURL('https://github.com/duolicious')}
       >
@@ -138,11 +134,30 @@ const About = ({navigation}) => {
             color: '#999',
           }}
         >
-          Duolicious is free software licensed under the AGPLv3. The source code used to make Duolicious is available
+          Duolicious is free software licensed under the AGPLv3. The source code
+          used to make Duolicious is available {}
           <DefaultText style={{fontWeight: '600', color: '#37f'}}>
-            {' '}here
+            here
           </DefaultText>
           .
+        </DefaultText>
+      </Pressable>
+      <Pressable
+        style={{marginTop: 15}}
+        onPress={() => Linking.openURL('mailto:support@duolicious.app')}
+      >
+        <DefaultText
+          style={{
+            textAlign: 'center',
+            color: '#999',
+          }}
+        >
+          You can contact us at {}
+          <DefaultText style={{fontWeight: '600', color: '#37f'}}>
+            support@duolicious.app
+          </DefaultText>
+          {} to provide feedback, report abuse, or submit any other concerns or
+          queries you have.
         </DefaultText>
       </Pressable>
     </View>

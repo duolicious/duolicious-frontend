@@ -464,7 +464,13 @@ const deactivationOptionGroups: OptionGroup[] = [
     description: 'Are you sure you want to deactivate your account? This will hide you from other users and log you out. The next time you sign in, your account will be reactivated. Press "continue" to deactivate your account.',
     input: {
       none: {
-        submit: async () => true
+        submit: async () => {
+          const ok = (await japi('post', '/deactivate')).ok
+          if (ok) {
+            setSignedInUser(undefined);
+          }
+          return ok;
+        }
       }
     }
   },
@@ -622,27 +628,6 @@ const createAccountOptionGroups: OptionGroup[] = [
       }
     }
   },
-];
-
-const contactOptionGroups: OptionGroup[] = [
-  {
-    title: 'Contact Us',
-    description: "Our mission at Duolicious is to help its users meet like-minded people. You can help us achieve that by contacting us here to provide feedback, report abuse, or submit any other concerns or queries you have.",
-    input: {
-      textLong: {
-        submit: async () => true
-      }
-    }
-  },
-  {
-    title: 'Message Sent!',
-    description: "Thanks for getting in touch. We'll get back to you as soon as possible.",
-    input: {
-      none: {
-        submit: async () => true
-      }
-    }
-  }
 ];
 
 const searchBasicsOptionGroups: OptionGroup[] = [
@@ -959,7 +944,6 @@ export {
   generalSettingsOptionGroups,
   notificationSettingsOptionGroups,
   privacySettingsOptionGroups,
-  contactOptionGroups,
   hideMeFromStrangersOptionGroup,
   OptionGroupOtp,
 };
