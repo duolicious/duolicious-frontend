@@ -33,6 +33,7 @@ type OptionGroupPhotos = {
   photos: {
     submit: (filename: string, pathOrBase64: string) => Promise<boolean>
     delete: (filename: string) => Promise<boolean>
+    fetch?: (position: string) => Promise<string | null>
   }
 };
 
@@ -256,6 +257,16 @@ const basicsOptionGroups: OptionGroup[] = [
   {
     title: 'Occupation',
     description: "What's your profession?",
+    input: {
+      textShort: {
+        submit: async (input: string) => true,
+        invalidMsg: 'Try again',
+      }
+    }
+  },
+  {
+    title: 'Education',
+    description: "Where did you study?",
     input: {
       textShort: {
         submit: async (input: string) => true,
@@ -922,28 +933,29 @@ const privacySettingsOptionGroups: OptionGroup[] = [
 
 export {
   OptionGroup,
+  OptionGroupOtp,
+  OptionGroupPhotos,
   basicsOptionGroups,
+  createAccountOptionGroups,
   deactivationOptionGroups,
   deletionOptionGroups,
+  generalSettingsOptionGroups,
+  hideMeFromStrangersOptionGroup,
   isOptionGroupButtons,
+  isOptionGroupCheckChips,
   isOptionGroupDate,
   isOptionGroupDeletion,
   isOptionGroupGivenName,
   isOptionGroupLocationSelector,
-  isOptionGroupOtp,
   isOptionGroupNone,
+  isOptionGroupOtp,
   isOptionGroupPhotos,
+  isOptionGroupRangeSlider,
   isOptionGroupSlider,
   isOptionGroupTextLong,
   isOptionGroupTextShort,
-  isOptionGroupCheckChips,
-  isOptionGroupRangeSlider,
-  searchBasicsOptionGroups,
-  searchInteractionsOptionGroups,
-  createAccountOptionGroups,
-  generalSettingsOptionGroups,
   notificationSettingsOptionGroups,
   privacySettingsOptionGroups,
-  hideMeFromStrangersOptionGroup,
-  OptionGroupOtp,
+  searchBasicsOptionGroups,
+  searchInteractionsOptionGroups,
 };

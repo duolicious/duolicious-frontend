@@ -16,7 +16,7 @@ const ButtonForOption = (props) => {
     label,
     optionGroups,
     setting,
-    noSettingText = 'Not Set',
+    noSettingText = 'Unanswered',
     showSkipButton,
     buttonTextColor,
     buttonBackgroundColor,
@@ -90,7 +90,7 @@ const ButtonForOption = (props) => {
           borderWidth: 1,
           borderRadius: 999,
           paddingLeft: 10,
-          paddingRight: 30,
+          paddingRight: 20,
           opacity: opacity,
           alignItems: 'center',
           flexDirection: 'row',
@@ -106,12 +106,15 @@ const ButtonForOption = (props) => {
         </DefaultText>
         <DefaultText
           style={{
-            color: '#444',
-            fontStyle: setting === undefined ? 'italic' : 'normal',
+            paddingLeft: 10,
+            paddingRight: 10,
+            color: (setting ?? noSettingText) === noSettingText ? '#888' : 'black',
+            fontStyle: (setting ?? noSettingText) === noSettingText ? 'italic' : 'normal',
+            textAlign: 'right',
           }}
+          numberOfLines={1}
         >
-          {setting === undefined && noSettingText}
-          {setting !== undefined && setting}
+          {setting ?? noSettingText}
         </DefaultText>
         {loading &&
           <ActivityIndicator

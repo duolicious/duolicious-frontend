@@ -6,6 +6,8 @@ import {
 } from 'react-native';
 import {
   useCallback,
+  useEffect,
+  useMemo,
   useState,
 } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -15,6 +17,7 @@ import { OptionScreen } from './option-screen';
 import { Title } from './title';
 import { DefaultLongTextInput } from './default-long-text-input';
 import {
+  OptionGroupPhotos,
   basicsOptionGroups,
   deactivationOptionGroups,
   deletionOptionGroups,
@@ -25,10 +28,25 @@ import {
 import { Images } from './images';
 import { DefaultText } from './default-text';
 import { sessionToken } from '../kv-storage/session-token';
-import { api } from '../api/api';
+import { api, mapi, japi } from '../api/api';
 import { setSignedInUser } from '../App';
+import {
+  IMAGES_URL,
+} from '../env/env';
+import { cmToFeetInchesStr } from '../units/units';
+import { signedInUser } from '../App';
 
 const Stack = createNativeStackNavigator();
+
+const localizeData = (data) => {
+  if (!data) return data;
+  if (signedInUser?.units !== 'Imperial') return data;
+
+  return {
+    ...data,
+    height: data.height && cmToFeetInchesStr(data.height),
+  };
+};
 
 const ProfileTab = ({navigation}) => {
   return (
@@ -44,7 +62,53 @@ const ProfileTab = ({navigation}) => {
   );
 };
 
+const Images_ = ({data}) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isInvalid, setIsInvalid] = useState(false);
+  const input: OptionGroupPhotos = useMemo(() => {
+    return {
+      photos: {
+        submit: async (filename, pathOrBase64) => (await mapi(
+          'patch',
+          '/profile-info',
+          filename,
+          pathOrBase64
+        )).ok,
+        delete: async (filename) => (await japi(
+          'delete',
+          '/profile-info',
+          { files: [filename] }
+        )).ok,
+        fetch: async (position) => {
+          const imageUuid = (data?.photo ?? {})[position] ?? null;
+          if (imageUuid) {
+            return `${IMAGES_URL}/900-${imageUuid}.jpg`
+          } else {
+            return null;
+          }
+        }
+      }
+    };
+  }, [data]);
+
+  return <Images
+    input={input}
+    setIsLoading={setIsLoading}
+    setIsInvalid={setIsInvalid} />
+};
+
 const ProfileTab_ = ({navigation}) => {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      const response = await api('get', '/profile-info');
+      if (response.json) {
+        setData(localizeData(response.json));
+      }
+    })();
+  }, []);
+
   return (
     <>
       <DuoliciousTopNavBar/>
@@ -59,14 +123,14 @@ const ProfileTab_ = ({navigation}) => {
         }}
       >
         <Title>Profile Pictures</Title>
-        <Images/>
-        <About navigation={navigation}/>
+        <Images_ data={data}/>
+        <About navigation={navigation} data={data}/>
       </ScrollView>
     </>
   );
 };
 
-const About = ({navigation}) => {
+const About = ({navigation, data}) => {
   const [isLoadingSignOut, setIsLoadingSignOut] = useState(false);
 
   const Button_ = (props) => {
@@ -89,30 +153,46 @@ const About = ({navigation}) => {
   return (
     <View>
       <Title>About</Title>
-      <DefaultLongTextInput/>
+      <DefaultLongTextInput defaultValue={data?.about ?? ''}/>
       <Title>Basics</Title>
       {
-        basicsOptionGroups.map((_, i) => {
-          return <Button_ key={i} optionGroups={basicsOptionGroups.slice(i)}/>
-        })
+        basicsOptionGroups.map((_, i) =>
+          <Button_
+            key={i}
+            setting={(data ?? {})[basicsOptionGroups[i].title.toLowerCase()]}
+            optionGroups={basicsOptionGroups.slice(i)}
+          />
+        )
       }
       <Title>General Settings</Title>
       {
-        generalSettingsOptionGroups.map((_, i) => {
-          return <Button_ key={i} optionGroups={generalSettingsOptionGroups.slice(i)}/>
-        })
+        generalSettingsOptionGroups.map((_, i) =>
+          <Button_
+            key={i}
+            setting={(data ?? {})[generalSettingsOptionGroups[i].title.toLowerCase()]}
+            optionGroups={generalSettingsOptionGroups.slice(i)}
+          />
+        )
       }
       <Title>Notification Settings</Title>
       {
-        notificationSettingsOptionGroups.map((_, i) => {
-          return <Button_ key={i} optionGroups={notificationSettingsOptionGroups.slice(i)}/>
-        })
+        notificationSettingsOptionGroups.map((_, i) =>
+          <Button_
+            key={i}
+            setting={(data ?? {})[notificationSettingsOptionGroups[i].title.toLowerCase()]}
+            optionGroups={notificationSettingsOptionGroups.slice(i)}
+          />
+        )
       }
       <Title>Privacy Settings</Title>
       {
-        privacySettingsOptionGroups.map((_, i) => {
-          return <Button_ key={i} optionGroups={privacySettingsOptionGroups.slice(i)}/>
-        })
+        privacySettingsOptionGroups.map((_, i) =>
+          <Button_
+            key={i}
+            setting={(data ?? {})[privacySettingsOptionGroups[i].title.toLowerCase()]}
+            optionGroups={privacySettingsOptionGroups.slice(i)}
+          />
+        )
       }
 
       <Title>Sign Out</Title>

@@ -378,6 +378,7 @@ type UserData = {
   long_distance: string | null,
   looking_for: string | null,
   occupation: string | null,
+  education: string | null,
   orientation: string | null,
   relationship_status: string | null,
   religion: string | null,
@@ -637,6 +638,9 @@ const Body = ({
           {data?.occupation &&
             <Basic icon="briefcase">{data.occupation}</Basic>}
 
+          {data?.education &&
+            <Basic icon="school">{data.education}</Basic>}
+
           {data?.has_kids === 'Yes' &&
             <Basic icon="people">Has Kids</Basic>}
           {data?.has_kids === 'No' &&
@@ -677,9 +681,9 @@ const Body = ({
           {data?.exercise &&
             <Basic icon="barbell">{data.exercise} Exercises</Basic>}
 
-          {data?.height_cm && signedInUser.units === 'Metric' &&
+          {data?.height_cm && signedInUser?.units === 'Metric' &&
             <Basic icon={faRulerVertical}>{data.height_cm} cm</Basic>}
-          {data?.height_cm && signedInUser.units === 'Imperial' &&
+          {data?.height_cm && signedInUser?.units === 'Imperial' &&
             <Basic icon={faRulerVertical}>{cmToFeetInchesStr(data.height_cm)}</Basic>}
         </Basics>
         <Title>About {data?.name ?? '...'}</Title>

@@ -7,6 +7,7 @@ import {
 import {
   forwardRef,
   useCallback,
+  useEffect,
   useRef,
   useState,
 } from 'react';
@@ -64,8 +65,23 @@ const Images = ({input, setIsLoading, setIsInvalid}) => {
 };
 
 const UserImage = ({input, fileNumber, setIsLoading, setIsInvalid}) => {
-  const [image, setImage] = useState(null);
+  const [image, setImage] = useState<string | null>(null);
   const [isLoading_, setIsLoading_] = useState(false);
+
+  const fetchImage = useCallback(async () => {
+    const _fetchImage = input.photos.fetch;
+
+    if (_fetchImage) {
+      setIsLoading(true);
+      setIsLoading_(true);
+
+      const filename = await _fetchImage(String(fileNumber));
+
+      setImage(filename);
+      setIsLoading(false);
+      setIsLoading_(false);
+    }
+  }, [input]);
 
   const addImage = useCallback(async () => {
     // No permissions request is necessary for launching the image library
@@ -115,6 +131,8 @@ const UserImage = ({input, fileNumber, setIsLoading, setIsInvalid}) => {
       setIsInvalid(true);
     }
   }, []);
+
+  useEffect(() => void fetchImage(), [fetchImage]);
 
   const Image_ = ({uri}) => {
     return (
