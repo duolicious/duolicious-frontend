@@ -153,8 +153,12 @@ const About = ({navigation, data}) => {
         isOptionGroupSlider(og.input) && og.title === 'Height' ? {
           input: {
             slider: {
-              unitsLabel: signedInUser?.units === 'Imperial' ? "ft'in\"" : undefined,
-              valueRewriter: signedInUser?.units === 'Imperial' ? cmToFeetInchesStr : undefined
+              unitsLabel: (
+                signedInUser?.units === 'Imperial' ?
+                "ft'in\"" : undefined),
+              valueRewriter: (
+                signedInUser?.units === 'Imperial' ?
+                cmToFeetInchesStr : undefined)
             }
           }
         } : {},
