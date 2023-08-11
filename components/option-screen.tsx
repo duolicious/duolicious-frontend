@@ -62,7 +62,7 @@ import { japi } from '../api/api';
 import { signedInUser } from '../App';
 import { cmToFeetInchesStr } from '../units/units';
 
-type InputProps<T> = {
+type InputProps<T extends OptionGroupInputs> = {
   input: T,
   isLoading: boolean
   setIsLoading: any
@@ -127,7 +127,7 @@ const Slider = forwardRef((props: InputProps<OptionGroupSlider>, ref) => {
   const submit = useCallback(async () => {
     props.setIsLoading(true);
 
-    const ok = await props.input.submit(inputValueRef?.current);
+    const ok = await props.input.slider.submit(inputValueRef?.current);
     ok && props.onSubmitSuccess();
 
     props.setIsLoading(false);
