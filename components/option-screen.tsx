@@ -23,21 +23,32 @@ import { OtpInput } from './otp-input';
 import { DatePicker } from './date-picker';
 import { LocationSelector as LocationSelector_ } from './location-selector';
 import {
-  OptionGroupOtp,
   OptionGroup,
+  OptionGroupButtons,
+  OptionGroupCheckChips,
+  OptionGroupDate,
+  OptionGroupGivenName,
+  OptionGroupInputs,
+  OptionGroupLocationSelector,
+  OptionGroupNone,
+  OptionGroupOtp,
+  OptionGroupPhotos,
+  OptionGroupRangeSlider,
+  OptionGroupSlider,
+  OptionGroupTextLong,
+  OptionGroupTextShort,
   isOptionGroupButtons,
+  isOptionGroupCheckChips,
   isOptionGroupDate,
-  isOptionGroupDeletion,
   isOptionGroupGivenName,
   isOptionGroupLocationSelector,
+  isOptionGroupNone,
   isOptionGroupOtp,
   isOptionGroupPhotos,
+  isOptionGroupRangeSlider,
   isOptionGroupSlider,
   isOptionGroupTextLong,
   isOptionGroupTextShort,
-  isOptionGroupRangeSlider,
-  isOptionGroupCheckChips,
-  isOptionGroupNone,
 } from '../data/option-groups';
 import {
   SecondaryImages,
@@ -48,27 +59,29 @@ import { CheckChip as CheckChip_, CheckChips as CheckChips_ } from './check-chip
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons/faArrowLeft'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { japi } from '../api/api';
+import { signedInUser } from '../App';
+import { cmToFeetInchesStr } from '../units/units';
 
-type InputProps = {
-  input,
-  isLoading,
-  setIsLoading,
-  onSubmitSuccess,
-  title,
-  showSkipButton
+type InputProps<T> = {
+  input: T,
+  isLoading: boolean
+  setIsLoading: any
+  onSubmitSuccess: any
+  title: string,
+  showSkipButton: boolean
 };
 
-const Buttons = forwardRef((props: InputProps, ref) => {
-  const inputValueRef = useRef<string | undefined>(undefined);
+const Buttons = forwardRef((props: InputProps<OptionGroupButtons>, ref) => {
+  const inputValueRef = useRef<string>('');
 
-  const onChangeInputValue = useCallback((value: number) => {
-    inputValueRef.current = props.input.buttons[value];
+  const onChangeInputValue = useCallback((index: number) => {
+    inputValueRef.current = props.input.buttons.values[index];
   }, []);
 
   const submit = useCallback(async () => {
     props.setIsLoading(true);
 
-    const ok = await props.input.submit(inputValueRef?.current);
+    const ok = await props.input.buttons.submit(inputValueRef?.current);
     ok && props.onSubmitSuccess();
 
     props.setIsLoading(false);
@@ -79,8 +92,12 @@ const Buttons = forwardRef((props: InputProps, ref) => {
   return (
     <>
       <ButtonGroup_
-        buttons={props.input.buttons}
-        initialSelectedIndex={props.input.initialSelectedIndex}
+        buttons={props.input.buttons.values}
+        initialSelectedIndex={
+          props.input.buttons.defaultValue ?
+            props.input.buttons.values.indexOf(props.input.buttons.defaultValue) :
+            0
+        }
         onPress={onChangeInputValue}
       />
       {props.showSkipButton &&
@@ -100,24 +117,43 @@ const Buttons = forwardRef((props: InputProps, ref) => {
   );
 });
 
-const Slider = ({input, onPress, title, showDoneButton}) => {
+const Slider = forwardRef((props: InputProps<OptionGroupSlider>, ref) => {
+  const inputValueRef = useRef<number>(props.input.slider.defaultValue);
+
+  const onChangeInputValue = useCallback((value: number) => {
+    inputValueRef.current = value;
+  }, []);
+
+  const submit = useCallback(async () => {
+    props.setIsLoading(true);
+
+    const ok = await props.input.submit(inputValueRef?.current);
+    ok && props.onSubmitSuccess();
+
+    props.setIsLoading(false);
+  }, []);
+
+  useImperativeHandle(ref, () => ({ submit }), []);
+
   return (
     <>
       <LabelledSlider
-        label={`${title} (${input.slider.unitsLabel})`}
-        minimumValue={input.slider.sliderMin}
-        maximumValue={input.slider.sliderMax}
-        initialValue={input.slider.sliderInitial}
-        step={input.slider.step}
-        addPlusAtMax={input.slider.addPlusAtMax}
+        label={`${props.title} (${props.input.slider.unitsLabel})`}
+        minimumValue={props.input.slider.sliderMin}
+        maximumValue={props.input.slider.sliderMax}
+        initialValue={props.input.slider.defaultValue}
+        onValueChange={onChangeInputValue}
+        step={props.input.slider.step}
+        addPlusAtMax={props.input.slider.addPlusAtMax}
+        valueRewriter={props.input.slider.valueRewriter}
         style={{
           marginLeft: 20,
           marginRight: 20,
         }}
       />
-      {showDoneButton &&
+      {props.showSkipButton &&
         <ButtonWithCenteredText
-          onPress={onPress}
+          onPress={submit}
           containerStyle={{
             marginTop: 30,
             marginLeft: 20,
@@ -129,24 +165,9 @@ const Slider = ({input, onPress, title, showDoneButton}) => {
       }
     </>
   );
-};
+});
 
-const Deletion = ({input, onPress}) => {
-  return (
-    <ButtonWithCenteredText
-      onPress={onPress}
-      containerStyle={{
-        marginTop: 30,
-        marginLeft: 20,
-        marginRight: 20,
-      }}
-    >
-      Yes, delete my account right now
-    </ButtonWithCenteredText>
-  );
-};
-
-const GivenName = forwardRef((props: InputProps, ref) => {
+const GivenName = forwardRef((props: InputProps<OptionGroupGivenName>, ref) => {
   const [isInvalid, setIsInvalid] = useState(false);
   const inputValueRef = useRef<string>('');
 
@@ -190,7 +211,7 @@ const GivenName = forwardRef((props: InputProps, ref) => {
   );
 });
 
-const Otp = forwardRef((props: InputProps, ref) => {
+const Otp = forwardRef((props: InputProps<OptionGroupOtp>, ref) => {
   const [isLoadingResend, setIsLoadingResend] = useState(false);
   const [isInvalid, setIsInvalid] = useState(false);
   const inputValueRef = useRef<string>('');
@@ -247,7 +268,7 @@ const Otp = forwardRef((props: InputProps, ref) => {
   );
 });
 
-const LocationSelector = forwardRef((props: InputProps, ref) => {
+const LocationSelector = forwardRef((props: InputProps<OptionGroupLocationSelector>, ref) => {
   const [isInvalid, setIsInvalid] = useState(false);
   const inputValueRef = useRef<string>('');
 
@@ -270,7 +291,10 @@ const LocationSelector = forwardRef((props: InputProps, ref) => {
 
   return (
     <>
-      <LocationSelector_ onChangeText={onChangeInputValue}/>
+      <LocationSelector_
+        onChangeText={onChangeInputValue}
+        defaultValue={props.input.locationSelector.defaultValue}
+      />
       <DefaultText
         style={{
           zIndex: -1,
@@ -302,7 +326,7 @@ const LocationSelector = forwardRef((props: InputProps, ref) => {
   );
 });
 
-const Photos = forwardRef((props: InputProps, ref) => {
+const Photos = forwardRef((props: InputProps<OptionGroupPhotos>, ref) => {
   const [isInvalid, setIsInvalid] = useState(false);
 
 
@@ -342,7 +366,7 @@ const Photos = forwardRef((props: InputProps, ref) => {
   );
 });
 
-const TextLong = forwardRef((props: InputProps, ref) => {
+const TextLong = forwardRef((props: InputProps<OptionGroupTextLong>, ref) => {
   const [isInvalid, setIsInvalid] = useState(false);
 
   const inputValueRef = useRef<string>('');
@@ -390,7 +414,7 @@ const TextLong = forwardRef((props: InputProps, ref) => {
   );
 });
 
-const TextShort = forwardRef((props: InputProps, ref) => {
+const TextShort = forwardRef((props: InputProps<OptionGroupTextShort>, ref) => {
   const [isInvalid, setIsInvalid] = useState(false);
 
   const inputValueRef = useRef<string>('');
@@ -449,7 +473,7 @@ const TextShort = forwardRef((props: InputProps, ref) => {
   );
 });
 
-const CheckChips = forwardRef((props: InputProps, ref) => {
+const CheckChips = forwardRef((props: InputProps<OptionGroupCheckChips>, ref) => {
   const [isInvalid, setIsInvalid] = useState(false);
   const inputValueRef = useRef(new Set<string>(
     props.input.checkChips.flatMap(
@@ -534,7 +558,7 @@ const RangeSlider = ({input}) => {
   />
 };
 
-const None = forwardRef((props: InputProps, ref) => {
+const None = forwardRef((props: InputProps<OptionGroupNone>, ref) => {
   const submit = useCallback(async () => {
     props.setIsLoading(true);
 
@@ -562,35 +586,31 @@ const None = forwardRef((props: InputProps, ref) => {
   );
 });
 
-const InputElement = forwardRef((props: InputProps, ref) => {
-  const props1 = {ref, ...props};
-
+const InputElement = forwardRef((props: InputProps<OptionGroupInputs>, ref) => {
   if (isOptionGroupButtons(props.input)) {
-    return <Buttons {...props1}/>;
+    return <Buttons {...{ref, ...props, input: props.input}}/>;
   } else if (isOptionGroupSlider(props.input)) {
-    return <Slider {...props1}/>;
-  } else if (isOptionGroupDeletion(props.input)) {
-    return <Deletion {...props1}/>;
+    return <Slider {...{ref, ...props, input: props.input}}/>;
   } else if (isOptionGroupGivenName(props.input)) {
-    return <GivenName {...props1}/>
+    return <GivenName {...{ref, ...props, input: props.input}}/>
   } else if (isOptionGroupOtp(props.input)) {
-    return <Otp {...props1}/>;
+    return <Otp {...{ref, ...props, input: props.input}}/>;
   } else if (isOptionGroupDate(props.input)) {
-    return <DatePicker {...props1}/>;
+    return <DatePicker {...{ref, ...props, input: props.input}}/>;
   } else if (isOptionGroupLocationSelector(props.input)) {
-    return <LocationSelector {...props1}/>;
+    return <LocationSelector {...{ref, ...props, input: props.input}}/>;
   } else if (isOptionGroupPhotos(props.input)) {
-    return <Photos {...props1}/>;
+    return <Photos {...{ref, ...props, input: props.input}}/>;
   } else if (isOptionGroupTextLong(props.input)) {
-    return <TextLong {...props1}/>;
+    return <TextLong {...{ref, ...props, input: props.input}}/>;
   } else if (isOptionGroupTextShort(props.input)) {
-    return <TextShort {...props1}/>;
+    return <TextShort {...{ref, ...props, input: props.input}}/>;
   } else if (isOptionGroupCheckChips(props.input)) {
-    return <CheckChips {...props1}/>;
+    return <CheckChips {...{ref, ...props, input: props.input}}/>;
   } else if (isOptionGroupRangeSlider(props.input)) {
-    return <RangeSlider {...props1}/>;
+    return <RangeSlider {...{ref, ...props, input: props.input}}/>;
   } else if (isOptionGroupNone(props.input)) {
-    return <None {...props1}/>;
+    return <None {...{ref, ...props, input: props.input}}/>;
   } else {
     throw Error('Unhandled input: ' + JSON.stringify(props.input));
   }
@@ -612,7 +632,7 @@ const OptionScreen = ({navigation, route}) => {
 
   const thisOptionGroup = optionGroups[0];
 
-  const inputRef = useRef(undefined);
+  const inputRef = useRef<any>(undefined);
 
   const {
     title,
@@ -620,6 +640,10 @@ const OptionScreen = ({navigation, route}) => {
     input,
     scrollView,
   } = thisOptionGroup;
+
+  if (!input) {
+    throw Error('Expected input to be defined');
+  }
 
   const onSubmitSuccess = useCallback(async () => {
     switch (optionGroups.length) {
@@ -740,7 +764,8 @@ const OptionScreen = ({navigation, route}) => {
               setIsLoading={setIsLoading}
               onSubmitSuccess={onSubmitSuccess}
               title={title}
-              showSkipButton={showSkipButton}/>
+              showSkipButton={showSkipButton}
+            />
           }
           {scrollView !== false && <>
               <ScrollView
@@ -757,7 +782,8 @@ const OptionScreen = ({navigation, route}) => {
                   setIsLoading={setIsLoading}
                   onSubmitSuccess={onSubmitSuccess}
                   title={title}
-                  showSkipButton={showSkipButton}/>
+                  showSkipButton={showSkipButton}
+                />
                 <View style={{height: 20}}/>
               </ScrollView>
               <LinearGradient
@@ -810,7 +836,7 @@ const OptionScreen = ({navigation, route}) => {
 const ButtonGroup_ = ({buttons, initialSelectedIndex, ...rest}) => {
   const {onPress} = rest;
 
-  const [selectedIndex, setSelectedIndex] = useState(initialSelectedIndex);
+  const [selectedIndex, setSelectedIndex] = useState<number>(initialSelectedIndex);
 
   const onPress_ = (value: number) => {
     setSelectedIndex(value);

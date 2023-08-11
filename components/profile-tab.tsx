@@ -17,11 +17,16 @@ import { OptionScreen } from './option-screen';
 import { Title } from './title';
 import { DefaultLongTextInput } from './default-long-text-input';
 import {
+  OptionGroup,
   OptionGroupPhotos,
   basicsOptionGroups,
   deactivationOptionGroups,
   deletionOptionGroups,
   generalSettingsOptionGroups,
+  getDefaultValue,
+  isOptionGroupButtons,
+  isOptionGroupLocationSelector,
+  isOptionGroupSlider,
   notificationSettingsOptionGroups,
   privacySettingsOptionGroups,
 } from '../data/option-groups';
@@ -35,18 +40,11 @@ import {
 } from '../env/env';
 import { cmToFeetInchesStr } from '../units/units';
 import { signedInUser } from '../App';
+import * as _ from "lodash";
+
+// TODO: Needs a spinner when loading data
 
 const Stack = createNativeStackNavigator();
-
-const localizeData = (data) => {
-  if (!data) return data;
-  if (signedInUser?.units !== 'Imperial') return data;
-
-  return {
-    ...data,
-    height: data.height && cmToFeetInchesStr(data.height),
-  };
-};
 
 const ProfileTab = ({navigation}) => {
   return (
@@ -104,7 +102,7 @@ const ProfileTab_ = ({navigation}) => {
     (async () => {
       const response = await api('get', '/profile-info');
       if (response.json) {
-        setData(localizeData(response.json));
+        setData(response.json);
       }
     })();
   }, []);
@@ -133,6 +131,50 @@ const ProfileTab_ = ({navigation}) => {
 const About = ({navigation, data}) => {
   const [isLoadingSignOut, setIsLoadingSignOut] = useState(false);
 
+  const addDefaultValue = (optionGroups: OptionGroup[]) =>
+    optionGroups.map((og, i) =>
+      _.merge(
+        {},
+        og,
+        isOptionGroupButtons(og.input) ? {
+          input: {
+            buttons: {
+              defaultValue: (data ?? {})[optionGroups[i].title.toLowerCase()]
+            }
+          }
+        } : {},
+        isOptionGroupLocationSelector(og.input) ? {
+          input: {
+            locationSelector: {
+              defaultValue: (data ?? {})[optionGroups[i].title.toLowerCase()]
+            }
+          }
+        } : {},
+        isOptionGroupSlider(og.input) && og.title === 'Height' ? {
+          input: {
+            slider: {
+              valueRewriter: signedInUser?.units === 'Imperial' ? cmToFeetInchesStr : undefined
+            }
+          }
+        } : {},
+      )
+    );
+
+  const [
+    _basicsOptionGroups,
+    _generalSettingsOptionGroups,
+    _notificationSettingsOptionGroups,
+    _privacySettingsOptionGroups,
+  ] = useMemo(
+    () => [
+      addDefaultValue(basicsOptionGroups),
+      addDefaultValue(generalSettingsOptionGroups),
+      addDefaultValue(notificationSettingsOptionGroups),
+      addDefaultValue(privacySettingsOptionGroups),
+    ],
+    [data]
+  );
+
   const Button_ = (props) => {
     return <ButtonForOption
       navigation={navigation}
@@ -156,47 +198,52 @@ const About = ({navigation, data}) => {
       <DefaultLongTextInput defaultValue={data?.about ?? ''}/>
       <Title>Basics</Title>
       {
-        basicsOptionGroups.map((_, i) =>
+        _basicsOptionGroups.map((_, i) =>
           <Button_
             key={i}
-            setting={(data ?? {})[basicsOptionGroups[i].title.toLowerCase()]}
-            optionGroups={basicsOptionGroups.slice(i)}
+            setting={getDefaultValue(_basicsOptionGroups[i].input)}
+            optionGroups={_basicsOptionGroups.slice(i)}
           />
         )
       }
       <Title>General Settings</Title>
       {
-        generalSettingsOptionGroups.map((_, i) =>
+        _generalSettingsOptionGroups.map((_, i) =>
           <Button_
             key={i}
-            setting={(data ?? {})[generalSettingsOptionGroups[i].title.toLowerCase()]}
-            optionGroups={generalSettingsOptionGroups.slice(i)}
+            setting={getDefaultValue(_generalSettingsOptionGroups[i].input)}
+            optionGroups={_generalSettingsOptionGroups.slice(i)}
           />
         )
       }
       <Title>Notification Settings</Title>
       {
-        notificationSettingsOptionGroups.map((_, i) =>
+        _notificationSettingsOptionGroups.map((_, i) =>
           <Button_
             key={i}
-            setting={(data ?? {})[notificationSettingsOptionGroups[i].title.toLowerCase()]}
-            optionGroups={notificationSettingsOptionGroups.slice(i)}
+            setting={getDefaultValue(_notificationSettingsOptionGroups[i].input)}
+            optionGroups={_notificationSettingsOptionGroups.slice(i)}
           />
         )
       }
       <Title>Privacy Settings</Title>
       {
-        privacySettingsOptionGroups.map((_, i) =>
+        _privacySettingsOptionGroups.map((_, i) =>
           <Button_
             key={i}
-            setting={(data ?? {})[privacySettingsOptionGroups[i].title.toLowerCase()]}
-            optionGroups={privacySettingsOptionGroups.slice(i)}
+            setting={getDefaultValue(_privacySettingsOptionGroups[i].input)}
+            optionGroups={_privacySettingsOptionGroups.slice(i)}
           />
         )
       }
 
       <Title>Sign Out</Title>
-      <ButtonForOption onPress={signOut} label="Sign Out" setting="" loading={isLoadingSignOut}/>
+      <ButtonForOption
+        onPress={signOut}
+        label="Sign Out"
+        setting=""
+        loading={isLoadingSignOut}
+      />
 
       <Title>Deactivate Your Account</Title>
       <Button_ optionGroups={deactivationOptionGroups} setting="" showSkipButton={false}/>

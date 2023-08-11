@@ -4,16 +4,18 @@ import { setSignedInUser } from '../App';
 import { sessionToken } from '../kv-storage/session-token';
 
 type OptionGroupButtons = {
-  buttons: string[],
-  submit: (input: string) => Promise<boolean>
-  initialSelectedIndex?: number,
+  buttons: {
+    values: string[],
+    submit: (input: string) => Promise<boolean>
+    defaultValue?: string,
+  }
 };
 
-type OptionGroupDeletion = 'deletion';
 
 type OptionGroupLocationSelector = {
   locationSelector: {
     submit: (input: string) => Promise<boolean>
+    defaultValue?: string,
   }
 };
 
@@ -76,10 +78,11 @@ type OptionGroupSlider = {
   slider: {
     sliderMin: number,
     sliderMax: number,
-    sliderInitial: number,
+    defaultValue: number,
     step: number,
     unitsLabel: string,
-    addPlusAtMax?: boolean
+    addPlusAtMax?: boolean,
+    valueRewriter?: (v: number) => string,
   }
 };
 
@@ -93,7 +96,6 @@ type OptionGroupRangeSlider = {
 
 type OptionGroupInputs
   = OptionGroupButtons
-  | OptionGroupDeletion
   | OptionGroupLocationSelector
   | OptionGroupSlider
   | OptionGroupRangeSlider
@@ -113,7 +115,6 @@ type OptionGroup = {
   scrollView?: boolean,
 };
 
-
 const hasExactKeys = (obj, keys) => {
     // If the number of keys in the object and the keys array don't match, return false
     if (Object.keys(obj).length !== keys.length) return false;
@@ -128,11 +129,7 @@ const hasExactKeys = (obj, keys) => {
 }
 
 const isOptionGroupButtons = (x: any): x is OptionGroupButtons => {
-  return (x as OptionGroupButtons)?.buttons !== undefined;
-}
-
-const isOptionGroupDeletion = (x: any): x is OptionGroupDeletion => {
-  return x === 'deletion';
+  return hasExactKeys(x, ['buttons']);
 }
 
 const isOptionGroupLocationSelector = (x: any): x is OptionGroupLocationSelector => {
@@ -179,6 +176,10 @@ const isOptionGroupCheckChips = (x: any): x is OptionGroupCheckChips => {
   return hasExactKeys(x, ['checkChips', 'submit']);
 }
 
+const getDefaultValue = (x: OptionGroupInputs) => {
+  if (isOptionGroupButtons(x)) return x.buttons.defaultValue;
+}
+
 const genders = [
   'Man',
   'Woman',
@@ -194,8 +195,10 @@ const genderOptionGroup: OptionGroup = {
   title: 'Gender',
   description: "What's your gender?",
   input: {
-    buttons: genders,
-    submit: async (input) => true
+    buttons: {
+      values: genders,
+      submit: async (input) => true,
+    }
   }
 };
 
@@ -223,16 +226,18 @@ const orientationOptionGroup: OptionGroup = {
   title: 'Orientation',
   description: "What's your sexual orientation?",
   input: {
-    buttons: [
-      'Straight',
-      'Gay',
-      'Bisexual',
-      'Asexual',
-      'Demisexual',
-      'Pansexual',
-      'Other',
-    ],
-    submit: async (input: string) => true
+    buttons: {
+      values: [
+        'Straight',
+        'Gay',
+        'Bisexual',
+        'Asexual',
+        'Demisexual',
+        'Pansexual',
+        'Other',
+      ],
+      submit: async (input: string) => true,
+    }
   },
 };
 
@@ -240,16 +245,17 @@ const lookingForOptionGroup: OptionGroup = {
   title: 'Looking for',
   description: 'What are you mainly looking for on Duolicious?',
   input: {
-    buttons: [
-      'Long-term dating',
-      'Short-term dating',
-      'Friends',
-    ],
-    submit: async (input: string) => true
+    buttons: {
+      values: [
+        'Long-term dating',
+        'Short-term dating',
+        'Friends',
+      ],
+      submit: async (input: string) => true
+    }
   }
 };
 
-// TODO: These should come from a DB or something
 const basicsOptionGroups: OptionGroup[] = [
   genderOptionGroup,
   orientationOptionGroup,
@@ -282,7 +288,7 @@ const basicsOptionGroups: OptionGroup[] = [
         sliderMin: 50,
         sliderMax: 220,
         step: 1,
-        sliderInitial: 170,
+        defaultValue: 170,
         unitsLabel: 'cm',
       },
     },
@@ -292,114 +298,134 @@ const basicsOptionGroups: OptionGroup[] = [
     title: 'Smoking',
     description: 'Do you smoke?',
     input: {
-      buttons: ['Yes', 'No'],
-      submit: async (input: string) => true
+      buttons: {
+        values: ['Yes', 'No'],
+        submit: async (input: string) => true
+      }
     },
   },
   {
     title: 'Drinking',
     description: 'How often do you drink?',
     input: {
-      buttons: ['Often', 'Sometimes', 'Never'],
-      submit: async (input: string) => true
+      buttons: {
+        values: ['Often', 'Sometimes', 'Never'],
+        submit: async (input: string) => true
+      }
     },
   },
   {
     title: 'Drugs',
     description: 'Do you do drugs?',
     input: {
-      buttons: ['Yes', 'No'],
-      submit: async (input: string) => true
+      buttons: {
+        values: ['Yes', 'No'],
+        submit: async (input: string) => true
+      }
     },
   },
   {
     title: 'Long Distance',
     description: 'Are you willing to enter a long-distance relationship?',
     input: {
-      buttons: ['Yes', 'No'],
-      submit: async (input: string) => true
+      buttons: {
+        values: ['Yes', 'No'],
+        submit: async (input: string) => true
+      }
     },
   },
   {
     title: 'Relationship Status',
     description: "What's your relationship status?",
     input: {
-      buttons: [
-        'Single',
-        'Seeing someone',
-        'Engaged',
-        'Married',
-        'Divorced',
-        'Widowed',
-        'Other',
-      ],
-      submit: async (input: string) => true
+      buttons: {
+        values: [
+          'Single',
+          'Seeing someone',
+          'Engaged',
+          'Married',
+          'Divorced',
+          'Widowed',
+          'Other',
+        ],
+        submit: async (input: string) => true
+      }
     }
   },
   {
     title: 'Has Kids',
     description: 'Do you have kids?',
     input: {
-      buttons: ['Yes', 'No'],
-      submit: async (input: string) => true
+      buttons: {
+        values: ['Yes', 'No'],
+        submit: async (input: string) => true
+      }
     },
   },
   {
     title: 'Wants Kids',
     description: 'Do you want kids?',
     input: {
-      buttons: ['Yes', 'No'],
-      submit: async (input: string) => true
+      buttons: {
+        values: ['Yes', 'No'],
+        submit: async (input: string) => true
+      }
     },
   },
   {
     title: 'Exercise',
     description: 'How often do you exercise?',
     input: {
-      buttons: [
-        'Often',
-        'Sometimes',
-        'Never',
-      ],
-      submit: async (input: string) => true
+      buttons: {
+        values: [
+          'Often',
+          'Sometimes',
+          'Never',
+        ],
+        submit: async (input: string) => true
+      }
     },
   },
   {
     title: 'Religion',
     description: "What's your religion?",
     input: {
-      buttons: [
-        'Agnostic',
-        'Atheist',
-        'Buddhist',
-        'Christian',
-        'Hindu',
-        'Jewish',
-        'Muslim',
-        'Other',
-      ],
-      submit: async (input: string) => true
+      buttons: {
+        values: [
+          'Agnostic',
+          'Atheist',
+          'Buddhist',
+          'Christian',
+          'Hindu',
+          'Jewish',
+          'Muslim',
+          'Other',
+        ],
+        submit: async (input: string) => true
+      }
     },
   },
   {
     title: 'Star Sign',
     description: "What's your star sign?",
     input: {
-      buttons: [
-        'Aquarius',
-        'Aries',
-        'Cancer',
-        'Capricorn',
-        'Gemini',
-        'Leo',
-        'Libra',
-        'Pisces',
-        'Sagittarius',
-        'Scorpio',
-        'Taurus',
-        'Virgo',
-      ],
-      submit: async (input: string) => true
+      buttons: {
+        values: [
+          'Aquarius',
+          'Aries',
+          'Cancer',
+          'Capricorn',
+          'Gemini',
+          'Leo',
+          'Libra',
+          'Pisces',
+          'Sagittarius',
+          'Scorpio',
+          'Taurus',
+          'Virgo',
+        ],
+        submit: async (input: string) => true
+      }
     },
   },
 ];
@@ -409,8 +435,10 @@ const generalSettingsOptionGroups: OptionGroup[] = [
     title: 'Units',
     description: "Do you use the metric system, or the imperial system?",
     input: {
-      buttons: ['Metric', 'Imperial'],
-      submit: async (input: string) => true
+      buttons: {
+        values: ['Metric', 'Imperial'],
+        submit: async (input: string) => true
+      }
     }
   },
 ];
@@ -420,28 +448,32 @@ const notificationSettingsOptionGroups: OptionGroup[] = [
     title: 'Chats',
     description: "When do you want to be notified if anyone you're chatting with sends a new message? (\"Daily\" still sends the first notification of the day immediately, but snoozes later notifications so that you get at-most one notification per 24 hours.)",
     input: {
-      buttons: [
-        'Immediately',
-        'Daily',
-        'Every 3 Days',
-        'Weekly',
-        'Never'
-      ],
-      submit: async (input: string) => true
+      buttons: {
+        values: [
+          'Immediately',
+          'Daily',
+          'Every 3 Days',
+          'Weekly',
+          'Never'
+        ],
+        submit: async (input: string) => true
+      }
     }
   },
   {
     title: 'Intros',
     description: "When do you want to be notified if someone you haven't chatted with sends you an intro? (\"Daily\" still sends the first notification of the day immediately, but snoozes later notifications so that you get at-most one notification per 24 hours.)",
     input: {
-      buttons: [
-        'Immediately',
-        'Daily',
-        'Every 3 Days',
-        'Weekly',
-        'Never'
-      ],
-      submit: async (input: string) => true
+      buttons: {
+        values: [
+          'Immediately',
+          'Daily',
+          'Every 3 Days',
+          'Weekly',
+          'Never'
+        ],
+        submit: async (input: string) => true
+      }
     }
   },
 ];
@@ -691,7 +723,7 @@ const searchBasicsOptionGroups: OptionGroup[] = [
       slider: {
         sliderMin: 0,
         sliderMax: 500,
-        sliderInitial: 50,
+        defaultValue: 50,
         step: 25,
         unitsLabel: 'km',
         addPlusAtMax: true
@@ -713,8 +745,10 @@ const searchBasicsOptionGroups: OptionGroup[] = [
     title: "Has a Profile Picture",
     description: "Do you want people in search results to have a profile picture?",
     input: {
-      buttons: ['Yes', 'No'],
-      submit: async (input: string) => true
+      buttons: {
+        values: ['Yes', 'No'],
+        submit: async (input: string) => true
+      }
     },
   },
   {
@@ -880,24 +914,30 @@ const searchInteractionsOptionGroups: OptionGroup[] = [
     title: "People You've Messaged",
     description: "Would you like search results to include people you already messaged?",
     input: {
-      buttons: ['Yes', 'No'],
-      submit: async (input: string) => true
+      buttons: {
+        values: ['Yes', 'No'],
+        submit: async (input: string) => true
+      }
     },
   },
   {
     title: "People You've Hidden",
     description: "Would you like search results to include people you hidden?",
     input: {
-      buttons: ['Yes', 'No'],
-      submit: async (input: string) => true
+      buttons: {
+        values: ['Yes', 'No'],
+        submit: async (input: string) => true
+      }
     },
   },
   {
     title: "People You've Blocked",
     description: "Would you like to include people you blocked?",
     input: {
-      buttons: ['Yes', 'No'],
-      submit: async (input: string) => true
+      buttons: {
+        values: ['Yes', 'No'],
+        submit: async (input: string) => true
+      }
     },
   },
 ];
@@ -906,8 +946,10 @@ const hideMeFromStrangersOptionGroup: OptionGroup = {
   title: 'Hide Me From Strangers',
   description: "If you'd rather be the one who makes the first move, you can show your profile only to people who you've messaged. With this option set to 'Yes', people won't be able to see you anywhere in Duolicious until you message them.",
   input: {
-    buttons: ['Yes', 'No'],
-    submit: async (input: string) => true
+    buttons: {
+      values: ['Yes', 'No'],
+      submit: async (input: string) => true
+    }
   },
 };
 
@@ -916,16 +958,20 @@ const privacySettingsOptionGroups: OptionGroup[] = [
     title: 'Show My Location',
     description: "Would you like your location to appear on your profile? Note that if you set this option to 'No', other people will still be able to filter your profile by distance when searching.",
     input: {
-      buttons: ['Yes', 'No'],
-      submit: async (input: string) => true
+      buttons: {
+        values: ['Yes', 'No'],
+        submit: async (input: string) => true
+      }
     },
   },
   {
     title: 'Show My Age',
     description: "Would you like your age to appear on your profile? Note that if you set this option to 'No', other people will still be able to filter your profile by age when searching.",
     input: {
-      buttons: ['Yes', 'No'],
-      submit: async (input: string) => true
+      buttons: {
+        values: ['Yes', 'No'],
+        submit: async (input: string) => true
+      }
     },
   },
   hideMeFromStrangersOptionGroup,
@@ -933,18 +979,29 @@ const privacySettingsOptionGroups: OptionGroup[] = [
 
 export {
   OptionGroup,
+  OptionGroupButtons,
+  OptionGroupCheckChips,
+  OptionGroupDate,
+  OptionGroupGivenName,
+  OptionGroupInputs,
+  OptionGroupLocationSelector,
+  OptionGroupNone,
   OptionGroupOtp,
   OptionGroupPhotos,
+  OptionGroupRangeSlider,
+  OptionGroupSlider,
+  OptionGroupTextLong,
+  OptionGroupTextShort,
   basicsOptionGroups,
   createAccountOptionGroups,
   deactivationOptionGroups,
   deletionOptionGroups,
   generalSettingsOptionGroups,
+  getDefaultValue,
   hideMeFromStrangersOptionGroup,
   isOptionGroupButtons,
   isOptionGroupCheckChips,
   isOptionGroupDate,
-  isOptionGroupDeletion,
   isOptionGroupGivenName,
   isOptionGroupLocationSelector,
   isOptionGroupNone,
