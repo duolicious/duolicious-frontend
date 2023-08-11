@@ -132,7 +132,7 @@ const About = ({navigation, data}) => {
   const [isLoadingSignOut, setIsLoadingSignOut] = useState(false);
 
   const addDefaultValue = (optionGroups: OptionGroup[]) =>
-    optionGroups.map((og, i) =>
+    optionGroups.map((og: OptionGroup, i: number): OptionGroup =>
       _.merge(
         {},
         og,
@@ -153,6 +153,7 @@ const About = ({navigation, data}) => {
         isOptionGroupSlider(og.input) && og.title === 'Height' ? {
           input: {
             slider: {
+              unitsLabel: signedInUser?.units === 'Imperial' ? "ft'in\"" : undefined,
               valueRewriter: signedInUser?.units === 'Imperial' ? cmToFeetInchesStr : undefined
             }
           }

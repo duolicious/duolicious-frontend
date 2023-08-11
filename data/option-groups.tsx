@@ -81,6 +81,7 @@ type OptionGroupSlider = {
     defaultValue: number,
     step: number,
     unitsLabel: string,
+    submit: (input: number) => Promise<boolean>
     addPlusAtMax?: boolean,
     valueRewriter?: (v: number) => string,
   }
@@ -176,7 +177,7 @@ const isOptionGroupCheckChips = (x: any): x is OptionGroupCheckChips => {
   return hasExactKeys(x, ['checkChips', 'submit']);
 }
 
-const getDefaultValue = (x: OptionGroupInputs) => {
+const getDefaultValue = (x: OptionGroupInputs | undefined) => {
   if (isOptionGroupButtons(x)) return x.buttons.defaultValue;
 }
 
@@ -290,6 +291,7 @@ const basicsOptionGroups: OptionGroup[] = [
         step: 1,
         defaultValue: 170,
         unitsLabel: 'cm',
+        submit: async () => true,
       },
     },
   },
@@ -726,7 +728,8 @@ const searchBasicsOptionGroups: OptionGroup[] = [
         defaultValue: 50,
         step: 25,
         unitsLabel: 'km',
-        addPlusAtMax: true
+        addPlusAtMax: true,
+        submit: async () => true,
       },
     },
   },
