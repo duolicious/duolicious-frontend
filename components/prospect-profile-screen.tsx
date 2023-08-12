@@ -642,14 +642,14 @@ const Body = ({
             <Basic icon="school">{data.education}</Basic>}
 
           {data?.has_kids === 'Yes' &&
-            <Basic icon="people">Has Kids</Basic>}
+            <Basic icon="people">Has kids</Basic>}
           {data?.has_kids === 'No' &&
-            <Basic icon="people">Doesn't have Kids</Basic>}
+            <Basic icon="people">Doesn't have kids</Basic>}
 
           {data?.wants_kids === 'Yes' &&
-            <Basic icon="people">Wants Kids</Basic>}
+            <Basic icon="people">Wants kids</Basic>}
           {data?.wants_kids === 'No' &&
-            <Basic icon="people">Doesn't Want Kids</Basic>}
+            <Basic icon="people">Doesn't want kids</Basic>}
 
           {data?.looking_for &&
             <Basic icon="eye">Looking for {data.looking_for}</Basic>}
@@ -657,29 +657,29 @@ const Body = ({
           {data?.smoking === 'Yes' &&
             <Basic icon={faSmoking}>Smokes</Basic>}
           {data?.smoking === 'No' &&
-            <Basic icon={faSmoking}>Doesn't Smoke</Basic>}
+            <Basic icon={faSmoking}>Doesn't smoke</Basic>}
 
           {data?.drinking &&
             <Basic icon="wine">{data.drinking} drinks</Basic>}
 
           {data?.drugs === 'Yes' &&
-            <Basic icon={faPills}>Does Drugs</Basic>}
+            <Basic icon={faPills}>Does drugs</Basic>}
           {data?.drugs === 'No' &&
-            <Basic icon={faPills}>Doesn't Do Drugs</Basic>}
+            <Basic icon={faPills}>Doesn't do drugs</Basic>}
 
           {data?.religion &&
             <Basic icon={faHandsPraying}>{data.religion}</Basic>}
 
           {data?.long_distance === 'Yes' &&
-            <Basic icon="globe">Open to Long Distance</Basic>}
+            <Basic icon="globe">Open to long distance</Basic>}
           {data?.long_distance === 'No' &&
-            <Basic icon="globe">Not Open to Long Distance</Basic>}
+            <Basic icon="globe">Not open to long distance</Basic>}
 
           {data?.star_sign &&
             <Basic icon="star">{data.star_sign}</Basic>}
 
           {data?.exercise &&
-            <Basic icon="barbell">{data.exercise} Exercises</Basic>}
+            <Basic icon="barbell">{data.exercise} exercises</Basic>}
 
           {data?.height_cm && signedInUser?.units === 'Metric' &&
             <Basic icon={faRulerVertical}>{data.height_cm} cm</Basic>}
