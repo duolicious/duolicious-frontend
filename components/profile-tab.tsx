@@ -246,13 +246,13 @@ const Options = ({navigation, data}) => {
     [data]
   );
 
-  const Button_ = (props) => {
+  const Button_ = useCallback((props) => {
     return <ButtonForOption
       navigation={navigation}
       navigationScreen="Profile Option Screen"
       {...props}
     />;
-  }
+  }, [navigation]);
 
   const signOut = useCallback(async () => {
     setIsLoadingSignOut(true);
@@ -326,7 +326,9 @@ const Options = ({navigation, data}) => {
 const AboutDuolicious = () => {
   return (
     <View>
-      <Title style={{marginTop: 40, textAlign: 'center', color: '#999'}}>About</Title>
+      <Title style={{marginTop: 40, textAlign: 'center', color: '#999'}}>
+        About
+      </Title>
       <Pressable
         onPress={() => Linking.openURL('https://github.com/duolicious')}
       >

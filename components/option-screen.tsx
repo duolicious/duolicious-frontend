@@ -118,7 +118,7 @@ const Buttons = forwardRef((props: InputProps<OptionGroupButtons>, ref) => {
 });
 
 const Slider = forwardRef((props: InputProps<OptionGroupSlider>, ref) => {
-  const inputValueRef = useRef<number>(props.input.slider.defaultValue);
+  const inputValueRef = useRef<number | undefined>(props.input.slider.defaultValue);
 
   const onChangeInputValue = useCallback((value: number) => {
     inputValueRef.current = value;
@@ -127,8 +127,13 @@ const Slider = forwardRef((props: InputProps<OptionGroupSlider>, ref) => {
   const submit = useCallback(async () => {
     props.setIsLoading(true);
 
-    const ok = await props.input.slider.submit(inputValueRef?.current);
-    ok && props.onSubmitSuccess();
+    const value = inputValueRef?.current;
+    if (value) {
+      const ok = await props.input.slider.submit(value);
+      ok && props.onSubmitSuccess();
+    } else {
+      props.onSubmitSuccess();
+    }
 
     props.setIsLoading(false);
   }, []);
