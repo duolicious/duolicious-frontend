@@ -35,7 +35,7 @@ type OptionGroupPhotos = {
   photos: {
     submit: (filename: string, pathOrBase64: string) => Promise<boolean>
     delete: (filename: string) => Promise<boolean>
-    fetch?: (position: string) => Promise<string | null>
+    fetch?: (position: string, resolution: string) => Promise<string | null>
   }
 };
 
@@ -78,12 +78,12 @@ type OptionGroupSlider = {
   slider: {
     sliderMin: number,
     sliderMax: number,
-    defaultValue: number,
     step: number,
     unitsLabel: string,
     submit: (input: number) => Promise<boolean>
     addPlusAtMax?: boolean,
     valueRewriter?: (v: number) => string,
+    defaultValue?: number,
   }
 };
 
@@ -198,7 +198,8 @@ const genderOptionGroup: OptionGroup = {
   input: {
     buttons: {
       values: genders,
-      submit: async (input) => true,
+      submit: async (gender: string) =>
+        (await japi('patch', '/profile-info', { gender })).ok
     }
   }
 };
@@ -286,7 +287,7 @@ const basicsOptionGroups: OptionGroup[] = [
     description: "How tall are you?",
     input: {
       slider: {
-        sliderMin: 50,
+        sliderMin: 100,
         sliderMax: 220,
         step: 1,
         defaultValue: 170,

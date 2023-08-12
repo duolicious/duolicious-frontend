@@ -64,7 +64,7 @@ const Images = ({input, setIsLoading, setIsInvalid}) => {
   );
 };
 
-const UserImage = ({input, fileNumber, setIsLoading, setIsInvalid}) => {
+const UserImage = ({input, fileNumber, setIsLoading, setIsInvalid, resolution}) => {
   const [image, setImage] = useState<string | null>(null);
   const [isLoading_, setIsLoading_] = useState(false);
 
@@ -75,7 +75,7 @@ const UserImage = ({input, fileNumber, setIsLoading, setIsInvalid}) => {
       setIsLoading(true);
       setIsLoading_(true);
 
-      const filename = await _fetchImage(String(fileNumber));
+      const filename = await _fetchImage(String(fileNumber), resolution);
 
       setImage(filename);
       setIsLoading(false);
@@ -196,7 +196,9 @@ const UserImage = ({input, fileNumber, setIsLoading, setIsInvalid}) => {
 };
 
 const PrimaryImage = ({input, fileNumber, setIsLoading, setIsInvalid}) => {
-  return <UserImage {...{input, fileNumber, setIsLoading, setIsInvalid}}/>
+  return <UserImage
+    {...{input, fileNumber, setIsLoading, setIsInvalid, resolution: '900'}}
+  />
 };
 
 const Row = ({input, firstFileNumber, setIsLoading, setIsInvalid}) => {
@@ -228,18 +230,21 @@ const Row = ({input, firstFileNumber, setIsLoading, setIsInvalid}) => {
         fileNumber={firstFileNumber + 0}
         setIsLoading={setIsLoading1}
         setIsInvalid={setIsInvalid}
+        resolution="450"
       />
       <UserImage
         input={input}
         fileNumber={firstFileNumber + 1}
         setIsLoading={setIsLoading2}
         setIsInvalid={setIsInvalid}
+        resolution="450"
       />
       <UserImage
         input={input}
         fileNumber={firstFileNumber + 2}
         setIsLoading={setIsLoading3}
         setIsInvalid={setIsInvalid}
+        resolution="450"
       />
     </View>
   );

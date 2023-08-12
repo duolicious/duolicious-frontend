@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   Linking,
   Pressable,
   ScrollView,
@@ -78,10 +79,10 @@ const Images_ = ({data}) => {
           '/profile-info',
           { files: [filename] }
         )).ok,
-        fetch: async (position) => {
+        fetch: async (position: string, resolution: string) => {
           const imageUuid = (data?.photo ?? {})[position] ?? null;
           if (imageUuid) {
-            return `${IMAGES_URL}/900-${imageUuid}.jpg`
+            return `${IMAGES_URL}/${resolution}-${imageUuid}.jpg`
           } else {
             return null;
           }
@@ -111,20 +112,33 @@ const ProfileTab_ = ({navigation}) => {
   return (
     <>
       <DuoliciousTopNavBar/>
-      <ScrollView
-        contentContainerStyle={{
-          paddingLeft: 10,
-          paddingRight: 10,
-          paddingBottom: 20,
-          maxWidth: 600,
-          width: '100%',
-          alignSelf: 'center',
-        }}
-      >
-        <Title>Profile Pictures</Title>
-        <Images_ data={data}/>
-        <About navigation={navigation} data={data}/>
-      </ScrollView>
+      {data &&
+        <ScrollView
+          contentContainerStyle={{
+            paddingLeft: 10,
+            paddingRight: 10,
+            paddingBottom: 20,
+            maxWidth: 600,
+            width: '100%',
+            alignSelf: 'center',
+          }}
+        >
+          <Title>Profile Pictures</Title>
+          <Images_ data={data}/>
+          <About navigation={navigation} data={data}/>
+        </ScrollView>
+      }
+      {!data &&
+        <View
+          style={{
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexGrow: 1,
+          }}
+        >
+          <ActivityIndicator size={60} color="#70f"/>
+        </View>
+      }
     </>
   );
 };
@@ -162,7 +176,8 @@ const About = ({navigation, data}) => {
                 "ft'in\"" : undefined),
               valueRewriter: (
                 signedInUser?.units === 'Imperial' ?
-                cmToFeetInchesStr : undefined)
+                cmToFeetInchesStr : undefined),
+              defaultValue: (data ?? {})[optionGroups[i].title.toLowerCase()] ?? 170
             }
           }
         } : {},
