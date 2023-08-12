@@ -94,8 +94,8 @@ const Buttons = forwardRef((props: InputProps<OptionGroupButtons>, ref) => {
       <ButtonGroup_
         buttons={props.input.buttons.values}
         initialSelectedIndex={
-          props.input.buttons.defaultValue ?
-            props.input.buttons.values.indexOf(props.input.buttons.defaultValue) :
+          props.input.buttons.currentValue ?
+            props.input.buttons.values.indexOf(props.input.buttons.currentValue) :
             0
         }
         onPress={onChangeInputValue}
@@ -118,7 +118,10 @@ const Buttons = forwardRef((props: InputProps<OptionGroupButtons>, ref) => {
 });
 
 const Slider = forwardRef((props: InputProps<OptionGroupSlider>, ref) => {
-  const inputValueRef = useRef<number | undefined>(props.input.slider.defaultValue);
+  const inputValueRef = useRef<number>(
+    props.input.slider.currentValue ??
+    props.input.slider.defaultValue
+  );
 
   const onChangeInputValue = useCallback((value: number) => {
     inputValueRef.current = value;
@@ -146,7 +149,9 @@ const Slider = forwardRef((props: InputProps<OptionGroupSlider>, ref) => {
         label={`${props.title} (${props.input.slider.unitsLabel})`}
         minimumValue={props.input.slider.sliderMin}
         maximumValue={props.input.slider.sliderMax}
-        initialValue={props.input.slider.defaultValue}
+        initialValue={
+          props.input.slider.currentValue ??
+          props.input.slider.defaultValue}
         onValueChange={onChangeInputValue}
         step={props.input.slider.step}
         addPlusAtMax={props.input.slider.addPlusAtMax}
@@ -298,7 +303,7 @@ const LocationSelector = forwardRef((props: InputProps<OptionGroupLocationSelect
     <>
       <LocationSelector_
         onChangeText={onChangeInputValue}
-        defaultValue={props.input.locationSelector.defaultValue}
+        currentValue={props.input.locationSelector.currentValue}
       />
       <DefaultText
         style={{
@@ -625,7 +630,7 @@ const OptionScreen = ({navigation, route}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isValid, setIsValid] = useState(true);
 
-  const optionGroups: OptionGroup[] = route?.params?.optionGroups ?? [];
+  const optionGroups: OptionGroup<OptionGroupInputs>[] = route?.params?.optionGroups ?? [];
   const showSkipButton: boolean = route?.params?.showSkipButton ?? true;
   const showCloseButton: boolean = route?.params?.showCloseButton ?? true;
   const showBackButton: boolean = route?.params?.showBackButton ?? false;
@@ -634,6 +639,7 @@ const OptionScreen = ({navigation, route}) => {
   const buttonTextColor: number = route?.params?.buttonTextColor;
   const backgroundColor: string | undefined = route?.params?.backgroundColor;
   const color: string | undefined = route?.params?.color;
+  const onSubmitSuccess: any | undefined = route?.params?.onSubmitSuccess;
 
   const thisOptionGroup = optionGroups[0];
 
@@ -650,7 +656,9 @@ const OptionScreen = ({navigation, route}) => {
     throw Error('Expected input to be defined');
   }
 
-  const onSubmitSuccess = useCallback(async () => {
+  const _onSubmitSuccess = useCallback(async () => {
+    onSubmitSuccess && onSubmitSuccess();
+
     switch (optionGroups.length) {
       case 0: {
         throw Error('Expected there to be some option groups');
@@ -767,7 +775,7 @@ const OptionScreen = ({navigation, route}) => {
               input={input}
               isLoading={isLoading}
               setIsLoading={setIsLoading}
-              onSubmitSuccess={onSubmitSuccess}
+              onSubmitSuccess={_onSubmitSuccess}
               title={title}
               showSkipButton={showSkipButton}
             />
@@ -785,7 +793,7 @@ const OptionScreen = ({navigation, route}) => {
                   input={input}
                   isLoading={isLoading}
                   setIsLoading={setIsLoading}
-                  onSubmitSuccess={onSubmitSuccess}
+                  onSubmitSuccess={_onSubmitSuccess}
                   title={title}
                   showSkipButton={showSkipButton}
                 />

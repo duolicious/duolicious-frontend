@@ -13,6 +13,7 @@ import { DefaultText } from '../default-text';
 const ButtonForOption = (props) => {
   const {
     onPress,
+    onSubmitSuccess,
     label,
     optionGroups,
     setting,
@@ -63,6 +64,7 @@ const ButtonForOption = (props) => {
       navigationScreen,
       {
         optionGroups: optionGroups,
+        ...(onSubmitSuccess !== undefined ? {onSubmitSuccess} : {}),
         ...(showSkipButton !== undefined ? {showSkipButton} : {}),
         ...(buttonTextColor !== undefined ? {buttonTextColor} : {}),
         ...(buttonBackgroundColor !== undefined ? {buttonBackgroundColor} : {}),

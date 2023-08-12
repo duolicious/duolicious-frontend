@@ -7,7 +7,7 @@ type OptionGroupButtons = {
   buttons: {
     values: string[],
     submit: (input: string) => Promise<boolean>
-    defaultValue?: string,
+    currentValue?: string,
   }
 };
 
@@ -15,7 +15,7 @@ type OptionGroupButtons = {
 type OptionGroupLocationSelector = {
   locationSelector: {
     submit: (input: string) => Promise<boolean>
-    defaultValue?: string,
+    currentValue?: string,
   }
 };
 
@@ -49,6 +49,7 @@ type OptionGroupTextLong = {
 type OptionGroupTextShort = {
   textShort: {
     submit: (input: string) => Promise<boolean>
+    currentValue?: string,
     invalidMsg?: string
   }
 };
@@ -82,8 +83,9 @@ type OptionGroupSlider = {
     unitsLabel: string,
     submit: (input: number) => Promise<boolean>
     addPlusAtMax?: boolean,
+    defaultValue: number,
     valueRewriter?: (v: number) => string,
-    defaultValue?: number,
+    currentValue?: number,
   }
 };
 
@@ -109,10 +111,10 @@ type OptionGroupInputs
   | OptionGroupCheckChips
   | OptionGroupNone;
 
-type OptionGroup = {
+type OptionGroup<T extends OptionGroupInputs> = {
   title: string,
   description: string,
-  input?: OptionGroupInputs,
+  input?: T,
   scrollView?: boolean,
 };
 
@@ -177,8 +179,18 @@ const isOptionGroupCheckChips = (x: any): x is OptionGroupCheckChips => {
   return hasExactKeys(x, ['checkChips', 'submit']);
 }
 
-const getDefaultValue = (x: OptionGroupInputs | undefined) => {
-  if (isOptionGroupButtons(x)) return x.buttons.defaultValue;
+const getCurrentValue = (x: OptionGroupInputs | undefined) => {
+  if (isOptionGroupButtons(x))
+    return x.buttons.currentValue;
+
+  if (isOptionGroupLocationSelector(x))
+    return x.locationSelector.currentValue;
+
+  if (isOptionGroupTextShort(x))
+    return x.textShort.currentValue;
+
+  if (isOptionGroupSlider(x))
+    return x.slider.currentValue;
 }
 
 const genders = [
@@ -192,19 +204,22 @@ const genders = [
   'Other',
 ];
 
-const genderOptionGroup: OptionGroup = {
+const genderOptionGroup: OptionGroup<OptionGroupButtons> = {
   title: 'Gender',
   description: "What's your gender?",
   input: {
     buttons: {
       values: genders,
-      submit: async (gender: string) =>
-        (await japi('patch', '/profile-info', { gender })).ok
+      submit: async function(gender: string) {
+        const ok = (await japi('patch', '/profile-info', { gender })).ok;
+        if (ok) this.currentValue = gender;
+        return ok;
+      },
     }
   }
 };
 
-const otherPeoplesGendersOptionGroup: OptionGroup = {
+const otherPeoplesGendersOptionGroup: OptionGroup<OptionGroupCheckChips> = {
   title: "Other People's Genders",
   description: "What are the genders of the people you'd like to meet?",
   input: {
@@ -213,18 +228,22 @@ const otherPeoplesGendersOptionGroup: OptionGroup = {
   }
 };
 
-const locationOptionGroup: OptionGroup = {
+const locationOptionGroup: OptionGroup<OptionGroupLocationSelector> = {
   title: 'Location',
   description: "What city do you live in?",
   input: {
     locationSelector: {
-      submit: async (input: string) => true
+      submit: async function(location: string) {
+        const ok = (await japi('patch', '/profile-info', { location })).ok;
+        if (ok) this.currentValue = location;
+        return ok;
+      },
     }
   },
   scrollView: false,
 };
 
-const orientationOptionGroup: OptionGroup = {
+const orientationOptionGroup: OptionGroup<OptionGroupButtons> = {
   title: 'Orientation',
   description: "What's your sexual orientation?",
   input: {
@@ -238,12 +257,16 @@ const orientationOptionGroup: OptionGroup = {
         'Pansexual',
         'Other',
       ],
-      submit: async (input: string) => true,
+      submit: async function(orientation: string) {
+        const ok = (await japi('patch', '/profile-info', { orientation })).ok;
+        if (ok) this.currentValue = orientation;
+        return ok;
+      },
     }
   },
 };
 
-const lookingForOptionGroup: OptionGroup = {
+const lookingForOptionGroup: OptionGroup<OptionGroupButtons> = {
   title: 'Looking for',
   description: 'What are you mainly looking for on Duolicious?',
   input: {
@@ -253,12 +276,16 @@ const lookingForOptionGroup: OptionGroup = {
         'Short-term dating',
         'Friends',
       ],
-      submit: async (input: string) => true
+      submit: async function(lookingFor: string) {
+        const ok = (await japi('patch', '/profile-info', { looking_for: lookingFor })).ok;
+        if (ok) this.currentValue = lookingFor;
+        return ok;
+      },
     }
   }
 };
 
-const basicsOptionGroups: OptionGroup[] = [
+const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
   genderOptionGroup,
   orientationOptionGroup,
   locationOptionGroup,
@@ -267,7 +294,11 @@ const basicsOptionGroups: OptionGroup[] = [
     description: "What's your profession?",
     input: {
       textShort: {
-        submit: async (input: string) => true,
+        submit: async function(occupation: string) {
+          const ok = (await japi('patch', '/profile-info', { occupation })).ok;
+          if (ok) this.currentValue = occupation;
+          return ok;
+        },
         invalidMsg: 'Try again',
       }
     }
@@ -277,7 +308,11 @@ const basicsOptionGroups: OptionGroup[] = [
     description: "Where did you study?",
     input: {
       textShort: {
-        submit: async (input: string) => true,
+        submit: async function(education: string) {
+          const ok = (await japi('patch', '/profile-info', { education })).ok;
+          if (ok) this.currentValue = education;
+          return ok;
+        },
         invalidMsg: 'Try again',
       }
     }
@@ -289,10 +324,14 @@ const basicsOptionGroups: OptionGroup[] = [
       slider: {
         sliderMin: 100,
         sliderMax: 220,
-        step: 1,
         defaultValue: 170,
+        step: 1,
         unitsLabel: 'cm',
-        submit: async () => true,
+        submit: async function(height: number) {
+          const ok = (await japi('patch', '/profile-info', { height: String(height) })).ok;
+          if (ok) this.currentValue = height;
+          return ok;
+        },
       },
     },
   },
@@ -303,7 +342,11 @@ const basicsOptionGroups: OptionGroup[] = [
     input: {
       buttons: {
         values: ['Yes', 'No'],
-        submit: async (input: string) => true
+        submit: async function(smoking: string) {
+          const ok = (await japi('patch', '/profile-info', { smoking })).ok;
+          if (ok) this.currentValue = smoking;
+          return ok;
+        },
       }
     },
   },
@@ -313,7 +356,11 @@ const basicsOptionGroups: OptionGroup[] = [
     input: {
       buttons: {
         values: ['Often', 'Sometimes', 'Never'],
-        submit: async (input: string) => true
+        submit: async function(drinking: string) {
+          const ok = (await japi('patch', '/profile-info', { drinking })).ok;
+          if (ok) this.currentValue = drinking;
+          return ok;
+        },
       }
     },
   },
@@ -323,7 +370,11 @@ const basicsOptionGroups: OptionGroup[] = [
     input: {
       buttons: {
         values: ['Yes', 'No'],
-        submit: async (input: string) => true
+        submit: async function(drugs: string) {
+          const ok = (await japi('patch', '/profile-info', { drugs })).ok;
+          if (ok) this.currentValue = drugs;
+          return ok;
+        },
       }
     },
   },
@@ -333,7 +384,11 @@ const basicsOptionGroups: OptionGroup[] = [
     input: {
       buttons: {
         values: ['Yes', 'No'],
-        submit: async (input: string) => true
+        submit: async function(longDistance: string) {
+          const ok = (await japi('patch', '/profile-info', { long_distance: longDistance })).ok;
+          if (ok) this.currentValue = longDistance;
+          return ok;
+        },
       }
     },
   },
@@ -351,7 +406,13 @@ const basicsOptionGroups: OptionGroup[] = [
           'Widowed',
           'Other',
         ],
-        submit: async (input: string) => true
+        submit: async function(relationshipStatus: string) {
+          const ok = (
+            await japi('patch', '/profile-info', { relationship_status: relationshipStatus })
+          ).ok;
+          if (ok) this.currentValue = relationshipStatus;
+          return ok;
+        },
       }
     }
   },
@@ -361,7 +422,11 @@ const basicsOptionGroups: OptionGroup[] = [
     input: {
       buttons: {
         values: ['Yes', 'No'],
-        submit: async (input: string) => true
+        submit: async function(hasKids: string) {
+          const ok = (await japi('patch', '/profile-info', { has_kids: hasKids })).ok;
+          if (ok) this.currentValue = hasKids;
+          return ok;
+        },
       }
     },
   },
@@ -371,7 +436,11 @@ const basicsOptionGroups: OptionGroup[] = [
     input: {
       buttons: {
         values: ['Yes', 'No'],
-        submit: async (input: string) => true
+        submit: async function(wantsKids: string) {
+          const ok = (await japi('patch', '/profile-info', { wants_kids: wantsKids })).ok;
+          if (ok) this.currentValue = wantsKids;
+          return ok;
+        },
       }
     },
   },
@@ -385,7 +454,11 @@ const basicsOptionGroups: OptionGroup[] = [
           'Sometimes',
           'Never',
         ],
-        submit: async (input: string) => true
+        submit: async function(exercise: string) {
+          const ok = (await japi('patch', '/profile-info', { exercise })).ok;
+          if (ok) this.currentValue = exercise;
+          return ok;
+        },
       }
     },
   },
@@ -404,7 +477,11 @@ const basicsOptionGroups: OptionGroup[] = [
           'Muslim',
           'Other',
         ],
-        submit: async (input: string) => true
+        submit: async function(religion: string) {
+          const ok = (await japi('patch', '/profile-info', { religion })).ok;
+          if (ok) this.currentValue = religion;
+          return ok;
+        },
       }
     },
   },
@@ -427,26 +504,46 @@ const basicsOptionGroups: OptionGroup[] = [
           'Taurus',
           'Virgo',
         ],
-        submit: async (input: string) => true
+        submit: async function(starSign: string) {
+          const ok = (await japi('patch', '/profile-info', { star_sign: starSign })).ok;
+          if (ok) this.currentValue = starSign;
+          return ok;
+        },
       }
     },
   },
 ];
 
-const generalSettingsOptionGroups: OptionGroup[] = [
+const generalSettingsOptionGroups: OptionGroup<OptionGroupButtons>[] = [
   {
     title: 'Units',
     description: "Do you use the metric system, or the imperial system?",
     input: {
       buttons: {
         values: ['Metric', 'Imperial'],
-        submit: async (input: string) => true
+        submit: async function(units: 'Imperial' | 'Metric') {
+          const ok = (await japi('patch', '/profile-info', { units })).ok;
+          if (ok) {
+            this.currentValue = units;
+            setSignedInUser((signedInUser) => {
+              if (signedInUser) {
+                return {
+                  ...signedInUser,
+                  units,
+                }
+              } else {
+                return signedInUser;
+              }
+            });
+          }
+          return ok;
+        },
       }
     }
   },
 ];
 
-const notificationSettingsOptionGroups: OptionGroup[] = [
+const notificationSettingsOptionGroups: OptionGroup<OptionGroupButtons>[] = [
   {
     title: 'Chats',
     description: "When do you want to be notified if anyone you're chatting with sends a new message? (\"Daily\" still sends the first notification of the day immediately, but snoozes later notifications so that you get at-most one notification per 24 hours.)",
@@ -455,11 +552,15 @@ const notificationSettingsOptionGroups: OptionGroup[] = [
         values: [
           'Immediately',
           'Daily',
-          'Every 3 Days',
+          'Every 3 days',
           'Weekly',
           'Never'
         ],
-        submit: async (input: string) => true
+        submit: async function(chats: string) {
+          const ok = (await japi('patch', '/profile-info', { chats })).ok;
+          if (ok) this.currentValue = chats;
+          return ok;
+        },
       }
     }
   },
@@ -471,17 +572,21 @@ const notificationSettingsOptionGroups: OptionGroup[] = [
         values: [
           'Immediately',
           'Daily',
-          'Every 3 Days',
+          'Every 3 days',
           'Weekly',
           'Never'
         ],
-        submit: async (input: string) => true
+        submit: async function(intros: string) {
+          const ok = (await japi('patch', '/profile-info', { intros })).ok;
+          if (ok) this.currentValue = intros;
+          return ok;
+        },
       }
     }
   },
 ];
 
-const deletionOptionGroups: OptionGroup[] = [
+const deletionOptionGroups: OptionGroup<OptionGroupTextShort>[] = [
   {
     title: 'Delete Your Account',
     description: `Are you sure you want to delete your account? This will immediately log you out and permanently delete your account data. If you're sure, type "delete" to confirm.`,
@@ -504,7 +609,7 @@ const deletionOptionGroups: OptionGroup[] = [
   },
 ];
 
-const deactivationOptionGroups: OptionGroup[] = [
+const deactivationOptionGroups: OptionGroup<OptionGroupNone>[] = [
   {
     title: 'Deactivate Your Account',
     description: 'Are you sure you want to deactivate your account? This will hide you from other users and log you out. The next time you sign in, your account will be reactivated. Press "continue" to deactivate your account.',
@@ -522,7 +627,7 @@ const deactivationOptionGroups: OptionGroup[] = [
   },
 ];
 
-const createAccountOptionGroups: OptionGroup[] = [
+const createAccountOptionGroups: OptionGroup<OptionGroupInputs>[] = [
   {
     title: "Password",
     description: "Enter the one-time password you just received to create an account or sign in",
@@ -676,7 +781,7 @@ const createAccountOptionGroups: OptionGroup[] = [
   },
 ];
 
-const searchBasicsOptionGroups: OptionGroup[] = [
+const searchBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
   {
     ...otherPeoplesGendersOptionGroup,
     input: {
@@ -684,7 +789,7 @@ const searchBasicsOptionGroups: OptionGroup[] = [
         ...(
           isOptionGroupCheckChips(otherPeoplesGendersOptionGroup.input) ?
             otherPeoplesGendersOptionGroup.input.checkChips : []),
-        {checked: true, label: 'Accept Unanswered'}
+        {checked: true, label: 'Accept unanswered'}
       ],
       submit: async (input: string[]) => true
     },
@@ -703,7 +808,7 @@ const searchBasicsOptionGroups: OptionGroup[] = [
         {checked: true, label: 'Demisexual'},
         {checked: true, label: 'Pansexual'},
         {checked: true, label: 'Other'},
-        {checked: true, label: 'Accept Unanswered'},
+        {checked: true, label: 'Accept unanswered'},
       ],
       submit: async (input: string[]) => true
     },
@@ -763,7 +868,7 @@ const searchBasicsOptionGroups: OptionGroup[] = [
         {checked: true, label: 'Long-term dating'},
         {checked: true, label: 'Short-term dating'},
         {checked: true, label: 'Friends'},
-        {checked: true, label: 'Accept Unanswered'}
+        {checked: true, label: 'Accept unanswered'}
       ],
       submit: async (input: string[]) => true
     },
@@ -775,7 +880,7 @@ const searchBasicsOptionGroups: OptionGroup[] = [
       checkChips: [
         {checked: true, label: 'Yes'},
         {checked: true, label: 'No'},
-        {checked: true, label: 'Accept Unanswered'}
+        {checked: true, label: 'Accept unanswered'}
       ],
       submit: async (input: string[]) => true
     },
@@ -788,7 +893,7 @@ const searchBasicsOptionGroups: OptionGroup[] = [
         {checked: true, label: 'Often'},
         {checked: true, label: 'Sometimes'},
         {checked: true, label: 'Never'},
-        {checked: true, label: 'Accept Unanswered'}
+        {checked: true, label: 'Accept unanswered'}
       ],
       submit: async (input: string[]) => true
     },
@@ -800,7 +905,7 @@ const searchBasicsOptionGroups: OptionGroup[] = [
       checkChips: [
         {checked: true, label: 'Yes'},
         {checked: true, label: 'No'},
-        {checked: true, label: 'Accept Unanswered'}
+        {checked: true, label: 'Accept unanswered'}
       ],
       submit: async (input: string[]) => true
     },
@@ -812,7 +917,7 @@ const searchBasicsOptionGroups: OptionGroup[] = [
       checkChips: [
         {checked: true, label: 'Yes'},
         {checked: true, label: 'No'},
-        {checked: true, label: 'Accept Unanswered'}
+        {checked: true, label: 'Accept unanswered'}
       ],
       submit: async (input: string[]) => true
     },
@@ -829,7 +934,7 @@ const searchBasicsOptionGroups: OptionGroup[] = [
         {checked: true, label: 'Divorced'},
         {checked: true, label: 'Widowed'},
         {checked: true, label: 'Other'},
-        {checked: true, label: 'Accept Unanswered'}
+        {checked: true, label: 'Accept unanswered'}
       ],
       submit: async (input: string[]) => true
     },
@@ -841,7 +946,7 @@ const searchBasicsOptionGroups: OptionGroup[] = [
       checkChips: [
         {checked: true, label: 'Yes'},
         {checked: true, label: 'No'},
-        {checked: true, label: 'Accept Unanswered'}
+        {checked: true, label: 'Accept unanswered'}
       ],
       submit: async (input: string[]) => true
     },
@@ -853,7 +958,7 @@ const searchBasicsOptionGroups: OptionGroup[] = [
       checkChips: [
         {checked: true, label: 'Yes'},
         {checked: true, label: 'No'},
-        {checked: true, label: 'Accept Unanswered'}
+        {checked: true, label: 'Accept unanswered'}
       ],
       submit: async (input: string[]) => true
     },
@@ -866,7 +971,7 @@ const searchBasicsOptionGroups: OptionGroup[] = [
         {checked: true, label: 'Often'},
         {checked: true, label: 'Sometimes'},
         {checked: true, label: 'Never'},
-        {checked: true, label: 'Accept Unanswered'},
+        {checked: true, label: 'Accept unanswered'},
       ],
       submit: async (input: string[]) => true
     },
@@ -884,7 +989,7 @@ const searchBasicsOptionGroups: OptionGroup[] = [
         {checked: true, label: 'Jewish'},
         {checked: true, label: 'Muslim'},
         {checked: true, label: 'Other'},
-        {checked: true, label: 'Accept Unanswered'},
+        {checked: true, label: 'Accept unanswered'},
       ],
       submit: async (input: string[]) => true
     },
@@ -906,14 +1011,14 @@ const searchBasicsOptionGroups: OptionGroup[] = [
         {checked: true, label: 'Scorpio'},
         {checked: true, label: 'Taurus'},
         {checked: true, label: 'Virgo'},
-        {checked: true, label: 'Accept Unanswered'},
+        {checked: true, label: 'Accept unanswered'},
       ],
       submit: async (input: string[]) => true
     },
   },
 ];
 
-const searchInteractionsOptionGroups: OptionGroup[] = [
+const searchInteractionsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
   {
     title: "People You've Messaged",
     description: "Would you like search results to include people you already messaged?",
@@ -946,25 +1051,45 @@ const searchInteractionsOptionGroups: OptionGroup[] = [
   },
 ];
 
-const hideMeFromStrangersOptionGroup: OptionGroup = {
+const hideMeFromStrangersOptionGroup: OptionGroup<OptionGroupInputs> = {
   title: 'Hide Me From Strangers',
   description: "If you'd rather be the one who makes the first move, you can show your profile only to people who you've messaged. With this option set to 'Yes', people won't be able to see you anywhere in Duolicious until you message them.",
   input: {
     buttons: {
       values: ['Yes', 'No'],
-      submit: async (input: string) => true
+      submit: async function(hideMeFromStrangers: string) {
+        const ok = (
+          await japi(
+            'patch',
+            '/profile-info',
+            { hide_me_from_strangers: hideMeFromStrangers }
+          )
+        ).ok;
+        if (ok) this.currentValue = hideMeFromStrangers;
+        return ok;
+      },
     }
   },
 };
 
-const privacySettingsOptionGroups: OptionGroup[] = [
+const privacySettingsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
   {
     title: 'Show My Location',
     description: "Would you like your location to appear on your profile? Note that if you set this option to 'No', other people will still be able to filter your profile by distance when searching.",
     input: {
       buttons: {
         values: ['Yes', 'No'],
-        submit: async (input: string) => true
+        submit: async function(showMyLocation: string) {
+          const ok = (
+            await japi(
+              'patch',
+              '/profile-info',
+              { show_my_location: showMyLocation }
+            )
+          ).ok;
+          if (ok) this.currentValue = showMyLocation;
+          return ok;
+        },
       }
     },
   },
@@ -974,7 +1099,17 @@ const privacySettingsOptionGroups: OptionGroup[] = [
     input: {
       buttons: {
         values: ['Yes', 'No'],
-        submit: async (input: string) => true
+        submit: async function(showMyAge: string) {
+          const ok = (
+            await japi(
+              'patch',
+              '/profile-info',
+              { show_my_age: showMyAge }
+            )
+          ).ok;
+          if (ok) this.currentValue = showMyAge;
+          return ok;
+        },
       }
     },
   },
@@ -1001,7 +1136,7 @@ export {
   deactivationOptionGroups,
   deletionOptionGroups,
   generalSettingsOptionGroups,
-  getDefaultValue,
+  getCurrentValue,
   hideMeFromStrangersOptionGroup,
   isOptionGroupButtons,
   isOptionGroupCheckChips,

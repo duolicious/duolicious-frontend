@@ -649,7 +649,7 @@ const Body = ({
           {data?.wants_kids === 'Yes' &&
             <Basic icon="people">Wants Kids</Basic>}
           {data?.wants_kids === 'No' &&
-            <Basic icon="people">Doesn't want Kids</Basic>}
+            <Basic icon="people">Doesn't Want Kids</Basic>}
 
           {data?.looking_for &&
             <Basic icon="eye">Looking for {data.looking_for}</Basic>}
@@ -665,7 +665,7 @@ const Body = ({
           {data?.drugs === 'Yes' &&
             <Basic icon={faPills}>Does Drugs</Basic>}
           {data?.drugs === 'No' &&
-            <Basic icon={faPills}>Doesn't do Drugs</Basic>}
+            <Basic icon={faPills}>Doesn't Do Drugs</Basic>}
 
           {data?.religion &&
             <Basic icon={faHandsPraying}>{data.religion}</Basic>}

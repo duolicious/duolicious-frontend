@@ -19,15 +19,17 @@ import { Title } from './title';
 import { DefaultLongTextInput } from './default-long-text-input';
 import {
   OptionGroup,
+  OptionGroupInputs,
   OptionGroupPhotos,
   basicsOptionGroups,
   deactivationOptionGroups,
   deletionOptionGroups,
   generalSettingsOptionGroups,
-  getDefaultValue,
+  getCurrentValue,
   isOptionGroupButtons,
   isOptionGroupLocationSelector,
   isOptionGroupSlider,
+  isOptionGroupTextShort,
   notificationSettingsOptionGroups,
   privacySettingsOptionGroups,
 } from '../data/option-groups';
@@ -35,16 +37,25 @@ import { Images } from './images';
 import { DefaultText } from './default-text';
 import { sessionToken } from '../kv-storage/session-token';
 import { api, mapi, japi } from '../api/api';
-import { setSignedInUser } from '../App';
+import { signedInUser, setSignedInUser } from '../App';
 import {
   IMAGES_URL,
 } from '../env/env';
 import { cmToFeetInchesStr } from '../units/units';
-import { signedInUser } from '../App';
 import * as _ from "lodash";
 import debounce from 'lodash/debounce';
 
-// TODO: Needs a spinner when loading data
+const formatHeight = (og: OptionGroup<OptionGroupInputs>): string | undefined => {
+  if (!isOptionGroupSlider(og.input)) return '';
+
+  const currentValue = getCurrentValue(og.input);
+
+  if (_.isNumber(currentValue)) {
+    return signedInUser?.units === 'Imperial' ?
+      cmToFeetInchesStr(currentValue) :
+      `${currentValue} cm`;
+  }
+};
 
 const Stack = createNativeStackNavigator();
 
@@ -194,41 +205,53 @@ const AboutPerson = ({navigation, data}) => {
 };
 
 const Options = ({navigation, data}) => {
+  const [, triggerRender] = useState({});
   const [isLoadingSignOut, setIsLoadingSignOut] = useState(false);
 
-  const addDefaultValue = (optionGroups: OptionGroup[]) =>
-    optionGroups.map((og: OptionGroup, i: number): OptionGroup =>
-      _.merge(
-        {},
-        og,
-        isOptionGroupButtons(og.input) ? {
-          input: {
-            buttons: {
-              defaultValue: (data ?? {})[optionGroups[i].title.toLowerCase()]
+  const addDefaultValue = (optionGroups: OptionGroup<OptionGroupInputs>[]) =>
+    optionGroups.map(
+      (
+        og: OptionGroup<OptionGroupInputs>,
+        i: number
+      ): OptionGroup<OptionGroupInputs> =>
+        _.merge(
+          {},
+          og,
+          isOptionGroupTextShort(og.input) ? {
+            input: {
+              textShort: {
+                currentValue: (data ?? {})[optionGroups[i].title.toLowerCase()]
+              }
             }
-          }
-        } : {},
-        isOptionGroupLocationSelector(og.input) ? {
-          input: {
-            locationSelector: {
-              defaultValue: (data ?? {})[optionGroups[i].title.toLowerCase()]
+          } : {},
+          isOptionGroupButtons(og.input) ? {
+            input: {
+              buttons: {
+                currentValue: (data ?? {})[optionGroups[i].title.toLowerCase()]
+              }
             }
-          }
-        } : {},
-        isOptionGroupSlider(og.input) && og.title === 'Height' ? {
-          input: {
-            slider: {
-              unitsLabel: (
-                signedInUser?.units === 'Imperial' ?
-                "ft'in\"" : undefined),
-              valueRewriter: (
-                signedInUser?.units === 'Imperial' ?
-                cmToFeetInchesStr : undefined),
-              defaultValue: (data ?? {})[optionGroups[i].title.toLowerCase()] ?? 170
+          } : {},
+          isOptionGroupLocationSelector(og.input) ? {
+            input: {
+              locationSelector: {
+                currentValue: (data ?? {})[optionGroups[i].title.toLowerCase()]
+              }
             }
-          }
-        } : {},
-      )
+          } : {},
+          isOptionGroupSlider(og.input) && og.title === 'Height' ? {
+            input: {
+              slider: {
+                unitsLabel: (
+                  signedInUser?.units === 'Imperial' ?
+                  "ft'in\"" : undefined),
+                valueRewriter: (
+                  signedInUser?.units === 'Imperial' ?
+                  cmToFeetInchesStr : undefined),
+                currentValue: (data ?? {})[optionGroups[i].title.toLowerCase()]
+              }
+            }
+          } : {},
+        )
     );
 
   const [
@@ -246,10 +269,15 @@ const Options = ({navigation, data}) => {
     [data]
   );
 
+  const onSubmitSuccess = useCallback(() => {
+    triggerRender({});
+  }, [triggerRender]);
+
   const Button_ = useCallback((props) => {
     return <ButtonForOption
       navigation={navigation}
       navigationScreen="Profile Option Screen"
+      onSubmitSuccess={onSubmitSuccess}
       {...props}
     />;
   }, [navigation]);
@@ -267,46 +295,53 @@ const Options = ({navigation, data}) => {
     <View>
       <Title>Basics</Title>
       {
-        _basicsOptionGroups.map((_, i) =>
+        _basicsOptionGroups.map((og, i) =>
           <Button_
             key={i}
-            setting={getDefaultValue(_basicsOptionGroups[i].input)}
+            setting={
+              (
+                isOptionGroupSlider(og.input) &&
+                og.title === 'Height'
+              ) ?
+              formatHeight(og) :
+              getCurrentValue(_basicsOptionGroups[i].input)
+            }
             optionGroups={_basicsOptionGroups.slice(i)}
           />
         )
       }
       <Title>General Settings</Title>
       {
-        _generalSettingsOptionGroups.map((_, i) =>
+        _generalSettingsOptionGroups.map((og, i) =>
           <Button_
             key={i}
-            setting={getDefaultValue(_generalSettingsOptionGroups[i].input)}
+            setting={getCurrentValue(og.input)}
             optionGroups={_generalSettingsOptionGroups.slice(i)}
           />
         )
       }
       <Title>Notification Settings</Title>
       {
-        _notificationSettingsOptionGroups.map((_, i) =>
+        _notificationSettingsOptionGroups.map((og, i) =>
           <Button_
             key={i}
-            setting={getDefaultValue(_notificationSettingsOptionGroups[i].input)}
+            setting={getCurrentValue(og.input)}
             optionGroups={_notificationSettingsOptionGroups.slice(i)}
           />
         )
       }
       <Title>Privacy Settings</Title>
       {
-        _privacySettingsOptionGroups.map((_, i) =>
+        _privacySettingsOptionGroups.map((og, i) =>
           <Button_
             key={i}
-            setting={getDefaultValue(_privacySettingsOptionGroups[i].input)}
+            setting={getCurrentValue(og.input)}
             optionGroups={_privacySettingsOptionGroups.slice(i)}
           />
         )
       }
 
-      <Title>Sign Out</Title>
+      <Title style={{ marginTop: 60 }}>Sign Out</Title>
       <ButtonForOption
         onPress={signOut}
         label="Sign Out"
@@ -314,7 +349,7 @@ const Options = ({navigation, data}) => {
         loading={isLoadingSignOut}
       />
 
-      <Title>Deactivate Your Account</Title>
+      <Title style={{ marginTop: 60 }}>Deactivate Your Account</Title>
       <Button_ optionGroups={deactivationOptionGroups} setting="" showSkipButton={false}/>
 
       <Title>Delete Your Account</Title>
@@ -325,8 +360,16 @@ const Options = ({navigation, data}) => {
 
 const AboutDuolicious = () => {
   return (
-    <View>
-      <Title style={{marginTop: 40, textAlign: 'center', color: '#999'}}>
+    <View
+      style={{
+        marginBottom: 60,
+      }}
+    >
+      <Title style={{
+        marginTop: 60,
+        textAlign: 'center',
+        color: '#999'
+      }}>
         About
       </Title>
       <Pressable
