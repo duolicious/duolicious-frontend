@@ -41,6 +41,7 @@ import {
 import { cmToFeetInchesStr } from '../units/units';
 import { signedInUser } from '../App';
 import * as _ from "lodash";
+import debounce from 'lodash/debounce';
 
 // TODO: Needs a spinner when loading data
 
@@ -130,6 +131,9 @@ const ProfileTab_ = ({navigation}) => {
 
 const About = ({navigation, data}) => {
   const [isLoadingSignOut, setIsLoadingSignOut] = useState(false);
+  const [aboutState, setAboutState] = useState<
+    'unchanged' | 'saving...' | 'saved' | 'error'
+  >('unchanged');
 
   const addDefaultValue = (optionGroups: OptionGroup[]) =>
     optionGroups.map((og: OptionGroup, i: number): OptionGroup =>
@@ -197,10 +201,45 @@ const About = ({navigation, data}) => {
     setIsLoadingSignOut(false);
   }, [navigation]);
 
+  const debouncedOnChangeAboutText = useCallback(
+    debounce(
+      async (about: string, cb: (ok: boolean) => void) => {
+        const response = await japi('patch', '/profile-info', { about });
+        cb(response.ok);
+      },
+      1000,
+    ),
+    []
+  );
+
+  const onChangeAboutText = useCallback(async (about: string) => {
+    setAboutState('saving...');
+    await debouncedOnChangeAboutText(
+      about,
+      (ok) => setAboutState(ok ? 'saved' : 'error'),
+    );
+  }, []);
+
   return (
     <View>
-      <Title>About</Title>
-      <DefaultLongTextInput defaultValue={data?.about ?? ''}/>
+      <Title>
+        About {}
+        {aboutState !== 'unchanged' &&
+          <DefaultText
+            style={{
+              fontSize: 14,
+              fontWeight: '400',
+              color: '#777',
+            }}
+          >
+            ({aboutState})
+          </DefaultText>
+        }
+      </Title>
+      <DefaultLongTextInput
+        defaultValue={data?.about ?? ''}
+        onChangeText={onChangeAboutText}
+      />
       <Title>Basics</Title>
       {
         _basicsOptionGroups.map((_, i) =>
