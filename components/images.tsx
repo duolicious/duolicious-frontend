@@ -271,7 +271,7 @@ const SecondaryImages = (
       />
       <Row
         input={input}
-        firstFileNumber={firstFileNumber + 1}
+        firstFileNumber={firstFileNumber + 3}
         setIsLoading={setIsLoading2}
         setIsInvalid={setIsInvalid}
       />
