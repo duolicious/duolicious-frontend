@@ -17,7 +17,7 @@ import { japi } from '../api/api';
 
 const LocationSelector = ({onChangeText, ...rest}) => {
   const [loading, setLoading] = useState(false);
-  const [items, setItems] = useState(null);
+  const [items, setItems] = useState<string[] | null>(null);
   const [text, setText] = useState(rest.defaultValue ?? "");
   const [displayResults, setDisplayResults] = useState(false);
 
