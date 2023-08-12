@@ -125,7 +125,9 @@ const ProfileTab_ = ({navigation}) => {
         >
           <Title>Profile Pictures</Title>
           <Images_ data={data}/>
-          <About navigation={navigation} data={data}/>
+          <AboutPerson navigation={navigation} data={data}/>
+          <Options navigation={navigation} data={data}/>
+          <AboutDuolicious/>
         </ScrollView>
       }
       {!data &&
@@ -143,11 +145,56 @@ const ProfileTab_ = ({navigation}) => {
   );
 };
 
-const About = ({navigation, data}) => {
-  const [isLoadingSignOut, setIsLoadingSignOut] = useState(false);
+const AboutPerson = ({navigation, data}) => {
   const [aboutState, setAboutState] = useState<
     'unchanged' | 'saving...' | 'saved' | 'error'
   >('unchanged');
+
+  const debouncedOnChangeAboutText = useCallback(
+    debounce(
+      async (about: string, cb: (ok: boolean) => void) => {
+        const response = await japi('patch', '/profile-info', { about });
+        cb(response.ok);
+      },
+      1000,
+    ),
+    []
+  );
+
+  const onChangeAboutText = useCallback(async (about: string) => {
+    setAboutState('saving...');
+    await debouncedOnChangeAboutText(
+      about,
+      (ok) => setAboutState(ok ? 'saved' : 'error'),
+    );
+  }, []);
+
+  return (
+    <View>
+      <Title>
+        About {}
+        {aboutState !== 'unchanged' &&
+          <DefaultText
+            style={{
+              fontSize: 14,
+              fontWeight: '400',
+              color: '#777',
+            }}
+          >
+            ({aboutState})
+          </DefaultText>
+        }
+      </Title>
+      <DefaultLongTextInput
+        defaultValue={data?.about ?? ''}
+        onChangeText={onChangeAboutText}
+      />
+    </View>
+  );
+};
+
+const Options = ({navigation, data}) => {
+  const [isLoadingSignOut, setIsLoadingSignOut] = useState(false);
 
   const addDefaultValue = (optionGroups: OptionGroup[]) =>
     optionGroups.map((og: OptionGroup, i: number): OptionGroup =>
@@ -216,45 +263,8 @@ const About = ({navigation, data}) => {
     setIsLoadingSignOut(false);
   }, [navigation]);
 
-  const debouncedOnChangeAboutText = useCallback(
-    debounce(
-      async (about: string, cb: (ok: boolean) => void) => {
-        const response = await japi('patch', '/profile-info', { about });
-        cb(response.ok);
-      },
-      1000,
-    ),
-    []
-  );
-
-  const onChangeAboutText = useCallback(async (about: string) => {
-    setAboutState('saving...');
-    await debouncedOnChangeAboutText(
-      about,
-      (ok) => setAboutState(ok ? 'saved' : 'error'),
-    );
-  }, []);
-
   return (
     <View>
-      <Title>
-        About {}
-        {aboutState !== 'unchanged' &&
-          <DefaultText
-            style={{
-              fontSize: 14,
-              fontWeight: '400',
-              color: '#777',
-            }}
-          >
-            ({aboutState})
-          </DefaultText>
-        }
-      </Title>
-      <DefaultLongTextInput
-        defaultValue={data?.about ?? ''}
-        onChangeText={onChangeAboutText}
-      />
       <Title>Basics</Title>
       {
         _basicsOptionGroups.map((_, i) =>
@@ -309,7 +319,13 @@ const About = ({navigation, data}) => {
 
       <Title>Delete Your Account</Title>
       <Button_ optionGroups={deletionOptionGroups} setting=""/>
+    </View>
+  );
+};
 
+const AboutDuolicious = () => {
+  return (
+    <View>
       <Title style={{marginTop: 40, textAlign: 'center', color: '#999'}}>About</Title>
       <Pressable
         onPress={() => Linking.openURL('https://github.com/duolicious')}
