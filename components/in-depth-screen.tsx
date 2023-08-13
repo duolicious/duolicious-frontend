@@ -300,15 +300,15 @@ const Charts = ({data}) => {
       {data.map((trait) =>
         <Chart
           key={JSON.stringify(trait)}
-          dimensionName={trait.min_label ? undefined : trait.name}
-          minLabel={trait.min_label}
-          maxLabel={trait.max_label}
-          name1={trait.name1 ?? undefined}
-          percentage1={trait.percentage1 ?? undefined}
-          name2={trait.name2 ?? undefined}
-          percentage2={trait.percentage2 ?? undefined}
+          dimensionName={trait.trait_min_label ? undefined : trait.trait_name}
+          minLabel={trait.trait_min_label}
+          maxLabel={trait.trait_max_label}
+          name1={trait.prospect_name ?? undefined}
+          percentage1={trait.prospect_percentage ?? undefined}
+          name2={trait.person_name ?? undefined}
+          percentage2={trait.person_percentage ?? undefined}
         >
-          {trait.description}
+          {trait.trait_description}
         </Chart>
       )}
     </View>
