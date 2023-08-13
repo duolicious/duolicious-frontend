@@ -652,7 +652,7 @@ const Body = ({
             <Basic icon="people">Doesn't want kids</Basic>}
 
           {data?.looking_for &&
-            <Basic icon="eye">Looking for {data.looking_for}</Basic>}
+            <Basic icon="eye">Looking for {data.looking_for.toLowerCase()}</Basic>}
 
           {data?.smoking === 'Yes' &&
             <Basic icon={faSmoking}>Smokes</Basic>}

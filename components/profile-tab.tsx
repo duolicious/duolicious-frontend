@@ -310,7 +310,7 @@ const Options = ({navigation, data}) => {
           />
         )
       }
-      <Title>General Settings</Title>
+      <Title style={{ marginTop: 60 }}>General Settings</Title>
       {
         _generalSettingsOptionGroups.map((og, i) =>
           <Button_
