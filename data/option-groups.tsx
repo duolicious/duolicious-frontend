@@ -685,7 +685,8 @@ const createAccountOptionGroups: OptionGroup<OptionGroupInputs>[] = [
             'patch',
             '/onboardee-info',
             { gender: input }
-          )).ok
+          )).ok,
+          currentValue: 'Man',
         }
       }
     },

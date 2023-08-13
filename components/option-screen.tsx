@@ -72,7 +72,7 @@ type InputProps<T extends OptionGroupInputs> = {
 };
 
 const Buttons = forwardRef((props: InputProps<OptionGroupButtons>, ref) => {
-  const inputValueRef = useRef<string>('');
+  const inputValueRef = useRef<string>(props.input.buttons.currentValue ?? '');
 
   const onChangeInputValue = useCallback((index: number) => {
     inputValueRef.current = props.input.buttons.values[index];
@@ -94,9 +94,7 @@ const Buttons = forwardRef((props: InputProps<OptionGroupButtons>, ref) => {
       <ButtonGroup_
         buttons={props.input.buttons.values}
         initialSelectedIndex={
-          props.input.buttons.currentValue ?
-            props.input.buttons.values.indexOf(props.input.buttons.currentValue) :
-            0
+          props.input.buttons.values.indexOf(inputValueRef.current)
         }
         onPress={onChangeInputValue}
       />
