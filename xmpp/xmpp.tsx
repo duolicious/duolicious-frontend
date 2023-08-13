@@ -731,7 +731,7 @@ const refreshInbox = async (): Promise<void> => {
 
 const logout = async () => {
   if (_xmpp) {
-    await _xmpp.send(xml("presence", { type: "unavailable" }));
+    await _xmpp.send(xml("presence", { type: "unavailable" })).catch(console.error);
     await _xmpp.stop().catch(console.error);
     setInbox(emtpyInbox);
   }
