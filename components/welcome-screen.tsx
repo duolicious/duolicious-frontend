@@ -4,6 +4,7 @@ import {
 } from 'react-native';
 import {
   useCallback,
+  useMemo,
   useState,
 } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -16,31 +17,28 @@ import { OptionScreen } from './option-screen';
 import { japi } from '../api/api';
 import { sessionToken } from '../kv-storage/session-token';
 
-const randomCallToAction = (): string => {
-  const ctas = [
-    "Meet people who get you.",
-    "Where your weird meets their weird. And it’s, like, super romantic.",
-    "Find someone to share memes and existential dread. Cute, right?",
-    "Your future ‘we met on an app’ story just got less boring.",
-    "Because your next awkward first date story needs an upgrade.",
-    "Because your type isn’t ‘generic with a hint of blah’.",
-    "The only app where ‘quirky’ isn’t code for ‘has five cats’. Unless that’s your vibe.",
-    "We’re not saying we’re the best dating app, but... Actually, yeah, that’s exactly what we’re saying.",
-    "Where your quirks aren’t just accepted, they’re kinda the selling point.",
-    "Let’s face it, you’re a catch. We’re just the net helping you realize it.",
-    "Your solo act is legendary. Time for an equally epic encore with a partner in crime.",
-    "If dating's a game, you’re the MVP. Ready to play?",
-    "Because ‘forever alone’ is so last decade.",
-    "Ready to find someone who’s also too good for most dating apps?",
-    "Love might be overrated, but hey, let’s overrate it together.",
-    "Where ‘single and thriving’ can also mean ‘open to distractions’.",
-    "Your charisma called. It asked for a partner in charm.",
-    "The sequel to your single life? We promise it’s a blockbuster.",
-    "Your love life could use a plot twist. Ready for the next chapter?",
-    "Matching you based on more than just your ability to craft a sassy bio.",
-  ]
-  return ctas[Math.floor(Math.random() * ctas.length)];
-};
+const callToActionList = [
+  "Meet people who get you.",
+  "Where your weird meets their weird. And it’s, like, super romantic.",
+  "Find someone to share memes and existential dread. Cute, right?",
+  "Your future ‘we met on an app’ story just got less boring.",
+  "Because your next awkward first date story needs an upgrade.",
+  "Because your type isn’t ‘generic with a hint of blah’.",
+  "The only app where ‘quirky’ isn’t code for ‘has five cats’. Unless that’s your vibe.",
+  "We’re not saying we’re the best dating app, but... Actually, yeah, that’s exactly what we’re saying.",
+  "Where your quirks aren’t just accepted, they’re kinda the selling point.",
+  "Let’s face it, you’re a catch. We’re just the net helping you realize it.",
+  "Your solo act is legendary. Time for an equally epic encore with a partner in crime.",
+  "If dating's a game, you’re the MVP. Ready to play?",
+  "Because ‘forever alone’ is so last decade.",
+  "Ready to find someone who’s also too good for most dating apps?",
+  "Love might be overrated, but hey, let’s overrate it together.",
+  "Where ‘single and thriving’ can also mean ‘open to distractions’.",
+  "Your charisma called. It asked for a partner in charm.",
+  "The sequel to your single life? We promise it’s a blockbuster.",
+  "Your love life could use a plot twist. Ready for the next chapter?",
+  "Matching you based on more than just your ability to craft a sassy bio.",
+];
 
 const Stack = createNativeStackNavigator();
 
@@ -63,6 +61,10 @@ const WelcomeScreen_ = ({navigation}) => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [emailNotSent, setEmailNotSent] = useState(false);
+  const callToAction = useMemo(() =>
+    callToActionList[Math.floor(Math.random() * callToActionList.length)],
+    []
+  );
 
   const submit = async (suffix?: string) => {
     const suffix_ = suffix ?? '';
@@ -159,9 +161,11 @@ const WelcomeScreen_ = ({navigation}) => {
               color: 'white',
               fontSize: 20,
               textAlign: 'center',
+              marginLeft: 20,
+              marginRight: 20,
             }}
           >
-            {randomCallToAction()}
+            {callToAction}
           </DefaultText>
           <DefaultTextInput
             style={{
@@ -174,6 +178,7 @@ const WelcomeScreen_ = ({navigation}) => {
             value={email}
             onChangeText={setEmail}
             onSubmitEditing={() => submit()}
+            autoFocus={true}
           />
           <DefaultText
             style={{
