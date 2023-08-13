@@ -207,7 +207,7 @@ const fetchPersonalityPage = (personId: number, m: number) => async (n: number):
   if (n === 1) {
     const response = await api('get', `/compare-personalities/${personId}/${topic}`);
 
-    if (response.json === undefined) return undefined;
+    if (response.json === undefined) return [];
 
     return [{
       kind: topic,
@@ -249,6 +249,8 @@ const InDepthScreen = (navigationRef) => ({navigation, route}) => {
       case 'attachment':
       case 'other':
         return <ChartsMemo data={item.data}/>;
+      default:
+        return <></>;
     }
   }, []);
 
