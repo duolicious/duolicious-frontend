@@ -62,10 +62,12 @@ type OptionGroupOtp = {
 
 type OptionGroupCheckChips = {
   checkChips: {
-    label: string
-    checked: boolean
-  }[],
-  submit: (input: string[]) => Promise<boolean>
+    values: {
+      label: string
+      checked: boolean
+    }[]
+    submit: (input: string[]) => Promise<boolean>
+  }
 };
 
 type OptionGroupNone = {
@@ -114,7 +116,7 @@ type OptionGroupInputs
 type OptionGroup<T extends OptionGroupInputs> = {
   title: string,
   description: string,
-  input?: T,
+  input: T,
   scrollView?: boolean,
 };
 
@@ -176,7 +178,7 @@ const isOptionGroupNone = (x: any): x is OptionGroupNone => {
 }
 
 const isOptionGroupCheckChips = (x: any): x is OptionGroupCheckChips => {
-  return hasExactKeys(x, ['checkChips', 'submit']);
+  return hasExactKeys(x, ['checkChips']);
 }
 
 const getCurrentValue = (x: OptionGroupInputs | undefined) => {
@@ -223,8 +225,10 @@ const otherPeoplesGendersOptionGroup: OptionGroup<OptionGroupCheckChips> = {
   title: "Other People's Genders",
   description: "What are the genders of the people you'd like to meet?",
   input: {
-    checkChips: genders.map((g) => ({checked: true, label: g})),
-    submit: async (inputs: string[]) => true
+    checkChips: {
+      values: genders.map((g) => ({checked: true, label: g})),
+      submit: async (inputs: string[]) => true
+    }
   }
 };
 
@@ -660,11 +664,13 @@ const createAccountOptionGroups: OptionGroup<OptionGroupInputs>[] = [
     {
       title: 'Step 1 of 7: ' + otherPeoplesGendersOptionGroup.title,
       input: {
-        submit: async (input) => (await japi(
-          'patch',
-          '/onboardee-info',
-          { other_peoples_genders: input }
-        )).ok
+        checkChips: {
+          submit: async (input: string[]) => (await japi(
+            'patch',
+            '/onboardee-info',
+            { other_peoples_genders: input }
+          )).ok
+        }
       }
     },
   ),
@@ -674,11 +680,13 @@ const createAccountOptionGroups: OptionGroup<OptionGroupInputs>[] = [
     {
       title: 'Step 2 of 7: ' + genderOptionGroup.title,
       input: {
-        submit: async (input) => (await japi(
-          'patch',
-          '/onboardee-info',
-          { gender: input }
-        )).ok
+        buttons: {
+          submit: async (input) => (await japi(
+            'patch',
+            '/onboardee-info',
+            { gender: input }
+          )).ok
+        }
       }
     },
   ),
@@ -785,13 +793,13 @@ const searchBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
   {
     ...otherPeoplesGendersOptionGroup,
     input: {
-      checkChips: [
-        ...(
-          isOptionGroupCheckChips(otherPeoplesGendersOptionGroup.input) ?
-            otherPeoplesGendersOptionGroup.input.checkChips : []),
-        {checked: true, label: 'Accept unanswered'}
-      ],
-      submit: async (input: string[]) => true
+      checkChips: {
+        values: [
+          ...otherPeoplesGendersOptionGroup.input.checkChips.values,
+          {checked: true, label: 'Accept unanswered'}
+        ],
+        submit: async (input: string[]) => true
+      }
     },
     title: "Gender",
     description: "Which genders would you like to see in search results?",
@@ -800,17 +808,19 @@ const searchBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
     title: "Orientation",
     description: "Which orientations would you like to see in search results?",
     input: {
-      checkChips: [
-        {checked: true, label: 'Straight'},
-        {checked: true, label: 'Gay'},
-        {checked: true, label: 'Bisexual'},
-        {checked: true, label: 'Asexual'},
-        {checked: true, label: 'Demisexual'},
-        {checked: true, label: 'Pansexual'},
-        {checked: true, label: 'Other'},
-        {checked: true, label: 'Accept unanswered'},
-      ],
-      submit: async (input: string[]) => true
+      checkChips: {
+        values: [
+          {checked: true, label: 'Straight'},
+          {checked: true, label: 'Gay'},
+          {checked: true, label: 'Bisexual'},
+          {checked: true, label: 'Asexual'},
+          {checked: true, label: 'Demisexual'},
+          {checked: true, label: 'Pansexual'},
+          {checked: true, label: 'Other'},
+          {checked: true, label: 'Accept unanswered'},
+        ],
+        submit: async (input: string[]) => true
+      }
     },
   },
   {
@@ -864,156 +874,178 @@ const searchBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
     title: "Looking for",
     description: "What kind of relationships would you like people in search results to be seeking?",
     input: {
-      checkChips: [
-        {checked: true, label: 'Long-term dating'},
-        {checked: true, label: 'Short-term dating'},
-        {checked: true, label: 'Friends'},
-        {checked: true, label: 'Accept unanswered'}
-      ],
-      submit: async (input: string[]) => true
+      checkChips: {
+        values: [
+          {checked: true, label: 'Long-term dating'},
+          {checked: true, label: 'Short-term dating'},
+          {checked: true, label: 'Friends'},
+          {checked: true, label: 'Accept unanswered'}
+        ],
+        submit: async (input: string[]) => true
+      }
     },
   },
   {
     title: "Smoking",
     description: "Do you want to include people who smoke in search results?",
     input: {
-      checkChips: [
-        {checked: true, label: 'Yes'},
-        {checked: true, label: 'No'},
-        {checked: true, label: 'Accept unanswered'}
-      ],
-      submit: async (input: string[]) => true
+      checkChips: {
+        values: [
+          {checked: true, label: 'Yes'},
+          {checked: true, label: 'No'},
+          {checked: true, label: 'Accept unanswered'}
+        ],
+        submit: async (input: string[]) => true
+      }
     },
   },
   {
     title: "Drinking",
     description: "Do you want to include people who drink alcohol in search results?",
     input: {
-      checkChips: [
-        {checked: true, label: 'Often'},
-        {checked: true, label: 'Sometimes'},
-        {checked: true, label: 'Never'},
-        {checked: true, label: 'Accept unanswered'}
-      ],
-      submit: async (input: string[]) => true
+      checkChips: {
+        values: [
+          {checked: true, label: 'Often'},
+          {checked: true, label: 'Sometimes'},
+          {checked: true, label: 'Never'},
+          {checked: true, label: 'Accept unanswered'}
+        ],
+        submit: async (input: string[]) => true
+      }
     },
   },
   {
     title: "Drugs",
     description: "Do you want to include people who take drugs in search results?",
     input: {
-      checkChips: [
-        {checked: true, label: 'Yes'},
-        {checked: true, label: 'No'},
-        {checked: true, label: 'Accept unanswered'}
-      ],
-      submit: async (input: string[]) => true
+      checkChips: {
+        values: [
+          {checked: true, label: 'Yes'},
+          {checked: true, label: 'No'},
+          {checked: true, label: 'Accept unanswered'}
+        ],
+        submit: async (input: string[]) => true
+      }
     },
   },
   {
     title: "Long Distance",
     description: "Do you want search results to include people willing to enter a long-distance relationship?",
     input: {
-      checkChips: [
-        {checked: true, label: 'Yes'},
-        {checked: true, label: 'No'},
-        {checked: true, label: 'Accept unanswered'}
-      ],
-      submit: async (input: string[]) => true
+      checkChips: {
+        values: [
+          {checked: true, label: 'Yes'},
+          {checked: true, label: 'No'},
+          {checked: true, label: 'Accept unanswered'}
+        ],
+        submit: async (input: string[]) => true
+      }
     },
   },
   {
     title: "Relationship Status",
     description: "What relationship statuses are you willing to accept from people in your search results?",
     input: {
-      checkChips: [
-        {checked: true, label: 'Single'},
-        {checked: true, label: 'Seeing someone'},
-        {checked: true, label: 'Engaged'},
-        {checked: true, label: 'Married'},
-        {checked: true, label: 'Divorced'},
-        {checked: true, label: 'Widowed'},
-        {checked: true, label: 'Other'},
-        {checked: true, label: 'Accept unanswered'}
-      ],
-      submit: async (input: string[]) => true
+      checkChips: {
+        values: [
+          {checked: true, label: 'Single'},
+          {checked: true, label: 'Seeing someone'},
+          {checked: true, label: 'Engaged'},
+          {checked: true, label: 'Married'},
+          {checked: true, label: 'Divorced'},
+          {checked: true, label: 'Widowed'},
+          {checked: true, label: 'Other'},
+          {checked: true, label: 'Accept unanswered'}
+        ],
+        submit: async (input: string[]) => true
+      }
     },
   },
   {
     title: "Has Kids",
     description: "Do you want search results to include people who had kids?",
     input: {
-      checkChips: [
-        {checked: true, label: 'Yes'},
-        {checked: true, label: 'No'},
-        {checked: true, label: 'Accept unanswered'}
-      ],
-      submit: async (input: string[]) => true
+      checkChips: {
+        values: [
+          {checked: true, label: 'Yes'},
+          {checked: true, label: 'No'},
+          {checked: true, label: 'Accept unanswered'}
+        ],
+        submit: async (input: string[]) => true
+      }
     },
   },
   {
     title: "Wants Kids",
     description: "Do you want search results to include people who want kids?",
     input: {
-      checkChips: [
-        {checked: true, label: 'Yes'},
-        {checked: true, label: 'No'},
-        {checked: true, label: 'Accept unanswered'}
-      ],
-      submit: async (input: string[]) => true
+      checkChips: {
+        values: [
+          {checked: true, label: 'Yes'},
+          {checked: true, label: 'No'},
+          {checked: true, label: 'Accept unanswered'}
+        ],
+        submit: async (input: string[]) => true
+      }
     },
   },
   {
     title: "Exercise",
     description: "Do you want search results to include people who exercise?",
     input: {
-      checkChips: [
-        {checked: true, label: 'Often'},
-        {checked: true, label: 'Sometimes'},
-        {checked: true, label: 'Never'},
-        {checked: true, label: 'Accept unanswered'},
-      ],
-      submit: async (input: string[]) => true
+      checkChips: {
+        values: [
+          {checked: true, label: 'Often'},
+          {checked: true, label: 'Sometimes'},
+          {checked: true, label: 'Never'},
+          {checked: true, label: 'Accept unanswered'},
+        ],
+        submit: async (input: string[]) => true
+      }
     },
   },
   {
     title: "Religion",
     description: "Do you want search results to include people who exercise?",
     input: {
-      checkChips: [
-        {checked: true, label: 'Agnostic'},
-        {checked: true, label: 'Atheist'},
-        {checked: true, label: 'Buddhist'},
-        {checked: true, label: 'Christian'},
-        {checked: true, label: 'Hindu'},
-        {checked: true, label: 'Jewish'},
-        {checked: true, label: 'Muslim'},
-        {checked: true, label: 'Other'},
-        {checked: true, label: 'Accept unanswered'},
-      ],
-      submit: async (input: string[]) => true
+      checkChips: {
+      values: [
+          {checked: true, label: 'Agnostic'},
+          {checked: true, label: 'Atheist'},
+          {checked: true, label: 'Buddhist'},
+          {checked: true, label: 'Christian'},
+          {checked: true, label: 'Hindu'},
+          {checked: true, label: 'Jewish'},
+          {checked: true, label: 'Muslim'},
+          {checked: true, label: 'Other'},
+          {checked: true, label: 'Accept unanswered'},
+        ],
+        submit: async (input: string[]) => true
+      }
     },
   },
   {
     title: "Star Sign",
     description: "What star signs would you like to see in search results?",
     input: {
-      checkChips: [
-        {checked: true, label: 'Aquarius'},
-        {checked: true, label: 'Aries'},
-        {checked: true, label: 'Cancer'},
-        {checked: true, label: 'Capricorn'},
-        {checked: true, label: 'Gemini'},
-        {checked: true, label: 'Leo'},
-        {checked: true, label: 'Libra'},
-        {checked: true, label: 'Pisces'},
-        {checked: true, label: 'Sagittarius'},
-        {checked: true, label: 'Scorpio'},
-        {checked: true, label: 'Taurus'},
-        {checked: true, label: 'Virgo'},
-        {checked: true, label: 'Accept unanswered'},
-      ],
-      submit: async (input: string[]) => true
+      checkChips: {
+        values: [
+          {checked: true, label: 'Aquarius'},
+          {checked: true, label: 'Aries'},
+          {checked: true, label: 'Cancer'},
+          {checked: true, label: 'Capricorn'},
+          {checked: true, label: 'Gemini'},
+          {checked: true, label: 'Leo'},
+          {checked: true, label: 'Libra'},
+          {checked: true, label: 'Pisces'},
+          {checked: true, label: 'Sagittarius'},
+          {checked: true, label: 'Scorpio'},
+          {checked: true, label: 'Taurus'},
+          {checked: true, label: 'Virgo'},
+          {checked: true, label: 'Accept unanswered'},
+        ],
+        submit: async (input: string[]) => true
+      }
     },
   },
 ];

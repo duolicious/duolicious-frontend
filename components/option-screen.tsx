@@ -486,7 +486,7 @@ const TextShort = forwardRef((props: InputProps<OptionGroupTextShort>, ref) => {
 const CheckChips = forwardRef((props: InputProps<OptionGroupCheckChips>, ref) => {
   const [isInvalid, setIsInvalid] = useState(false);
   const inputValueRef = useRef(new Set<string>(
-    props.input.checkChips.flatMap(
+    props.input.checkChips.values.flatMap(
       (checkChip, i) => checkChip.checked ? [checkChip.label] : []
     )
   ));
@@ -495,7 +495,7 @@ const CheckChips = forwardRef((props: InputProps<OptionGroupCheckChips>, ref) =>
     setIsInvalid(false);
     props.setIsLoading(true);
 
-    const ok = await props.input.submit([...inputValueRef.current]);
+    const ok = await props.input.checkChips.submit([...inputValueRef.current]);
     setIsInvalid(!ok);
     ok && props.onSubmitSuccess();
 
@@ -514,7 +514,7 @@ const CheckChips = forwardRef((props: InputProps<OptionGroupCheckChips>, ref) =>
         }}
       >
         {
-          props.input.checkChips.map((checkChip, i) =>
+          props.input.checkChips.values.map((checkChip, i) =>
             <CheckChip_
               key={i}
               label={checkChip.label}
