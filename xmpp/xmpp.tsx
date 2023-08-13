@@ -18,7 +18,6 @@ import { deleteFromArray, withTimeout } from '../util/util';
 // TODO: Catch more exceptions. If a network request fails, that shouldn't crash the app.
 // TODO: Update match percentages when user answers some questions
 // TODO: When someone opens two windows, display a warning. Or get multiple sessions working
-// TODO: Intros should be the first tab
 
 type MessageStatus =
   | 'sent'
