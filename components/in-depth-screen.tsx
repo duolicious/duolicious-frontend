@@ -239,7 +239,7 @@ const InDepthScreen = (navigationRef) => ({navigation, route}) => {
             answer1={item.item.prospect_answer}
             user2="You"
             answer2={item.item.person_answer}
-            answer2Publicly={item.item.person_public_}
+            answer2Publicly={item.item.person_public_ ?? true}
           >
             {item.item.question}
           </AnsweredQuizCardMemo>;
