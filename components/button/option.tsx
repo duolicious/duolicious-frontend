@@ -108,7 +108,7 @@ const ButtonForOption = (props) => {
         </DefaultText>
         <DefaultText
           style={{
-            paddingLeft: 10,
+            paddingLeft: 20,
             paddingRight: 10,
             color: (setting ?? noSettingText) === noSettingText ? '#888' : 'black',
             fontStyle: (setting ?? noSettingText) === noSettingText ? 'italic' : 'normal',

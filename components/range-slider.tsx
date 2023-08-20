@@ -3,6 +3,7 @@ import {
 } from 'react-native';
 import {
   useState,
+  useRef,
 } from 'react';
 import Slider from '@react-native-community/slider';
 
@@ -12,30 +13,44 @@ const RangeSlider = ({minimumValue, maximumValue, ...props}) => {
   const {
     containerStyle,
     unitsLabel,
+    onLowerValueChange,
+    onUpperValueChange,
+    initialLowerValue,
+    initialUpperValue,
+    valueRewriter,
   } = props;
 
   const args = {
     minimumValue: minimumValue,
     maximumValue: maximumValue,
     step: 1,
+    valueRewriter: valueRewriter,
   };
 
-  const [lowerValue, setLowerValue] = useState(args.minimumValue);
-  const [upperValue, setUpperValue] = useState(args.maximumValue);
+  const topSliderStyle = useRef({
+    marginBottom: 30
+  }).current;
 
-  const onLowerValueChange = (value: number) => {
+  const [lowerValue, setLowerValue] = useState(initialLowerValue ?? args.minimumValue);
+  const [upperValue, setUpperValue] = useState(initialUpperValue ?? args.maximumValue);
+
+  const _onLowerValueChange = (value: number) => {
     setLowerValue(value);
+    onLowerValueChange(value);
 
     if (value > upperValue) {
       setUpperValue(value);
+      onUpperValueChange(value);
     }
   };
 
-  const onUpperValueChange = (value: number) => {
+  const _onUpperValueChange = (value: number) => {
     setUpperValue(value);
+    onUpperValueChange(value);
 
     if (value < lowerValue) {
       setLowerValue(value)
+      onLowerValueChange(value);
     }
   };
 
@@ -47,18 +62,22 @@ const RangeSlider = ({minimumValue, maximumValue, ...props}) => {
     >
       <LabelledSlider
         value={lowerValue}
-        onValueChange={onLowerValueChange}
+        onValueChange={_onLowerValueChange}
         label={"Min" + (unitsLabel ? ` (${unitsLabel})` : '')}
-        style={{
-          marginBottom: 30,
-        }}
-        {...args}
+        minimumValue={minimumValue}
+        maximumValue={maximumValue}
+        step={1}
+        valueRewriter={valueRewriter}
+        style={topSliderStyle}
       />
       <LabelledSlider
         value={upperValue}
-        onValueChange={onUpperValueChange}
+        onValueChange={_onUpperValueChange}
         label={"Max" + (unitsLabel ? ` (${unitsLabel})` : '')}
-        {...args}
+        minimumValue={minimumValue}
+        maximumValue={maximumValue}
+        step={1}
+        valueRewriter={valueRewriter}
       />
     </View>
   );

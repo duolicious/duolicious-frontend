@@ -147,9 +147,7 @@ const Slider = forwardRef((props: InputProps<OptionGroupSlider>, ref) => {
         label={`${props.title} (${props.input.slider.unitsLabel})`}
         minimumValue={props.input.slider.sliderMin}
         maximumValue={props.input.slider.sliderMax}
-        initialValue={
-          props.input.slider.currentValue ??
-          props.input.slider.defaultValue}
+        initialValue={inputValueRef.current}
         onValueChange={onChangeInputValue}
         step={props.input.slider.step}
         addPlusAtMax={props.input.slider.addPlusAtMax}
@@ -557,17 +555,54 @@ const CheckChips = forwardRef((props: InputProps<OptionGroupCheckChips>, ref) =>
   );
 });
 
-const RangeSlider = ({input}) => {
+const RangeSlider = forwardRef((props: InputProps<OptionGroupRangeSlider>, ref) => {
+  const lowerValueRef = useRef<number | null>(
+    props.input.rangeSlider.currentMin ??
+    props.input.rangeSlider.sliderMin ??
+    null
+  );
+  const upperValueRef = useRef<number | null>(
+    props.input.rangeSlider.currentMax ??
+    props.input.rangeSlider.sliderMax ??
+    null
+  );
+
+  const onLowerValueChange = useCallback((value: number) => {
+    lowerValueRef.current = value;
+  }, []);
+  const onUpperValueChange = useCallback((value: number) => {
+    upperValueRef.current = value;
+  }, []);
+
+  const submit = useCallback(async () => {
+    props.setIsLoading(true);
+
+    const minValue = lowerValueRef?.current;
+    const maxValue = upperValueRef?.current;
+
+    const ok = await props.input.rangeSlider.submit(minValue, maxValue);
+    ok && props.onSubmitSuccess();
+
+    props.setIsLoading(false);
+  }, []);
+
+  useImperativeHandle(ref, () => ({ submit }), []);
+
   return <RangeSlider_
-    unitsLabel={input.rangeSlider.unitsLabel}
-    minimumValue={input.rangeSlider.sliderMin}
-    maximumValue={input.rangeSlider.sliderMax}
+    initialLowerValue={lowerValueRef.current}
+    initialUpperValue={upperValueRef.current}
+    unitsLabel={props.input.rangeSlider.unitsLabel}
+    minimumValue={props.input.rangeSlider.sliderMin}
+    maximumValue={props.input.rangeSlider.sliderMax}
+    onLowerValueChange={onLowerValueChange}
+    onUpperValueChange={onUpperValueChange}
+    valueRewriter={props.input.rangeSlider.valueRewriter}
     containerStyle={{
       marginLeft: 20,
       marginRight: 20,
     }}
   />
-};
+});
 
 const None = forwardRef((props: InputProps<OptionGroupNone>, ref) => {
   const submit = useCallback(async () => {
