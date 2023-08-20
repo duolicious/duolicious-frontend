@@ -299,9 +299,10 @@ const lookingForOptionGroup: OptionGroup<OptionGroupButtons> = {
   input: {
     buttons: {
       values: [
-        'Long-term dating',
-        'Short-term dating',
         'Friends',
+        'Short-term dating',
+        'Long-term dating',
+        'Marriage',
       ],
       submit: async function(lookingFor: string) {
         const ok = (await japi('patch', '/profile-info', { looking_for: lookingFor })).ok;
@@ -973,9 +974,10 @@ const searchBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
     input: {
       checkChips: {
         values: [
-          {checked: true, label: 'Long-term dating'},
-          {checked: true, label: 'Short-term dating'},
           {checked: true, label: 'Friends'},
+          {checked: true, label: 'Short-term dating'},
+          {checked: true, label: 'Long-term dating'},
+          {checked: true, label: 'Marriage'},
           {checked: true, label: 'Unanswered'}
         ],
         submit: async function(lookingFor: string[]) {
