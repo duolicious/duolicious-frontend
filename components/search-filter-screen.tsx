@@ -1,5 +1,6 @@
 import {
   ActivityIndicator,
+  ListRenderItemInfo,
   Platform,
   Pressable,
   ScrollView,
@@ -34,11 +35,12 @@ import { OptionScreen } from './option-screen';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DefaultTextInput } from './default-text-input';
 import { SearchQuizCard } from './quiz-card';
-import { DefaultFlatList } from './default-flat-list';
 import { api, japi } from '../api/api';
 import * as _ from "lodash";
 import { signedInUser } from '../App';
 import { cmToFeetInchesStr, kmToMilesStr } from '../units/units';
+import debounce from 'lodash/debounce';
+import { Notice } from './notice';
 
 const getCurrentValueAsLabel = (og: OptionGroup<OptionGroupInputs> | undefined) => {
   if (!og) return undefined;
@@ -61,7 +63,7 @@ const getCurrentValueAsLabel = (og: OptionGroup<OptionGroupInputs> | undefined) 
     if (currentValue === undefined) {
       return undefined;
     } else if (og.title === 'Furthest Distance') {
-      return currentValue === undefined ? 'any' :
+      return _.isNil(currentValue) ? undefined :
         signedInUser?.units === 'Imperial' ?
         `${kmToMilesStr(currentValue)} mi.` :
         `${currentValue} km`;
@@ -77,17 +79,17 @@ const getCurrentValueAsLabel = (og: OptionGroup<OptionGroupInputs> | undefined) 
     const currentMin = og.input.rangeSlider.currentMin;
     const currentMax = og.input.rangeSlider.currentMax;
 
-    if (currentMin === undefined && currentMax === undefined) {
+    if (_.isNil(currentMin) && _.isNil(currentMax)) {
       return undefined;
     } else if (og.title === 'Age') {
       return `${currentMin ?? 'any'}–${currentMax ?? 'any'} years`;
     } else if (og.title === 'Height') {
-      const _currentMin = currentMin === undefined ? 'any' :
+      const _currentMin = _.isNil(currentMin) ? 'any' :
         signedInUser?.units === 'Imperial' ?
         cmToFeetInchesStr(currentMin) :
         `${currentMin} cm`;
 
-      const _currentMax = currentMax === undefined ? 'any' :
+      const _currentMax = _.isNil(currentMax) ? 'any' :
         signedInUser?.units === 'Imperial' ?
         cmToFeetInchesStr(currentMax) :
         `${currentMax} cm`;
@@ -114,6 +116,27 @@ const optionGroupToDataKey = (og: OptionGroup<OptionGroupInputs>) => {
   return og.title.toLowerCase().replaceAll(' ', '_');
 };
 
+type AnswerItem = {
+  question_id: number,
+  question: string,
+  topic: string,
+  answer: boolean | null,
+  accept_unanswered: boolean,
+};
+
+const fetchQuestionSearch = async (q: string): Promise<AnswerItem[]> => {
+  const resultsPerPage = 25;
+  const offset = 0;
+
+  const response = await api(
+    'get',
+    `/search-filter-questions` +
+    `?q=${encodeURIComponent(q)}&n=${resultsPerPage}&o=${offset}`,
+  );
+
+  return response.ok ? response.json : [];
+};
+
 const Stack = createNativeStackNavigator();
 
 const SearchFilterScreen = ({navigation}) => {
@@ -135,9 +158,15 @@ const SearchFilterScreen_ = ({navigation}) => {
   const [, triggerRender] = useState({});
   const [data, setData] = useState<any>(null);
 
+  const answers: any[] | undefined = data?.answer;
+
   const onSubmitSuccess = useCallback(() => {
     triggerRender({});
   }, [triggerRender]);
+
+  const onPressQAndAAnswers = useCallback(() => {
+    return navigation.navigate("Q&A Filter Screen", {answers})
+  }, [navigation, answers]);
 
   const Button_ = useCallback((props) => {
     return <ButtonForOption
@@ -305,8 +334,13 @@ const SearchFilterScreen_ = ({navigation}) => {
           <Title>Q&A Answers</Title>
           <ButtonForOption
             label="Q&A Answers"
+            setting={
+              (answers === undefined || answers.length === 0) ?
+              undefined :
+              (`${answers.length} Answer` + (answers.length === 1 ? '' : 's'))
+            }
             noSettingText="Any"
-            onPress={() => navigation.navigate("Q&A Filter Screen")}
+            onPress={onPressQAndAAnswers}
           />
           <Title>Basics</Title>
           {
@@ -345,8 +379,31 @@ const SearchFilterScreen_ = ({navigation}) => {
   );
 };
 
-const QandQFilterScreen = ({navigation}) => {
+const QandQFilterScreen = ({navigation, route}) => {
+  const answers: AnswerItem[] | undefined | null = route?.params?.answers;
+
+  const numAnswersStr = _.isNil(answers) ? '' : ` (${answers.length})`;
+
+  // TODO: Make fiddling with the search filters actually do something
   const [searchText, setSearchText] = useState("");
+  const [searchResults, setSearchResults] = useState<AnswerItem[] | null>();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const clearSearchText = useCallback(() => setSearchText(""), []);
+
+  const _fetchQuestionSearch = useCallback(debounce(async (q: string) => {
+    const results = await fetchQuestionSearch(q);
+
+    setSearchResults(results);
+    setIsLoading(false);
+  }, 1000), []);
+
+  const onChangeTextDebounced = useCallback(async (q) => {
+    setSearchText(q);
+    setSearchResults(null);
+    setIsLoading(true);
+    await _fetchQuestionSearch(q);
+  }, [_fetchQuestionSearch]);
 
   return (
     <>
@@ -386,11 +443,11 @@ const QandQFilterScreen = ({navigation}) => {
             height: '100%',
           }}
           value={searchText}
-          onChangeText={setSearchText}
+          onChangeText={onChangeTextDebounced}
         />
         {searchText !== "" &&
           <Pressable
-            onPress={() => setSearchText("")}
+            onPress={clearSearchText}
             style={{
               zIndex: 999,
               position: 'absolute',
@@ -412,39 +469,91 @@ const QandQFilterScreen = ({navigation}) => {
           </Pressable>
         }
       </TopNavBar>
-      <DefaultFlatList
-        contentContainerStyle={{
-          paddingTop: 0,
-          paddingLeft: 10,
-          paddingRight: 10,
-        }}
-        emptyText={
-          searchText === "" ?
-            "You haven't added any Q&A filters" :
-            "Your search didn't match any Q&A questions"
-        }
-        endText={
-          searchText === "" ?
-            "You haven't added any other Q&A filters" :
-            "No more Q&A questions to show"
-        }
-        dataKey={searchText}
-        fetchPage={async (): Promise<any[]> => await Array(1)}
-        ListHeaderComponent={
-          searchText === "" ?
-          <Title>Q&A Answers You'll Accept</Title> :
-          <Title>Search Results</Title>
-        }
-        renderItem={(x) =>
-          <SearchQuizCard
-            questionNumber={420}
-            topic="Faith"
-            answer="yes"
-          >
-            Do you believe in the power of your PlayStation?
-          </SearchQuizCard>
-        }
-      />
+      {isLoading &&
+        <View
+          style={{
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexGrow: 1,
+          }}
+        >
+          <ActivityIndicator size={60} color="#70f"/>
+        </View>
+      }
+      {!isLoading &&
+        <ScrollView
+          contentContainerStyle={{
+            paddingTop: 0,
+            paddingLeft: 10,
+            paddingRight: 10,
+          }}
+        >
+          {searchText === "" && _.isEmpty(answers) &&
+            <DefaultText
+              style={{
+                fontFamily: 'Trueno',
+                margin: '20%',
+                textAlign: 'center'
+              }}
+            >
+              You haven't added any Q&A filters
+            </DefaultText>
+          }
+          {searchText !== "" && _.isEmpty(searchResults) &&
+            <DefaultText
+              style={{
+                fontFamily: 'Trueno',
+                margin: '20%',
+                textAlign: 'center'
+              }}
+            >
+              Your search didn't match any Q&A questions
+            </DefaultText>
+          }
+          {searchText === "" && !_.isEmpty(answers) &&
+            <>
+              <Title>Q&A Answers You'll Accept ({(answers ?? []).length})</Title>
+              {(answers ?? []).map((a) =>
+                <SearchQuizCard
+                  key={JSON.stringify(a)}
+                  questionNumber={a.question_id}
+                  topic={a.topic}
+                  answer={a.answer}
+                  initialCheckBoxValue={a.accept_unanswered}
+                >
+                  {a.question}
+                </SearchQuizCard>
+              )}
+              <Notice style={{ marginTop: 5, marginBottom: 5, marginLeft: 0, marginRight: 0 }}>
+                <DefaultText style={{color: '#70f'}} >
+                  You haven't got any other Q&A filters
+                </DefaultText>
+              </Notice>
+            </>
+          }
+          {searchText !== "" && !_.isEmpty(searchResults) &&
+            <>
+              <Title>Search Results</Title>
+              {(searchResults ?? []).map((a) =>
+                <SearchQuizCard
+                  key={JSON.stringify(a)}
+                  questionNumber={a.question_id}
+                  topic={a.topic}
+                  answer={a.answer}
+                  initialCheckBoxValue={a.accept_unanswered}
+                >
+                  {a.question}
+                </SearchQuizCard>
+              )}
+              <Notice style={{ marginTop: 5, marginBottom: 5, marginLeft: 0, marginRight: 0 }}>
+                <DefaultText style={{color: '#70f'}} >
+                  No more search results to show
+                </DefaultText>
+              </Notice>
+            </>
+          }
+        </ScrollView>
+      }
     </>
   );
 };

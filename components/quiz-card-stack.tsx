@@ -47,10 +47,6 @@ function getRandomInt(max) {
   return Math.floor(Math.random() * max);
 }
 
-const delay = async (ms: number) => {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 const fetchNextQuestions = async (n: number = 10, o: number = 0): Promise<{
   id: number,
   question: string,

@@ -666,7 +666,13 @@ const AnsweredQuizCard = ({
   );
 };
 
-const SearchQuizCard = ({children, questionNumber, topic, answer}) => {
+const SearchQuizCard = ({
+  children,
+  questionNumber,
+  topic,
+  answer,
+  initialCheckBoxValue,
+}) => {
   const [answerState, setAnswer2State] = useState(answer);
 
   const onPress = useCallback(() => {

@@ -83,7 +83,7 @@ type OptionGroupSlider = {
     sliderMax: number,
     step: number,
     unitsLabel: string,
-    submit: (input: number) => Promise<boolean>,
+    submit: (input: number | null) => Promise<boolean>,
     addPlusAtMax?: boolean,
     defaultValue: number,
     valueRewriter?: (v: number) => string,
@@ -901,7 +901,7 @@ const searchBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
         step: 1,
         unitsLabel: 'km',
         addPlusAtMax: true,
-        submit: async function(furthestDistance: number) {
+        submit: async function(furthestDistance: number | null) {
           const ok = (
             await japi(
               'post',

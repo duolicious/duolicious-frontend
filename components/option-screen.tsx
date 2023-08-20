@@ -116,25 +116,25 @@ const Buttons = forwardRef((props: InputProps<OptionGroupButtons>, ref) => {
 });
 
 const Slider = forwardRef((props: InputProps<OptionGroupSlider>, ref) => {
-  const inputValueRef = useRef<number>(
+  const inputValueRef = useRef<number | null>(
     props.input.slider.currentValue ??
     props.input.slider.defaultValue
   );
 
   const onChangeInputValue = useCallback((value: number) => {
-    inputValueRef.current = value;
+    if (value === props.input.slider.sliderMax && props.input.slider.addPlusAtMax) {
+      inputValueRef.current = null;
+    } else {
+      inputValueRef.current = value;
+    }
   }, []);
 
   const submit = useCallback(async () => {
     props.setIsLoading(true);
 
     const value = inputValueRef?.current;
-    if (value) {
-      const ok = await props.input.slider.submit(value);
-      ok && props.onSubmitSuccess();
-    } else {
-      props.onSubmitSuccess();
-    }
+    const ok = await props.input.slider.submit(value);
+    ok && props.onSubmitSuccess();
 
     props.setIsLoading(false);
   }, []);
