@@ -521,7 +521,7 @@ const AnswerIconGroup = ({answer, enabled}) => {
 const nextAnswer = (thisAnswer: boolean | null) => {
   if (thisAnswer === true) return false;
   if (thisAnswer === false) return null;
-  if (thisAnswer === null) return true;
+  return true;
 };
 
 const AnsweredQuizCard = ({
