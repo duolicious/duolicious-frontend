@@ -155,17 +155,19 @@ const SearchFilterScreen = ({navigation}) => {
 };
 
 const SearchFilterScreen_ = ({navigation}) => {
-  const [, triggerRender] = useState({});
+  const [, _triggerRender] = useState({});
+  const triggerRender = useCallback(() => _triggerRender({}), [_triggerRender]);
+
   const [data, setData] = useState<any>(null);
 
-  const answers: any[] | undefined = data?.answer;
+  const answers: AnswerItem[] = data?.answer ?? [];
 
   const onSubmitSuccess = useCallback(() => {
-    triggerRender({});
+    triggerRender();
   }, [triggerRender]);
 
   const onPressQAndAAnswers = useCallback(() => {
-    return navigation.navigate("Q&A Filter Screen", {answers})
+    return navigation.navigate("Q&A Filter Screen", {answers, triggerRender})
   }, [navigation, answers]);
 
   const Button_ = useCallback((props) => {
@@ -380,11 +382,11 @@ const SearchFilterScreen_ = ({navigation}) => {
 };
 
 const QandQFilterScreen = ({navigation, route}) => {
-  const answers: AnswerItem[] | undefined | null = route?.params?.answers;
+  const answers: AnswerItem[] = route?.params?.answers;
+  const triggerRender = route?.params?.triggerRender;
 
   const numAnswersStr = _.isNil(answers) ? '' : ` (${answers.length})`;
 
-  // TODO: Make fiddling with the search filters actually do something
   const [searchText, setSearchText] = useState("");
   const [searchResults, setSearchResults] = useState<AnswerItem[] | null>();
   const [isLoading, setIsLoading] = useState(false);
@@ -404,6 +406,12 @@ const QandQFilterScreen = ({navigation, route}) => {
     setIsLoading(true);
     await _fetchQuestionSearch(q);
   }, [_fetchQuestionSearch]);
+
+  const onAnswerChange = useCallback((newAnswers: AnswerItem[]) => {
+    answers.length = 0;
+    answers.push(...newAnswers);
+    triggerRender();
+  }, [answers]);
 
   return (
     <>
@@ -486,6 +494,9 @@ const QandQFilterScreen = ({navigation, route}) => {
             paddingTop: 0,
             paddingLeft: 10,
             paddingRight: 10,
+            maxWidth: 600,
+            width: '100%',
+            alignSelf: 'center',
           }}
         >
           {searchText === "" && _.isEmpty(answers) &&
@@ -520,6 +531,7 @@ const QandQFilterScreen = ({navigation, route}) => {
                   topic={a.topic}
                   answer={a.answer}
                   initialCheckBoxValue={a.accept_unanswered}
+                  onAnswerChange={onAnswerChange}
                 >
                   {a.question}
                 </SearchQuizCard>
@@ -541,6 +553,7 @@ const QandQFilterScreen = ({navigation, route}) => {
                   topic={a.topic}
                   answer={a.answer}
                   initialCheckBoxValue={a.accept_unanswered}
+                  onAnswerChange={onAnswerChange}
                 >
                   {a.question}
                 </SearchQuizCard>

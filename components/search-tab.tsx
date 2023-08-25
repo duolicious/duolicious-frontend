@@ -61,7 +61,7 @@ const fetchPage = async (pageNumber: number): Promise<PageItem[]> => {
 };
 
 const SearchScreen_ = ({navigation}) => {
-  const listRef = useRef(undefined);
+  const listRef = useRef<any>(undefined);
 
   const TopNavBarButton = ({onPress, iconName, style}) => {
     const opacity = useRef(new Animated.Value(1)).current;
