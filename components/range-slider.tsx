@@ -2,15 +2,19 @@ import {
   View,
 } from 'react-native';
 import {
-  useState,
+  forwardRef,
+  useImperativeHandle,
   useRef,
+  useState,
 } from 'react';
 import Slider from '@react-native-community/slider';
 
 import { LabelledSlider } from './labelled-slider';
 
-const RangeSlider = ({minimumValue, maximumValue, ...props}) => {
+const RangeSlider = forwardRef((props: any, ref) => {
   const {
+    minimumValue,
+    maximumValue,
     containerStyle,
     unitsLabel,
     onLowerValueChange,
@@ -54,6 +58,16 @@ const RangeSlider = ({minimumValue, maximumValue, ...props}) => {
     }
   };
 
+  const setValues = (values: {lowerValue: any, upperValue: any}) => {
+    const lowerValue_ = values.lowerValue;
+    const upperValue_ = values.upperValue;
+
+    if (lowerValue_ !== undefined) setLowerValue(lowerValue_);
+    if (upperValue_ !== undefined) setUpperValue(upperValue_);
+  };
+
+  useImperativeHandle(ref, () => ({ setValues }), []);
+
   return (
     <View
       style={{
@@ -81,7 +95,7 @@ const RangeSlider = ({minimumValue, maximumValue, ...props}) => {
       />
     </View>
   );
-};
+});
 
 export {
   RangeSlider,

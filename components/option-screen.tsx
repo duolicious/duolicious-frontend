@@ -556,6 +556,8 @@ const CheckChips = forwardRef((props: InputProps<OptionGroupCheckChips>, ref) =>
 });
 
 const RangeSlider = forwardRef((props: InputProps<OptionGroupRangeSlider>, ref) => {
+  const rangeSliderRef = useRef<any>();
+
   const lowerValueRef = useRef<number | null>(
     props.input.rangeSlider.currentMin ??
     props.input.rangeSlider.sliderMin ??
@@ -577,8 +579,14 @@ const RangeSlider = forwardRef((props: InputProps<OptionGroupRangeSlider>, ref) 
   const submit = useCallback(async () => {
     props.setIsLoading(true);
 
-    const minValue = lowerValueRef?.current;
-    const maxValue = upperValueRef?.current;
+    const sliderMin = props.input.rangeSlider.sliderMin;
+    const sliderMax = props.input.rangeSlider.sliderMax;
+
+    const currentMin = lowerValueRef?.current;
+    const currentMax = upperValueRef?.current;
+
+    const minValue = sliderMin === currentMin ? null : currentMin;
+    const maxValue = sliderMax === currentMax ? null : currentMax;
 
     const ok = await props.input.rangeSlider.submit(minValue, maxValue);
     ok && props.onSubmitSuccess();
@@ -588,20 +596,46 @@ const RangeSlider = forwardRef((props: InputProps<OptionGroupRangeSlider>, ref) 
 
   useImperativeHandle(ref, () => ({ submit }), []);
 
-  return <RangeSlider_
-    initialLowerValue={lowerValueRef.current}
-    initialUpperValue={upperValueRef.current}
-    unitsLabel={props.input.rangeSlider.unitsLabel}
-    minimumValue={props.input.rangeSlider.sliderMin}
-    maximumValue={props.input.rangeSlider.sliderMax}
-    onLowerValueChange={onLowerValueChange}
-    onUpperValueChange={onUpperValueChange}
-    valueRewriter={props.input.rangeSlider.valueRewriter}
-    containerStyle={{
-      marginLeft: 20,
-      marginRight: 20,
-    }}
-  />
+  const onPressReset = useCallback(() => {
+    const setValues = rangeSliderRef?.current?.setValues;
+    if (setValues) {
+      setValues({
+        lowerValue: props.input.rangeSlider.sliderMin,
+        upperValue: props.input.rangeSlider.sliderMax,
+      });
+    }
+  }, []);
+
+  return (
+    <>
+      <RangeSlider_
+        ref={rangeSliderRef}
+        initialLowerValue={lowerValueRef.current}
+        initialUpperValue={upperValueRef.current}
+        unitsLabel={props.input.rangeSlider.unitsLabel}
+        minimumValue={props.input.rangeSlider.sliderMin}
+        maximumValue={props.input.rangeSlider.sliderMax}
+        onLowerValueChange={onLowerValueChange}
+        onUpperValueChange={onUpperValueChange}
+        valueRewriter={props.input.rangeSlider.valueRewriter}
+        containerStyle={{
+          marginLeft: 20,
+          marginRight: 20,
+        }}
+      />
+      <ButtonWithCenteredText
+        onPress={onPressReset}
+        containerStyle={{
+          marginTop: 30,
+          marginLeft: 20,
+          marginRight: 20,
+        }}
+        secondary={true}
+      >
+        Reset
+      </ButtonWithCenteredText>
+    </>
+  );
 });
 
 const None = forwardRef((props: InputProps<OptionGroupNone>, ref) => {
