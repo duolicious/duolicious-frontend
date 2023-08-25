@@ -69,6 +69,7 @@ type InputProps<T extends OptionGroupInputs> = {
   onSubmitSuccess: any
   title: string,
   showSkipButton: boolean
+  theme?: 'dark' | 'light'
 };
 
 const Buttons = forwardRef((props: InputProps<OptionGroupButtons>, ref) => {
@@ -532,7 +533,7 @@ const CheckChips = forwardRef((props: InputProps<OptionGroupCheckChips>, ref) =>
       <DefaultText
         style={{
           textAlign: 'center',
-          color: 'white',
+          color: props.theme === 'light' ? 'red' : 'white',
           opacity: isInvalid ? 1 : 0,
         }}
       >
@@ -710,6 +711,7 @@ const OptionScreen = ({navigation, route}) => {
   const backgroundColor: string | undefined = route?.params?.backgroundColor;
   const color: string | undefined = route?.params?.color;
   const onSubmitSuccess: any | undefined = route?.params?.onSubmitSuccess;
+  const theme: any | undefined = route?.params?.theme;
 
   const thisOptionGroup = optionGroups[0];
 
@@ -848,6 +850,7 @@ const OptionScreen = ({navigation, route}) => {
               onSubmitSuccess={_onSubmitSuccess}
               title={title}
               showSkipButton={showSkipButton}
+              theme={theme}
             />
           }
           {scrollView !== false && <>
@@ -866,6 +869,7 @@ const OptionScreen = ({navigation, route}) => {
                   onSubmitSuccess={_onSubmitSuccess}
                   title={title}
                   showSkipButton={showSkipButton}
+                  theme={theme}
                 />
                 <View style={{height: 20}}/>
               </ScrollView>

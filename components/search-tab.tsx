@@ -111,8 +111,11 @@ const SearchScreen_ = ({navigation}) => {
   }, []);
 
   const onPressOptions = useCallback(() => {
-    navigation.navigate('Search Filter Screen');
-  }, []);
+    navigation.navigate('Search Filter Screen', {
+      screen: 'Search Filter Tab',
+      params: { onPressRefresh },
+    });
+  }, [onPressRefresh]);
 
   const ListHeaderComponent = useCallback(() => {
     return (

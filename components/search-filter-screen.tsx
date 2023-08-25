@@ -154,7 +154,9 @@ const SearchFilterScreen = ({navigation}) => {
   );
 };
 
-const SearchFilterScreen_ = ({navigation}) => {
+const SearchFilterScreen_ = ({navigation, route}) => {
+  const onPressRefresh = route?.params?.onPressRefresh;
+
   const [, _triggerRender] = useState({});
   const triggerRender = useCallback(() => _triggerRender({}), [_triggerRender]);
 
@@ -175,6 +177,7 @@ const SearchFilterScreen_ = ({navigation}) => {
       navigation={navigation}
       navigationScreen="Search Filter Option Screen"
       showSkipButton={false}
+      theme="light"
       buttonTextColor="white"
       buttonBackgroundColor="#70f"
       buttonBorderWidth={0}
@@ -284,6 +287,11 @@ const SearchFilterScreen_ = ({navigation}) => {
     });
   }, [_searchBasicsOptionGroups, signedInUser?.units]);
 
+  const goBack = useCallback(() => {
+    onPressRefresh && onPressRefresh();
+    navigation.goBack();
+  }, [navigation, onPressRefresh]);
+
   return (
     <>
       <TopNavBar
@@ -293,7 +301,7 @@ const SearchFilterScreen_ = ({navigation}) => {
         }}
       >
         <Pressable
-          onPress={() => navigation.goBack()}
+          onPress={goBack}
           style={{
             zIndex: 999,
             position: 'absolute',

@@ -24,7 +24,8 @@ const ButtonForOption = (props) => {
     buttonBorderWidth,
     navigationScreen,
     navigation,
-    loading = false
+    loading = false,
+    theme,
   } = props;
 
   if ((label === undefined) === (optionGroups === undefined)) {
@@ -69,6 +70,7 @@ const ButtonForOption = (props) => {
         ...(buttonTextColor !== undefined ? {buttonTextColor} : {}),
         ...(buttonBackgroundColor !== undefined ? {buttonBackgroundColor} : {}),
         ...(buttonBorderWidth !== undefined ? {buttonBorderWidth} : {}),
+        ...(theme !== undefined ? {theme} : {}),
       }
     )
   }), []);
