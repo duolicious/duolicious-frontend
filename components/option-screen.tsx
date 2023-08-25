@@ -161,6 +161,7 @@ const Slider = forwardRef((props: InputProps<OptionGroupSlider>, ref) => {
       {props.showSkipButton &&
         <ButtonWithCenteredText
           onPress={submit}
+          loading={props.isLoading}
           containerStyle={{
             marginTop: 30,
             marginLeft: 20,
