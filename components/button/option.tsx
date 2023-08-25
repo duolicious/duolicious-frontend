@@ -19,9 +19,6 @@ const ButtonForOption = (props) => {
     setting,
     noSettingText = 'Unanswered',
     showSkipButton,
-    buttonTextColor,
-    buttonBackgroundColor,
-    buttonBorderWidth,
     navigationScreen,
     navigation,
     loading = false,
@@ -67,9 +64,6 @@ const ButtonForOption = (props) => {
         optionGroups: optionGroups,
         ...(onSubmitSuccess !== undefined ? {onSubmitSuccess} : {}),
         ...(showSkipButton !== undefined ? {showSkipButton} : {}),
-        ...(buttonTextColor !== undefined ? {buttonTextColor} : {}),
-        ...(buttonBackgroundColor !== undefined ? {buttonBackgroundColor} : {}),
-        ...(buttonBorderWidth !== undefined ? {buttonBorderWidth} : {}),
         ...(theme !== undefined ? {theme} : {}),
       }
     )

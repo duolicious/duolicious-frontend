@@ -705,9 +705,6 @@ const OptionScreen = ({navigation, route}) => {
   const showSkipButton: boolean = route?.params?.showSkipButton ?? true;
   const showCloseButton: boolean = route?.params?.showCloseButton ?? true;
   const showBackButton: boolean = route?.params?.showBackButton ?? false;
-  const buttonBorderWidth: number = route?.params?.buttonBorderWidth;
-  const buttonBackgroundColor: number = route?.params?.buttonBackgroundColor;
-  const buttonTextColor: number = route?.params?.buttonTextColor;
   const backgroundColor: string | undefined = route?.params?.backgroundColor;
   const color: string | undefined = route?.params?.color;
   const onSubmitSuccess: any | undefined = route?.params?.onSubmitSuccess;
@@ -905,10 +902,7 @@ const OptionScreen = ({navigation, route}) => {
           }}
         >
           <ButtonWithCenteredText
-            secondary={true}
-            borderWidth={buttonBorderWidth}
-            backgroundColor={buttonBackgroundColor}
-            textColor={buttonTextColor}
+            secondary={theme !== 'light'}
             onPress={onPressContinue}
             loading={isLoading}
           >
