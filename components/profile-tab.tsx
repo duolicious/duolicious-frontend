@@ -395,7 +395,7 @@ const AboutDuolicious = () => {
         </DefaultText>
       </Pressable>
       <Pressable
-        style={{marginTop: 15}}
+        style={{marginTop: 25}}
         onPress={() => Linking.openURL('mailto:support@duolicious.app')}
       >
         <DefaultText
