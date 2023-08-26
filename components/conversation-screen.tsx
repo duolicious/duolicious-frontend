@@ -81,8 +81,9 @@ const ConversationScreen = ({navigation, route}) => {
 
     if (messageStatus === 'sent') {
       setMessages(messages => [...(messages ?? []), message]);
-    }
-    if (messageStatus === 'sent' && isFirstMessage) {
+
+      // TODO: Ideally, you wouldn't have to mark messages as sent in this way;
+      //       The chat service already knows if a message was sent
       api('post', `/mark-messaged/${personId}`);
     }
 
