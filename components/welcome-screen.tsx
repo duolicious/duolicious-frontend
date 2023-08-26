@@ -30,6 +30,8 @@ const callToActionList = [
   "Ready to find someone who’s also too good for most dating apps?",
   "Where ‘single and thriving’ can also mean ‘open to distractions’.",
   "Matching you based on more than just your ability to craft a sassy bio.",
+  "Babe, wake up. New matches just dropped.",
+  "When life gives you this app, you don’t just make lemonade, you find someone to share it with.",
 ];
 
 const Stack = createNativeStackNavigator();
