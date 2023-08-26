@@ -50,6 +50,7 @@ const ConversationScreen = ({navigation, route}) => {
   const personId: number = route?.params?.personId;
   const name: string = route?.params?.name;
   const imageUuid: number = route?.params?.imageUuid;
+  const isDeletedUser: boolean = route?.params?.isDeletedUser;
 
   const listRef = useRef<any>(null)
 
@@ -266,7 +267,7 @@ const ConversationScreen = ({navigation, route}) => {
           "Someone already used that intro! Try again!"
         }
       </DefaultText>
-      {!messageFetchTimeout &&
+      {!messageFetchTimeout && !isDeletedUser &&
         <TextInputWithButton onPress={onPressSend}/>
       }
     </>
