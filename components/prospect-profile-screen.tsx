@@ -408,6 +408,7 @@ const Content = (navigationRef) => ({navigation, route, ...props}) => {
   navigationRef.current = navigation;
 
   const personId = route.params.personId;
+  const showBottomButtons = route.params.showBottomButtons ?? true;
 
   const [data, setData] = useState<UserData | undefined>(undefined);
 
@@ -461,38 +462,40 @@ const Content = (navigationRef) => ({navigation, route, ...props}) => {
           data={data}
         />
       </ScrollView>
-      <View
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          width: '100%',
-          maxWidth: 600,
-          alignSelf: 'center',
-          zIndex: 999,
-          overflow: 'visible',
-          justifyContent: 'center',
-          flexDirection: 'row',
-        }}
-        pointerEvents="box-none"
-      >
+      {showBottomButtons &&
         <View
           style={{
+            position: 'absolute',
+            bottom: 0,
+            width: '100%',
+            maxWidth: 600,
+            alignSelf: 'center',
+            zIndex: 999,
+            overflow: 'visible',
+            justifyContent: 'center',
             flexDirection: 'row',
           }}
+          pointerEvents="box-none"
         >
-          <FloatingHideButton
-            navigation={navigation}
-            personId={personId}
-            isHidden={data?.is_hidden}
-          />
-          <FloatingSendIntroButton
-            navigation={navigation}
-            personId={personId}
-            name={data?.name}
-            imageUuid={imageUuid}
-          />
+          <View
+            style={{
+              flexDirection: 'row',
+            }}
+          >
+            <FloatingHideButton
+              navigation={navigation}
+              personId={personId}
+              isHidden={data?.is_hidden}
+            />
+            <FloatingSendIntroButton
+              navigation={navigation}
+              personId={personId}
+              name={data?.name}
+              imageUuid={imageUuid}
+            />
+          </View>
         </View>
-      </View>
+      }
     </>
   );
 };

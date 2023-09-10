@@ -92,6 +92,16 @@ const ConversationScreen = ({navigation, route}) => {
     return messageStatus;
   }, [personId, messages]);
 
+  const onPressName = useCallback(() => {
+    navigation.navigate(
+      'Prospect Profile Screen',
+      {
+        screen: 'Prospect Profile',
+        params: { personId, showBottomButtons: false },
+      }
+    );
+  }, [personId, name]);
+
   const _fetchConversation = useCallback(async () => {
     const _messages = await fetchConversation(personId);
     setMessageFetchTimeout(_messages === 'timeout');
@@ -137,7 +147,8 @@ const ConversationScreen = ({navigation, route}) => {
             name="arrow-back"
           />
         </Pressable>
-        <View
+        <Pressable
+          onPress={onPressName}
           style={{
             justifyContent: 'center',
             alignItems: 'center',
@@ -162,7 +173,7 @@ const ConversationScreen = ({navigation, route}) => {
           >
             {name ?? '...'}
           </DefaultText>
-        </View>
+        </Pressable>
       </TopNavBar>
       {messages === null && !messageFetchTimeout &&
         <View style={{flexGrow: 1, justifyContent: 'center', alignItems: 'center'}}>
