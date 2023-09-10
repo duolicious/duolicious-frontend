@@ -43,6 +43,7 @@ import { faLocationDot } from '@fortawesome/free-solid-svg-icons/faLocationDot'
 import { RotateCcw, X } from "react-native-feather";
 import { IMAGES_URL } from '../env/env';
 import { randomGagLocation } from '../data/gag-locations';
+import { setBlocked } from '../xmpp/xmpp';
 
 const Stack = createNativeStackNavigator();
 
@@ -285,11 +286,21 @@ const BlockButton = ({name, personId, isBlocked}) => {
     setIsBlockedState(isBlocked);
   }, [isBlocked]);
 
-  const onPress = useCallback(() => {
-    setIsBlockedState(!isBlockedState);
+  const onPress = useCallback(async () => {
+    const nextIsBlockedState = !isBlockedState;
 
-    if (isBlockedState === true ) api('post', `/unblock/${personId}`);
-    if (isBlockedState === false) api('post', `/block/${personId}`);
+    const status = await setBlocked(personId, nextIsBlockedState);
+    if (status === undefined) {
+      if (!nextIsBlockedState) api('post', `/unblock/${personId}`);
+      if ( nextIsBlockedState) api('post', `/block/${personId}`);
+
+      // TODO: Show a spinner before setting this
+      setIsBlockedState(nextIsBlockedState);
+    } else if (status === 'timeout') {
+      ;
+    } else {
+      throw Error(`Unexpected status: ${status}`);
+    }
   }, [isBlockedState]);
 
   const text = isBlockedState

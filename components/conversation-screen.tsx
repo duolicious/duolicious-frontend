@@ -263,10 +263,9 @@ const ConversationScreen = ({navigation, route}) => {
           ...(lastMessageStatus === 'timeout' ? {} : { fontFamily: 'Trueno' }),
         }}
       >
-        {lastMessageStatus === 'timeout' ?
-          "Message not delivered. Are you online?" :
-          "Someone already used that intro! Try again!"
-        }
+        {lastMessageStatus === 'timeout' ?  "Message not delivered. Are you online?" : '' }
+        {lastMessageStatus === 'blocked' ?  name + ' is unavailable right now. Try messaging someone else!' : '' }
+        {lastMessageStatus === 'not unique' ?  "Someone already used that intro! Try again!" : '' }
       </DefaultText>
       {!messageFetchTimeout && !isDeletedUser &&
         <TextInputWithButton onPress={onPressSend}/>
