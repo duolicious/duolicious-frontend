@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   Animated,
   Pressable,
   ScrollView,
@@ -280,6 +281,7 @@ const SeeQAndAButton = ({navigation, personId, name, countAnswers}) => {
 };
 
 const BlockButton = ({name, personId, isBlocked}) => {
+  const [isLoading, setIsLoading] = useState(false);
   const [isBlockedState, setIsBlockedState] = useState(false);
 
   useEffect(() => {
@@ -287,21 +289,32 @@ const BlockButton = ({name, personId, isBlocked}) => {
   }, [isBlocked]);
 
   const onPress = useCallback(async () => {
+    if (isLoading) return;
+
+    setIsLoading(true);
+
     const nextIsBlockedState = !isBlockedState;
 
     const status = await setBlocked(personId, nextIsBlockedState);
     if (status === undefined) {
-      if (!nextIsBlockedState) api('post', `/unblock/${personId}`);
-      if ( nextIsBlockedState) api('post', `/block/${personId}`);
+      const endpoint = (
+        nextIsBlockedState ?
+        `/block/${personId}` :
+        `/unblock/${personId}`);
 
-      // TODO: Show a spinner before setting this
-      setIsBlockedState(nextIsBlockedState);
+      const response = await api('post', endpoint);
+
+      if (response.ok) {
+        setIsBlockedState(nextIsBlockedState);
+      }
     } else if (status === 'timeout') {
       ;
     } else {
       throw Error(`Unexpected status: ${status}`);
     }
-  }, [isBlockedState]);
+
+    setIsLoading(false);
+  }, [isLoading, isBlockedState]);
 
   const text = isBlockedState
     ? `You have blocked and reported ${name}. Press to unblock ${name}.` :
@@ -316,14 +329,19 @@ const BlockButton = ({name, personId, isBlocked}) => {
         alignSelf: 'center',
       }}
     >
-      <DefaultText
-        style={{
-          color: '#777',
-          overflow: 'hidden',
-        }}
-      >
-        {name === undefined ? '...' : text}
-      </DefaultText>
+      {isLoading &&
+        <ActivityIndicator size="small" color="#70f"/>
+      }
+      {!isLoading &&
+        <DefaultText
+          style={{
+            color: '#777',
+            overflow: 'hidden',
+          }}
+        >
+          {name === undefined ? '...' : text}
+        </DefaultText>
+      }
     </Pressable>
   );
 };
