@@ -1,0 +1,752 @@
+-- Merging decision tree log ---
+manifest
+ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:1:1-34:12
+INJECTED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:1:1-34:12
+INJECTED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:1:1-34:12
+INJECTED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:1:1-34:12
+MERGED from [:react-native-async-storage_async-storage] /home/christian/duolicious-frontend/node_modules/@react-native-async-storage/async-storage/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:2:1-7:12
+MERGED from [:react-native-community_slider] /home/christian/duolicious-frontend/node_modules/@react-native-community/slider/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:2:1-7:12
+MERGED from [:expo] /home/christian/duolicious-frontend/node_modules/expo/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:2:1-7:12
+MERGED from [:react-native-safe-area-context] /home/christian/duolicious-frontend/node_modules/react-native-safe-area-context/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:2:1-7:12
+MERGED from [:react-native-screens] /home/christian/duolicious-frontend/node_modules/react-native-screens/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:2:1-7:12
+MERGED from [:react-native-svg] /home/christian/duolicious-frontend/node_modules/react-native-svg/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:2:1-7:12
+MERGED from [:expo-application] /home/christian/duolicious-frontend/node_modules/expo-application/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:2:1-7:12
+MERGED from [:expo-clipboard] /home/christian/duolicious-frontend/node_modules/expo-clipboard/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:2:1-18:12
+MERGED from [:expo-constants] /home/christian/duolicious-frontend/node_modules/expo-constants/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:2:1-7:12
+MERGED from [:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:2:1-33:12
+MERGED from [:expo-font] /home/christian/duolicious-frontend/node_modules/expo-font/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:2:1-7:12
+MERGED from [:expo-image-loader] /home/christian/duolicious-frontend/node_modules/expo-image-loader/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:2:1-7:12
+MERGED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:2:1-59:12
+MERGED from [:expo-keep-awake] /home/christian/duolicious-frontend/node_modules/expo-keep-awake/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:2:1-7:12
+MERGED from [:expo-linear-gradient] /home/christian/duolicious-frontend/node_modules/expo-linear-gradient/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:2:1-7:12
+MERGED from [:expo-screen-orientation] /home/christian/duolicious-frontend/node_modules/expo-screen-orientation/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:2:1-7:12
+MERGED from [:expo-secure-store] /home/christian/duolicious-frontend/node_modules/expo-secure-store/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:2:1-7:12
+MERGED from [:expo-splash-screen] /home/christian/duolicious-frontend/node_modules/expo-splash-screen/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:2:1-7:12
+MERGED from [:expo-modules-core] /home/christian/duolicious-frontend/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:2:1-18:12
+MERGED from [com.facebook.react:react-android:0.72.4] /home/christian/.gradle/caches/transforms-3/3b52522e5c09ee593a0bca9dee2b23c4/transformed/jetified-react-android-0.72.4-release/AndroidManifest.xml:2:1-7:12
+MERGED from [com.facebook.fresco:fresco:2.5.0] /home/christian/.gradle/caches/transforms-3/219ade6cf0eaade4feab090adc648c00/transformed/jetified-fresco-2.5.0/AndroidManifest.xml:2:1-9:12
+MERGED from [com.facebook.fresco:imagepipeline-okhttp3:2.5.0] /home/christian/.gradle/caches/transforms-3/f15bec81ce8958a721e68c9727768fe7/transformed/jetified-imagepipeline-okhttp3-2.5.0/AndroidManifest.xml:2:1-9:12
+MERGED from [com.facebook.fresco:animated-gif:2.5.0] /home/christian/.gradle/caches/transforms-3/491ab11cdc6f40996107fd55a8c24518/transformed/jetified-animated-gif-2.5.0/AndroidManifest.xml:2:1-9:12
+MERGED from [com.facebook.fresco:webpsupport:2.5.0] /home/christian/.gradle/caches/transforms-3/5a941b36865489bcc9ec1464ea40ecea/transformed/jetified-webpsupport-2.5.0/AndroidManifest.xml:2:1-9:12
+MERGED from [com.facebook.react:hermes-android:0.72.4] /home/christian/.gradle/caches/transforms-3/a2bef35018d30e412622983071bf8eef/transformed/jetified-hermes-android-0.72.4-release/AndroidManifest.xml:2:1-7:12
+MERGED from [com.google.android.material:material:1.1.0] /home/christian/.gradle/caches/transforms-3/6ed83fd0f18220e5979e6984ec0c3a37/transformed/material-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:2:1-38:12
+MERGED from [androidx.biometric:biometric:1.1.0] /home/christian/.gradle/caches/transforms-3/808043cb4cf2ad49d6936bcf600e8cf8/transformed/biometric-1.1.0/AndroidManifest.xml:17:1-29:12
+MERGED from [androidx.appcompat:appcompat:1.6.1] /home/christian/.gradle/caches/transforms-3/a0b6ea719f8a5b245a49ddd9545c67bd/transformed/appcompat-1.6.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.appcompat:appcompat-resources:1.6.1] /home/christian/.gradle/caches/transforms-3/d412f68530d340f9b414e7e969b04bb7/transformed/jetified-appcompat-resources-1.6.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.autofill:autofill:1.1.0] /home/christian/.gradle/caches/transforms-3/218a52ab81d718d16ea6c9defe0a6b78/transformed/jetified-autofill-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.legacy:legacy-support-v4:1.0.0] /home/christian/.gradle/caches/transforms-3/07ad9d47cf3432f2bd69708b35894f17/transformed/legacy-support-v4-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.legacy:legacy-support-core-ui:1.0.0] /home/christian/.gradle/caches/transforms-3/c16de79b864adfe8d65782d96dac77d3/transformed/legacy-support-core-ui-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.swiperefreshlayout:swiperefreshlayout:1.0.0] /home/christian/.gradle/caches/transforms-3/6af2408613e8bb6c12f75327d8b83848/transformed/swiperefreshlayout-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.tracing:tracing-ktx:1.1.0] /home/christian/.gradle/caches/transforms-3/ebcf50a8c36edaad61408fd0a53bc20d/transformed/jetified-tracing-ktx-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [com.github.bumptech.glide:glide:4.13.2] /home/christian/.gradle/caches/transforms-3/9cf0dd9e34ec9fe3ad8e998be38b106d/transformed/jetified-glide-4.13.2/AndroidManifest.xml:2:1-12:12
+MERGED from [androidx.fragment:fragment-ktx:1.5.7] /home/christian/.gradle/caches/transforms-3/bb0cd3f206943031efb6ed20ab3386da/transformed/jetified-fragment-ktx-1.5.7/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.activity:activity-ktx:1.7.2] /home/christian/.gradle/caches/transforms-3/1a5f0add0cc021fc7cba40c1e073e797/transformed/jetified-activity-ktx-1.7.2/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.viewpager2:viewpager2:1.0.0] /home/christian/.gradle/caches/transforms-3/4b97286a9fb5084811419ff3cce8995a/transformed/jetified-viewpager2-1.0.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.fragment:fragment:1.5.7] /home/christian/.gradle/caches/transforms-3/d289b368d1c76f56212ad7fb41afa591/transformed/fragment-1.5.7/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.activity:activity:1.7.2] /home/christian/.gradle/caches/transforms-3/4a8011f545144d3ce9e7846bdec12798/transformed/jetified-activity-1.7.2/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.emoji2:emoji2-views-helper:1.2.0] /home/christian/.gradle/caches/transforms-3/eaab9be5e777bb8b93a52316e7390f5d/transformed/jetified-emoji2-views-helper-1.2.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.emoji2:emoji2:1.2.0] /home/christian/.gradle/caches/transforms-3/aaa38c963a9e05720a10713f7b391cb5/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:17:1-35:12
+MERGED from [androidx.legacy:legacy-support-core-utils:1.0.0] /home/christian/.gradle/caches/transforms-3/0b00d4a6a6215b61f4786c0934938958/transformed/legacy-support-core-utils-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.loader:loader:1.0.0] /home/christian/.gradle/caches/transforms-3/e1c3587e5042482ca1212af2adf9c8c7/transformed/loader-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.savedstate:savedstate-ktx:1.2.1] /home/christian/.gradle/caches/transforms-3/40a68710ab125457959c55d49934019d/transformed/jetified-savedstate-ktx-1.2.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.savedstate:savedstate:1.2.1] /home/christian/.gradle/caches/transforms-3/e9a204d336c633d95646e80dc3eba364/transformed/jetified-savedstate-1.2.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-livedata:2.6.1] /home/christian/.gradle/caches/transforms-3/66c91c181cf71b1dbaabb147afdc945f/transformed/lifecycle-livedata-2.6.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/christian/.gradle/caches/transforms-3/37237e168ff21f74c2fa7449816f191f/transformed/jetified-lifecycle-process-2.6.1/AndroidManifest.xml:17:1-35:12
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.6.1] /home/christian/.gradle/caches/transforms-3/a3d72f67a47d870cfdd7b87dc29306ff/transformed/jetified-lifecycle-viewmodel-savedstate-2.6.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-livedata-core-ktx:2.6.1] /home/christian/.gradle/caches/transforms-3/f9ae64e9e90e3635b8868f24320d38a3/transformed/jetified-lifecycle-livedata-core-ktx-2.6.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-livedata-core:2.6.1] /home/christian/.gradle/caches/transforms-3/dba4bd8e57b283323e27897aa7114628/transformed/lifecycle-livedata-core-2.6.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.6.1] /home/christian/.gradle/caches/transforms-3/9e680dbaa0842d78fb3d305a20874afa/transformed/lifecycle-viewmodel-2.6.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-runtime-ktx:2.6.1] /home/christian/.gradle/caches/transforms-3/56cf9b4b0ca11af36195c4dd104b579d/transformed/jetified-lifecycle-runtime-ktx-2.6.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1] /home/christian/.gradle/caches/transforms-3/8a7cb78e3ecc70292ebedd83a40b6f7a/transformed/jetified-lifecycle-viewmodel-ktx-2.6.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.coordinatorlayout:coordinatorlayout:1.1.0] /home/christian/.gradle/caches/transforms-3/f432b5daa4d6cd5a25389c7818c78090/transformed/coordinatorlayout-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] /home/christian/.gradle/caches/transforms-3/f247157e7ddbdaefa22790775dc73d8a/transformed/vectordrawable-animated-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] /home/christian/.gradle/caches/transforms-3/cf55d77c61a0b6a7a3181a42669ac3de/transformed/vectordrawable-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.drawerlayout:drawerlayout:1.0.0] /home/christian/.gradle/caches/transforms-3/d8d20c1b9c73a6ff51cfecd7f0a5912d/transformed/drawerlayout-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.recyclerview:recyclerview:1.1.0] /home/christian/.gradle/caches/transforms-3/9877a4bd122d876df6f443db472308c4/transformed/recyclerview-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.viewpager:viewpager:1.0.0] /home/christian/.gradle/caches/transforms-3/c77580c485e6189d662dee139241c30c/transformed/viewpager-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.slidingpanelayout:slidingpanelayout:1.0.0] /home/christian/.gradle/caches/transforms-3/916eed05ad19469c544f3b428e0db3f3/transformed/slidingpanelayout-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.customview:customview:1.0.0] /home/christian/.gradle/caches/transforms-3/80eb95a753d48716874adf5ae7f6e73d/transformed/customview-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.transition:transition:1.2.0] /home/christian/.gradle/caches/transforms-3/66434bfa5707fa90a56f5bf72fec4820/transformed/transition-1.2.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.media:media:1.0.0] /home/christian/.gradle/caches/transforms-3/33515c94ab0dd71e7cd5cdadd943ba7f/transformed/media-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.asynclayoutinflater:asynclayoutinflater:1.0.0] /home/christian/.gradle/caches/transforms-3/409f2c5d163608b218e12928a2d1aad1/transformed/asynclayoutinflater-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.core:core-ktx:1.9.0] /home/christian/.gradle/caches/transforms-3/7edb3ee37bd5890adb7770e17d108224/transformed/jetified-core-ktx-1.9.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.core:core:1.9.0] /home/christian/.gradle/caches/transforms-3/0d9081b1defcfc12625845badd9b93a6/transformed/core-1.9.0/AndroidManifest.xml:17:1-30:12
+MERGED from [androidx.lifecycle:lifecycle-runtime:2.6.1] /home/christian/.gradle/caches/transforms-3/9fbca55ab621f16ef933b265a8c5d154/transformed/lifecycle-runtime-2.6.1/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:17:1-55:12
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/christian/.gradle/caches/transforms-3/2660846b8c17c3774a74d166e48ca0f3/transformed/jetified-startup-runtime-1.1.1/AndroidManifest.xml:17:1-33:12
+MERGED from [androidx.tracing:tracing:1.1.0] /home/christian/.gradle/caches/transforms-3/95d1533f87ae9a952a8deeb52e685a76/transformed/jetified-tracing-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [com.facebook.fbjni:fbjni:0.3.0] /home/christian/.gradle/caches/transforms-3/8b6cc7607ffe5936bd42bb311e7e5848/transformed/jetified-fbjni-0.3.0/AndroidManifest.xml:2:1-9:12
+MERGED from [com.facebook.fresco:animated-base:2.5.0] /home/christian/.gradle/caches/transforms-3/6cd8b5df66c3e088da8b805e8293dd25/transformed/jetified-animated-base-2.5.0/AndroidManifest.xml:2:1-9:12
+MERGED from [com.facebook.fresco:animated-drawable:2.5.0] /home/christian/.gradle/caches/transforms-3/ccfc720418f310dfeac01965ca9b7e92/transformed/jetified-animated-drawable-2.5.0/AndroidManifest.xml:2:1-9:12
+MERGED from [com.facebook.fresco:drawee:2.5.0] /home/christian/.gradle/caches/transforms-3/5f4ef27e4ecf53ecc859ea5e1a299452/transformed/jetified-drawee-2.5.0/AndroidManifest.xml:2:1-9:12
+MERGED from [com.facebook.fresco:middleware:2.5.0] /home/christian/.gradle/caches/transforms-3/ea1eaf573a05d082b29337eb1929ac5c/transformed/jetified-middleware-2.5.0/AndroidManifest.xml:2:1-9:12
+MERGED from [com.facebook.fresco:ui-common:2.5.0] /home/christian/.gradle/caches/transforms-3/60a8a4b4ffd882376cd8d1370bd2b8df/transformed/jetified-ui-common-2.5.0/AndroidManifest.xml:2:1-9:12
+MERGED from [com.facebook.fresco:nativeimagefilters:2.5.0] /home/christian/.gradle/caches/transforms-3/38e1b056080e4270b8c8105a3af984b1/transformed/jetified-nativeimagefilters-2.5.0/AndroidManifest.xml:2:1-9:12
+MERGED from [com.facebook.fresco:memory-type-native:2.5.0] /home/christian/.gradle/caches/transforms-3/19590571c670446f2130a9329882d60f/transformed/jetified-memory-type-native-2.5.0/AndroidManifest.xml:2:1-9:12
+MERGED from [com.facebook.fresco:memory-type-java:2.5.0] /home/christian/.gradle/caches/transforms-3/46f5f58c3b327aa427178165cefd5312/transformed/jetified-memory-type-java-2.5.0/AndroidManifest.xml:2:1-9:12
+MERGED from [com.facebook.fresco:imagepipeline-native:2.5.0] /home/christian/.gradle/caches/transforms-3/91ebe7c9239b690855a0725db1b54fa1/transformed/jetified-imagepipeline-native-2.5.0/AndroidManifest.xml:2:1-9:12
+MERGED from [com.facebook.fresco:memory-type-ashmem:2.5.0] /home/christian/.gradle/caches/transforms-3/38efc9ce8069371c05380a5c7ff0268f/transformed/jetified-memory-type-ashmem-2.5.0/AndroidManifest.xml:2:1-9:12
+MERGED from [com.facebook.fresco:imagepipeline:2.5.0] /home/christian/.gradle/caches/transforms-3/ba2a06906321439a13b9f9bd3e24c3f9/transformed/jetified-imagepipeline-2.5.0/AndroidManifest.xml:2:1-9:12
+MERGED from [com.facebook.fresco:nativeimagetranscoder:2.5.0] /home/christian/.gradle/caches/transforms-3/ed361aaba09169f56fbda9f71a10b9e3/transformed/jetified-nativeimagetranscoder-2.5.0/AndroidManifest.xml:2:1-9:12
+MERGED from [com.facebook.fresco:imagepipeline-base:2.5.0] /home/christian/.gradle/caches/transforms-3/418fadc30eb91f7dc25a3671d969b57f/transformed/jetified-imagepipeline-base-2.5.0/AndroidManifest.xml:2:1-9:12
+MERGED from [com.facebook.fresco:soloader:2.5.0] /home/christian/.gradle/caches/transforms-3/2d72fca743f51b872b7985f695cac016/transformed/jetified-soloader-2.5.0/AndroidManifest.xml:2:1-9:12
+MERGED from [com.facebook.soloader:soloader:0.10.5] /home/christian/.gradle/caches/transforms-3/4201aca3a97f634c9516e0bda615b0b2/transformed/jetified-soloader-0.10.5/AndroidManifest.xml:2:1-17:12
+MERGED from [com.facebook.fresco:fbcore:2.5.0] /home/christian/.gradle/caches/transforms-3/56ed6617d641134c2c52004aa4faeec9/transformed/jetified-fbcore-2.5.0/AndroidManifest.xml:2:1-9:12
+MERGED from [androidx.interpolator:interpolator:1.0.0] /home/christian/.gradle/caches/transforms-3/bf6623ade03b74ea81b50d2a711defd0/transformed/interpolator-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.exifinterface:exifinterface:1.3.3] /home/christian/.gradle/caches/transforms-3/639819332770e79e4af207a32e07990c/transformed/exifinterface-1.3.3/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/christian/.gradle/caches/transforms-3/d021db3fe608572a43ddd014c15cd1d3/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:17:1-27:12
+MERGED from [androidx.cardview:cardview:1.0.0] /home/christian/.gradle/caches/transforms-3/806c10943097594da6947bf401fa8e08/transformed/cardview-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [com.github.bumptech.glide:gifdecoder:4.13.2] /home/christian/.gradle/caches/transforms-3/e281c2cd3459377edca18846d1e241f3/transformed/jetified-gifdecoder-4.13.2/AndroidManifest.xml:2:1-11:12
+MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /home/christian/.gradle/caches/transforms-3/86a26b8c8e62ac0dd349e3c70f1c1a7a/transformed/cursoradapter-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.databinding:viewbinding:7.2.1] /home/christian/.gradle/caches/transforms-3/dfcecec1b8aaaaab457293f75c9d280e/transformed/jetified-viewbinding-7.2.1/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.documentfile:documentfile:1.0.0] /home/christian/.gradle/caches/transforms-3/196ae1d304e1a7021c1c6c936e888ea6/transformed/documentfile-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] /home/christian/.gradle/caches/transforms-3/f7bb7b4733d841c11da2c439984e06dc/transformed/localbroadcastmanager-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.print:print:1.0.0] /home/christian/.gradle/caches/transforms-3/4802b04b2389f3f7d4022101c9ebfac6/transformed/print-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.arch.core:core-runtime:2.2.0] /home/christian/.gradle/caches/transforms-3/017a69326d647c824a4c9c4124330dd0/transformed/core-runtime-2.2.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.annotation:annotation-experimental:1.3.0] /home/christian/.gradle/caches/transforms-3/9165a090fe537fd73af81716e0cf8a0d/transformed/jetified-annotation-experimental-1.3.0/AndroidManifest.xml:17:1-22:12
+MERGED from [com.android.installreferrer:installreferrer:1.0] /home/christian/.gradle/caches/transforms-3/a2fc601cfe997e4c81afcf84c9b49ea0/transformed/jetified-installreferrer-1.0/AndroidManifest.xml:2:1-13:12
+INJECTED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:1:1-34:12
+INJECTED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:1:1-34:12
+INJECTED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:1:1-34:12
+	package
+		INJECTED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:1:1-34:12
+		INJECTED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml
+	android:versionName
+		INJECTED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:1:1-34:12
+		INJECTED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml
+	xmlns:tools
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:1:70-116
+	android:versionCode
+		INJECTED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:1:1-34:12
+		INJECTED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml
+	xmlns:android
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:1:11-69
+uses-permission#android.permission.INTERNET
+ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:2:3-64
+MERGED from [:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:8:5-67
+MERGED from [:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:8:5-67
+	android:name
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:2:20-62
+uses-permission#android.permission.READ_EXTERNAL_STORAGE
+ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:3:3-77
+MERGED from [:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:10:5-80
+MERGED from [:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:10:5-80
+MERGED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:12:5-80
+MERGED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:12:5-80
+	android:name
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:3:20-75
+uses-permission#android.permission.RECORD_AUDIO
+ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:4:3-68
+	android:name
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:4:20-66
+uses-permission#android.permission.SYSTEM_ALERT_WINDOW
+ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:5:3-75
+	android:name
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:5:20-73
+uses-permission#android.permission.VIBRATE
+ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:6:3-63
+	android:name
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:6:20-61
+uses-permission#android.permission.WRITE_EXTERNAL_STORAGE
+ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:7:3-78
+MERGED from [:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:9:5-81
+MERGED from [:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:9:5-81
+MERGED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:11:5-81
+MERGED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:11:5-81
+	android:name
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:7:20-76
+queries
+ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:8:3-14:13
+MERGED from [:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:12:5-18:15
+MERGED from [:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:12:5-18:15
+MERGED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:16:5-27:15
+MERGED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:16:5-27:15
+MERGED from [com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:9:5-20:15
+MERGED from [com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:9:5-20:15
+intent#action:name:android.intent.action.VIEW+category:name:android.intent.category.BROWSABLE+data:scheme:https
+ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:9:5-13:14
+action#android.intent.action.VIEW
+ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:10:7-58
+	android:name
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:10:15-56
+category#android.intent.category.BROWSABLE
+ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:11:7-67
+	android:name
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:11:17-65
+data
+ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:12:7-37
+	android:scheme
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:12:13-35
+application
+ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:15:3-33:17
+MERGED from [:expo-clipboard] /home/christian/duolicious-frontend/node_modules/expo-clipboard/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:7:5-16:19
+MERGED from [:expo-clipboard] /home/christian/duolicious-frontend/node_modules/expo-clipboard/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:7:5-16:19
+MERGED from [:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:20:5-31:19
+MERGED from [:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:20:5-31:19
+MERGED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:29:5-57:19
+MERGED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:29:5-57:19
+MERGED from [:expo-modules-core] /home/christian/duolicious-frontend/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:8:5-16:19
+MERGED from [:expo-modules-core] /home/christian/duolicious-frontend/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:8:5-16:19
+MERGED from [com.google.android.material:material:1.1.0] /home/christian/.gradle/caches/transforms-3/6ed83fd0f18220e5979e6984ec0c3a37/transformed/material-1.1.0/AndroidManifest.xml:22:5-20
+MERGED from [com.google.android.material:material:1.1.0] /home/christian/.gradle/caches/transforms-3/6ed83fd0f18220e5979e6984ec0c3a37/transformed/material-1.1.0/AndroidManifest.xml:22:5-20
+MERGED from [com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:22:5-36:19
+MERGED from [com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:22:5-36:19
+MERGED from [com.github.bumptech.glide:glide:4.13.2] /home/christian/.gradle/caches/transforms-3/9cf0dd9e34ec9fe3ad8e998be38b106d/transformed/jetified-glide-4.13.2/AndroidManifest.xml:10:5-20
+MERGED from [com.github.bumptech.glide:glide:4.13.2] /home/christian/.gradle/caches/transforms-3/9cf0dd9e34ec9fe3ad8e998be38b106d/transformed/jetified-glide-4.13.2/AndroidManifest.xml:10:5-20
+MERGED from [androidx.emoji2:emoji2:1.2.0] /home/christian/.gradle/caches/transforms-3/aaa38c963a9e05720a10713f7b391cb5/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:23:5-33:19
+MERGED from [androidx.emoji2:emoji2:1.2.0] /home/christian/.gradle/caches/transforms-3/aaa38c963a9e05720a10713f7b391cb5/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:23:5-33:19
+MERGED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/christian/.gradle/caches/transforms-3/37237e168ff21f74c2fa7449816f191f/transformed/jetified-lifecycle-process-2.6.1/AndroidManifest.xml:23:5-33:19
+MERGED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/christian/.gradle/caches/transforms-3/37237e168ff21f74c2fa7449816f191f/transformed/jetified-lifecycle-process-2.6.1/AndroidManifest.xml:23:5-33:19
+MERGED from [androidx.core:core:1.9.0] /home/christian/.gradle/caches/transforms-3/0d9081b1defcfc12625845badd9b93a6/transformed/core-1.9.0/AndroidManifest.xml:28:5-89
+MERGED from [androidx.core:core:1.9.0] /home/christian/.gradle/caches/transforms-3/0d9081b1defcfc12625845badd9b93a6/transformed/core-1.9.0/AndroidManifest.xml:28:5-89
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:23:5-53:19
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:23:5-53:19
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/christian/.gradle/caches/transforms-3/2660846b8c17c3774a74d166e48ca0f3/transformed/jetified-startup-runtime-1.1.1/AndroidManifest.xml:25:5-31:19
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/christian/.gradle/caches/transforms-3/2660846b8c17c3774a74d166e48ca0f3/transformed/jetified-startup-runtime-1.1.1/AndroidManifest.xml:25:5-31:19
+MERGED from [com.facebook.soloader:soloader:0.10.5] /home/christian/.gradle/caches/transforms-3/4201aca3a97f634c9516e0bda615b0b2/transformed/jetified-soloader-0.10.5/AndroidManifest.xml:11:5-15:19
+MERGED from [com.facebook.soloader:soloader:0.10.5] /home/christian/.gradle/caches/transforms-3/4201aca3a97f634c9516e0bda615b0b2/transformed/jetified-soloader-0.10.5/AndroidManifest.xml:11:5-15:19
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/christian/.gradle/caches/transforms-3/d021db3fe608572a43ddd014c15cd1d3/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:24:5-25:19
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/christian/.gradle/caches/transforms-3/d021db3fe608572a43ddd014c15cd1d3/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:24:5-25:19
+MERGED from [com.github.bumptech.glide:gifdecoder:4.13.2] /home/christian/.gradle/caches/transforms-3/e281c2cd3459377edca18846d1e241f3/transformed/jetified-gifdecoder-4.13.2/AndroidManifest.xml:9:5-20
+MERGED from [com.github.bumptech.glide:gifdecoder:4.13.2] /home/christian/.gradle/caches/transforms-3/e281c2cd3459377edca18846d1e241f3/transformed/jetified-gifdecoder-4.13.2/AndroidManifest.xml:9:5-20
+MERGED from [com.android.installreferrer:installreferrer:1.0] /home/christian/.gradle/caches/transforms-3/a2fc601cfe997e4c81afcf84c9b49ea0/transformed/jetified-installreferrer-1.0/AndroidManifest.xml:11:5-20
+MERGED from [com.android.installreferrer:installreferrer:1.0] /home/christian/.gradle/caches/transforms-3/a2fc601cfe997e4c81afcf84c9b49ea0/transformed/jetified-installreferrer-1.0/AndroidManifest.xml:11:5-20
+	android:appComponentFactory
+		ADDED from [androidx.core:core:1.9.0] /home/christian/.gradle/caches/transforms-3/0d9081b1defcfc12625845badd9b93a6/transformed/core-1.9.0/AndroidManifest.xml:28:18-86
+	android:label
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:15:48-80
+	android:icon
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:15:81-115
+	android:allowBackup
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:15:116-142
+	android:theme
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:15:143-174
+	android:name
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:15:16-47
+meta-data#expo.modules.updates.ENABLED
+ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:16:5-83
+	android:value
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:16:60-81
+	android:name
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:16:16-59
+meta-data#expo.modules.updates.EXPO_SDK_VERSION
+ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:17:5-93
+	android:value
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:17:69-91
+	android:name
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:17:16-68
+meta-data#expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH
+ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:18:5-105
+	android:value
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:18:81-103
+	android:name
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:18:16-80
+meta-data#expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS
+ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:19:5-99
+	android:value
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:19:80-97
+	android:name
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:19:16-79
+activity#app.duolicious.MainActivity
+ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:20:5-31:16
+	android:label
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:20:44-76
+	android:launchMode
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:20:155-186
+	android:windowSoftInputMode
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:20:187-229
+	android:exported
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:20:276-299
+	android:configChanges
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:20:77-154
+	android:theme
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:20:230-275
+	android:name
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:20:15-43
+intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
+ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:21:7-24:23
+action#android.intent.action.MAIN
+ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:22:9-60
+	android:name
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:22:17-58
+category#android.intent.category.LAUNCHER
+ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:23:9-68
+	android:name
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:23:19-66
+intent-filter#action:name:android.intent.action.VIEW+category:name:android.intent.category.BROWSABLE+category:name:android.intent.category.DEFAULT+data:scheme:app.duolicious
+ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:25:7-30:23
+category#android.intent.category.DEFAULT
+ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:27:9-67
+	android:name
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:27:19-65
+activity#com.facebook.react.devsupport.DevSettingsActivity
+ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:32:5-106
+	android:exported
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:32:80-104
+	android:name
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:32:15-79
+uses-sdk
+INJECTED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml
+INJECTED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml
+MERGED from [:react-native-async-storage_async-storage] /home/christian/duolicious-frontend/node_modules/@react-native-async-storage/async-storage/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:react-native-async-storage_async-storage] /home/christian/duolicious-frontend/node_modules/@react-native-async-storage/async-storage/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:react-native-community_slider] /home/christian/duolicious-frontend/node_modules/@react-native-community/slider/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:react-native-community_slider] /home/christian/duolicious-frontend/node_modules/@react-native-community/slider/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:expo] /home/christian/duolicious-frontend/node_modules/expo/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:expo] /home/christian/duolicious-frontend/node_modules/expo/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:react-native-safe-area-context] /home/christian/duolicious-frontend/node_modules/react-native-safe-area-context/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:react-native-safe-area-context] /home/christian/duolicious-frontend/node_modules/react-native-safe-area-context/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:react-native-screens] /home/christian/duolicious-frontend/node_modules/react-native-screens/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:react-native-screens] /home/christian/duolicious-frontend/node_modules/react-native-screens/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:react-native-svg] /home/christian/duolicious-frontend/node_modules/react-native-svg/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:react-native-svg] /home/christian/duolicious-frontend/node_modules/react-native-svg/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:expo-application] /home/christian/duolicious-frontend/node_modules/expo-application/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:expo-application] /home/christian/duolicious-frontend/node_modules/expo-application/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:expo-clipboard] /home/christian/duolicious-frontend/node_modules/expo-clipboard/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:expo-clipboard] /home/christian/duolicious-frontend/node_modules/expo-clipboard/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:expo-constants] /home/christian/duolicious-frontend/node_modules/expo-constants/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:expo-constants] /home/christian/duolicious-frontend/node_modules/expo-constants/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:6:5-44
+MERGED from [:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:6:5-44
+MERGED from [:expo-font] /home/christian/duolicious-frontend/node_modules/expo-font/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:expo-font] /home/christian/duolicious-frontend/node_modules/expo-font/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:expo-image-loader] /home/christian/duolicious-frontend/node_modules/expo-image-loader/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:expo-image-loader] /home/christian/duolicious-frontend/node_modules/expo-image-loader/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:6:5-44
+MERGED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:6:5-44
+MERGED from [:expo-keep-awake] /home/christian/duolicious-frontend/node_modules/expo-keep-awake/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:expo-keep-awake] /home/christian/duolicious-frontend/node_modules/expo-keep-awake/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:expo-linear-gradient] /home/christian/duolicious-frontend/node_modules/expo-linear-gradient/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:expo-linear-gradient] /home/christian/duolicious-frontend/node_modules/expo-linear-gradient/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:expo-screen-orientation] /home/christian/duolicious-frontend/node_modules/expo-screen-orientation/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:expo-screen-orientation] /home/christian/duolicious-frontend/node_modules/expo-screen-orientation/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:expo-secure-store] /home/christian/duolicious-frontend/node_modules/expo-secure-store/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:expo-secure-store] /home/christian/duolicious-frontend/node_modules/expo-secure-store/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:expo-splash-screen] /home/christian/duolicious-frontend/node_modules/expo-splash-screen/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:expo-splash-screen] /home/christian/duolicious-frontend/node_modules/expo-splash-screen/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:5:5-44
+MERGED from [:expo-modules-core] /home/christian/duolicious-frontend/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:6:5-44
+MERGED from [:expo-modules-core] /home/christian/duolicious-frontend/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:6:5-44
+MERGED from [com.facebook.react:react-android:0.72.4] /home/christian/.gradle/caches/transforms-3/3b52522e5c09ee593a0bca9dee2b23c4/transformed/jetified-react-android-0.72.4-release/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.react:react-android:0.72.4] /home/christian/.gradle/caches/transforms-3/3b52522e5c09ee593a0bca9dee2b23c4/transformed/jetified-react-android-0.72.4-release/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:fresco:2.5.0] /home/christian/.gradle/caches/transforms-3/219ade6cf0eaade4feab090adc648c00/transformed/jetified-fresco-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:fresco:2.5.0] /home/christian/.gradle/caches/transforms-3/219ade6cf0eaade4feab090adc648c00/transformed/jetified-fresco-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:imagepipeline-okhttp3:2.5.0] /home/christian/.gradle/caches/transforms-3/f15bec81ce8958a721e68c9727768fe7/transformed/jetified-imagepipeline-okhttp3-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:imagepipeline-okhttp3:2.5.0] /home/christian/.gradle/caches/transforms-3/f15bec81ce8958a721e68c9727768fe7/transformed/jetified-imagepipeline-okhttp3-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:animated-gif:2.5.0] /home/christian/.gradle/caches/transforms-3/491ab11cdc6f40996107fd55a8c24518/transformed/jetified-animated-gif-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:animated-gif:2.5.0] /home/christian/.gradle/caches/transforms-3/491ab11cdc6f40996107fd55a8c24518/transformed/jetified-animated-gif-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:webpsupport:2.5.0] /home/christian/.gradle/caches/transforms-3/5a941b36865489bcc9ec1464ea40ecea/transformed/jetified-webpsupport-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:webpsupport:2.5.0] /home/christian/.gradle/caches/transforms-3/5a941b36865489bcc9ec1464ea40ecea/transformed/jetified-webpsupport-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.react:hermes-android:0.72.4] /home/christian/.gradle/caches/transforms-3/a2bef35018d30e412622983071bf8eef/transformed/jetified-hermes-android-0.72.4-release/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.react:hermes-android:0.72.4] /home/christian/.gradle/caches/transforms-3/a2bef35018d30e412622983071bf8eef/transformed/jetified-hermes-android-0.72.4-release/AndroidManifest.xml:5:5-44
+MERGED from [com.google.android.material:material:1.1.0] /home/christian/.gradle/caches/transforms-3/6ed83fd0f18220e5979e6984ec0c3a37/transformed/material-1.1.0/AndroidManifest.xml:20:5-44
+MERGED from [com.google.android.material:material:1.1.0] /home/christian/.gradle/caches/transforms-3/6ed83fd0f18220e5979e6984ec0c3a37/transformed/material-1.1.0/AndroidManifest.xml:20:5-44
+MERGED from [com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:5:5-7:41
+MERGED from [com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:5:5-7:41
+MERGED from [androidx.biometric:biometric:1.1.0] /home/christian/.gradle/caches/transforms-3/808043cb4cf2ad49d6936bcf600e8cf8/transformed/biometric-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.biometric:biometric:1.1.0] /home/christian/.gradle/caches/transforms-3/808043cb4cf2ad49d6936bcf600e8cf8/transformed/biometric-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.appcompat:appcompat:1.6.1] /home/christian/.gradle/caches/transforms-3/a0b6ea719f8a5b245a49ddd9545c67bd/transformed/appcompat-1.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.appcompat:appcompat:1.6.1] /home/christian/.gradle/caches/transforms-3/a0b6ea719f8a5b245a49ddd9545c67bd/transformed/appcompat-1.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.appcompat:appcompat-resources:1.6.1] /home/christian/.gradle/caches/transforms-3/d412f68530d340f9b414e7e969b04bb7/transformed/jetified-appcompat-resources-1.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.appcompat:appcompat-resources:1.6.1] /home/christian/.gradle/caches/transforms-3/d412f68530d340f9b414e7e969b04bb7/transformed/jetified-appcompat-resources-1.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.autofill:autofill:1.1.0] /home/christian/.gradle/caches/transforms-3/218a52ab81d718d16ea6c9defe0a6b78/transformed/jetified-autofill-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.autofill:autofill:1.1.0] /home/christian/.gradle/caches/transforms-3/218a52ab81d718d16ea6c9defe0a6b78/transformed/jetified-autofill-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.legacy:legacy-support-v4:1.0.0] /home/christian/.gradle/caches/transforms-3/07ad9d47cf3432f2bd69708b35894f17/transformed/legacy-support-v4-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.legacy:legacy-support-v4:1.0.0] /home/christian/.gradle/caches/transforms-3/07ad9d47cf3432f2bd69708b35894f17/transformed/legacy-support-v4-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.legacy:legacy-support-core-ui:1.0.0] /home/christian/.gradle/caches/transforms-3/c16de79b864adfe8d65782d96dac77d3/transformed/legacy-support-core-ui-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.legacy:legacy-support-core-ui:1.0.0] /home/christian/.gradle/caches/transforms-3/c16de79b864adfe8d65782d96dac77d3/transformed/legacy-support-core-ui-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.swiperefreshlayout:swiperefreshlayout:1.0.0] /home/christian/.gradle/caches/transforms-3/6af2408613e8bb6c12f75327d8b83848/transformed/swiperefreshlayout-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.swiperefreshlayout:swiperefreshlayout:1.0.0] /home/christian/.gradle/caches/transforms-3/6af2408613e8bb6c12f75327d8b83848/transformed/swiperefreshlayout-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.tracing:tracing-ktx:1.1.0] /home/christian/.gradle/caches/transforms-3/ebcf50a8c36edaad61408fd0a53bc20d/transformed/jetified-tracing-ktx-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.tracing:tracing-ktx:1.1.0] /home/christian/.gradle/caches/transforms-3/ebcf50a8c36edaad61408fd0a53bc20d/transformed/jetified-tracing-ktx-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [com.github.bumptech.glide:glide:4.13.2] /home/christian/.gradle/caches/transforms-3/9cf0dd9e34ec9fe3ad8e998be38b106d/transformed/jetified-glide-4.13.2/AndroidManifest.xml:6:5-8:41
+MERGED from [com.github.bumptech.glide:glide:4.13.2] /home/christian/.gradle/caches/transforms-3/9cf0dd9e34ec9fe3ad8e998be38b106d/transformed/jetified-glide-4.13.2/AndroidManifest.xml:6:5-8:41
+MERGED from [androidx.fragment:fragment-ktx:1.5.7] /home/christian/.gradle/caches/transforms-3/bb0cd3f206943031efb6ed20ab3386da/transformed/jetified-fragment-ktx-1.5.7/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.fragment:fragment-ktx:1.5.7] /home/christian/.gradle/caches/transforms-3/bb0cd3f206943031efb6ed20ab3386da/transformed/jetified-fragment-ktx-1.5.7/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.activity:activity-ktx:1.7.2] /home/christian/.gradle/caches/transforms-3/1a5f0add0cc021fc7cba40c1e073e797/transformed/jetified-activity-ktx-1.7.2/AndroidManifest.xml:20:5-44
+MERGED from [androidx.activity:activity-ktx:1.7.2] /home/christian/.gradle/caches/transforms-3/1a5f0add0cc021fc7cba40c1e073e797/transformed/jetified-activity-ktx-1.7.2/AndroidManifest.xml:20:5-44
+MERGED from [androidx.viewpager2:viewpager2:1.0.0] /home/christian/.gradle/caches/transforms-3/4b97286a9fb5084811419ff3cce8995a/transformed/jetified-viewpager2-1.0.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.viewpager2:viewpager2:1.0.0] /home/christian/.gradle/caches/transforms-3/4b97286a9fb5084811419ff3cce8995a/transformed/jetified-viewpager2-1.0.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.fragment:fragment:1.5.7] /home/christian/.gradle/caches/transforms-3/d289b368d1c76f56212ad7fb41afa591/transformed/fragment-1.5.7/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.fragment:fragment:1.5.7] /home/christian/.gradle/caches/transforms-3/d289b368d1c76f56212ad7fb41afa591/transformed/fragment-1.5.7/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.activity:activity:1.7.2] /home/christian/.gradle/caches/transforms-3/4a8011f545144d3ce9e7846bdec12798/transformed/jetified-activity-1.7.2/AndroidManifest.xml:20:5-44
+MERGED from [androidx.activity:activity:1.7.2] /home/christian/.gradle/caches/transforms-3/4a8011f545144d3ce9e7846bdec12798/transformed/jetified-activity-1.7.2/AndroidManifest.xml:20:5-44
+MERGED from [androidx.emoji2:emoji2-views-helper:1.2.0] /home/christian/.gradle/caches/transforms-3/eaab9be5e777bb8b93a52316e7390f5d/transformed/jetified-emoji2-views-helper-1.2.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.emoji2:emoji2-views-helper:1.2.0] /home/christian/.gradle/caches/transforms-3/eaab9be5e777bb8b93a52316e7390f5d/transformed/jetified-emoji2-views-helper-1.2.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.emoji2:emoji2:1.2.0] /home/christian/.gradle/caches/transforms-3/aaa38c963a9e05720a10713f7b391cb5/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:21:5-44
+MERGED from [androidx.emoji2:emoji2:1.2.0] /home/christian/.gradle/caches/transforms-3/aaa38c963a9e05720a10713f7b391cb5/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:21:5-44
+MERGED from [androidx.legacy:legacy-support-core-utils:1.0.0] /home/christian/.gradle/caches/transforms-3/0b00d4a6a6215b61f4786c0934938958/transformed/legacy-support-core-utils-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.legacy:legacy-support-core-utils:1.0.0] /home/christian/.gradle/caches/transforms-3/0b00d4a6a6215b61f4786c0934938958/transformed/legacy-support-core-utils-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.loader:loader:1.0.0] /home/christian/.gradle/caches/transforms-3/e1c3587e5042482ca1212af2adf9c8c7/transformed/loader-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.loader:loader:1.0.0] /home/christian/.gradle/caches/transforms-3/e1c3587e5042482ca1212af2adf9c8c7/transformed/loader-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.savedstate:savedstate-ktx:1.2.1] /home/christian/.gradle/caches/transforms-3/40a68710ab125457959c55d49934019d/transformed/jetified-savedstate-ktx-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.savedstate:savedstate-ktx:1.2.1] /home/christian/.gradle/caches/transforms-3/40a68710ab125457959c55d49934019d/transformed/jetified-savedstate-ktx-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.savedstate:savedstate:1.2.1] /home/christian/.gradle/caches/transforms-3/e9a204d336c633d95646e80dc3eba364/transformed/jetified-savedstate-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.savedstate:savedstate:1.2.1] /home/christian/.gradle/caches/transforms-3/e9a204d336c633d95646e80dc3eba364/transformed/jetified-savedstate-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata:2.6.1] /home/christian/.gradle/caches/transforms-3/66c91c181cf71b1dbaabb147afdc945f/transformed/lifecycle-livedata-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata:2.6.1] /home/christian/.gradle/caches/transforms-3/66c91c181cf71b1dbaabb147afdc945f/transformed/lifecycle-livedata-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/christian/.gradle/caches/transforms-3/37237e168ff21f74c2fa7449816f191f/transformed/jetified-lifecycle-process-2.6.1/AndroidManifest.xml:21:5-44
+MERGED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/christian/.gradle/caches/transforms-3/37237e168ff21f74c2fa7449816f191f/transformed/jetified-lifecycle-process-2.6.1/AndroidManifest.xml:21:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.6.1] /home/christian/.gradle/caches/transforms-3/a3d72f67a47d870cfdd7b87dc29306ff/transformed/jetified-lifecycle-viewmodel-savedstate-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.6.1] /home/christian/.gradle/caches/transforms-3/a3d72f67a47d870cfdd7b87dc29306ff/transformed/jetified-lifecycle-viewmodel-savedstate-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata-core-ktx:2.6.1] /home/christian/.gradle/caches/transforms-3/f9ae64e9e90e3635b8868f24320d38a3/transformed/jetified-lifecycle-livedata-core-ktx-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata-core-ktx:2.6.1] /home/christian/.gradle/caches/transforms-3/f9ae64e9e90e3635b8868f24320d38a3/transformed/jetified-lifecycle-livedata-core-ktx-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata-core:2.6.1] /home/christian/.gradle/caches/transforms-3/dba4bd8e57b283323e27897aa7114628/transformed/lifecycle-livedata-core-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata-core:2.6.1] /home/christian/.gradle/caches/transforms-3/dba4bd8e57b283323e27897aa7114628/transformed/lifecycle-livedata-core-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.6.1] /home/christian/.gradle/caches/transforms-3/9e680dbaa0842d78fb3d305a20874afa/transformed/lifecycle-viewmodel-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.6.1] /home/christian/.gradle/caches/transforms-3/9e680dbaa0842d78fb3d305a20874afa/transformed/lifecycle-viewmodel-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime-ktx:2.6.1] /home/christian/.gradle/caches/transforms-3/56cf9b4b0ca11af36195c4dd104b579d/transformed/jetified-lifecycle-runtime-ktx-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime-ktx:2.6.1] /home/christian/.gradle/caches/transforms-3/56cf9b4b0ca11af36195c4dd104b579d/transformed/jetified-lifecycle-runtime-ktx-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1] /home/christian/.gradle/caches/transforms-3/8a7cb78e3ecc70292ebedd83a40b6f7a/transformed/jetified-lifecycle-viewmodel-ktx-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1] /home/christian/.gradle/caches/transforms-3/8a7cb78e3ecc70292ebedd83a40b6f7a/transformed/jetified-lifecycle-viewmodel-ktx-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.coordinatorlayout:coordinatorlayout:1.1.0] /home/christian/.gradle/caches/transforms-3/f432b5daa4d6cd5a25389c7818c78090/transformed/coordinatorlayout-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.coordinatorlayout:coordinatorlayout:1.1.0] /home/christian/.gradle/caches/transforms-3/f432b5daa4d6cd5a25389c7818c78090/transformed/coordinatorlayout-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] /home/christian/.gradle/caches/transforms-3/f247157e7ddbdaefa22790775dc73d8a/transformed/vectordrawable-animated-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] /home/christian/.gradle/caches/transforms-3/f247157e7ddbdaefa22790775dc73d8a/transformed/vectordrawable-animated-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] /home/christian/.gradle/caches/transforms-3/cf55d77c61a0b6a7a3181a42669ac3de/transformed/vectordrawable-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] /home/christian/.gradle/caches/transforms-3/cf55d77c61a0b6a7a3181a42669ac3de/transformed/vectordrawable-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.drawerlayout:drawerlayout:1.0.0] /home/christian/.gradle/caches/transforms-3/d8d20c1b9c73a6ff51cfecd7f0a5912d/transformed/drawerlayout-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.drawerlayout:drawerlayout:1.0.0] /home/christian/.gradle/caches/transforms-3/d8d20c1b9c73a6ff51cfecd7f0a5912d/transformed/drawerlayout-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.recyclerview:recyclerview:1.1.0] /home/christian/.gradle/caches/transforms-3/9877a4bd122d876df6f443db472308c4/transformed/recyclerview-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.recyclerview:recyclerview:1.1.0] /home/christian/.gradle/caches/transforms-3/9877a4bd122d876df6f443db472308c4/transformed/recyclerview-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.viewpager:viewpager:1.0.0] /home/christian/.gradle/caches/transforms-3/c77580c485e6189d662dee139241c30c/transformed/viewpager-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.viewpager:viewpager:1.0.0] /home/christian/.gradle/caches/transforms-3/c77580c485e6189d662dee139241c30c/transformed/viewpager-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.slidingpanelayout:slidingpanelayout:1.0.0] /home/christian/.gradle/caches/transforms-3/916eed05ad19469c544f3b428e0db3f3/transformed/slidingpanelayout-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.slidingpanelayout:slidingpanelayout:1.0.0] /home/christian/.gradle/caches/transforms-3/916eed05ad19469c544f3b428e0db3f3/transformed/slidingpanelayout-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.customview:customview:1.0.0] /home/christian/.gradle/caches/transforms-3/80eb95a753d48716874adf5ae7f6e73d/transformed/customview-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.customview:customview:1.0.0] /home/christian/.gradle/caches/transforms-3/80eb95a753d48716874adf5ae7f6e73d/transformed/customview-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.transition:transition:1.2.0] /home/christian/.gradle/caches/transforms-3/66434bfa5707fa90a56f5bf72fec4820/transformed/transition-1.2.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.transition:transition:1.2.0] /home/christian/.gradle/caches/transforms-3/66434bfa5707fa90a56f5bf72fec4820/transformed/transition-1.2.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.media:media:1.0.0] /home/christian/.gradle/caches/transforms-3/33515c94ab0dd71e7cd5cdadd943ba7f/transformed/media-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media:media:1.0.0] /home/christian/.gradle/caches/transforms-3/33515c94ab0dd71e7cd5cdadd943ba7f/transformed/media-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.asynclayoutinflater:asynclayoutinflater:1.0.0] /home/christian/.gradle/caches/transforms-3/409f2c5d163608b218e12928a2d1aad1/transformed/asynclayoutinflater-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.asynclayoutinflater:asynclayoutinflater:1.0.0] /home/christian/.gradle/caches/transforms-3/409f2c5d163608b218e12928a2d1aad1/transformed/asynclayoutinflater-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.core:core-ktx:1.9.0] /home/christian/.gradle/caches/transforms-3/7edb3ee37bd5890adb7770e17d108224/transformed/jetified-core-ktx-1.9.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.core:core-ktx:1.9.0] /home/christian/.gradle/caches/transforms-3/7edb3ee37bd5890adb7770e17d108224/transformed/jetified-core-ktx-1.9.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.core:core:1.9.0] /home/christian/.gradle/caches/transforms-3/0d9081b1defcfc12625845badd9b93a6/transformed/core-1.9.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.core:core:1.9.0] /home/christian/.gradle/caches/transforms-3/0d9081b1defcfc12625845badd9b93a6/transformed/core-1.9.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime:2.6.1] /home/christian/.gradle/caches/transforms-3/9fbca55ab621f16ef933b265a8c5d154/transformed/lifecycle-runtime-2.6.1/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime:2.6.1] /home/christian/.gradle/caches/transforms-3/9fbca55ab621f16ef933b265a8c5d154/transformed/lifecycle-runtime-2.6.1/AndroidManifest.xml:5:5-44
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:21:5-44
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:21:5-44
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/christian/.gradle/caches/transforms-3/2660846b8c17c3774a74d166e48ca0f3/transformed/jetified-startup-runtime-1.1.1/AndroidManifest.xml:21:5-23:41
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/christian/.gradle/caches/transforms-3/2660846b8c17c3774a74d166e48ca0f3/transformed/jetified-startup-runtime-1.1.1/AndroidManifest.xml:21:5-23:41
+MERGED from [androidx.tracing:tracing:1.1.0] /home/christian/.gradle/caches/transforms-3/95d1533f87ae9a952a8deeb52e685a76/transformed/jetified-tracing-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.tracing:tracing:1.1.0] /home/christian/.gradle/caches/transforms-3/95d1533f87ae9a952a8deeb52e685a76/transformed/jetified-tracing-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [com.facebook.fbjni:fbjni:0.3.0] /home/christian/.gradle/caches/transforms-3/8b6cc7607ffe5936bd42bb311e7e5848/transformed/jetified-fbjni-0.3.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fbjni:fbjni:0.3.0] /home/christian/.gradle/caches/transforms-3/8b6cc7607ffe5936bd42bb311e7e5848/transformed/jetified-fbjni-0.3.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:animated-base:2.5.0] /home/christian/.gradle/caches/transforms-3/6cd8b5df66c3e088da8b805e8293dd25/transformed/jetified-animated-base-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:animated-base:2.5.0] /home/christian/.gradle/caches/transforms-3/6cd8b5df66c3e088da8b805e8293dd25/transformed/jetified-animated-base-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:animated-drawable:2.5.0] /home/christian/.gradle/caches/transforms-3/ccfc720418f310dfeac01965ca9b7e92/transformed/jetified-animated-drawable-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:animated-drawable:2.5.0] /home/christian/.gradle/caches/transforms-3/ccfc720418f310dfeac01965ca9b7e92/transformed/jetified-animated-drawable-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:drawee:2.5.0] /home/christian/.gradle/caches/transforms-3/5f4ef27e4ecf53ecc859ea5e1a299452/transformed/jetified-drawee-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:drawee:2.5.0] /home/christian/.gradle/caches/transforms-3/5f4ef27e4ecf53ecc859ea5e1a299452/transformed/jetified-drawee-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:middleware:2.5.0] /home/christian/.gradle/caches/transforms-3/ea1eaf573a05d082b29337eb1929ac5c/transformed/jetified-middleware-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:middleware:2.5.0] /home/christian/.gradle/caches/transforms-3/ea1eaf573a05d082b29337eb1929ac5c/transformed/jetified-middleware-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:ui-common:2.5.0] /home/christian/.gradle/caches/transforms-3/60a8a4b4ffd882376cd8d1370bd2b8df/transformed/jetified-ui-common-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:ui-common:2.5.0] /home/christian/.gradle/caches/transforms-3/60a8a4b4ffd882376cd8d1370bd2b8df/transformed/jetified-ui-common-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:nativeimagefilters:2.5.0] /home/christian/.gradle/caches/transforms-3/38e1b056080e4270b8c8105a3af984b1/transformed/jetified-nativeimagefilters-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:nativeimagefilters:2.5.0] /home/christian/.gradle/caches/transforms-3/38e1b056080e4270b8c8105a3af984b1/transformed/jetified-nativeimagefilters-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:memory-type-native:2.5.0] /home/christian/.gradle/caches/transforms-3/19590571c670446f2130a9329882d60f/transformed/jetified-memory-type-native-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:memory-type-native:2.5.0] /home/christian/.gradle/caches/transforms-3/19590571c670446f2130a9329882d60f/transformed/jetified-memory-type-native-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:memory-type-java:2.5.0] /home/christian/.gradle/caches/transforms-3/46f5f58c3b327aa427178165cefd5312/transformed/jetified-memory-type-java-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:memory-type-java:2.5.0] /home/christian/.gradle/caches/transforms-3/46f5f58c3b327aa427178165cefd5312/transformed/jetified-memory-type-java-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:imagepipeline-native:2.5.0] /home/christian/.gradle/caches/transforms-3/91ebe7c9239b690855a0725db1b54fa1/transformed/jetified-imagepipeline-native-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:imagepipeline-native:2.5.0] /home/christian/.gradle/caches/transforms-3/91ebe7c9239b690855a0725db1b54fa1/transformed/jetified-imagepipeline-native-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:memory-type-ashmem:2.5.0] /home/christian/.gradle/caches/transforms-3/38efc9ce8069371c05380a5c7ff0268f/transformed/jetified-memory-type-ashmem-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:memory-type-ashmem:2.5.0] /home/christian/.gradle/caches/transforms-3/38efc9ce8069371c05380a5c7ff0268f/transformed/jetified-memory-type-ashmem-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:imagepipeline:2.5.0] /home/christian/.gradle/caches/transforms-3/ba2a06906321439a13b9f9bd3e24c3f9/transformed/jetified-imagepipeline-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:imagepipeline:2.5.0] /home/christian/.gradle/caches/transforms-3/ba2a06906321439a13b9f9bd3e24c3f9/transformed/jetified-imagepipeline-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:nativeimagetranscoder:2.5.0] /home/christian/.gradle/caches/transforms-3/ed361aaba09169f56fbda9f71a10b9e3/transformed/jetified-nativeimagetranscoder-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:nativeimagetranscoder:2.5.0] /home/christian/.gradle/caches/transforms-3/ed361aaba09169f56fbda9f71a10b9e3/transformed/jetified-nativeimagetranscoder-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:imagepipeline-base:2.5.0] /home/christian/.gradle/caches/transforms-3/418fadc30eb91f7dc25a3671d969b57f/transformed/jetified-imagepipeline-base-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:imagepipeline-base:2.5.0] /home/christian/.gradle/caches/transforms-3/418fadc30eb91f7dc25a3671d969b57f/transformed/jetified-imagepipeline-base-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:soloader:2.5.0] /home/christian/.gradle/caches/transforms-3/2d72fca743f51b872b7985f695cac016/transformed/jetified-soloader-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:soloader:2.5.0] /home/christian/.gradle/caches/transforms-3/2d72fca743f51b872b7985f695cac016/transformed/jetified-soloader-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.soloader:soloader:0.10.5] /home/christian/.gradle/caches/transforms-3/4201aca3a97f634c9516e0bda615b0b2/transformed/jetified-soloader-0.10.5/AndroidManifest.xml:7:5-9:41
+MERGED from [com.facebook.soloader:soloader:0.10.5] /home/christian/.gradle/caches/transforms-3/4201aca3a97f634c9516e0bda615b0b2/transformed/jetified-soloader-0.10.5/AndroidManifest.xml:7:5-9:41
+MERGED from [com.facebook.fresco:fbcore:2.5.0] /home/christian/.gradle/caches/transforms-3/56ed6617d641134c2c52004aa4faeec9/transformed/jetified-fbcore-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.facebook.fresco:fbcore:2.5.0] /home/christian/.gradle/caches/transforms-3/56ed6617d641134c2c52004aa4faeec9/transformed/jetified-fbcore-2.5.0/AndroidManifest.xml:5:5-7:41
+MERGED from [androidx.interpolator:interpolator:1.0.0] /home/christian/.gradle/caches/transforms-3/bf6623ade03b74ea81b50d2a711defd0/transformed/interpolator-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.interpolator:interpolator:1.0.0] /home/christian/.gradle/caches/transforms-3/bf6623ade03b74ea81b50d2a711defd0/transformed/interpolator-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.exifinterface:exifinterface:1.3.3] /home/christian/.gradle/caches/transforms-3/639819332770e79e4af207a32e07990c/transformed/exifinterface-1.3.3/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.exifinterface:exifinterface:1.3.3] /home/christian/.gradle/caches/transforms-3/639819332770e79e4af207a32e07990c/transformed/exifinterface-1.3.3/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/christian/.gradle/caches/transforms-3/d021db3fe608572a43ddd014c15cd1d3/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/christian/.gradle/caches/transforms-3/d021db3fe608572a43ddd014c15cd1d3/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.cardview:cardview:1.0.0] /home/christian/.gradle/caches/transforms-3/806c10943097594da6947bf401fa8e08/transformed/cardview-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.cardview:cardview:1.0.0] /home/christian/.gradle/caches/transforms-3/806c10943097594da6947bf401fa8e08/transformed/cardview-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [com.github.bumptech.glide:gifdecoder:4.13.2] /home/christian/.gradle/caches/transforms-3/e281c2cd3459377edca18846d1e241f3/transformed/jetified-gifdecoder-4.13.2/AndroidManifest.xml:5:5-7:41
+MERGED from [com.github.bumptech.glide:gifdecoder:4.13.2] /home/christian/.gradle/caches/transforms-3/e281c2cd3459377edca18846d1e241f3/transformed/jetified-gifdecoder-4.13.2/AndroidManifest.xml:5:5-7:41
+MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /home/christian/.gradle/caches/transforms-3/86a26b8c8e62ac0dd349e3c70f1c1a7a/transformed/cursoradapter-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /home/christian/.gradle/caches/transforms-3/86a26b8c8e62ac0dd349e3c70f1c1a7a/transformed/cursoradapter-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.databinding:viewbinding:7.2.1] /home/christian/.gradle/caches/transforms-3/dfcecec1b8aaaaab457293f75c9d280e/transformed/jetified-viewbinding-7.2.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.databinding:viewbinding:7.2.1] /home/christian/.gradle/caches/transforms-3/dfcecec1b8aaaaab457293f75c9d280e/transformed/jetified-viewbinding-7.2.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.documentfile:documentfile:1.0.0] /home/christian/.gradle/caches/transforms-3/196ae1d304e1a7021c1c6c936e888ea6/transformed/documentfile-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.documentfile:documentfile:1.0.0] /home/christian/.gradle/caches/transforms-3/196ae1d304e1a7021c1c6c936e888ea6/transformed/documentfile-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] /home/christian/.gradle/caches/transforms-3/f7bb7b4733d841c11da2c439984e06dc/transformed/localbroadcastmanager-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] /home/christian/.gradle/caches/transforms-3/f7bb7b4733d841c11da2c439984e06dc/transformed/localbroadcastmanager-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.print:print:1.0.0] /home/christian/.gradle/caches/transforms-3/4802b04b2389f3f7d4022101c9ebfac6/transformed/print-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.print:print:1.0.0] /home/christian/.gradle/caches/transforms-3/4802b04b2389f3f7d4022101c9ebfac6/transformed/print-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.arch.core:core-runtime:2.2.0] /home/christian/.gradle/caches/transforms-3/017a69326d647c824a4c9c4124330dd0/transformed/core-runtime-2.2.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.arch.core:core-runtime:2.2.0] /home/christian/.gradle/caches/transforms-3/017a69326d647c824a4c9c4124330dd0/transformed/core-runtime-2.2.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.annotation:annotation-experimental:1.3.0] /home/christian/.gradle/caches/transforms-3/9165a090fe537fd73af81716e0cf8a0d/transformed/jetified-annotation-experimental-1.3.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.annotation:annotation-experimental:1.3.0] /home/christian/.gradle/caches/transforms-3/9165a090fe537fd73af81716e0cf8a0d/transformed/jetified-annotation-experimental-1.3.0/AndroidManifest.xml:20:5-44
+MERGED from [com.android.installreferrer:installreferrer:1.0] /home/christian/.gradle/caches/transforms-3/a2fc601cfe997e4c81afcf84c9b49ea0/transformed/jetified-installreferrer-1.0/AndroidManifest.xml:5:5-7:41
+MERGED from [com.android.installreferrer:installreferrer:1.0] /home/christian/.gradle/caches/transforms-3/a2fc601cfe997e4c81afcf84c9b49ea0/transformed/jetified-installreferrer-1.0/AndroidManifest.xml:5:5-7:41
+INJECTED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml
+INJECTED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml
+	android:targetSdkVersion
+		INJECTED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml
+		INJECTED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml
+		ADDED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml
+		INJECTED from /home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml
+provider#expo.modules.clipboard.ClipboardFileProvider
+ADDED from [:expo-clipboard] /home/christian/duolicious-frontend/node_modules/expo-clipboard/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:8:9-15:20
+	android:authorities
+		ADDED from [:expo-clipboard] /home/christian/duolicious-frontend/node_modules/expo-clipboard/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:10:13-73
+	android:exported
+		ADDED from [:expo-clipboard] /home/christian/duolicious-frontend/node_modules/expo-clipboard/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:11:13-36
+	android:name
+		ADDED from [:expo-clipboard] /home/christian/duolicious-frontend/node_modules/expo-clipboard/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:9:13-72
+meta-data#expo.modules.clipboard.CLIPBOARD_FILE_PROVIDER_PATHS
+ADDED from [:expo-clipboard] /home/christian/duolicious-frontend/node_modules/expo-clipboard/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:12:13-14:68
+	android:resource
+		ADDED from [:expo-clipboard] /home/christian/duolicious-frontend/node_modules/expo-clipboard/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:14:17-65
+	android:name
+		ADDED from [:expo-clipboard] /home/christian/duolicious-frontend/node_modules/expo-clipboard/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:13:17-84
+intent#action:name:android.intent.action.OPEN_DOCUMENT_TREE
+ADDED from [:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:15:9-17:18
+action#android.intent.action.OPEN_DOCUMENT_TREE
+ADDED from [:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:16:13-79
+	android:name
+		ADDED from [:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:16:21-76
+provider#expo.modules.filesystem.FileSystemFileProvider
+ADDED from [:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:21:9-30:20
+	android:grantUriPermissions
+		ADDED from [:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:25:13-47
+	android:authorities
+		ADDED from [:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:23:13-74
+	android:exported
+		ADDED from [:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:24:13-37
+	tools:replace
+		ADDED from [:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:26:13-48
+	android:name
+		ADDED from [:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:22:13-74
+meta-data#android.support.FILE_PROVIDER_PATHS
+ADDED from [:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:27:13-29:70
+	android:resource
+		ADDED from [:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:29:17-67
+	android:name
+		ADDED from [:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:28:17-67
+uses-permission#android.permission.CAMERA
+ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:8:5-65
+	android:name
+		ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:8:22-62
+uses-permission#android.permission.READ_MEDIA_IMAGES
+ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:13:5-76
+	android:name
+		ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:13:22-73
+uses-permission#android.permission.READ_MEDIA_VIDEO
+ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:14:5-75
+	android:name
+		ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:14:22-72
+intent#action:name:android.media.action.IMAGE_CAPTURE
+ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:17:9-21:18
+action#android.media.action.IMAGE_CAPTURE
+ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:20:13-73
+	android:name
+		ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:20:21-70
+intent#action:name:android.media.action.ACTION_VIDEO_CAPTURE
+ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:22:9-26:18
+action#android.media.action.ACTION_VIDEO_CAPTURE
+ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:25:13-80
+	android:name
+		ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:25:21-77
+service#com.google.android.gms.metadata.ModuleDependencies
+ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:30:9-42:19
+	android:enabled
+		ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:32:13-36
+	android:exported
+		ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:33:13-37
+	tools:ignore
+		ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:34:13-40
+	android:name
+		ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:31:13-78
+intent-filter#action:name:com.google.android.gms.metadata.MODULE_DEPENDENCIES
+ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:35:13-37:29
+action#com.google.android.gms.metadata.MODULE_DEPENDENCIES
+ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:36:17-94
+	android:name
+		ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:36:25-91
+meta-data#photopicker_activity:0:required
+ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:39:13-41:36
+	android:value
+		ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:41:17-33
+	android:name
+		ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:40:17-63
+activity#com.canhub.cropper.CropImageActivity
+ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:44:9-46:59
+MERGED from [com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:33:9-35:39
+MERGED from [com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:33:9-35:39
+	android:exported
+		ADDED from [com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:35:13-36
+	android:theme
+		ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:46:13-56
+	android:name
+		ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:45:13-64
+provider#expo.modules.imagepicker.fileprovider.ImagePickerFileProvider
+ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:48:9-56:20
+	android:grantUriPermissions
+		ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:52:13-47
+	android:authorities
+		ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:50:13-75
+	android:exported
+		ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:51:13-37
+	android:name
+		ADDED from [:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:49:13-89
+meta-data#org.unimodules.core.AppLoader#react-native-headless
+ADDED from [:expo-modules-core] /home/christian/duolicious-frontend/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:9:9-11:89
+	android:value
+		ADDED from [:expo-modules-core] /home/christian/duolicious-frontend/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:11:13-86
+	android:name
+		ADDED from [:expo-modules-core] /home/christian/duolicious-frontend/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:10:13-79
+meta-data#com.facebook.soloader.enabled
+ADDED from [:expo-modules-core] /home/christian/duolicious-frontend/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:12:9-15:45
+MERGED from [com.facebook.soloader:soloader:0.10.5] /home/christian/.gradle/caches/transforms-3/4201aca3a97f634c9516e0bda615b0b2/transformed/jetified-soloader-0.10.5/AndroidManifest.xml:12:9-14:37
+MERGED from [com.facebook.soloader:soloader:0.10.5] /home/christian/.gradle/caches/transforms-3/4201aca3a97f634c9516e0bda615b0b2/transformed/jetified-soloader-0.10.5/AndroidManifest.xml:12:9-14:37
+	tools:replace
+		ADDED from [:expo-modules-core] /home/christian/duolicious-frontend/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:15:13-42
+	android:value
+		ADDED from [:expo-modules-core] /home/christian/duolicious-frontend/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:14:13-33
+		REJECTED from [com.facebook.soloader:soloader:0.10.5] /home/christian/.gradle/caches/transforms-3/4201aca3a97f634c9516e0bda615b0b2/transformed/jetified-soloader-0.10.5/AndroidManifest.xml:14:13-34
+	android:name
+		ADDED from [:expo-modules-core] /home/christian/duolicious-frontend/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:13:13-57
+intent#action:name:android.intent.action.GET_CONTENT+category:name:android.intent.category.OPENABLE+data:mimeType:*/*
+ADDED from [com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:10:9-16:18
+action#android.intent.action.GET_CONTENT
+ADDED from [com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:11:13-72
+	android:name
+		ADDED from [com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:11:21-69
+category#android.intent.category.OPENABLE
+ADDED from [com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:13:13-73
+	android:name
+		ADDED from [com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:13:23-70
+provider#com.canhub.cropper.CropFileProvider
+ADDED from [com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:23:9-31:20
+	android:grantUriPermissions
+		ADDED from [com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:27:13-47
+	android:authorities
+		ADDED from [com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:25:13-72
+	android:exported
+		ADDED from [com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:26:13-37
+	android:name
+		ADDED from [com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:24:13-63
+uses-permission#android.permission.USE_BIOMETRIC
+ADDED from [androidx.biometric:biometric:1.1.0] /home/christian/.gradle/caches/transforms-3/808043cb4cf2ad49d6936bcf600e8cf8/transformed/biometric-1.1.0/AndroidManifest.xml:24:5-72
+	android:name
+		ADDED from [androidx.biometric:biometric:1.1.0] /home/christian/.gradle/caches/transforms-3/808043cb4cf2ad49d6936bcf600e8cf8/transformed/biometric-1.1.0/AndroidManifest.xml:24:22-69
+uses-permission#android.permission.USE_FINGERPRINT
+ADDED from [androidx.biometric:biometric:1.1.0] /home/christian/.gradle/caches/transforms-3/808043cb4cf2ad49d6936bcf600e8cf8/transformed/biometric-1.1.0/AndroidManifest.xml:27:5-74
+	android:name
+		ADDED from [androidx.biometric:biometric:1.1.0] /home/christian/.gradle/caches/transforms-3/808043cb4cf2ad49d6936bcf600e8cf8/transformed/biometric-1.1.0/AndroidManifest.xml:27:22-71
+provider#androidx.startup.InitializationProvider
+ADDED from [androidx.emoji2:emoji2:1.2.0] /home/christian/.gradle/caches/transforms-3/aaa38c963a9e05720a10713f7b391cb5/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/christian/.gradle/caches/transforms-3/37237e168ff21f74c2fa7449816f191f/transformed/jetified-lifecycle-process-2.6.1/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/christian/.gradle/caches/transforms-3/37237e168ff21f74c2fa7449816f191f/transformed/jetified-lifecycle-process-2.6.1/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/christian/.gradle/caches/transforms-3/2660846b8c17c3774a74d166e48ca0f3/transformed/jetified-startup-runtime-1.1.1/AndroidManifest.xml:26:9-30:34
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/christian/.gradle/caches/transforms-3/2660846b8c17c3774a74d166e48ca0f3/transformed/jetified-startup-runtime-1.1.1/AndroidManifest.xml:26:9-30:34
+	tools:node
+		ADDED from [androidx.emoji2:emoji2:1.2.0] /home/christian/.gradle/caches/transforms-3/aaa38c963a9e05720a10713f7b391cb5/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:28:13-31
+	android:authorities
+		ADDED from [androidx.emoji2:emoji2:1.2.0] /home/christian/.gradle/caches/transforms-3/aaa38c963a9e05720a10713f7b391cb5/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:26:13-68
+	android:exported
+		ADDED from [androidx.emoji2:emoji2:1.2.0] /home/christian/.gradle/caches/transforms-3/aaa38c963a9e05720a10713f7b391cb5/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:27:13-37
+	android:name
+		ADDED from [androidx.emoji2:emoji2:1.2.0] /home/christian/.gradle/caches/transforms-3/aaa38c963a9e05720a10713f7b391cb5/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:25:13-67
+meta-data#androidx.emoji2.text.EmojiCompatInitializer
+ADDED from [androidx.emoji2:emoji2:1.2.0] /home/christian/.gradle/caches/transforms-3/aaa38c963a9e05720a10713f7b391cb5/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:29:13-31:52
+	android:value
+		ADDED from [androidx.emoji2:emoji2:1.2.0] /home/christian/.gradle/caches/transforms-3/aaa38c963a9e05720a10713f7b391cb5/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:31:17-49
+	android:name
+		ADDED from [androidx.emoji2:emoji2:1.2.0] /home/christian/.gradle/caches/transforms-3/aaa38c963a9e05720a10713f7b391cb5/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:30:17-75
+meta-data#androidx.lifecycle.ProcessLifecycleInitializer
+ADDED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/christian/.gradle/caches/transforms-3/37237e168ff21f74c2fa7449816f191f/transformed/jetified-lifecycle-process-2.6.1/AndroidManifest.xml:29:13-31:52
+	android:value
+		ADDED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/christian/.gradle/caches/transforms-3/37237e168ff21f74c2fa7449816f191f/transformed/jetified-lifecycle-process-2.6.1/AndroidManifest.xml:31:17-49
+	android:name
+		ADDED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/christian/.gradle/caches/transforms-3/37237e168ff21f74c2fa7449816f191f/transformed/jetified-lifecycle-process-2.6.1/AndroidManifest.xml:30:17-78
+permission#${applicationId}.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.9.0] /home/christian/.gradle/caches/transforms-3/0d9081b1defcfc12625845badd9b93a6/transformed/core-1.9.0/AndroidManifest.xml:22:5-24:47
+	android:protectionLevel
+		ADDED from [androidx.core:core:1.9.0] /home/christian/.gradle/caches/transforms-3/0d9081b1defcfc12625845badd9b93a6/transformed/core-1.9.0/AndroidManifest.xml:24:9-44
+	android:name
+		ADDED from [androidx.core:core:1.9.0] /home/christian/.gradle/caches/transforms-3/0d9081b1defcfc12625845badd9b93a6/transformed/core-1.9.0/AndroidManifest.xml:23:9-81
+permission#app.duolicious.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.9.0] /home/christian/.gradle/caches/transforms-3/0d9081b1defcfc12625845badd9b93a6/transformed/core-1.9.0/AndroidManifest.xml:22:5-24:47
+	android:protectionLevel
+		ADDED from [androidx.core:core:1.9.0] /home/christian/.gradle/caches/transforms-3/0d9081b1defcfc12625845badd9b93a6/transformed/core-1.9.0/AndroidManifest.xml:24:9-44
+	android:name
+		ADDED from [androidx.core:core:1.9.0] /home/christian/.gradle/caches/transforms-3/0d9081b1defcfc12625845badd9b93a6/transformed/core-1.9.0/AndroidManifest.xml:23:9-81
+uses-permission#${applicationId}.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.9.0] /home/christian/.gradle/caches/transforms-3/0d9081b1defcfc12625845badd9b93a6/transformed/core-1.9.0/AndroidManifest.xml:26:5-97
+	android:name
+		ADDED from [androidx.core:core:1.9.0] /home/christian/.gradle/caches/transforms-3/0d9081b1defcfc12625845badd9b93a6/transformed/core-1.9.0/AndroidManifest.xml:26:22-94
+uses-permission#app.duolicious.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.9.0] /home/christian/.gradle/caches/transforms-3/0d9081b1defcfc12625845badd9b93a6/transformed/core-1.9.0/AndroidManifest.xml:26:5-97
+	android:name
+		ADDED from [androidx.core:core:1.9.0] /home/christian/.gradle/caches/transforms-3/0d9081b1defcfc12625845badd9b93a6/transformed/core-1.9.0/AndroidManifest.xml:26:22-94
+meta-data#androidx.profileinstaller.ProfileInstallerInitializer
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:29:13-31:52
+	android:value
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:31:17-49
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:30:17-85
+receiver#androidx.profileinstaller.ProfileInstallReceiver
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:34:9-52:20
+	android:enabled
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:37:13-35
+	android:exported
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:38:13-36
+	android:permission
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:39:13-57
+	android:directBootAware
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:36:13-44
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:35:13-76
+intent-filter#action:name:androidx.profileinstaller.action.INSTALL_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:40:13-42:29
+action#androidx.profileinstaller.action.INSTALL_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:41:17-91
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:41:25-88
+intent-filter#action:name:androidx.profileinstaller.action.SKIP_FILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:43:13-45:29
+action#androidx.profileinstaller.action.SKIP_FILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:44:17-85
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:44:25-82
+intent-filter#action:name:androidx.profileinstaller.action.SAVE_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:46:13-48:29
+action#androidx.profileinstaller.action.SAVE_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:47:17-88
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:47:25-85
+intent-filter#action:name:androidx.profileinstaller.action.BENCHMARK_OPERATION
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:49:13-51:29
+action#androidx.profileinstaller.action.BENCHMARK_OPERATION
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:50:17-95
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:50:25-92
+uses-permission#com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE
+ADDED from [com.android.installreferrer:installreferrer:1.0] /home/christian/.gradle/caches/transforms-3/a2fc601cfe997e4c81afcf84c9b49ea0/transformed/jetified-installreferrer-1.0/AndroidManifest.xml:9:5-110
+	android:name
+		ADDED from [com.android.installreferrer:installreferrer:1.0] /home/christian/.gradle/caches/transforms-3/a2fc601cfe997e4c81afcf84c9b49ea0/transformed/jetified-installreferrer-1.0/AndroidManifest.xml:9:22-107

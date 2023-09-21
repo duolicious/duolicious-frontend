@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "app.duolicious.app-mergeReleaseResources-44:/values-port/values-port.xml",
+            "map": [
+                {
+                    "source": "/home/christian/.gradle/caches/transforms-3/a0b6ea719f8a5b245a49ddd9545c67bd/transformed/appcompat-1.6.1/res/values-port/values-port.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "55",
+                        "endOffsets": "106"
+                    }
+                }
+            ]
+        }
+    ]
+}
