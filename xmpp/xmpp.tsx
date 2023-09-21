@@ -69,7 +69,7 @@ const emptyInbox = (): Inbox => ({
 
 let _xmpp: Client | undefined;
 
-let _inbox: Inbox | null;
+let _inbox: Inbox | null = null;
 const _inboxObservers: Set<(inbox: Inbox | null) => void> = new Set();
 
 const observeInbox = (

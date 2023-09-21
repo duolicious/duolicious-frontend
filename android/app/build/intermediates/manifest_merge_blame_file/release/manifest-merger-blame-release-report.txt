@@ -1,0 +1,385 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="app.duolicious"
+4    android:versionCode="1"
+5    android:versionName="1.0.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="21"
+8-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml
+9        android:targetSdkVersion="33" />
+9-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml
+10
+11    <uses-permission android:name="android.permission.INTERNET" />
+11-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:2:3-64
+11-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:2:20-62
+12    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+12-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:3:3-77
+12-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:3:20-75
+13    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+13-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:4:3-68
+13-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:4:20-66
+14    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+14-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:5:3-75
+14-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:5:20-73
+15    <uses-permission android:name="android.permission.VIBRATE" />
+15-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:6:3-63
+15-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:6:20-61
+16    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+16-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:7:3-78
+16-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:7:20-76
+17
+18    <queries>
+18-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:8:3-14:13
+19        <intent>
+19-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:9:5-13:14
+20            <action android:name="android.intent.action.VIEW" />
+20-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:10:7-58
+20-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:10:15-56
+21
+22            <category android:name="android.intent.category.BROWSABLE" />
+22-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:11:7-67
+22-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:11:17-65
+23
+24            <data android:scheme="https" />
+24-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:12:7-37
+24-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:12:13-35
+25        </intent>
+26        <!-- Query open documents -->
+27        <intent>
+27-->[:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:15:9-17:18
+28            <action android:name="android.intent.action.OPEN_DOCUMENT_TREE" />
+28-->[:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:16:13-79
+28-->[:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:16:21-76
+29        </intent>
+30        <intent>
+30-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:17:9-21:18
+31
+32            <!-- Required for picking images from the camera roll if targeting API 30 -->
+33            <action android:name="android.media.action.IMAGE_CAPTURE" />
+33-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:20:13-73
+33-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:20:21-70
+34        </intent>
+35        <intent>
+35-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:22:9-26:18
+36
+37            <!-- Required for picking images from the camera if targeting API 30 -->
+38            <action android:name="android.media.action.ACTION_VIDEO_CAPTURE" />
+38-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:25:13-80
+38-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:25:21-77
+39        </intent>
+40        <intent>
+40-->[com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:10:9-16:18
+41            <action android:name="android.intent.action.GET_CONTENT" />
+41-->[com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:11:13-72
+41-->[com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:11:21-69
+42
+43            <category android:name="android.intent.category.OPENABLE" />
+43-->[com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:13:13-73
+43-->[com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:13:23-70
+44
+45            <data android:mimeType="*/*" />
+45-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:12:7-37
+46        </intent>
+47    </queries>
+48    <!-- Required for picking images from camera directly -->
+49    <uses-permission android:name="android.permission.CAMERA" />
+49-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:8:5-65
+49-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:8:22-62
+50    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+50-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:13:5-76
+50-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:13:22-73
+51    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+51-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:14:5-75
+51-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:14:22-72
+52    <uses-permission android:name="android.permission.USE_BIOMETRIC" /> <!-- suppress DeprecatedClassUsageInspection -->
+52-->[androidx.biometric:biometric:1.1.0] /home/christian/.gradle/caches/transforms-3/808043cb4cf2ad49d6936bcf600e8cf8/transformed/biometric-1.1.0/AndroidManifest.xml:24:5-72
+52-->[androidx.biometric:biometric:1.1.0] /home/christian/.gradle/caches/transforms-3/808043cb4cf2ad49d6936bcf600e8cf8/transformed/biometric-1.1.0/AndroidManifest.xml:24:22-69
+53    <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+53-->[androidx.biometric:biometric:1.1.0] /home/christian/.gradle/caches/transforms-3/808043cb4cf2ad49d6936bcf600e8cf8/transformed/biometric-1.1.0/AndroidManifest.xml:27:5-74
+53-->[androidx.biometric:biometric:1.1.0] /home/christian/.gradle/caches/transforms-3/808043cb4cf2ad49d6936bcf600e8cf8/transformed/biometric-1.1.0/AndroidManifest.xml:27:22-71
+54
+55    <permission
+55-->[androidx.core:core:1.9.0] /home/christian/.gradle/caches/transforms-3/0d9081b1defcfc12625845badd9b93a6/transformed/core-1.9.0/AndroidManifest.xml:22:5-24:47
+56        android:name="app.duolicious.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+56-->[androidx.core:core:1.9.0] /home/christian/.gradle/caches/transforms-3/0d9081b1defcfc12625845badd9b93a6/transformed/core-1.9.0/AndroidManifest.xml:23:9-81
+57        android:protectionLevel="signature" />
+57-->[androidx.core:core:1.9.0] /home/christian/.gradle/caches/transforms-3/0d9081b1defcfc12625845badd9b93a6/transformed/core-1.9.0/AndroidManifest.xml:24:9-44
+58
+59    <uses-permission android:name="app.duolicious.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+59-->[androidx.core:core:1.9.0] /home/christian/.gradle/caches/transforms-3/0d9081b1defcfc12625845badd9b93a6/transformed/core-1.9.0/AndroidManifest.xml:26:5-97
+59-->[androidx.core:core:1.9.0] /home/christian/.gradle/caches/transforms-3/0d9081b1defcfc12625845badd9b93a6/transformed/core-1.9.0/AndroidManifest.xml:26:22-94
+60    <uses-permission android:name="com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE" />
+60-->[com.android.installreferrer:installreferrer:1.0] /home/christian/.gradle/caches/transforms-3/a2fc601cfe997e4c81afcf84c9b49ea0/transformed/jetified-installreferrer-1.0/AndroidManifest.xml:9:5-110
+60-->[com.android.installreferrer:installreferrer:1.0] /home/christian/.gradle/caches/transforms-3/a2fc601cfe997e4c81afcf84c9b49ea0/transformed/jetified-installreferrer-1.0/AndroidManifest.xml:9:22-107
+61
+62    <application
+62-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:15:3-33:17
+63        android:name="app.duolicious.MainApplication"
+63-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:15:16-47
+64        android:allowBackup="true"
+64-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:15:116-142
+65        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+65-->[androidx.core:core:1.9.0] /home/christian/.gradle/caches/transforms-3/0d9081b1defcfc12625845badd9b93a6/transformed/core-1.9.0/AndroidManifest.xml:28:18-86
+66        android:icon="@mipmap/ic_launcher"
+66-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:15:81-115
+67        android:label="@string/app_name"
+67-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:15:48-80
+68        android:theme="@style/AppTheme" >
+68-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:15:143-174
+69        <meta-data
+69-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:16:5-83
+70            android:name="expo.modules.updates.ENABLED"
+70-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:16:16-59
+71            android:value="false" />
+71-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:16:60-81
+72        <meta-data
+72-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:17:5-93
+73            android:name="expo.modules.updates.EXPO_SDK_VERSION"
+73-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:17:16-68
+74            android:value="49.0.0" />
+74-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:17:69-91
+75        <meta-data
+75-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:18:5-105
+76            android:name="expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH"
+76-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:18:16-80
+77            android:value="ALWAYS" />
+77-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:18:81-103
+78        <meta-data
+78-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:19:5-99
+79            android:name="expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS"
+79-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:19:16-79
+80            android:value="0" />
+80-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:19:80-97
+81
+82        <activity
+82-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:20:5-31:16
+83            android:name="app.duolicious.MainActivity"
+83-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:20:15-43
+84            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|uiMode"
+84-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:20:77-154
+85            android:exported="true"
+85-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:20:276-299
+86            android:label="@string/app_name"
+86-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:20:44-76
+87            android:launchMode="singleTask"
+87-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:20:155-186
+88            android:theme="@style/Theme.App.SplashScreen"
+88-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:20:230-275
+89            android:windowSoftInputMode="adjustResize" >
+89-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:20:187-229
+90            <intent-filter>
+90-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:21:7-24:23
+91                <action android:name="android.intent.action.MAIN" />
+91-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:22:9-60
+91-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:22:17-58
+92
+93                <category android:name="android.intent.category.LAUNCHER" />
+93-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:23:9-68
+93-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:23:19-66
+94            </intent-filter>
+95            <intent-filter>
+95-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:25:7-30:23
+96                <action android:name="android.intent.action.VIEW" />
+96-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:10:7-58
+96-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:10:15-56
+97
+98                <category android:name="android.intent.category.DEFAULT" />
+98-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:27:9-67
+98-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:27:19-65
+99                <category android:name="android.intent.category.BROWSABLE" />
+99-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:11:7-67
+99-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:11:17-65
+100
+101                <data android:scheme="app.duolicious" />
+101-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:12:7-37
+101-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:12:13-35
+102            </intent-filter>
+103        </activity>
+104        <activity
+104-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:32:5-106
+105            android:name="com.facebook.react.devsupport.DevSettingsActivity"
+105-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:32:15-79
+106            android:exported="false" />
+106-->/home/christian/duolicious-frontend/android/app/src/main/AndroidManifest.xml:32:80-104
+107
+108        <provider
+108-->[:expo-clipboard] /home/christian/duolicious-frontend/node_modules/expo-clipboard/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:8:9-15:20
+109            android:name="expo.modules.clipboard.ClipboardFileProvider"
+109-->[:expo-clipboard] /home/christian/duolicious-frontend/node_modules/expo-clipboard/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:9:13-72
+110            android:authorities="app.duolicious.ClipboardFileProvider"
+110-->[:expo-clipboard] /home/christian/duolicious-frontend/node_modules/expo-clipboard/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:10:13-73
+111            android:exported="true" >
+111-->[:expo-clipboard] /home/christian/duolicious-frontend/node_modules/expo-clipboard/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:11:13-36
+112            <meta-data
+112-->[:expo-clipboard] /home/christian/duolicious-frontend/node_modules/expo-clipboard/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:12:13-14:68
+113                android:name="expo.modules.clipboard.CLIPBOARD_FILE_PROVIDER_PATHS"
+113-->[:expo-clipboard] /home/christian/duolicious-frontend/node_modules/expo-clipboard/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:13:17-84
+114                android:resource="@xml/clipboard_provider_paths" />
+114-->[:expo-clipboard] /home/christian/duolicious-frontend/node_modules/expo-clipboard/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:14:17-65
+115        </provider>
+116        <provider
+116-->[:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:21:9-30:20
+117            android:name="expo.modules.filesystem.FileSystemFileProvider"
+117-->[:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:22:13-74
+118            android:authorities="app.duolicious.FileSystemFileProvider"
+118-->[:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:23:13-74
+119            android:exported="false"
+119-->[:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:24:13-37
+120            android:grantUriPermissions="true" >
+120-->[:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:25:13-47
+121            <meta-data
+121-->[:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:27:13-29:70
+122                android:name="android.support.FILE_PROVIDER_PATHS"
+122-->[:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:28:17-67
+123                android:resource="@xml/file_system_provider_paths" />
+123-->[:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:29:17-67
+124        </provider>
+125
+126        <service
+126-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:30:9-42:19
+127            android:name="com.google.android.gms.metadata.ModuleDependencies"
+127-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:31:13-78
+128            android:enabled="false"
+128-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:32:13-36
+129            android:exported="false" >
+129-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:33:13-37
+130            <intent-filter>
+130-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:35:13-37:29
+131                <action android:name="com.google.android.gms.metadata.MODULE_DEPENDENCIES" />
+131-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:36:17-94
+131-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:36:25-91
+132            </intent-filter>
+133
+134            <meta-data
+134-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:39:13-41:36
+135                android:name="photopicker_activity:0:required"
+135-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:40:17-63
+136                android:value="" />
+136-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:41:17-33
+137        </service>
+138
+139        <activity
+139-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:44:9-46:59
+140            android:name="com.canhub.cropper.CropImageActivity"
+140-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:45:13-64
+141            android:exported="true"
+141-->[com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:35:13-36
+142            android:theme="@style/Base.Theme.AppCompat" /> <!-- https://developer.android.com/guide/topics/manifest/provider-element.html -->
+142-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:46:13-56
+143        <provider
+143-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:48:9-56:20
+144            android:name="expo.modules.imagepicker.fileprovider.ImagePickerFileProvider"
+144-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:49:13-89
+145            android:authorities="app.duolicious.ImagePickerFileProvider"
+145-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:50:13-75
+146            android:exported="false"
+146-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:51:13-37
+147            android:grantUriPermissions="true" >
+147-->[:expo-image-picker] /home/christian/duolicious-frontend/node_modules/expo-image-picker/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:52:13-47
+148            <meta-data
+148-->[:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:27:13-29:70
+149                android:name="android.support.FILE_PROVIDER_PATHS"
+149-->[:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:28:17-67
+150                android:resource="@xml/image_picker_provider_paths" />
+150-->[:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:29:17-67
+151        </provider>
+152
+153        <meta-data
+153-->[:expo-modules-core] /home/christian/duolicious-frontend/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:9:9-11:89
+154            android:name="org.unimodules.core.AppLoader#react-native-headless"
+154-->[:expo-modules-core] /home/christian/duolicious-frontend/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:10:13-79
+155            android:value="expo.modules.adapters.react.apploader.RNHeadlessAppLoader" />
+155-->[:expo-modules-core] /home/christian/duolicious-frontend/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:11:13-86
+156        <meta-data
+156-->[:expo-modules-core] /home/christian/duolicious-frontend/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:12:9-15:45
+157            android:name="com.facebook.soloader.enabled"
+157-->[:expo-modules-core] /home/christian/duolicious-frontend/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:13:13-57
+158            android:value="true" />
+158-->[:expo-modules-core] /home/christian/duolicious-frontend/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:14:13-33
+159
+160        <provider
+160-->[com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:23:9-31:20
+161            android:name="com.canhub.cropper.CropFileProvider"
+161-->[com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:24:13-63
+162            android:authorities="app.duolicious.cropper.fileprovider"
+162-->[com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:25:13-72
+163            android:exported="false"
+163-->[com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:26:13-37
+164            android:grantUriPermissions="true" >
+164-->[com.github.CanHub:Android-Image-Cropper:4.3.1] /home/christian/.gradle/caches/transforms-3/a48a213d95cbe39ce9590bfeff0ee82b/transformed/jetified-Android-Image-Cropper-4.3.1/AndroidManifest.xml:27:13-47
+165            <meta-data
+165-->[:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:27:13-29:70
+166                android:name="android.support.FILE_PROVIDER_PATHS"
+166-->[:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:28:17-67
+167                android:resource="@xml/library_file_paths" />
+167-->[:expo-file-system] /home/christian/duolicious-frontend/node_modules/expo-file-system/android/build/intermediates/merged_manifest/release/AndroidManifest.xml:29:17-67
+168        </provider>
+169        <provider
+169-->[androidx.emoji2:emoji2:1.2.0] /home/christian/.gradle/caches/transforms-3/aaa38c963a9e05720a10713f7b391cb5/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:24:9-32:20
+170            android:name="androidx.startup.InitializationProvider"
+170-->[androidx.emoji2:emoji2:1.2.0] /home/christian/.gradle/caches/transforms-3/aaa38c963a9e05720a10713f7b391cb5/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:25:13-67
+171            android:authorities="app.duolicious.androidx-startup"
+171-->[androidx.emoji2:emoji2:1.2.0] /home/christian/.gradle/caches/transforms-3/aaa38c963a9e05720a10713f7b391cb5/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:26:13-68
+172            android:exported="false" >
+172-->[androidx.emoji2:emoji2:1.2.0] /home/christian/.gradle/caches/transforms-3/aaa38c963a9e05720a10713f7b391cb5/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:27:13-37
+173            <meta-data
+173-->[androidx.emoji2:emoji2:1.2.0] /home/christian/.gradle/caches/transforms-3/aaa38c963a9e05720a10713f7b391cb5/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:29:13-31:52
+174                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+174-->[androidx.emoji2:emoji2:1.2.0] /home/christian/.gradle/caches/transforms-3/aaa38c963a9e05720a10713f7b391cb5/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:30:17-75
+175                android:value="androidx.startup" />
+175-->[androidx.emoji2:emoji2:1.2.0] /home/christian/.gradle/caches/transforms-3/aaa38c963a9e05720a10713f7b391cb5/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:31:17-49
+176            <meta-data
+176-->[androidx.lifecycle:lifecycle-process:2.6.1] /home/christian/.gradle/caches/transforms-3/37237e168ff21f74c2fa7449816f191f/transformed/jetified-lifecycle-process-2.6.1/AndroidManifest.xml:29:13-31:52
+177                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+177-->[androidx.lifecycle:lifecycle-process:2.6.1] /home/christian/.gradle/caches/transforms-3/37237e168ff21f74c2fa7449816f191f/transformed/jetified-lifecycle-process-2.6.1/AndroidManifest.xml:30:17-78
+178                android:value="androidx.startup" />
+178-->[androidx.lifecycle:lifecycle-process:2.6.1] /home/christian/.gradle/caches/transforms-3/37237e168ff21f74c2fa7449816f191f/transformed/jetified-lifecycle-process-2.6.1/AndroidManifest.xml:31:17-49
+179            <meta-data
+179-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:29:13-31:52
+180                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+180-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:30:17-85
+181                android:value="androidx.startup" />
+181-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:31:17-49
+182        </provider>
+183
+184        <receiver
+184-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:34:9-52:20
+185            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+185-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:35:13-76
+186            android:directBootAware="false"
+186-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:36:13-44
+187            android:enabled="true"
+187-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:37:13-35
+188            android:exported="true"
+188-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:38:13-36
+189            android:permission="android.permission.DUMP" >
+189-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:39:13-57
+190            <intent-filter>
+190-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:40:13-42:29
+191                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+191-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:41:17-91
+191-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:41:25-88
+192            </intent-filter>
+193            <intent-filter>
+193-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:43:13-45:29
+194                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+194-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:44:17-85
+194-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:44:25-82
+195            </intent-filter>
+196            <intent-filter>
+196-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:46:13-48:29
+197                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+197-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:47:17-88
+197-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:47:25-85
+198            </intent-filter>
+199            <intent-filter>
+199-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:49:13-51:29
+200                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+200-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:50:17-95
+200-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/christian/.gradle/caches/transforms-3/78a26ccc04b8399851fb3c6d61540a03/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:50:25-92
+201            </intent-filter>
+202        </receiver>
+203    </application>
+204
+205</manifest>
