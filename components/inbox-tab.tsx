@@ -48,10 +48,8 @@ const InboxTab_ = ({navigation}) => {
   const [sectionIndex, setSectionIndex] = useState(0);
   const [sortByIndex, setSortByIndex] = useState(0);
   const [isTooManyTapped, setIsTooManyTapped] = useState(false);
-  const [inbox, setInbox] = useState<Inbox | undefined>(undefined);
+  const [inbox, setInbox] = useState<Inbox | null>(null);
   const listRef = useRef<any>(undefined);
-
-  observeInbox(setInbox);
 
   const buttonOpacity = useRef(new Animated.Value(0)).current;
 
@@ -84,6 +82,8 @@ const InboxTab_ = ({navigation}) => {
     setIsTooManyTapped(true);
   }, []);
 
+
+  useEffect(() => observeInbox(setInbox), []);
   useEffect(() => void listRef.current.refresh(), [sectionIndex]);
   useEffect(() => void listRef.current.refresh(), [sortByIndex]);
   useEffect(() => void listRef.current.refresh(), [inbox]);
@@ -93,7 +93,7 @@ const InboxTab_ = ({navigation}) => {
   ) => async (
     n: number
   ): Promise<Conversation[]> => {
-    if (inbox === undefined) {
+    if (inbox === null) {
       return [];
     }
 
@@ -211,12 +211,12 @@ const InboxTab_ = ({navigation}) => {
           Inbox
         </DefaultText>
       </TopNavBar>
-      {inbox === undefined &&
+      {inbox === null &&
         <View style={{height: '100%', justifyContent: 'center', alignItems: 'center'}}>
           <ActivityIndicator size="large" color="#70f" />
         </View>
       }
-      {inbox !== undefined &&
+      {inbox !== null &&
         <DefaultFlatList
           ref={listRef}
           emptyText={
