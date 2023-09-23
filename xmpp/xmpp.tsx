@@ -120,7 +120,7 @@ const populateConversationList = async (
   }, {});
 
   conversationList.forEach((c: Conversation) => {
-    c.name = personIdToInfo[c.personId]?.name ?? 'Deleted User';
+    c.name = personIdToInfo[c.personId]?.name ?? 'Deleted account';
     c.matchPercentage = personIdToInfo[c.personId]?.match_percentage ?? 0;
     c.imageUuid = personIdToInfo[c.personId]?.image_uuid ?? null;
     c.isDeletedUser = personIdToInfo[c.personId] === undefined;
