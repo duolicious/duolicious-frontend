@@ -27,6 +27,7 @@ import { api, japi } from '../api/api';
 import { quizQueue } from '../api/queue';
 import * as _ from "lodash";
 import { markTraitDataDirty } from './traits-tab';
+import { listen, unlisten } from '../events/events';
 
 const QuizCardMemo = memo(QuizCard);
 
@@ -320,6 +321,47 @@ const getBestProspects = (prospects: ProspectState[]) => {
   ].filter(prospect => prospect);
 };
 
+const Prospect = ({navigation, style, personId, imageUuid, matchPercentage}) => {
+  const [isHidden, setIsHidden] = useState(false);
+
+  const onHide = useCallback((personId_: number) => {
+    if (personId === personId_) setIsHidden(true);
+  }, [personId, setIsHidden]);
+
+  const onUnhide = useCallback((personId_: number) => {
+    if (personId === personId_) setIsHidden(false);
+  }, [personId, setIsHidden]);
+
+  useEffect(() => {
+    listen('hide-profile', onHide);
+    listen('unhide-profile', onUnhide);
+
+    return () => {
+      unlisten('hide-profile', onHide);
+      unlisten('unhide-profile', onUnhide);
+    };
+  }, [onHide, onUnhide]);
+
+  return <Animated.View
+    style={{
+      position: 'absolute',
+      width: '33.3333%',
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...style,
+      ...(isHidden ? { opacity: 0 } : {})
+    }}
+  >
+    <Avatar
+      navigation={navigation}
+      personId={personId}
+      imageUuid={imageUuid}
+      percentage={matchPercentage}
+      shadow={true}
+    />
+  </Animated.View>
+};
+
 const Prospects = ({
   navigation,
   topCardIndex,
@@ -391,26 +433,6 @@ const Prospects = ({
     elevation: 6,
   }).current;
 
-  const Prospect = useCallback(({style, personId, imageUuid, matchPercentage}) => (
-    <Animated.View
-      style={{
-        position: 'absolute',
-        width: '33.3333%',
-        alignItems: 'center',
-        justifyContent: 'center',
-        ...style,
-      }}
-    >
-      <Avatar
-        navigation={navigation}
-        personId={personId}
-        imageUuid={imageUuid}
-        percentage={matchPercentage}
-        shadow={true}
-      />
-    </Animated.View>
-  ), []);
-
   const ProspectDonutPercentage = useCallback(({donutOpacity, matchPercentage}) => (
     <Animated.View
       style={{
@@ -481,6 +503,7 @@ const Prospects = ({
           bestProspects.map((prospect, i) =>
             <Prospect
               key={String(topCardIndex - i)}
+              navigation={navigation}
               style={prospect.style}
               personId={prospect.personId}
               imageUuid={prospect.imageUuid}
