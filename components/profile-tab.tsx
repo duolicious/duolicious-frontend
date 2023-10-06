@@ -44,6 +44,8 @@ import {
 import * as _ from "lodash";
 import debounce from 'lodash/debounce';
 import { aboutQueue } from '../api/queue';
+import { ClubSelector } from './club-selector';
+import { listen } from '../events/events';
 
 const formatHeight = (og: OptionGroup<OptionGroupInputs>): string | undefined => {
   if (!isOptionGroupSlider(og.input)) return '';
@@ -69,6 +71,7 @@ const ProfileTab = ({navigation}) => {
     >
       <Stack.Screen name="Profile Tab" component={ProfileTab_} />
       <Stack.Screen name="Profile Option Screen" component={OptionScreen} />
+      <Stack.Screen name="Club Selector" component={ClubSelector} />
     </Stack.Navigator>
   );
 };
@@ -109,7 +112,7 @@ const Images_ = ({data}) => {
 };
 
 const ProfileTab_ = ({navigation}) => {
-  const [data, setData] = useState(null);
+  const [data, setData] = useState<any>(null);
 
   useEffect(() => {
     (async () => {
@@ -119,6 +122,13 @@ const ProfileTab_ = ({navigation}) => {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    return listen(
+      'updated-clubs',
+      (newClubs: any) => { if (data) data['clubs'] = newClubs; },
+    );
+  }, [data]);
 
   return (
     <>
@@ -301,6 +311,13 @@ const Options = ({navigation, data}) => {
       setSignedInUser(undefined);
     }
     setIsLoadingSignOut(false);
+  }, []);
+
+  const goToClubSelector = useCallback(() => {
+    navigation.navigate(
+      "Club Selector",
+      { selectedClubs: data["clubs"] },
+    );
   }, [navigation]);
 
   return (
@@ -319,7 +336,14 @@ const Options = ({navigation, data}) => {
           />
         )
       }
-      <Title style={{ marginTop: 60 }}>General Settings</Title>
+      <Title>Clubs</Title>
+      <ButtonForOption
+        onPress={goToClubSelector}
+        label="Clubs"
+        noSettingText="None"
+      />
+
+      <Title style={{ marginTop: 70 }}>General Settings</Title>
       {
         _generalSettingsOptionGroups.map((og, i) =>
           <Button_
@@ -350,7 +374,7 @@ const Options = ({navigation, data}) => {
         )
       }
 
-      <Title style={{ marginTop: 60 }}>Sign Out</Title>
+      <Title style={{ marginTop: 70 }}>Sign Out</Title>
       <ButtonForOption
         onPress={signOut}
         label="Sign Out"
@@ -358,7 +382,7 @@ const Options = ({navigation, data}) => {
         loading={isLoadingSignOut}
       />
 
-      <Title style={{ marginTop: 60 }}>Deactivate My Account</Title>
+      <Title style={{ marginTop: 70 }}>Deactivate My Account</Title>
       <Button_ optionGroups={deactivationOptionGroups} setting="" showSkipButton={false}/>
 
       <Title>Delete My Account</Title>

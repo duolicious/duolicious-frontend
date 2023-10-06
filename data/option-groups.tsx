@@ -1292,7 +1292,7 @@ const searchInteractionsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
 
 const hideMeFromStrangersOptionGroup: OptionGroup<OptionGroupInputs> = {
   title: 'Hide Me From Strangers',
-  description: "If you'd rather be the one who messages first, you can show your profile only to people who you've messaged before. With this option set to 'Yes', people won't be able to see you anywhere in Duolicious until you message them.",
+  description: "With this option set to 'Yes', people won't see you anywhere in Duolicious until you message them first.",
   input: {
     buttons: {
       values: yesNo,
