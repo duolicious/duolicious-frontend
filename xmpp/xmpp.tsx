@@ -560,7 +560,7 @@ const onReceiveMessage = (
       from: from.toString(),
       to: to.toString(),
       id: id.toString(),
-      timestamp: new Date(stamp.toString()),
+      timestamp: stamp.toString() ? new Date(stamp.toString()) : new Date(),
       fromCurrentUser: jidToPersonId(from.toString()) == signedInUser?.personId,
     };
 
