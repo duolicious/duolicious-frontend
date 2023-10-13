@@ -46,6 +46,7 @@ const ConversationScreen = ({navigation, route}) => {
   const [lastMessageStatus, setLastMessageStatus] = useState<
     MessageStatus | null
   >(null);
+  const hasScrolled = useRef(false);
 
   const personId: number = route?.params?.personId;
   const name: string = route?.params?.name;
@@ -55,8 +56,9 @@ const ConversationScreen = ({navigation, route}) => {
   const listRef = useRef<any>(null)
 
   const scrollToEnd = useCallback(() => {
-    if (listRef.current) {
+    if (listRef.current && !hasScrolled.current) {
       listRef.current.scrollToEnd({animated: true});
+      hasScrolled.current = true;
     }
   }, [listRef.current]);
 
@@ -81,6 +83,7 @@ const ConversationScreen = ({navigation, route}) => {
     );
 
     if (messageStatus === 'sent') {
+      hasScrolled.current = false;
       setMessages(messages => [...(messages ?? []), message]);
 
       // TODO: Ideally, you wouldn't have to mark messages as sent in this way;
@@ -113,10 +116,10 @@ const ConversationScreen = ({navigation, route}) => {
     }
   }, []);
 
-  const _onReceiveMessage = useCallback(
-    (msg) => setMessages(msgs => [...(msgs ?? []), msg]),
-    []
-  );
+  const _onReceiveMessage = useCallback((msg) => {
+    hasScrolled.current = false;
+    setMessages(msgs => [...(msgs ?? []), msg]);
+  }, []);
 
   useEffect(() => {
     _fetchConversation();
@@ -249,6 +252,7 @@ const ConversationScreen = ({navigation, route}) => {
           onContentSizeChange={scrollToEnd}
           contentContainerStyle={{
             paddingTop: 10,
+            paddingBottom: 20,
             maxWidth: 600,
             width: '100%',
             alignSelf: 'center',
