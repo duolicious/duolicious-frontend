@@ -38,6 +38,7 @@ import { japi, SUPPORTED_API_VERSIONS } from './api/api';
 import { login, logout } from './xmpp/xmpp';
 import { STATUS_URL } from './env/env';
 import { delay } from './util/util';
+import { Pinchy } from './components/pinchy';
 
 // TODO: iOS UI testing
 // TODO: Delete 'getRandomInt' definitions
@@ -139,6 +140,36 @@ const App = () => {
   const [serverStatus, setServerStatus] = useState<ServerStatus>("ok");
   [signedInUser, setSignedInUser] = useState<SignedInUser | undefined>();
   [referrerId, setReferrerId] = useState<string | undefined>();
+
+  SplashScreen.hideAsync();
+  return (
+    <NavigationContainer
+      theme={{
+        ...DefaultTheme,
+        colors: {
+          ...DefaultTheme.colors,
+          background: 'white',
+        },
+      }}
+      documentTitle={{
+        formatter: () => "Duolicious"
+      }}
+    >
+      <StatusBar
+        translucent={true}
+        backgroundColor="transparent"
+        barStyle="dark-content"
+      />
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false,
+          presentation: 'modal',
+        }}
+      >
+        <Tab.Screen name="TODO" component={Pinchy} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
 
   const loadFonts = useCallback(async () => {
     await Font.loadAsync({
