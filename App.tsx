@@ -38,7 +38,7 @@ import { japi, SUPPORTED_API_VERSIONS } from './api/api';
 import { login, logout } from './xmpp/xmpp';
 import { STATUS_URL } from './env/env';
 import { delay } from './util/util';
-import { Pinchy } from './components/pinchy';
+import { ImageCarousel } from './components/image-carousel';
 
 // TODO: iOS UI testing
 // TODO: Delete 'getRandomInt' definitions
@@ -166,7 +166,7 @@ const App = () => {
           presentation: 'modal',
         }}
       >
-        <Tab.Screen name="TODO" component={Pinchy} />
+        <Tab.Screen name="TODO" component={ImageCarousel} />
       </Stack.Navigator>
     </NavigationContainer>
   );
