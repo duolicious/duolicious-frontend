@@ -311,6 +311,8 @@ const ConversationScreen = ({navigation, route}) => {
           width: '100%',
           alignSelf: 'center',
           textAlign: 'center',
+          paddingLeft: 5,
+          paddingRight: 5,
           opacity: lastMessageStatus === 'sent' || lastMessageStatus === null ? 0 : 1,
           color: lastMessageStatus === 'timeout' ? 'red' : '#70f',
           ...(lastMessageStatus === 'timeout' ? {} : { fontFamily: 'Trueno' }),
