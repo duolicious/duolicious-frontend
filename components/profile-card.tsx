@@ -26,6 +26,10 @@ function getRandomInt(max) {
 }
 
 const ImageOrSkeleton = ({resolution, imageUuid, ...rest}) => {
+  const {
+    showGradient = true,
+  } = rest;
+
   return (
     <View style={rest.style}>
       {imageUuid !== undefined &&
@@ -51,21 +55,25 @@ const ImageOrSkeleton = ({resolution, imageUuid, ...rest}) => {
         }}
       >
         <LinearGradient
-          colors={[
+          colors={showGradient ? [
             'rgba(0, 0, 0, 0.1)',
             'transparent',
             'transparent',
             'transparent',
             'transparent',
             'rgba(0, 0, 0, 0.1)',
-            'rgba(0, 0, 0, 0.2)',
+            'rgba(0, 0, 0, 0.3)',
+            'rgba(0, 0, 0, 0.4)',
+          ] : [
+            'transparent',
+            'transparent',
           ]}
           style={{
             height: '100%',
             justifyContent: 'center',
             alignItems: 'center',
           }}
-          >
+        >
           {imageUuid === null &&
             <Ionicons
               style={{fontSize: 100, color: '#eee'}}

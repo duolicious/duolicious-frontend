@@ -17,7 +17,6 @@ import {
 } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBarSpacer } from './status-bar-spacer';
-import ImageViewer from 'react-native-image-zoom-viewer';
 import { DefaultText } from './default-text';
 import { DonutChart } from './donut-chart';
 import { Title } from './title';
@@ -52,14 +51,6 @@ const Stack = createNativeStackNavigator();
 
 const isIconDefinition = (x: any): x is IconDefinition => {
   return x.iconName !== undefined;
-};
-
-// TODO: Delete 'Gallery Screen' component
-// TODO: Delete
-const goToGallery = (navigation, imageUuids) => () => {
-  if ((imageUuids ?? []).length > 0) {
-    navigation.navigate('Gallery Screen', { imageUuids } );
-  }
 };
 
 const FloatingBackButton = (props) => {
@@ -432,6 +423,8 @@ const Content = (navigationRef) => ({navigation, route, ...props}) => {
   const showBottomButtons = route.params.showBottomButtons ?? true;
 
   const [data, setData] = useState<UserData | undefined>(undefined);
+
+  const [activeIndex, setActiveIndex] = useState(0);
   const [embiggenedUuid, setEmbiggenedUuid] = useState<string | null>(null);
 
   useEffect(() => {
@@ -476,7 +469,9 @@ const Content = (navigationRef) => ({navigation, route, ...props}) => {
         }}
       >
         <ImageCarousel
-          uuids={imageUuids ?? []}
+          uuids={imageUuids}
+          activeIndex={activeIndex}
+          onChangeActiveIndex={setActiveIndex}
           onChangeEmbiggened={setEmbiggenedUuid}
         />
         <ProspectUserDetails
@@ -785,38 +780,7 @@ const Body = ({
   );
 };
 
-// TODO: Delete
-const GalleryScreen = ({navigation, route}) => {
-  const imageUuids = route.params.imageUuids;
-
-  return (
-    <>
-      <View
-        style={{
-          position: 'absolute',
-          zIndex: 99,
-          width: '100%',
-          height: '100%',
-        }}
-      >
-        <ImageViewer
-          imageUrls={
-            imageUuids.map(imageUuid => ({
-              url: `${IMAGES_URL}/original-${imageUuid}.jpg`
-            })
-          )}
-          saveToLocalByLongPress={false}
-        />
-      </View>
-      <StatusBarSpacer/>
-      <FloatingBackButton navigation={navigation}/>
-    </>
-  );
-};
-
-
 export {
-  GalleryScreen,
   InDepthScreen,
   ProspectProfileScreen,
 };

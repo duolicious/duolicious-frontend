@@ -5,6 +5,7 @@ import {
   useState,
 } from 'react';
 import {
+  ActivityIndicator,
   Animated,
   GestureResponderEvent,
   Image,
@@ -71,9 +72,7 @@ const FitWithinScreenImage = ({ source, style, onUpdateImageSize, ...rest }) => 
     );
   }
 
-  // If the dimensions aren't calculated yet, don't render the image.
-  // Alternatively, you could show a placeholder or a loading spinner here.
-  return null;
+  return <ActivityIndicator size={60} color="#70f"/>;
 };
 
 const constrainPosition = (

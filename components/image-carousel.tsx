@@ -9,34 +9,44 @@ import {
   View,
 } from 'react-native';
 import { isMobile } from '../util/util';
-import {
-  ImageOrSkeleton,
-} from './profile-card';
+import { ImageOrSkeleton } from './profile-card';
 import { ChevronLeft, ChevronRight } from "react-native-feather";
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-// TODO: Uninstall Image viewer dependency
+// TODO: Add a back button to the in-depth screen
 
 const ImageCarousel = ({
   uuids,
+  activeIndex,
+  onChangeActiveIndex,
   onChangeEmbiggened,
 }: {
-  uuids: string[]
+  uuids: string[] | undefined
+  activeIndex: number
+  onChangeActiveIndex: (n: number) => void
   onChangeEmbiggened: (uuid: string) => void
 }) => {
-  const [active, setActive] = useState(0);
-
   const goToPrevSlide = () => {
-    if (active > 0) setActive(active - 1);
+    if (uuids !== undefined && activeIndex > 0)
+      onChangeActiveIndex(activeIndex - 1);
   };
 
   const goToNextSlide = () => {
-    if (active < uuids.length - 1) setActive(active + 1);
+    if (uuids !== undefined && activeIndex < uuids.length - 1)
+      onChangeActiveIndex(activeIndex + 1);
   };
 
   return (
     <View style={styles.container}>
-      {uuids.length === 0 &&
+      {uuids === undefined &&
+        <ImageOrSkeleton
+          resolution={900}
+          imageUuid={undefined}
+          style={styles.image}
+        />
+      }
+
+      {uuids !== undefined && uuids.length === 0 &&
         <ImageOrSkeleton
           resolution={900}
           imageUuid={null}
@@ -44,25 +54,26 @@ const ImageCarousel = ({
         />
       }
 
-      {uuids.map((uuid, index) => (
+      {uuids !== undefined && uuids.map((uuid, index) => (
         <ImageOrSkeleton
           key={index}
           resolution={900}
           imageUuid={uuid}
-          style={[styles.image, { opacity: index === active ? 1 : 0 }]}
+          style={[styles.image, { opacity: index === activeIndex ? 1 : 0 }]}
+          showGradient={false}
         />
       ))}
 
-      {uuids.length >= 2 &&
+      {uuids !== undefined && uuids.length >= 2 &&
         <View style={styles.pagination}>
           {uuids.map((_, index) => (
-            <View key={index} style={index === active ? styles.activeDot : styles.dot} />
+            <View key={index} style={index === activeIndex ? styles.activeDot : styles.dot} />
           ))}
         </View>
       }
 
-      {uuids.length >= 2 &&
-        <Pressable onPress={goToPrevSlide} style={styles.leftPressable}>
+      {uuids !== undefined && uuids.length >= 2 &&
+        <Pressable onPressIn={goToPrevSlide} style={styles.leftPressable}>
           {!isMobile() &&
             <View style={styles.leftButton}>
               <ChevronLeft
@@ -76,15 +87,15 @@ const ImageCarousel = ({
         </Pressable>
       }
 
-      {uuids.length >= 1 &&
+      {uuids !== undefined && uuids.length >= 1 &&
         <Pressable
-          onPress={() => onChangeEmbiggened(uuids[active])}
+          onPressIn={() => onChangeEmbiggened(uuids[activeIndex])}
           style={styles.middleButton}
         />
       }
 
-      {uuids.length >= 2 &&
-        <Pressable onPress={goToNextSlide} style={styles.rightPressable}>
+      {uuids !== undefined && uuids.length >= 2 &&
+        <Pressable onPressIn={goToNextSlide} style={styles.rightPressable}>
           {!isMobile() &&
             <View style={styles.rightButton}>
               <ChevronRight
