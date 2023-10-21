@@ -781,6 +781,7 @@ const Body = ({
 };
 
 export {
+  FloatingBackButton,
   InDepthScreen,
   ProspectProfileScreen,
 };
