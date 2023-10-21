@@ -13,8 +13,6 @@ import { ImageOrSkeleton } from './profile-card';
 import { ChevronLeft, ChevronRight } from "react-native-feather";
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-// TODO: Add a back button to the in-depth screen
-
 const ImageCarousel = ({
   uuids,
   activeIndex,
