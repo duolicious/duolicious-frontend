@@ -11,7 +11,6 @@ import {
 import { isMobile } from '../util/util';
 import { ImageOrSkeleton } from './profile-card';
 import { ChevronLeft, ChevronRight } from "react-native-feather";
-import Ionicons from '@expo/vector-icons/Ionicons';
 
 const ImageCarousel = ({
   uuids,
@@ -182,12 +181,22 @@ const styles = StyleSheet.create({
     backgroundColor: 'black',
     borderRadius: 999,
     marginLeft: 5,
+    paddingLeft: 3,
+    height: 50,
+    width: 50,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
   },
   rightButton: {
     opacity: 0.6,
     backgroundColor: 'black',
     borderRadius: 999,
     marginRight: 5,
+    paddingRight: 3,
+    height: 50,
+    width: 50,
+    justifyContent: 'center',
+    alignItems: 'flex-end',
   },
 });
 
