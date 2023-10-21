@@ -71,7 +71,7 @@ const ImageCarousel = ({
       }
 
       {uuids !== undefined && uuids.length >= 2 &&
-        <Pressable onPressIn={goToPrevSlide} style={styles.leftPressable}>
+        <Pressable onPress={goToPrevSlide} style={styles.leftPressable}>
           {!isMobile() &&
             <View style={styles.leftButton}>
               <ChevronLeft
@@ -87,13 +87,13 @@ const ImageCarousel = ({
 
       {uuids !== undefined && uuids.length >= 1 &&
         <Pressable
-          onPressIn={() => onChangeEmbiggened(uuids[activeIndex])}
+          onPress={() => onChangeEmbiggened(uuids[activeIndex])}
           style={styles.middleButton}
         />
       }
 
       {uuids !== undefined && uuids.length >= 2 &&
-        <Pressable onPressIn={goToNextSlide} style={styles.rightPressable}>
+        <Pressable onPress={goToNextSlide} style={styles.rightPressable}>
           {!isMobile() &&
             <View style={styles.rightButton}>
               <ChevronRight
@@ -112,6 +112,7 @@ const ImageCarousel = ({
 
 const styles = StyleSheet.create({
   container: {
+    userSelect: 'none',
     width: '100%',
     aspectRatio: 1,
   },

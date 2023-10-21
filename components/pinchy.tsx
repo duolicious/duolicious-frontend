@@ -231,8 +231,7 @@ const Pinchy = ({uuid}: {uuid: string}) => {
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponderCapture: (e) => (e.preventDefault(), true),
       onPanResponderGrant: handleSingleTap,
       onPanResponderMove: onPinchMove,
       onPanResponderRelease: onPinchEnd,
@@ -253,7 +252,7 @@ const Pinchy = ({uuid}: {uuid: string}) => {
   }, [viewportWidth, viewportHeight]);
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} pointerEvents="box-none">
       <FitWithinScreenImage
         {...panResponder.panHandlers}
         source={{ uri: `${IMAGES_URL}/original-${uuid}.jpg` }}
@@ -276,6 +275,7 @@ const Pinchy = ({uuid}: {uuid: string}) => {
 const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
+    touchAction: 'none',
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
