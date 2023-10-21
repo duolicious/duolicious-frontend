@@ -13,6 +13,7 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+import { IMAGES_URL } from '../env/env';
 
 const FitWithinScreenImage = ({ source, style, onUpdateImageSize, ...rest }) => {
   const isFetchingSize = useRef(false);
@@ -108,7 +109,7 @@ const constrainPosition = (
   };
 };
 
-const Pinchy = () => {
+const Pinchy = ({uuid}: {uuid: string}) => {
   const { width: viewportWidth, height: viewportHeight } = useWindowDimensions();
 
   const scaleBase = useRef<number | null>(null);
@@ -256,7 +257,7 @@ const Pinchy = () => {
     <View style={styles.container}>
       <FitWithinScreenImage
         {...panResponder.panHandlers}
-        source={{ uri: 'https://placehold.co/600x400/png' }}
+        source={{ uri: `${IMAGES_URL}/original-${uuid}.jpg` }}
         style={[
           {
             transform: [
@@ -275,11 +276,13 @@ const Pinchy = () => {
 
 const styles = StyleSheet.create({
   container: {
+    ...StyleSheet.absoluteFillObject,
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+    backgroundColor: 'black',
     overflow: 'hidden',
+    zIndex: 999,
   },
 });
 

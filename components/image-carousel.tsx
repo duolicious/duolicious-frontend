@@ -1,132 +1,113 @@
 import {
-  useRef,
   useState,
 } from 'react';
 import {
   Dimensions,
   Image,
-  Platform,
-  ScrollView,
   StyleSheet,
-  Text,
-  TouchableOpacity,
+  Pressable,
   View,
 } from 'react-native';
+import { isMobile } from '../util/util';
 import {
-  isMobile,
-} from '../util/util'
+  ImageOrSkeleton,
+} from './profile-card';
+import { ChevronLeft, ChevronRight } from "react-native-feather";
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 // TODO: Uninstall Image viewer dependency
-// TODO: Fix this for screen widths that change
-const { width } = Dimensions.get('window');
 
-const ImageCarousel = () => {
-  return (
-    <_ImageCarousel
-      images={[
-        'https://placehold.co/600x400/png',
-        'https://placehold.co/300x200/png',
-        'https://placehold.co/600x400/png',
-      ]}
-    />
-  );
-};
-
-const _ImageCarousel = ({ images }) => {
-  // TODO: Reduce the number of redraws
-
+const ImageCarousel = ({
+  uuids,
+  onChangeEmbiggened,
+}: {
+  uuids: string[]
+  onChangeEmbiggened: (uuid: string) => void
+}) => {
   const [active, setActive] = useState(0);
 
-  const scrollViewRef = useRef<ScrollView>(null);  // Reference to the ScrollView
-
-  const change = ({ nativeEvent }) => {
-    const slide = Math.ceil(nativeEvent.contentOffset.x / nativeEvent.layoutMeasurement.width);
-    if (slide !== active) {
-      setActive(slide);
-    }
-  };
-
   const goToPrevSlide = () => {
-    if (scrollViewRef.current && active > 0) {
-      scrollViewRef.current.scrollTo({ x: width * (active - 1), animated: false });
-      setActive(active - 1);  // Update the active slide index
-    }
+    if (active > 0) setActive(active - 1);
   };
 
   const goToNextSlide = () => {
-    if (scrollViewRef.current && active < images.length - 1) {
-      scrollViewRef.current.scrollTo({ x: width * (active + 1), animated: false });
-      setActive(active + 1);  // Update the active slide index
-    }
-  };
-
-  const embiggenImage = () => {
-    console.log('embiggen image'); // TODO
+    if (active < uuids.length - 1) setActive(active + 1);
   };
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        ref={scrollViewRef}
-        decelerationRate="fast"
-        horizontal={true}
-        onScroll={change}
-        scrollEventThrottle={16}
-        showsHorizontalScrollIndicator={false}
-        snapToInterval={width}
-        snapToAlignment="start"
-        bounces={false}
-        overScrollMode="never"
-        style={styles.scroll}
-      >
-        {images.map((image, index) =>
-          <Image
-            key={index}
-            source={{ uri: image }}
-            style={styles.image}
-          />
-        )}
-      </ScrollView>
-      <View style={styles.pagination}>
-        {images.map((i, k) => (
-          <View key={k} style={k === active ? styles.activeDot : styles.dot} />
-        ))}
-      </View>
+      {uuids.length === 0 &&
+        <ImageOrSkeleton
+          resolution={900}
+          imageUuid={null}
+          style={styles.image}
+        />
+      }
 
-      <TouchableOpacity onPress={goToPrevSlide} style={styles.leftButton}>
-        {!isMobile() &&
-          <Text style={styles.leftButtonText}>{"<"}</Text>
-        }
-      </TouchableOpacity>
+      {uuids.map((uuid, index) => (
+        <ImageOrSkeleton
+          key={index}
+          resolution={900}
+          imageUuid={uuid}
+          style={[styles.image, { opacity: index === active ? 1 : 0 }]}
+        />
+      ))}
 
-      <TouchableOpacity onPress={embiggenImage} style={styles.middleButton}/>
+      {uuids.length >= 2 &&
+        <View style={styles.pagination}>
+          {uuids.map((_, index) => (
+            <View key={index} style={index === active ? styles.activeDot : styles.dot} />
+          ))}
+        </View>
+      }
 
-      <TouchableOpacity onPress={goToNextSlide} style={styles.rightButton}>
-        {!isMobile() &&
-          <Text style={styles.rightButtonText}>{">"}</Text>
-        }
-      </TouchableOpacity>
+      {uuids.length >= 2 &&
+        <Pressable onPress={goToPrevSlide} style={styles.leftPressable}>
+          {!isMobile() &&
+            <View style={styles.leftButton}>
+              <ChevronLeft
+                stroke="white"
+                strokeWidth={4}
+                width={40}
+                height={40}
+              />
+            </View>
+          }
+        </Pressable>
+      }
+
+      {uuids.length >= 1 &&
+        <Pressable
+          onPress={() => onChangeEmbiggened(uuids[active])}
+          style={styles.middleButton}
+        />
+      }
+
+      {uuids.length >= 2 &&
+        <Pressable onPress={goToNextSlide} style={styles.rightPressable}>
+          {!isMobile() &&
+            <View style={styles.rightButton}>
+              <ChevronRight
+                stroke="white"
+                strokeWidth={4}
+                width={40}
+                height={40}
+              />
+            </View>
+          }
+        </Pressable>
+      }
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    width,
+    width: '100%',
     aspectRatio: 1,
-  },
-  scroll: {
-    width,
-    aspectRatio: 1,
-    scrollSnapType: 'x mandatory'  // This activates snapping on the x-axis.
   },
   image: {
-    width,
-    aspectRatio: 1,
-    resizeMode: 'cover',
-    borderWidth: 1,
-    borderColor: 'red',
-    scrollSnapAlign: 'start'  // This makes the image snap to the start.
+    ...StyleSheet.absoluteFillObject,
   },
   pagination: {
     flexDirection: 'row',
@@ -136,27 +117,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
     display: 'flex',
-    padding: 5,
+    padding: 3,
   },
   dot: {
-    margin: 5,
+    margin: 3,
     flex: 1,
     height: 5,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: 'black',
-    backgroundColor: '#70f',
+    borderColor: '#777',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
   },
   activeDot: {
-    margin: 5,
+    margin: 3,
     flex: 1,
     height: 5,
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: 'black',
+    borderColor: '#777',
     backgroundColor: 'white',
   },
-  leftButton: {
+  leftPressable: {
     position: 'absolute',
     top: 0,
     bottom: 0,
@@ -164,6 +145,7 @@ const styles = StyleSheet.create({
     width: '33%',
     zIndex: 2,
     justifyContent: 'center',
+    alignItems: 'flex-start',
     alignSelf: 'center',
   },
   middleButton: {
@@ -174,7 +156,7 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 1,
   },
-  rightButton: {
+  rightPressable: {
     position: 'absolute',
     top: 0,
     bottom: 0,
@@ -182,19 +164,20 @@ const styles = StyleSheet.create({
     width: '33%',
     zIndex: 2,
     justifyContent: 'center',
+    alignItems: 'flex-end',
     alignSelf: 'center',
   },
-  leftButtonText: {
-    fontSize: 40,
-    color: 'white',
-    textAlign: 'left',
-    paddingLeft: '15%',
+  leftButton: {
+    opacity: 0.6,
+    backgroundColor: 'black',
+    borderRadius: 999,
+    marginLeft: 5,
   },
-  rightButtonText: {
-    fontSize: 40,
-    color: 'white',
-    textAlign: 'right',
-    paddingRight: '15%',
+  rightButton: {
+    opacity: 0.6,
+    backgroundColor: 'black',
+    borderRadius: 999,
+    marginRight: 5,
   },
 });
 

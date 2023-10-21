@@ -16,7 +16,6 @@ import {
   useState,
 } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { ProspectProfileCard } from './profile-card';
 import { StatusBarSpacer } from './status-bar-spacer';
 import ImageViewer from 'react-native-image-zoom-viewer';
 import { DefaultText } from './default-text';
@@ -28,6 +27,12 @@ import { ButtonWithCenteredText } from './button/centered-text';
 import { api } from '../api/api';
 import { cmToFeetInchesStr } from '../units/units';
 import { signedInUser } from '../App';
+import { IMAGES_URL } from '../env/env';
+import { randomGagLocation } from '../data/gag-locations';
+import { setBlocked } from '../xmpp/xmpp';
+import { notify } from '../events/events';
+import { ImageCarousel } from './image-carousel';
+import { Pinchy } from './pinchy';
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
@@ -42,10 +47,6 @@ import { faVenusMars } from '@fortawesome/free-solid-svg-icons/faVenusMars'
 import { faPaperPlane } from '@fortawesome/free-solid-svg-icons/faPaperPlane'
 import { faLocationDot } from '@fortawesome/free-solid-svg-icons/faLocationDot'
 import { RotateCcw, X } from "react-native-feather";
-import { IMAGES_URL } from '../env/env';
-import { randomGagLocation } from '../data/gag-locations';
-import { setBlocked } from '../xmpp/xmpp';
-import { notify } from '../events/events';
 
 const Stack = createNativeStackNavigator();
 
@@ -53,6 +54,8 @@ const isIconDefinition = (x: any): x is IconDefinition => {
   return x.iconName !== undefined;
 };
 
+// TODO: Delete 'Gallery Screen' component
+// TODO: Delete
 const goToGallery = (navigation, imageUuids) => () => {
   if ((imageUuids ?? []).length > 0) {
     navigation.navigate('Gallery Screen', { imageUuids } );
@@ -61,6 +64,7 @@ const goToGallery = (navigation, imageUuids) => () => {
 
 const FloatingBackButton = (props) => {
   const {
+    onPress,
     navigationRef,
     navigation,
   } = props;
@@ -85,7 +89,7 @@ const FloatingBackButton = (props) => {
         shadowRadius: 8,
         elevation: 8,
       }}
-      onPress={(navigationRef?.current || navigation).goBack}
+      onPress={onPress ?? (navigationRef?.current || navigation).goBack}
     >
       <FontAwesomeIcon
         icon={faArrowLeft}
@@ -380,31 +384,16 @@ const ProspectProfileScreen = ({navigation, route}) => {
   const personId = route.params.personId;
 
   return (
-    <>
-      <Stack.Navigator
-        screenOptions={{
-          headerShown: false,
-          presentation: 'modal',
-          animation: 'slide_from_right',
-        }}
-      >
-        <Stack.Screen name="Prospect Profile" component={Content(navigationRef)} />
-        <Stack.Screen name="In-Depth" component={InDepthScreen(navigationRef)} />
-      </Stack.Navigator>
-      <View
-        style={{
-          position: 'absolute',
-          height: 0,
-          width: '100%',
-          maxWidth: 600,
-          alignSelf: 'center',
-          zIndex: 999,
-        }}
-      >
-        <StatusBarSpacer/>
-        <FloatingBackButton navigationRef={navigationRef}/>
-      </View>
-    </>
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        presentation: 'modal',
+        animation: 'slide_from_right',
+      }}
+    >
+      <Stack.Screen name="Prospect Profile" component={Content(navigationRef)} />
+      <Stack.Screen name="In-Depth" component={InDepthScreen(navigationRef)} />
+    </Stack.Navigator>
   );
 };
 
@@ -443,6 +432,7 @@ const Content = (navigationRef) => ({navigation, route, ...props}) => {
   const showBottomButtons = route.params.showBottomButtons ?? true;
 
   const [data, setData] = useState<UserData | undefined>(undefined);
+  const [embiggenedUuid, setEmbiggenedUuid] = useState<string | null>(null);
 
   useEffect(() => {
     setData(undefined);
@@ -464,6 +454,17 @@ const Content = (navigationRef) => ({navigation, route, ...props}) => {
 
   const numMorePics = Math.max(0, (imageUuids ?? []).length - 1);
 
+  if (embiggenedUuid) {
+    return (
+      <>
+        <Pinchy uuid={embiggenedUuid}/>
+        <StatusBarSpacer/>
+        <FloatingBackButton onPress={() => setEmbiggenedUuid(null)}/>
+      </>
+    );
+  }
+
+  // TODO
   return (
     <>
       <ScrollView
@@ -474,10 +475,9 @@ const Content = (navigationRef) => ({navigation, route, ...props}) => {
           paddingBottom: 100,
         }}
       >
-        <ProspectProfileCard
-          onPress={goToGallery(navigation, imageUuids)}
-          imageUuid={imageUuid}
-          numMorePics={numMorePics}
+        <ImageCarousel
+          uuids={imageUuids ?? []}
+          onChangeEmbiggened={setEmbiggenedUuid}
         />
         <ProspectUserDetails
           navigation={navigation}
@@ -528,6 +528,19 @@ const Content = (navigationRef) => ({navigation, route, ...props}) => {
           </View>
         </View>
       }
+      <View
+        style={{
+          position: 'absolute',
+          height: 0,
+          width: '100%',
+          maxWidth: 600,
+          alignSelf: 'center',
+          zIndex: 999,
+        }}
+      >
+        <StatusBarSpacer/>
+        <FloatingBackButton navigationRef={navigationRef}/>
+      </View>
     </>
   );
 };
@@ -772,6 +785,7 @@ const Body = ({
   );
 };
 
+// TODO: Delete
 const GalleryScreen = ({navigation, route}) => {
   const imageUuids = route.params.imageUuids;
 
