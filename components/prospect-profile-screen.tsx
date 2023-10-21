@@ -457,7 +457,6 @@ const Content = (navigationRef) => ({navigation, route, ...props}) => {
     );
   }
 
-  // TODO
   return (
     <>
       <ScrollView
