@@ -131,6 +131,7 @@ const WelcomeScreen_ = ({navigation}) => {
           <DefaultText
             style={{
               alignSelf: 'center',
+              textAlign: 'center',
               color: 'white',
               fontSize: 20,
             }}
