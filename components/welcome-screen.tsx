@@ -135,7 +135,8 @@ const WelcomeScreen_ = ({navigation}) => {
               fontSize: 20,
             }}
           >
-            Date, chat & make new friends
+            {/* Date, chat & make new friends */}
+            Online dating exclusively for 4chan
           </DefaultText>
           <DefaultTextInput
             style={{
