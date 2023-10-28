@@ -207,7 +207,7 @@ const InboxTab_ = ({navigation}) => {
             }}
           />
         </Animated.View>
-        {!isTooManyTapped && sectionIndex === 0 && inbox && numUnreadIntros >= 3 &&
+        {!isTooManyTapped && sectionIndex === 0 && !showArchive && numUnreadIntros >= 3 &&
           <Notice
             onPress={onPressTooMany}
             style={{
