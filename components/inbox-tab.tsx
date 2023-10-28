@@ -26,8 +26,6 @@ import { Inbox, Conversation, inboxStats, observeInbox } from '../xmpp/xmpp';
 import { compareArrays } from '../util/util';
 import { TopNavBarButton } from './top-nav-bar-button';
 
-// TODO: Blocking people should remove them from each others' inboxes
-
 const Stack = createNativeStackNavigator();
 
 const InboxItemMemo = memo(InboxItem);
