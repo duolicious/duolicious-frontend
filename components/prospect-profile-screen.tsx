@@ -158,6 +158,7 @@ const FloatingProfileInteractionButton = ({
 };
 
 const FloatingHideButton = ({navigation, personId, isHidden}) => {
+  const [isLoading, setIsLoading] = useState(false);
   const [isHiddenState, setIsHiddenState] = useState<
     boolean | undefined
   >(isHidden);
@@ -166,23 +167,41 @@ const FloatingHideButton = ({navigation, personId, isHidden}) => {
     setIsHiddenState(isHidden);
   }, [isHidden]);
 
-  const onPress = useCallback(() => {
+  const onPress = useCallback(async () => {
     if (personId === undefined) return;
 
-    const newIsHiddenState = !isHiddenState;
+    setIsLoading(true);
 
-    setIsHiddenState(newIsHiddenState);
+    const nextIsHiddenState = !isHiddenState;
 
-    notify(
-      newIsHiddenState ?
-      `hide-profile-${personId}` :
-      `unhide-profile-${personId}`
-    );
+    const status = await setBlocked(personId, nextIsHiddenState);
 
-    if ( newIsHiddenState) api('post', `/hide/${personId}`);
-    if (!newIsHiddenState) api('post', `/unhide/${personId}`);
+    if (status === undefined) {
+      const endpoint = (
+        nextIsHiddenState ?
+        `/hide/${personId}` :
+        `/unhide/${personId}`);
 
-    if (newIsHiddenState) navigation.goBack();
+      const response = await api('post', endpoint);
+
+      if (response.ok) {
+        setIsHiddenState(nextIsHiddenState);
+
+        notify(
+          nextIsHiddenState ?
+          `hide-profile-${personId}` :
+          `unhide-profile-${personId}`
+        );
+
+        if (nextIsHiddenState) navigation.goBack();
+      }
+    } else if (status === 'timeout') {
+      ;
+    } else {
+      throw Error(`Unexpected status: ${status}`);
+    }
+
+    setIsLoading(false);
   }, [isHiddenState, personId]);
 
   return (
@@ -191,14 +210,17 @@ const FloatingHideButton = ({navigation, personId, isHidden}) => {
       onPress={onPress}
       backgroundColor="white"
     >
-      {isHiddenState === true && <RotateCcw
+      {isLoading &&
+        <ActivityIndicator size="large" color="#70f"/>
+      }
+      {!isLoading && isHiddenState === true && <RotateCcw
           stroke="#70f"
           strokeWidth={3}
           height={24}
           width={24}
         />
       }
-      {isHiddenState === false && <X
+      {!isLoading && isHiddenState === false && <X
           stroke="#70f"
           strokeWidth={3}
           height={24}
@@ -300,6 +322,7 @@ const BlockButton = ({name, personId, isBlocked}) => {
     const nextIsBlockedState = !isBlockedState;
 
     const status = await setBlocked(personId, nextIsBlockedState);
+
     if (status === undefined) {
       const endpoint = (
         nextIsBlockedState ?
@@ -312,8 +335,9 @@ const BlockButton = ({name, personId, isBlocked}) => {
         setIsBlockedState(nextIsBlockedState);
 
         notify(
-          nextIsBlockedState ? 'hide-profile' : 'unhide-profile',
-          personId,
+          nextIsBlockedState ?
+          `hide-profile-${personId}` :
+          `unhide-profile-${personId}`
         );
       }
     } else if (status === 'timeout') {
