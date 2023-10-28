@@ -265,9 +265,11 @@ const InboxTab_ = ({navigation}) => {
           ref={listRef}
           emptyText={
             sectionIndex === 0 ?
-            "No intros to show":
-            "No chats to show"}
-          endText="No more messages to show"
+            `No${showArchive ? ' archived ' : ' '}intros to show`:
+            `No${showArchive ? ' archived ' : ' '}chats to show`}
+          endText={
+            `No more${showArchive ? ' archived ' : ' '}messages to show`
+          }
           endTextStyle={{
             marginRight: 5,
           }}
