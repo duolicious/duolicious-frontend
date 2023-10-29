@@ -281,7 +281,7 @@ const SeeQAndAButton = ({navigation, personId, name, countAnswers}) => {
   );
 };
 
-const BlockButton = ({name, personId, isBlocked}) => {
+const BlockButton = ({navigation, name, personId, isBlocked}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isBlockedState, setIsBlockedState] = useState(false);
 
@@ -300,6 +300,9 @@ const BlockButton = ({name, personId, isBlocked}) => {
     if (await setBlocked(personId, nextIsBlockedState)) {
       setIsBlockedState(nextIsBlockedState);
       setIsLoading(false);
+      if (nextIsBlockedState) {
+        navigation.popToTop();
+      }
     }
   }, [isLoading, isBlockedState, personId]);
 
@@ -324,6 +327,7 @@ const BlockButton = ({name, personId, isBlocked}) => {
           style={{
             color: '#777',
             overflow: 'hidden',
+            textAlign: 'center',
           }}
         >
           {name === undefined ? '...' : text}
@@ -751,7 +755,12 @@ const Body = ({
           name={data?.name}
           countAnswers={data?.count_answers}
         />
-        <BlockButton name={data?.name} personId={personId} isBlocked={data?.is_blocked} />
+        <BlockButton
+          navigation={navigation}
+          name={data?.name}
+          personId={personId}
+          isBlocked={data?.is_blocked}
+        />
       </View>
     </>
   );
