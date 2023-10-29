@@ -28,8 +28,7 @@ import { cmToFeetInchesStr } from '../units/units';
 import { signedInUser } from '../App';
 import { IMAGES_URL } from '../env/env';
 import { randomGagLocation } from '../data/gag-locations';
-import { setBlocked } from '../xmpp/xmpp';
-import { notify } from '../events/events';
+import { setHidden, setBlocked } from '../hide-and-block/hide-and-block';
 import { ImageCarousel } from './image-carousel';
 import { Pinchy } from './pinchy';
 
@@ -170,39 +169,15 @@ const FloatingHideButton = ({navigation, personId, isHidden}) => {
   const onPress = useCallback(async () => {
     if (personId === undefined) return;
 
-    setIsLoading(true);
-
     const nextIsHiddenState = !isHiddenState;
 
-    const status = await setBlocked(personId, nextIsHiddenState);
-
-    if (status === undefined) {
-      const endpoint = (
-        nextIsHiddenState ?
-        `/hide/${personId}` :
-        `/unhide/${personId}`);
-
-      const response = await api('post', endpoint);
-
-      if (response.ok) {
-        setIsHiddenState(nextIsHiddenState);
-
-        notify(
-          nextIsHiddenState ?
-          `hide-profile-${personId}` :
-          `unhide-profile-${personId}`
-        );
-
-        if (nextIsHiddenState) navigation.goBack();
-      }
-    } else if (status === 'timeout') {
-      ;
-    } else {
-      throw Error(`Unexpected status: ${status}`);
+    setIsLoading(true);
+    if (await setHidden(personId, nextIsHiddenState)) {
+      if (nextIsHiddenState) navigation.goBack();
+      setIsHiddenState(nextIsHiddenState);
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
-  }, [isHiddenState, personId]);
+  }, [isLoading, isHiddenState, personId]);
 
   return (
     <FloatingProfileInteractionButton
@@ -321,32 +296,11 @@ const BlockButton = ({name, personId, isBlocked}) => {
 
     const nextIsBlockedState = !isBlockedState;
 
-    const status = await setBlocked(personId, nextIsBlockedState);
-
-    if (status === undefined) {
-      const endpoint = (
-        nextIsBlockedState ?
-        `/block/${personId}` :
-        `/unblock/${personId}`);
-
-      const response = await api('post', endpoint);
-
-      if (response.ok) {
-        setIsBlockedState(nextIsBlockedState);
-
-        notify(
-          nextIsBlockedState ?
-          `hide-profile-${personId}` :
-          `unhide-profile-${personId}`
-        );
-      }
-    } else if (status === 'timeout') {
-      ;
-    } else {
-      throw Error(`Unexpected status: ${status}`);
+    setIsLoading(true);
+    if (await setBlocked(personId, nextIsBlockedState)) {
+      setIsBlockedState(nextIsBlockedState);
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   }, [isLoading, isBlockedState, personId]);
 
   const text = isBlockedState
