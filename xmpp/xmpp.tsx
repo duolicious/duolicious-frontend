@@ -171,7 +171,7 @@ const populateConversationList = async (
   }, {});
 
   conversationList.forEach((c: Conversation) => {
-    c.name = personIdToInfo[c.personId]?.name ?? 'Unavailable User';
+    c.name = personIdToInfo[c.personId]?.name ?? 'Unavailable Person';
     c.matchPercentage = personIdToInfo[c.personId]?.match_percentage ?? 0;
     c.imageUuid = personIdToInfo[c.personId]?.image_uuid ?? null;
     c.isAvailableUser = personIdToInfo[c.personId] !== undefined;
