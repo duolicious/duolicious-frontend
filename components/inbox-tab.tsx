@@ -140,7 +140,7 @@ const InboxTab_ = ({navigation}) => {
     const page = [...section.conversations]
       .filter((c) => (!c.isAvailableUser || c.wasArchivedByMe) === showArchive)
       .sort((a, b) => {
-        if (sectionName === 'intros' && sortByIndex === 1) {
+        if (sectionName === 'intros' && sortByIndex === 0) {
           return compareArrays(
             [b.matchPercentage, +b.lastMessageTimestamp],
             [a.matchPercentage, +a.lastMessageTimestamp],
@@ -194,7 +194,7 @@ const InboxTab_ = ({navigation}) => {
           pointerEvents={sectionIndex === 1 ? 'none' : 'auto'}
         >
           <ButtonGroup
-            buttons={['Latest First', 'Best Matches First']}
+            buttons={['Best Matches First', 'Latest First']}
             selectedIndex={sortByIndex}
             onPress={setSortByIndex_}
             secondary={true}
