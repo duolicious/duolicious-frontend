@@ -62,8 +62,8 @@ const InboxTab_ = ({navigation}) => {
     }
 
     return showArchive ?
-      _inboxStats.chats.numUnreadUnavailable :
-      _inboxStats.chats.numUnreadAvailable;
+      _inboxStats.chats.numUnreadArchive :
+      _inboxStats.chats.numUnreadInbox;
   })();
 
   const numUnreadIntros = (() => {
@@ -72,8 +72,8 @@ const InboxTab_ = ({navigation}) => {
     }
 
     return showArchive ?
-      _inboxStats.intros.numUnreadUnavailable :
-      _inboxStats.intros.numUnreadAvailable;
+      _inboxStats.intros.numUnreadArchive :
+      _inboxStats.intros.numUnreadInbox;
   })();
 
   const buttonOpacity = useRef(new Animated.Value(0)).current;
