@@ -32,6 +32,7 @@ import { setHidden, setBlocked } from '../hide-and-block/hide-and-block';
 import { ImageCarousel } from './image-carousel';
 import { Pinchy } from './pinchy';
 import { Basic } from './basic';
+import { Club, Clubs } from './club';
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
@@ -375,6 +376,8 @@ const ProspectProfileScreen = ({navigation, route}) => {
 type UserData = {
   name: string,
   about: string,
+  mutual_clubs: string[],
+  other_clubs: string[],
   gender: string,
   match_percentage: number,
   count_answers: number,
@@ -701,6 +704,34 @@ const Body = ({
             <DefaultText selectable={true}>
               {data.about}
             </DefaultText>
+          </>
+        }
+        {data !== undefined && data.mutual_clubs.length > 0 &&
+          <>
+            <Title>Mutual Clubs</Title>
+            <Clubs>
+              {data.mutual_clubs.map((clubName, i) =>
+                <Club
+                  key={i}
+                  name={clubName}
+                  isMutual={true}
+                />
+              )}
+            </Clubs>
+          </>
+        }
+        {data !== undefined && data.other_clubs.length > 0 &&
+          <>
+            <Title>{data.mutual_clubs.length > 0 ? 'Other ' : ''}Clubs</Title>
+            <Clubs>
+              {data.other_clubs.map((clubName, i) =>
+                <Club
+                  key={i}
+                  name={clubName}
+                  isMutual={false}
+                />
+              )}
+            </Clubs>
           </>
         }
         <SeeQAndAButton
