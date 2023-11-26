@@ -105,7 +105,13 @@ const UnselectedClub = ({
 };
 
 const fetchClubItems = async (q: string): Promise<ClubItem[]> => {
-  const cleanQ = q.trim().replace(/\s+/g, ' ');
+  const cleanQ = q
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/\u2018/g, `'`)
+    .replace(/\u2019/g, `'`)
+    .replace(/\u201C/g, `"`)
+    .replace(/\u201D/g, `"`);
 
   const response = await api(
     'get',
@@ -142,6 +148,8 @@ const ClubSelector = ({navigation, route}) => {
   }, [_fetchClubItems]);
 
   const onSelectClub = useCallback((club: ClubItem) => {
+    japi('post', '/join-club', { name: club.name });
+
     const newSelectedClubs = [...selectedClubs, club];
 
     const newUnselectedClubs = searchResults.filter((c) => c !== club);
@@ -153,6 +161,8 @@ const ClubSelector = ({navigation, route}) => {
   }, [selectedClubs, searchResults]);
 
   const onUnselectClub = useCallback((club: ClubItem) => {
+    japi('post', '/leave-club', { name: club.name });
+
     const newSelectedClubs = selectedClubs.filter((c) => c !== club);
     const newUnselectedClubs = [...searchResults, club].sort((a, b) => {
       if (a.count_members < b.count_members) return +1;
