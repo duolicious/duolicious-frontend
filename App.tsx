@@ -291,39 +291,6 @@ const App = () => {
     return <UtilityScreen serverStatus={serverStatus}/>
   }
 
-  // TODO
-  return (
-    <NavigationContainer
-      ref={navigationContainerRef}
-      onStateChange={pushBrowserState}
-      theme={{
-        ...DefaultTheme,
-        colors: {
-          ...DefaultTheme.colors,
-          background: 'white',
-        },
-      }}
-      onReady={onLayoutRootView}
-      documentTitle={{
-        formatter: () => "Duolicious"
-      }}
-    >
-      <StatusBar
-        translucent={true}
-        backgroundColor="transparent"
-        barStyle="dark-content"
-      />
-      <Stack.Navigator
-        screenOptions={{
-          headerShown: false,
-          presentation: 'modal',
-        }}
-      >
-        <Tab.Screen name="Club Selector" component={ClubSelector} />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
-
   return (
     <>
       {!isLoading &&

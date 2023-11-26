@@ -123,13 +123,6 @@ const ProfileTab_ = ({navigation}) => {
     })();
   }, []);
 
-  useEffect(() => {
-    return listen(
-      'updated-clubs',
-      (newClubs: any) => { if (data) data['clubs'] = newClubs; },
-    );
-  }, [data]);
-
   return (
     <>
       <DuoliciousTopNavBar/>
@@ -291,6 +284,18 @@ const Options = ({navigation, data}) => {
     });
   }, [_basicsOptionGroups, signedInUser?.units]);
 
+  useEffect(() => {
+    return listen(
+      'updated-clubs',
+      (newClubs: any) => {
+        if (data) {
+          data['clubs'] = newClubs;
+          triggerRender({});
+        }
+      },
+    );
+  }, [data]);
+
   const onSubmitSuccess = useCallback(() => {
     triggerRender({});
   }, [triggerRender]);
@@ -320,6 +325,13 @@ const Options = ({navigation, data}) => {
     );
   }, [navigation]);
 
+  const clubsSetting = (() => {
+    if (data?.clubs?.length === undefined) return undefined;
+    if (data.clubs.length === 0) return undefined;
+    if (data.clubs.length === 1) return '1 club';
+    if (data.clubs.length >   1) return `${data.clubs.length} clubs`;
+  })();
+
   return (
     <View>
       <Title>Basics</Title>
@@ -340,6 +352,7 @@ const Options = ({navigation, data}) => {
       <ButtonForOption
         onPress={goToClubSelector}
         label="Clubs"
+        setting={clubsSetting}
         noSettingText="None"
       />
 
