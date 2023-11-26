@@ -45,9 +45,8 @@ import { Basic } from './basic';
 import { notify } from '../events/events';
 
 type ClubItem = {
-  club_id: number,
-  num_members: number,
-  club_name: string,
+  name: string,
+  count_members: number,
 };
 
 const SelectedClub = ({
@@ -73,7 +72,7 @@ const SelectedClub = ({
           color: '#70f',
         }}
       >
-        {clubItem.club_name}
+        {clubItem.name}
       </Basic>
     </Pressable>
   );
@@ -99,38 +98,21 @@ const UnselectedClub = ({
           marginTop: 5,
           marginBottom: 5,
         }}
-      >{clubItem.club_name}</Basic>
-      <DefaultText style={{fontWeight: '700'}}>{clubItem.num_members} people</DefaultText>
+      >{clubItem.name}</Basic>
+      <DefaultText style={{fontWeight: '700'}}>{clubItem.count_members} people</DefaultText>
     </Pressable>
   );
 };
 
 const fetchClubItems = async (q: string): Promise<ClubItem[]> => {
-  return [
-    { club_id:  1, num_members: 701, club_name: `The "I don't like clubs" club` },
-    { club_id:  2, num_members:   2, club_name: `Teddy Appreciators` },
-    { club_id:  3, num_members:  42, club_name: `/soc/` },
-    { club_id:  4, num_members:  32, club_name: `/v/` },
-    { club_id:  5, num_members:  42, club_name: `/cm/` },
-    { club_id:  6, num_members:  69, club_name: `Anime` },
-    { club_id:  7, num_members:  43, club_name: `Music` },
-    { club_id:  8, num_members:  42, club_name: `Normies` },
-    { club_id:  9, num_members:   1, club_name: `Guro` },
-    { club_id: 10, num_members:  42, club_name: `straya` },
-    { club_id: 10, num_members:  42, club_name: `murka` },
-  ];
+  const cleanQ = q.trim().replace(/\s+/g, ' ');
 
-  // TODO
-  // const resultsPerPage = 25;
-  // const offset = 0;
+  const response = await api(
+    'get',
+    `/search-clubs?q=${encodeURIComponent(cleanQ)}`
+  );
 
-  // const response = await api(
-  //   'get',
-  //   `/search-filter-questions` +
-  //   `?q=${encodeURIComponent(q)}&n=${resultsPerPage}&o=${offset}`,
-  // );
-
-  // return response.ok ? response.json : [];
+  return response.ok ? response.json : [];
 };
 
 const ClubSelector = ({navigation, route}) => {
@@ -160,11 +142,7 @@ const ClubSelector = ({navigation, route}) => {
   }, [_fetchClubItems]);
 
   const onSelectClub = useCallback((club: ClubItem) => {
-    const newSelectedClubs = [...selectedClubs, club].sort((a, b) => {
-      if (a.club_name > b.club_name) return +1;
-      if (a.club_name < b.club_name) return -1;
-      return 0;
-    });
+    const newSelectedClubs = [...selectedClubs, club];
 
     const newUnselectedClubs = searchResults.filter((c) => c !== club);
 
@@ -177,8 +155,8 @@ const ClubSelector = ({navigation, route}) => {
   const onUnselectClub = useCallback((club: ClubItem) => {
     const newSelectedClubs = selectedClubs.filter((c) => c !== club);
     const newUnselectedClubs = [...searchResults, club].sort((a, b) => {
-      if (a.num_members < b.num_members) return +1;
-      if (a.num_members > b.num_members) return -1;
+      if (a.count_members < b.count_members) return +1;
+      if (a.count_members > b.count_members) return -1;
       return 0;
     });
 
@@ -330,11 +308,6 @@ const ClubSelector = ({navigation, route}) => {
     </>
   );
 };
-
-
-
-
-
 
 export {
   ClubSelector,
