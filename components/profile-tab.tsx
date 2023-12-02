@@ -355,6 +355,17 @@ const Options = ({navigation, data}) => {
         setting={clubsSetting}
         noSettingText="None"
       />
+      <DefaultText
+        style={{
+          color: '#999',
+          textAlign: 'center',
+          marginLeft:  10,
+          marginRight: 10,
+        }}
+      >
+        When you join a club, mutual members will be shown to you first in
+        search results
+      </DefaultText>
 
       <Title style={{ marginTop: 70 }}>General Settings</Title>
       {

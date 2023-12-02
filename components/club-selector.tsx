@@ -215,6 +215,7 @@ const ClubSelector = ({navigation, route}) => {
           }}
           value={searchText}
           onChangeText={onChangeTextDebounced}
+          autoFocus={true}
         />
         {searchText !== "" &&
           <Pressable
@@ -273,7 +274,7 @@ const ClubSelector = ({navigation, route}) => {
               textAlign: 'center'
             }}
           >
-            You haven't joined any clubs
+            Start typing to search for clubs to join...
           </DefaultText>
         }
 
