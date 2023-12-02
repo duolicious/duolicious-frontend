@@ -1272,7 +1272,7 @@ const searchInteractionsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
   },
   {
     title: "People You've Blocked",
-    description: "Would you like to include people you blocked?",
+    description: "Would you like search results to include people you blocked?",
     input: {
       buttons: {
         values: yesNo,

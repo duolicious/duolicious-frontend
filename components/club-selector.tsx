@@ -299,7 +299,7 @@ const ClubSelector = ({navigation, route}) => {
               textAlign: 'center'
             }}
           >
-            Your search didn't match any Q&A questions
+            Your search didn't match any clubs
           </DefaultText>
         }
         {!isLoading && searchText !== "" && !_.isEmpty(searchResults) &&
