@@ -321,5 +321,6 @@ const ClubSelector = ({navigation, route}) => {
 };
 
 export {
+  ClubItem,
   ClubSelector,
 };

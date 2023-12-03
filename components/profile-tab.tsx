@@ -44,7 +44,7 @@ import {
 import * as _ from "lodash";
 import debounce from 'lodash/debounce';
 import { aboutQueue } from '../api/queue';
-import { ClubSelector } from './club-selector';
+import { ClubItem, ClubSelector } from './club-selector';
 import { listen } from '../events/events';
 
 const formatHeight = (og: OptionGroup<OptionGroupInputs>): string | undefined => {
@@ -328,8 +328,7 @@ const Options = ({navigation, data}) => {
   const clubsSetting = (() => {
     if (data?.clubs?.length === undefined) return undefined;
     if (data.clubs.length === 0) return undefined;
-    if (data.clubs.length === 1) return '1 club';
-    if (data.clubs.length >   1) return `${data.clubs.length} clubs`;
+    return data.clubs.map((clubItem: ClubItem) => clubItem.name).join(', ')
   })();
 
   return (
