@@ -36,7 +36,10 @@ const api = async (
       `${API_URL}${endpoint}`;
 
     const init_ = _.merge(
-      { method: method.toUpperCase() },
+      {
+        method: method.toUpperCase(),
+        cache: 'no-store',
+      },
       (
         existingSessionToken ? {
           headers: {
