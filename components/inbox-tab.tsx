@@ -48,7 +48,7 @@ const InboxTab = ({navigation}) => {
 };
 
 const InboxTab_ = ({navigation}) => {
-  const maxIntros = 20;
+  const maxIntros = 10;
 
   const [sectionIndex, setSectionIndex] = useState(0);
   const [sortByIndex, setSortByIndex] = useState(0);
