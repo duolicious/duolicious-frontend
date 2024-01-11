@@ -31,10 +31,9 @@ const TopNavBar = (props) => {
         style={{
           width: '100%',
           maxWidth: 600,
-          height: 40,
+          height: 52,
           alignSelf: 'center',
-          alignItems: 'center',
-          justifyContent: 'center',
+          placeContent: 'center center',
           ...props.style,
         }}
       >

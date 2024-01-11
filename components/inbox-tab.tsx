@@ -313,6 +313,7 @@ const InboxTab_ = ({navigation}) => {
           style={{
             fontWeight: '700',
             fontSize: 20,
+            marginLeft: 16
           }}
         >
           {'Inbox' + (showArchive ? ' (Archive)' : '')}
