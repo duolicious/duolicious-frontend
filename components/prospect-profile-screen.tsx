@@ -575,10 +575,8 @@ const ProspectUserDetails = ({
     navigation.navigate('In-Depth', { personId, name });
   }, [personId, name]);
 
-  const gagLocation = useMemo(randomGagLocation, []);
-
   const displayedLocation = (
-    userLocation === undefined ? '' : (userLocation ?? gagLocation));
+    userLocation === undefined ? '' : (userLocation ?? 'Private location'));
 
   return (
     <View
