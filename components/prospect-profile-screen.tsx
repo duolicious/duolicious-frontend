@@ -11,7 +11,6 @@ import {
 import {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -26,8 +25,6 @@ import { ButtonWithCenteredText } from './button/centered-text';
 import { api } from '../api/api';
 import { cmToFeetInchesStr } from '../units/units';
 import { signedInUser } from '../App';
-import { IMAGES_URL } from '../env/env';
-import { randomGagLocation } from '../data/gag-locations';
 import { setSkipped } from '../hide-and-block/hide-and-block';
 import { ImageCarousel } from './image-carousel';
 import { Pinchy } from './pinchy';
