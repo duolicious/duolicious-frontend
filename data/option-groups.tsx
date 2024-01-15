@@ -679,7 +679,7 @@ const notificationSettingsOptionGroups: OptionGroup<OptionGroupButtons>[] = [
   {
     title: 'Chats',
     Icon: () => <Ionicons style={{fontSize: 16 }} name="chatbubbles" />,
-    description: "When do you want to be notified if anyone you’re chatting with sends a new message? (\"Daily\" still sends the first notification of the day immediately, but snoozes later notifications so that you get at-most one notification per 24 hours.)",
+    description: "When do you want to be notified if anyone you’re chatting with sends a new message? (“Daily” still sends the first notification of the day immediately, but snoozes later notifications so that you get at-most one notification per 24 hours.)",
     input: {
       buttons: {
         values: immediacy,
@@ -694,7 +694,7 @@ const notificationSettingsOptionGroups: OptionGroup<OptionGroupButtons>[] = [
   {
     title: 'Intros',
     Icon: () => <Ionicons style={{fontSize: 16 }} name="chatbubble" />,
-    description: "When do you want to be notified if someone you haven’t chatted with sends you an intro? (\"Daily\" still sends the first notification of the day immediately, but snoozes later notifications so that you get at-most one notification per 24 hours.)",
+    description: "When do you want to be notified if someone you haven’t chatted with sends you an intro? (“Daily” still sends the first notification of the day immediately, but snoozes later notifications so that you get at-most one notification per 24 hours.)",
     input: {
       buttons: {
         values: immediacy,
@@ -711,7 +711,7 @@ const notificationSettingsOptionGroups: OptionGroup<OptionGroupButtons>[] = [
 const deletionOptionGroups: OptionGroup<OptionGroupTextShort>[] = [
   {
     title: 'Delete My Account',
-    description: `Are you sure you want to delete your account? This will immediately log you out and permanently delete your account data. If you’re sure, type "delete" to confirm.`,
+    description: `Are you sure you want to delete your account? This will immediately log you out and permanently delete your account data. If you’re sure, type “delete” to confirm.`,
     input: {
       textShort: {
         submit: async (input: string) => {
@@ -734,7 +734,7 @@ const deletionOptionGroups: OptionGroup<OptionGroupTextShort>[] = [
 const deactivationOptionGroups: OptionGroup<OptionGroupNone>[] = [
   {
     title: 'Deactivate My Account',
-    description: 'Are you sure you want to deactivate your account? This will hide you from other users and log you out. The next time you sign in, your account will be reactivated. Press "continue" to deactivate your account.',
+    description: 'Are you sure you want to deactivate your account? This will hide you from other users and log you out. The next time you sign in, your account will be reactivated. Press “continue” to deactivate your account.',
     input: {
       none: {
         submit: async () => {
