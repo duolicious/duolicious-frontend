@@ -259,7 +259,7 @@ const ClubSelector = ({navigation, route}) => {
             </View>
           </>
         }
-        {_.isEmpty(selectedClubs) && (_.isEmpty(searchResults) || searchText === "") &&
+        {!isLoading && searchText === "" && _.isEmpty(selectedClubs) &&
           <DefaultText
             style={{
               fontFamily: 'Trueno',
@@ -274,7 +274,7 @@ const ClubSelector = ({navigation, route}) => {
         {searchText !== "" &&
           <Title>Search Results</Title>
         }
-        {isLoading &&
+        {searchText !== "" && isLoading &&
           <View
             style={{
               alignItems: 'center',
@@ -293,7 +293,7 @@ const ClubSelector = ({navigation, route}) => {
               textAlign: 'center'
             }}
           >
-            Your search didn't match any clubs
+            Your search didn’t match any clubs
           </DefaultText>
         }
         {!isLoading && searchText !== "" && !_.isEmpty(searchResults) &&
@@ -301,11 +301,19 @@ const ClubSelector = ({navigation, route}) => {
             {(searchResults ?? []).map((a, i) =>
               <UnselectedClub key={String(i)} clubItem={a} onPress={onSelectClub} />
             )}
-            <Notice style={{ marginTop: 5, marginBottom: 5, marginLeft: 0, marginRight: 0 }}>
-              <DefaultText style={{color: '#70f'}} >
-                No more search results to show
-              </DefaultText>
-            </Notice>
+            <DefaultText style={{
+              fontFamily: 'TruenoBold',
+              color: '#000',
+              fontSize: 16,
+              textAlign: 'center',
+              alignSelf: 'center',
+              marginTop: 30,
+              marginBottom: 30,
+              marginLeft: '15%',
+              marginRight: '15%',
+            }}>
+              No more clubs to show
+            </DefaultText>
           </>
         }
       </ScrollView>
