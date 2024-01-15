@@ -409,8 +409,8 @@ const lookingForOptionGroup: OptionGroup<OptionGroupButtons> = {
 
 const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
   genderOptionGroup,
-  orientationOptionGroup,
   locationOptionGroup,
+  orientationOptionGroup,
   {
     title: 'Occupation',
     Icon: () => <Ionicons style={{fontSize: 16 }} name="briefcase" />,
@@ -909,7 +909,7 @@ const createAccountOptionGroups: OptionGroup<OptionGroupInputs>[] = [
   },
 ];
 
-const searchBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
+const searchTwoWayBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
   {
     ...yourPartnersGenderOptionGroup,
     title: "Gender",
@@ -937,23 +937,35 @@ const searchBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
     },
   },
   {
-    title: "Orientation",
-    Icon: () => <Ionicons style={{fontSize: 16 }} name="person" />,
-    description: "Which orientations would you like to see in search results?",
+    title: "Furthest Distance",
+    Icon: () => (
+      <FontAwesomeIcon
+        icon={faLocationDot}
+        size={14}
+        style={{color: 'black'}}
+      />
+    ),
+    description: "How far away can people be?",
     input: {
-      checkChips: {
-        values: [
-          ...orientations.map((x) => ({checked: true, label: x})),
-          {checked: true, label: 'Unanswered'},
-        ],
-        submit: async function(orientation: string[]) {
-          const ok = (await japi('post', '/search-filter', { orientation })).ok;
-          if (ok) {
-            this.values = newCheckChipValues(this.values, orientation);
-          }
+      slider: {
+        sliderMin: 5,
+        sliderMax: 10000,
+        defaultValue: 10000,
+        step: 1,
+        unitsLabel: 'km',
+        addPlusAtMax: true,
+        submit: async function(furthestDistance: number | null) {
+          const ok = (
+            await japi(
+              'post',
+              '/search-filter',
+              { furthest_distance: furthestDistance }
+            )
+          ).ok;
+          if (ok) this.currentValue = furthestDistance;
           return ok;
-        }
-      }
+        },
+      },
     },
   },
   {
@@ -993,36 +1005,27 @@ const searchBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
       }
     },
   },
+];
+
+const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
   {
-    title: "Furthest Distance",
-    Icon: () => (
-      <FontAwesomeIcon
-        icon={faLocationDot}
-        size={14}
-        style={{color: 'black'}}
-      />
-    ),
-    description: "How far away can people be?",
+    title: "Orientation",
+    Icon: () => <Ionicons style={{fontSize: 16 }} name="person" />,
+    description: "Which orientations would you like to see in search results?",
     input: {
-      slider: {
-        sliderMin: 5,
-        sliderMax: 10000,
-        defaultValue: 10000,
-        step: 1,
-        unitsLabel: 'km',
-        addPlusAtMax: true,
-        submit: async function(furthestDistance: number | null) {
-          const ok = (
-            await japi(
-              'post',
-              '/search-filter',
-              { furthest_distance: furthestDistance }
-            )
-          ).ok;
-          if (ok) this.currentValue = furthestDistance;
+      checkChips: {
+        values: [
+          ...orientations.map((x) => ({checked: true, label: x})),
+          {checked: true, label: 'Unanswered'},
+        ],
+        submit: async function(orientation: string[]) {
+          const ok = (await japi('post', '/search-filter', { orientation })).ok;
+          if (ok) {
+            this.values = newCheckChipValues(this.values, orientation);
+          }
           return ok;
-        },
-      },
+        }
+      }
     },
   },
   {
@@ -1553,6 +1556,7 @@ export {
   isOptionGroupTextShort,
   notificationSettingsOptionGroups,
   privacySettingsOptionGroups,
-  searchBasicsOptionGroups,
+  searchTwoWayBasicsOptionGroups,
+  searchOtherBasicsOptionGroups,
   searchInteractionsOptionGroups,
 };

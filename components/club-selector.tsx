@@ -19,17 +19,6 @@ import { DefaultText } from './default-text';
 import { TopNavBar } from './top-nav-bar';
 import { ButtonForOption } from './button/option';
 import { Title } from './title';
-import {
-  OptionGroup,
-  OptionGroupInputs,
-  searchBasicsOptionGroups,
-  searchInteractionsOptionGroups,
-  getCurrentValue,
-  isOptionGroupCheckChips,
-  isOptionGroupRangeSlider,
-  isOptionGroupButtons,
-  isOptionGroupSlider,
-} from '../data/option-groups';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { OptionScreen } from './option-screen';
 import Ionicons from '@expo/vector-icons/Ionicons';
