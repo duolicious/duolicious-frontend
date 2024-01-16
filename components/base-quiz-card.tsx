@@ -9,7 +9,7 @@ import {
   forwardRef,
   useCallback,
   useImperativeHandle,
-  useMemo,
+  useRef,
 } from 'react';
 import {
   Dimensions,
@@ -45,13 +45,6 @@ interface Props {
   ref?: Ref<API>
 
   /**
-   * Whether or not to let the element be flicked away off-screen after a swipe.
-   *
-   * @default true
-   */
-  flickOnSwipe?: boolean
-
-  /**
    * Callback that will be executed when a swipe has been completed. It will be called with a single string denoting which direction the swipe was in: `'left'`, `'right'`, `'up'` or `'down'`.
    */
   onSwipe?: SwipeHandler
@@ -68,14 +61,6 @@ interface Props {
    */
   preventSwipe?: string[]
 
-  /**
-   * What method to evaluate what direction to throw the card on release. 'velocity' will evaluate direction based on the direction of the swiping movement. 'position' will evaluate direction based on the position the card has on the screen.
-   * If set to position it is recommended to manually set swipeThreshold based on the screen size as not all devices will accommodate the default distance of 300px and the default native swipeThreshold is 1px which most likely is undesirably low.
-   *
-   * @default 'velocity'
-   */
-  swipeRequirementType?: 'velocity' | 'position'
-
    /**
    * The threshold of which to accept swipes. If swipeRequirementType is set to velocity it is the velocity threshold and if set to position it is the position threshold.
    * On native the default value is 1 as the physics works differently there.
@@ -84,22 +69,6 @@ interface Props {
    * @default 300
    */
   swipeThreshold?: number
-
-  /**
-   * Callback that will be executed when a `BaseQuizCard` has fulfilled the requirement necessary to be swiped in a direction on release. This in combination with `onSwipeRequirementUnfulfilled` is useful for displaying user feedback on the card. When using this it is recommended to use `swipeRequirementType='position'` as this will fire a lot otherwise.
-   * It will be called with a single string denoting which direction the user is swiping: `'left'`, `'right'`, `'up'` or `'down'`.
-   */
-  onSwipeRequirementFulfilled?: SwipeRequirementFufillUpdate
-
-  /**
-   * Callback that will be executed when a `BaseQuizCard` has unfulfilled the requirement necessary to be swiped in a direction on release.
-   */
-  onSwipeRequirementUnfulfilled?: SwipeRequirementUnfufillUpdate
-
-  /**
-   * HTML attribute class
-   */
-  className?: string
 
   /**
    * Style to add to the container.
@@ -161,11 +130,7 @@ const finalXyrot = (gesture) => {
 
 const diagonal = () => pythagoras(height, width)
 
-const animateOut = async (
-  gesture,
-  setSpringTarget,
-  dir: 'right' | 'left' | 'up' | 'down' | undefined = undefined
-) => {
+const animateOut = async (gesture, setSpringTarget, dir?: Direction) => {
   const normalizedGesture = (() => {
     if (dir === 'right')
       return { x: Math.max( 2, gesture.x), y: gesture.y }
@@ -228,15 +193,11 @@ const AnimatedView = animated(View)
 const BaseQuizCard = forwardRef(
   (
     {
-      flickOnSwipe = true,
       children,
       onSwipe,
       onCardLeftScreen,
       preventSwipe = [],
-      swipeRequirementType = 'velocity',
       swipeThreshold = settings.swipeThreshold,
-      onSwipeRequirementFulfilled,
-      onSwipeRequirementUnfulfilled,
       containerStyle,
       initialPosition,
       leftComponent,
@@ -245,6 +206,8 @@ const BaseQuizCard = forwardRef(
     }: Props,
     ref
   ) => {
+    const isAnimating = useRef(false);
+
     const startPosition = (() => {
       if (initialPosition === 'left')  return finalXyrot({x: -1, y:  0})
       if (initialPosition === 'right') return finalXyrot({x:  1, y:  0})
@@ -260,113 +223,109 @@ const BaseQuizCard = forwardRef(
 
     useImperativeHandle(ref, () => ({
       async swipe (dir: Direction = 'right') {
+        if (isAnimating.current) return;
+        isAnimating.current = true;
+
         if (onSwipe) onSwipe(dir)
         const power = 2.0
         const disturbance = (Math.random() - 0.5) / 2
         if (dir === 'right') {
-          await animateOut({ x: power, y: disturbance }, setSpringTarget)
+          await animateOut({ x:  power, y: disturbance }, setSpringTarget)
         } else if (dir === 'left') {
           await animateOut({ x: -power, y: disturbance }, setSpringTarget)
         } else if (dir === 'up') {
           await animateOut({ x: disturbance, y: -power }, setSpringTarget)
         } else if (dir === 'down') {
-          await animateOut({ x: disturbance, y: power }, setSpringTarget)
+          await animateOut({ x: disturbance, y:  power }, setSpringTarget)
         }
         if (onCardLeftScreen) onCardLeftScreen(dir)
+
+        isAnimating.current = false;
       },
       async restoreCard () {
+        if (isAnimating.current) return;
+        isAnimating.current = true;
+
         await animateBack(setSpringTarget)
+
+        isAnimating.current = false;
       }
-    }))
+    }));
 
     const handleSwipeReleased = useCallback(
       async (setSpringTarget, gesture) => {
+        if (isAnimating.current) return;
+        isAnimating.current = true;
+
         // Check if this is a swipe
         const dir = getSwipeDirection({
-          x: swipeRequirementType === 'velocity' ? gesture.vx : gesture.dx,
-          y: swipeRequirementType === 'velocity' ? gesture.vy : gesture.dy
+          x: gesture.dx,
+          y: gesture.dy
         })
 
-        if (dir !== 'none') {
-          if (flickOnSwipe) {
-            if (!preventSwipe.includes(dir)) {
-              if (onSwipe) onSwipe(dir)
+        if (dir === 'none') {
+          // Card was not flicked away, animate back to start
+          animateBack(setSpringTarget)
+        } else if (!preventSwipe.includes(dir)) {
+          if (onSwipe) onSwipe(dir)
 
-              await animateOut(
-                {x: gesture.vx, y: gesture.vy},
-                setSpringTarget,
-                dir
-              )
-              if (onCardLeftScreen) onCardLeftScreen(dir)
-              return
-            }
-          }
+          await animateOut(
+            {x: gesture.vx, y: gesture.vy},
+            setSpringTarget,
+            dir
+          )
+
+          if (onCardLeftScreen) onCardLeftScreen(dir)
         }
 
-        // Card was not flicked away, animate back to start
-        animateBack(setSpringTarget)
+        isAnimating.current = false;
       },
-      [flickOnSwipe, onSwipe, onCardLeftScreen, preventSwipe]
-    )
+      [onSwipe, onCardLeftScreen, preventSwipe]
+    );
 
-    let swipeThresholdFulfilledDirection = 'none'
-    const panResponder = useMemo(
-      () =>
-        PanResponder.create({
-          // Ask to be the responder:
-          onStartShouldSetPanResponder: (evt, gestureState) => false,
-          onStartShouldSetPanResponderCapture: (evt, gestureState) => false,
-          onMoveShouldSetPanResponder: (evt, gestureState) => true,
-          onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
+    const panResponder = useRef(
+      PanResponder.create({
+        // Ask to be the responder:
+        onStartShouldSetPanResponder:
+          (evt, gestureState) => false,
+        onStartShouldSetPanResponderCapture:
+          (evt, gestureState) => false,
+        onMoveShouldSetPanResponder:
+          (evt, gestureState) => !isAnimating.current,
+        onMoveShouldSetPanResponderCapture:
+          (evt, gestureState) => !isAnimating.current,
 
-          onPanResponderGrant: (evt, gestureState) => {
-            // The gesture has started.
-            // Probably wont need this anymore as postion i relative to swipe!
-            setSpringTarget.current[0].start({
-              x: gestureState.dx,
-              y: gestureState.dy,
-              rot: 0,
-              immediate: true
-            })
-          },
-          onPanResponderMove: (evt, gestureState) => {
-            // Check fulfillment
-            if (onSwipeRequirementFulfilled || onSwipeRequirementUnfulfilled) {
-              const dir = getSwipeDirection({
-                x: swipeRequirementType === 'velocity' ? gestureState.vx : gestureState.dx,
-                y: swipeRequirementType === 'velocity' ? gestureState.vy : gestureState.dy
-              })
-              if (dir !== swipeThresholdFulfilledDirection) {
-                swipeThresholdFulfilledDirection = dir
-                if (swipeThresholdFulfilledDirection === 'none') {
-                  if (onSwipeRequirementUnfulfilled) onSwipeRequirementUnfulfilled()
-                } else {
-                  if (onSwipeRequirementFulfilled) onSwipeRequirementFulfilled(dir)
-                }
-              }
-            }
-
-            // use guestureState.vx / guestureState.vy for velocity calculations
-            // translate element
-            setSpringTarget.current[0].start({
-              x: gestureState.dx,
-              y: gestureState.dy,
-              rot: rotateByDx(gestureState.dx),
-              immediate: true,
-            })
-          },
-          onPanResponderTerminationRequest: (evt, gestureState) => {
-            return true
-          },
-          onPanResponderRelease: (evt, gestureState) => {
-            // The user has released all touches while this view is the
-            // responder. This typically means a gesture has succeeded
-            // enable
-            handleSwipeReleased(setSpringTarget, gestureState)
-          }
-        }),
-      []
-    )
+        onPanResponderGrant: (evt, gestureState) => {
+          // The gesture has started.
+          // Probably wont need this anymore as position relative to swipe!
+          setSpringTarget.current[0].start({
+            x: gestureState.dx,
+            y: gestureState.dy,
+            rot: 0,
+            immediate: true,
+          })
+        },
+        onPanResponderMove: (evt, gestureState) => {
+          // use guestureState.vx / guestureState.vy for velocity calculations
+          // translate element
+          setSpringTarget.current[0].start({
+            x: gestureState.dx,
+            y: gestureState.dy,
+            rot: rotateByDx(gestureState.dx),
+            immediate: true,
+          })
+        },
+        onPanResponderTerminationRequest: (evt, gestureState) => {
+          return true;
+        },
+        onPanResponderRelease: (evt, gestureState) => {
+          // The user has released all touches while this view is the
+          // responder. This typically means a gesture has succeeded
+          // enable
+          handleSwipeReleased(setSpringTarget, gestureState)
+        }
+      })
+    ).current;
 
     return (
       <AnimatedView

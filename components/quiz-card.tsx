@@ -205,7 +205,6 @@ const QuizCard = ({
       leftComponent={<LeftComponent percentage={noPercentage}/>}
       rightComponent={<RightComponent percentage={yesPercentage}/>}
       downComponent={<DownComponent/>}
-      swipeRequirementType="position"
       swipeThreshold={75}
       {...rest}
     >
