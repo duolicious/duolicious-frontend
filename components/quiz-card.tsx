@@ -14,7 +14,7 @@ import {
   useState,
 } from 'react';
 import CheckBox, { StatelessCheckBox } from './check-box';
-import { TinderCard } from 'react-tinder-card'
+import { BaseQuizCard } from './base-quiz-card';
 import { DefaultText } from './default-text';
 import { StackActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -194,7 +194,7 @@ const QuizCard = ({
   } = props;
 
   return (
-    <TinderCard
+    <BaseQuizCard
       ref={innerRef}
       containerStyle={{
         position: 'absolute',
@@ -221,7 +221,7 @@ const QuizCard = ({
       >
         {children}
       </NonInteractiveQuizCard>
-    </TinderCard>
+    </BaseQuizCard>
   );
 };
 
