@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import {
+  createElement,
   memo,
   useCallback,
   useEffect,
@@ -463,7 +464,17 @@ const NonInteractiveQuizCard = ({children, ...props}) => {
   );
 };
 
-const AnswerIcon = ({answer, selected, enabled}) => {
+const AnswerIcon = ({
+  answer,
+  selected,
+  enabled,
+  onPress = undefined
+}: {
+  answer: string,
+  selected: boolean,
+  enabled: boolean,
+  onPress?: any
+}) => {
   const backgroundColor = (() => {
     if (selected === false) return 'white';
     if (enabled) return '#70f';
@@ -476,9 +487,10 @@ const AnswerIcon = ({answer, selected, enabled}) => {
     return '#bcbcbc';
   })();
 
-  return (
-    <View
-      style={{
+  return createElement(
+    onPress ? Pressable : View,
+    {
+      style: {
         justifyContent: 'center',
         alignItems: 'center',
         padding: 2,
@@ -494,8 +506,10 @@ const AnswerIcon = ({answer, selected, enabled}) => {
         shadowOpacity: 0.2,
         shadowRadius: 5,
         elevation: 3,
-      }}
-    >
+      },
+      onPress,
+    },
+    <>
       {answer === 'yes' ?
         <Check
           stroke={checkColor}
@@ -508,28 +522,57 @@ const AnswerIcon = ({answer, selected, enabled}) => {
           height={18}
           />
       }
-    </View>
+    </>
   );
 };
 
-const AnswerIconGroup = ({answer, enabled}) => {
+const AnswerIconGroup = ({
+  answer,
+  enabled,
+  onPress = undefined
+}: {
+  answer: boolean | null,
+  enabled: boolean,
+  onPress?: any,
+}) => {
+  const onPressYes = useCallback(() => onPress && onPress(true),  [onPress]);
+  const onPressNo  = useCallback(() => onPress && onPress(false), [onPress]);
+
   return (
     <View
       style={{
         flexDirection: 'row',
+        gap: onPress ? 15 : 3,
       }}
     >
-      <AnswerIcon answer="no" selected={answer === false} enabled={enabled}/>
-      <DefaultText> </DefaultText>
-      <AnswerIcon answer="yes" selected={answer === true} enabled={enabled}/>
+      <AnswerIcon
+        answer="no"
+        selected={answer === false}
+        enabled={enabled}
+        onPress={onPress && onPressNo}
+      />
+      <AnswerIcon
+        answer="yes"
+        selected={answer === true}
+        enabled={enabled}
+        onPress={onPress && onPressYes}
+      />
     </View>
   );
 };
 
-const nextAnswer = (thisAnswer: boolean | null) => {
-  if (thisAnswer === true) return false;
-  if (thisAnswer === false) return null;
-  return true;
+const nextAnswer = (curAnswer: boolean | null, pressedButton?: boolean) => {
+  if (pressedButton === undefined) {
+    if (curAnswer === true) return false;
+    if (curAnswer === false) return null;
+    return true;
+  } else {
+    if (curAnswer === pressedButton) {
+      return null;
+    } else {
+      return pressedButton;
+    }
+  }
 };
 
 const AnsweredQuizCard = ({
@@ -568,9 +611,11 @@ const AnsweredQuizCard = ({
     }
   }, [state.answer])();
 
-  const onPressAnswerIconGroup = useCallback(async () => {
+  const onPressAnswerIconGroup = useCallback(async (pressedButton: boolean) => {
+    console.log(pressedButton); // TODO
+
     setState((state: CardState): CardState => {
-      const nextAnswer_ = nextAnswer(state.answer);
+      const nextAnswer_ = nextAnswer(state.answer, pressedButton);
 
       quizQueue.addTask(async () => {
         await japi(
@@ -638,8 +683,8 @@ const AnsweredQuizCard = ({
           marginRight: 30,
         }}
       >
-        <DefaultText style={{ fontWeight: '500', color: textColor }} >
-          {user1}:{' '}
+        <DefaultText style={{ fontWeight: '500', marginRight: 5, color: textColor }} >
+          {user1}:
         </DefaultText>
         <AnswerIconGroup answer={answer1} enabled={false}/>
       </View>
@@ -650,12 +695,14 @@ const AnsweredQuizCard = ({
           flexDirection: 'row',
         }}
       >
-        <DefaultText style={{ fontWeight: '500', color: '#666' }}>
-          {user2}:{' '}
+        <DefaultText style={{ fontWeight: '500', marginRight: 5, color: '#666' }}>
+          {user2}:
         </DefaultText>
-        <Pressable onPress={onPressAnswerIconGroup}>
-          <AnswerIconGroup answer={state.answer} enabled={true}/>
-        </Pressable>
+        <AnswerIconGroup
+          answer={state.answer}
+          enabled={true}
+          onPress={onPressAnswerIconGroup}
+        />
       </View>
     </View>
   );
