@@ -623,8 +623,6 @@ const AnsweredQuizCard = ({
   }, [state.answer])();
 
   const onPressAnswerIconGroup = useCallback(async (pressedButton: boolean) => {
-    console.log(pressedButton); // TODO
-
     setState((state: CardState): CardState => {
       const nextAnswer_ = nextAnswer(state.answer, pressedButton);
 
