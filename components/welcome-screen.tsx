@@ -18,7 +18,7 @@ import { createAccountOptionGroups } from '../data/option-groups';
 import { OptionScreen } from './option-screen';
 import { japi } from '../api/api';
 import { sessionToken } from '../kv-storage/session-token';
-import { Logo } from './logo';
+import { Logo16 } from './logo';
 
 const Stack = createNativeStackNavigator();
 
@@ -126,7 +126,7 @@ const WelcomeScreen_ = ({navigation}) => {
             gap: 5,
           }}
         >
-          <Logo size={32}/>
+          <Logo16 size={32} rectSize={0.3} />
           <Text
             style={{
               color: 'white',
