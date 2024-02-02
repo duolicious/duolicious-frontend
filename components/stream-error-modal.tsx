@@ -58,7 +58,7 @@ const StreamErrorModal = () => {
             textAlign: 'center',
           }}
         >
-          Too many tabs! 😩
+          Too many tabs!
         </DefaultText>
         <DefaultText
           style={{
@@ -66,8 +66,8 @@ const StreamErrorModal = () => {
             textAlign: 'center',
           }}
         >
-          Duolicious is open in more than one tab. Close all other tabs and
-          refresh this page.
+          Duolicious is open another tab. Close all other tabs and refresh this
+          page.
         </DefaultText>
       </View>
     </View>
