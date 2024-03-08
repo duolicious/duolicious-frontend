@@ -50,7 +50,10 @@
     "ts-node": "^10.9.1",
     "typescript": "^5.3.0",
     "xmldom": "^0.6.0",
-    "xpath": "^0.0.33"
+    "xpath": "^0.0.33",
+    "expo-notifications": "~0.27.6",
+    "expo-device": "~5.9.3",
+    "expo-constants": "~15.4.5"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9"
