@@ -141,7 +141,7 @@ const App = () => {
   [referrerId, setReferrerId] = useState<string | undefined>();
   const navigationContainerRef = useRef<any>();
 
-  useNotificationTest(); // TODO
+  // useNotificationTest(); // TODO
 
   const loadFonts = useCallback(async () => {
     await Font.loadAsync({

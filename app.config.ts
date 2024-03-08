@@ -33,8 +33,10 @@ const config: ExpoConfig = {
   },
   plugins: [
     "expo-secure-store"
-  ]
-
+  ],
+  android: {
+    package: "app.duolicious"
+  }
 };
 
 export default config;
