@@ -5,6 +5,8 @@ import {
   Platform,
   StatusBar,
   UIManager,
+  View,
+  useWindowDimensions,
 } from 'react-native';
 import {
   useCallback,
@@ -140,6 +142,7 @@ const App = () => {
   [signedInUser, setSignedInUser] = useState<SignedInUser | undefined>();
   [referrerId, setReferrerId] = useState<string | undefined>();
   const navigationContainerRef = useRef<any>();
+  const { height, width } = useWindowDimensions();
 
   // useNotificationTest(); // TODO
 
@@ -323,50 +326,52 @@ const App = () => {
   return (
     <>
       {!isLoading &&
-        <NavigationContainer
-          ref={navigationContainerRef}
-          onStateChange={pushBrowserState}
-          theme={{
-            ...DefaultTheme,
-            colors: {
-              ...DefaultTheme.colors,
-              background: 'white',
-            },
-          }}
-          onReady={onLayoutRootView}
-          documentTitle={{
-            formatter: () =>
-              (numUnreadTitle ? `(${numUnreadTitle}) ` : '') + 'Duolicious'
-          }}
-        >
-          <StatusBar
-            translucent={true}
-            backgroundColor="transparent"
-            barStyle="dark-content"
-          />
-          <Stack.Navigator
-            screenOptions={{
-              headerShown: false,
-              presentation: 'modal',
+        <View style={{ height, width }}>
+          <NavigationContainer
+            ref={navigationContainerRef}
+            onStateChange={pushBrowserState}
+            theme={{
+              ...DefaultTheme,
+              colors: {
+                ...DefaultTheme.colors,
+                background: 'white',
+              },
+            }}
+            onReady={onLayoutRootView}
+            documentTitle={{
+              formatter: () =>
+                (numUnreadTitle ? `(${numUnreadTitle}) ` : '') + 'Duolicious'
             }}
           >
-            {
-              referrerId !== undefined ? (
-                <Tab.Screen name="Traits Screen" component={TraitsTab} />
-              ) : signedInUser ? (
-                <>
-                  <Tab.Screen name="Home" component={HomeTabs} />
-                  <Tab.Screen name="Conversation Screen" component={ConversationScreen} />
-                  <Tab.Screen name="Prospect Profile Screen" component={ProspectProfileScreen} />
-                </>
-              ) : (
-                <>
-                  <Tab.Screen name="Welcome" component={WelcomeScreen(numUsers)} />
-                </>
-              )
-            }
-          </Stack.Navigator>
-        </NavigationContainer>
+            <StatusBar
+              translucent={true}
+              backgroundColor="transparent"
+              barStyle="dark-content"
+            />
+            <Stack.Navigator
+              screenOptions={{
+                headerShown: false,
+                presentation: 'modal',
+              }}
+            >
+              {
+                referrerId !== undefined ? (
+                  <Tab.Screen name="Traits Screen" component={TraitsTab} />
+                ) : signedInUser ? (
+                  <>
+                    <Tab.Screen name="Home" component={HomeTabs} />
+                    <Tab.Screen name="Conversation Screen" component={ConversationScreen} />
+                    <Tab.Screen name="Prospect Profile Screen" component={ProspectProfileScreen} />
+                  </>
+                ) : (
+                  <>
+                    <Tab.Screen name="Welcome" component={WelcomeScreen(numUsers)} />
+                  </>
+                )
+              }
+            </Stack.Navigator>
+          </NavigationContainer>
+        </View>
       }
       <ReportModal/>
       <ImageCropper/>

@@ -5,7 +5,7 @@ import { Client, client, xml } from '@xmpp/client';
 import { Element } from '@xmpp/xml';
 import { parse } from 'ltx';
 
-import { DOMParser } from 'xmldom';
+import { DOMParser } from '@xmldom/xmldom';
 import xpath from 'xpath';
 
 import { signedInUser } from '../App';
