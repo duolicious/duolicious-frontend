@@ -144,7 +144,7 @@ const App = () => {
   const navigationContainerRef = useRef<any>();
   const { height, width } = useWindowDimensions();
 
-  // useNotificationTest(); // TODO
+  useNotificationTest(); // TODO
 
   const loadFonts = useCallback(async () => {
     await Font.loadAsync({
@@ -326,7 +326,10 @@ const App = () => {
   return (
     <>
       {!isLoading &&
-        <View style={{ height, width }}>
+        <View style={{
+          height: height,
+          width: width,
+        }}>
           <NavigationContainer
             ref={navigationContainerRef}
             onStateChange={pushBrowserState}

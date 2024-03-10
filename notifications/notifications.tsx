@@ -24,7 +24,7 @@ async function sendPushNotification(expoPushToken) {
     data: { someData: 'goes here' },
   };
 
-  await fetch('https://exp.host/--/api/v2/push/send', {
+  const response = await fetch('https://exp.host/--/api/v2/push/send', {
     method: 'POST',
     headers: {
       Accept: 'application/json',
@@ -33,9 +33,11 @@ async function sendPushNotification(expoPushToken) {
     },
     body: JSON.stringify(message),
   });
+
+  console.log('sendPushNotification response', response);
 }
 
-async function registerForPushNotificationsAsync() {
+async function registerForPushNotificationsAsync(): Promise<string | undefined> {
   let token;
 
   if (Platform.OS === 'android') {
@@ -58,10 +60,13 @@ async function registerForPushNotificationsAsync() {
       alert('Failed to get push token for push notification!');
       return;
     }
-    token = await Notifications.getExpoPushTokenAsync({
-      projectId: Constants.expoConfig?.extra?.eas.projectId,
-    });
-    console.log(token);
+    const projectId = Constants.expoConfig?.extra?.eas.projectId;
+    console.log(projectId);
+    token = await Notifications.getExpoPushTokenAsync({ projectId });
+    console.log('expo token', token);
+
+    const deviceToken = await Notifications.getDevicePushTokenAsync();
+    console.log('device token', deviceToken);
   } else {
     alert('Must use physical device for Push Notifications');
   }
@@ -70,11 +75,15 @@ async function registerForPushNotificationsAsync() {
 }
 
 const useNotificationTest = () => {
-  const [expoPushToken, setExpoPushToken] = useState('');
+  const [expoPushToken, setExpoPushToken] = useState<string | undefined>();
   const notificationListener = useRef<Notifications.Subscription>();
 
   useEffect(() => {
-    registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
+    registerForPushNotificationsAsync()
+      .then(token => {
+        setExpoPushToken(token);
+        sendPushNotification(expoPushToken);
+      });
 
     notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
       console.log(notification);
