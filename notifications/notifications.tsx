@@ -1,44 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
-import { Text, View, Button, Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
+import { registerPushToken } from '../xmpp/xmpp';
 
-
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
-
-
-// Can use this function below or use Expo's Push Notification Tool from: https://expo.dev/notifications
-async function sendPushNotification(expoPushToken) {
-  const message = {
-    to: expoPushToken,
-    sound: 'default',
-    title: 'Original Title',
-    body: 'And here is the body!',
-    data: { someData: 'goes here' },
-  };
-
-  const response = await fetch('https://exp.host/--/api/v2/push/send', {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Accept-encoding': 'gzip, deflate',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(message),
+const setNofications = () => {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: AppState.currentState !== 'active',
+      shouldPlaySound: AppState.currentState !== 'active',
+      shouldSetBadge: false,
+    }),
   });
-
-  console.log('sendPushNotification response', response);
-}
-
-async function registerForPushNotificationsAsync(): Promise<string | undefined> {
-  let token;
 
   if (Platform.OS === 'android') {
     Notifications.setNotificationChannelAsync('default', {
@@ -48,54 +21,31 @@ async function registerForPushNotificationsAsync(): Promise<string | undefined> 
       lightColor: '#FF231F7C',
     });
   }
-
-  if (Device.isDevice) {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-    if (finalStatus !== 'granted') {
-      alert('Failed to get push token for push notification!');
-      return;
-    }
-    const projectId = Constants.expoConfig?.extra?.eas.projectId;
-    console.log(projectId);
-    token = await Notifications.getExpoPushTokenAsync({ projectId });
-    console.log('expo token', token);
-
-    const deviceToken = await Notifications.getDevicePushTokenAsync();
-    console.log('device token', deviceToken);
-  } else {
-    alert('Must use physical device for Push Notifications');
-  }
-
-  return token.data;
 }
 
-const useNotificationTest = () => {
-  const [expoPushToken, setExpoPushToken] = useState<string | undefined>();
-  const notificationListener = useRef<Notifications.Subscription>();
+const registerForPushNotificationsAsync = async (): Promise<void> => {
+  if (!Device.isDevice) {
+    return;
+  }
 
-  useEffect(() => {
-    registerForPushNotificationsAsync()
-      .then(token => {
-        setExpoPushToken(token);
-        sendPushNotification(expoPushToken);
-      });
+  const { status } = await Notifications.getPermissionsAsync();
+  const finalStatus =
+    status === 'granted' ?
+    status :
+    (await Notifications.requestPermissionsAsync()).status;
 
-    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-      console.log(notification);
-    });
+  if (finalStatus !== 'granted') {
+    console.error('Failed to get push token for push notification!');
+    return;
+  }
 
-    return () => {
-      if (notificationListener.current)
-        Notifications.removeNotificationSubscription(notificationListener.current);
-    };
-  }, []);
+  const projectId = Constants.expoConfig?.extra?.eas.projectId;
+  const token = await Notifications.getExpoPushTokenAsync({ projectId });
+
+  registerPushToken(token.data);
 };
 
 export {
-  useNotificationTest,
+  setNofications,
+  registerForPushNotificationsAsync,
 };
