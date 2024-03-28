@@ -35,6 +35,7 @@ const config: ExpoConfig = {
     "expo-secure-store"
   ],
   android: {
+    googleServicesFile: "./google-services.json",
     package: "app.duolicious"
   }
 };
