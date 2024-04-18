@@ -1,16 +1,12 @@
 import {
-  Animated,
-  LayoutAnimation,
-  Pressable,
-  ScrollView,
   StyleProp,
   View,
   ViewStyle,
+  SafeAreaView,
+  StyleSheet,
 } from 'react-native';
 import {
   useCallback,
-  useEffect,
-  useRef,
   useState,
   memo,
 } from 'react';
@@ -19,10 +15,7 @@ import { DefaultText } from './default-text';
 import { ButtonGroup } from './button-group';
 import { AnsweredQuizCard } from './quiz-card';
 import { DefaultFlatList } from './default-flat-list';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { ArrowLeft, ArrowRight } from "react-native-feather";
 import { Chart } from './chart';
-import { useFocusEffect } from '@react-navigation/native';
 import { api } from '../api/api';
 import { StatusBarSpacer } from './status-bar-spacer';
 import { FloatingBackButton } from './prospect-profile-screen';
@@ -254,57 +247,59 @@ const InDepthScreen = (navigationRef) => ({navigation, route}) => {
 
   // TODO: Sometimes a spinner shows up at the bottom of the screen that won't go away
   return (
-    <>
-      <DefaultFlatList
-        contentContainerStyle={{
-          paddingTop: 0,
-          paddingBottom: 20,
-        }}
-        dataKey={
-          idx1 === 1 ? `${idx1}-${idx4}` : `${idx1}-${idx2}-${idx3}`}
-        emptyText={
-          idx1 === 1 ? undefined : "No Q&A answers to show"}
-        endText={
-          idx1 === 1 ? undefined : "No more Q&A answers to show"}
-        fetchPage={
-          idx1 === 1 ?
-          fetchPersonalityPage(personId, idx4) :
-          fetchAnswersPage(
-            personId,
-            ['all', 'agree', 'disagree', 'unanswered'][idx2],
-            ['all', 'values', 'sex', 'interpersonal', 'other'][idx3],
-          )
-        }
-        ListHeaderComponent={
-          <Header
-            name={name}
-            idx1={idx1}
-            idx2={idx2}
-            idx3={idx3}
-            idx4={idx4}
-            onChangeIdx1={setIdx1}
-            onChangeIdx2={setIdx2}
-            onChangeIdx3={setIdx3}
-            onChangeIdx4={setIdx4}
-          />
-        }
-        renderItem={renderItem}
-        disableRefresh={true}
-      />
-      <View
-        style={{
-          position: 'absolute',
-          height: 0,
-          width: '100%',
-          maxWidth: 600,
-          alignSelf: 'center',
-          zIndex: 999,
-        }}
-      >
-        <StatusBarSpacer/>
-        <FloatingBackButton navigationRef={navigationRef}/>
+    <SafeAreaView style={styles.safeAreaView}>
+      <View>
+        <DefaultFlatList
+          contentContainerStyle={{
+            paddingTop: 0,
+            paddingBottom: 20,
+          }}
+          dataKey={
+            idx1 === 1 ? `${idx1}-${idx4}` : `${idx1}-${idx2}-${idx3}`}
+          emptyText={
+            idx1 === 1 ? undefined : "No Q&A answers to show"}
+          endText={
+            idx1 === 1 ? undefined : "No more Q&A answers to show"}
+          fetchPage={
+            idx1 === 1 ?
+            fetchPersonalityPage(personId, idx4) :
+            fetchAnswersPage(
+              personId,
+              ['all', 'agree', 'disagree', 'unanswered'][idx2],
+              ['all', 'values', 'sex', 'interpersonal', 'other'][idx3],
+            )
+          }
+          ListHeaderComponent={
+            <Header
+              name={name}
+              idx1={idx1}
+              idx2={idx2}
+              idx3={idx3}
+              idx4={idx4}
+              onChangeIdx1={setIdx1}
+              onChangeIdx2={setIdx2}
+              onChangeIdx3={setIdx3}
+              onChangeIdx4={setIdx4}
+            />
+          }
+          renderItem={renderItem}
+          disableRefresh={true}
+        />
+        <View
+          style={{
+            position: 'absolute',
+            height: 0,
+            width: '100%',
+            maxWidth: 600,
+            alignSelf: 'center',
+            zIndex: 999,
+          }}
+        >
+          <StatusBarSpacer/>
+          <FloatingBackButton navigationRef={navigationRef} safeAreaView={false}/>
+        </View>
       </View>
-    </>
+    </SafeAreaView>
   );
 };
 
@@ -330,6 +325,12 @@ const Charts = ({data}) => {
 };
 
 const ChartsMemo = memo(Charts);
+
+const styles = StyleSheet.create({
+  safeAreaView: {
+    flex: 1
+  }
+});
 
 export {
   InDepthScreen,

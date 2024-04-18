@@ -2,6 +2,8 @@ import {
   Modal,
   Pressable,
   View,
+  Platform,
+  Keyboard,
 } from 'react-native';
 import {
   useCallback,
@@ -111,14 +113,17 @@ const ReportModal = () => {
     }
   }, [isTooFewChars, isSomethingWrong]);
 
+  const defaultTextStyle = Platform.OS === 'ios' ? {style: {height: 200}} : null;
+
   return (
     <Modal
       animationType="fade"
-      transparent={true}
+      transparent={false}
       visible={isVisible}
       onRequestClose={close}
     >
-      <View
+      <Pressable
+        onPress={Keyboard.dismiss}
         style={{
           width: '100%',
           height: '100%',
@@ -166,6 +171,7 @@ const ReportModal = () => {
               value={reportText}
               onChangeText={onChangeReportText}
               numberOfLines={8}
+              {...defaultTextStyle}
             />
             <View
               style={{
@@ -219,7 +225,7 @@ const ReportModal = () => {
             We won't tell {name} you reported them
           </DefaultText>
         </View>
-      </View>
+      </Pressable>
     </Modal>
   );
 }
