@@ -62,6 +62,7 @@ import { faArrowLeft } from '@fortawesome/free-solid-svg-icons/faArrowLeft'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { japi } from '../api/api';
 import { delay } from '../util/util';
+import { KeyboardDismissingView } from './keyboard-dismissing-view';
 
 type InputProps<T extends OptionGroupInputs> = {
   input: T,
@@ -836,8 +837,7 @@ const OptionScreen = ({navigation, route}) => {
         height: '100%',
       }}
     >
-      <Pressable
-        onPress={Keyboard.dismiss}
+      <KeyboardDismissingView
         style={{
           height: '100%',
           width: '100%',
@@ -989,7 +989,7 @@ const OptionScreen = ({navigation, route}) => {
             {showSkipButton ? 'Skip' : 'Continue'}
           </ButtonWithCenteredText>
         </View>
-      </Pressable>
+      </KeyboardDismissingView>
     </SafeAreaView>
   );
 };

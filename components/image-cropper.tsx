@@ -138,23 +138,10 @@ const ImageCropper = () => {
     });
   }, [windowWidth, windowHeight]);
 
-  // Used on web, ios
   useEffect(() => {
     if (!data) return;
-    if (!['web', 'ios'].includes(Platform.OS)) return;
 
     Image.getSize(data.base64, initDims, console.error);
-  }, [data, initDims]);
-
-  // Used on mobile
-  const onLoad = useCallback((e: any) => {
-    if (!data) return;
-    if (!['web'].includes(Platform.OS)) return;
-
-    const width = e.nativeEvent.source.width;
-    const height = e.nativeEvent.source.height;
-
-    initDims(width, height);
   }, [data, initDims]);
 
   useEffect(() => {
@@ -265,7 +252,6 @@ const ImageCropper = () => {
       }}>
         <Image
           resizeMode="cover"
-          onLoad={onLoad}
           source={imageSource}
           style={styles.image}
         />

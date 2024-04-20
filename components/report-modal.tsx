@@ -17,6 +17,7 @@ import { ButtonWithCenteredText } from './button/centered-text';
 import { X } from "react-native-feather";
 import { listen } from '../events/events';
 import { setSkipped } from '../hide-and-block/hide-and-block';
+import { KeyboardDismissingView } from './keyboard-dismissing-view';
 
 type ReportModalInitialData = {
   name: string
@@ -122,8 +123,7 @@ const ReportModal = () => {
       visible={isVisible}
       onRequestClose={close}
     >
-      <Pressable
-        onPress={Keyboard.dismiss}
+      <KeyboardDismissingView
         style={{
           width: '100%',
           height: '100%',
@@ -225,7 +225,7 @@ const ReportModal = () => {
             We won't tell {name} you reported them
           </DefaultText>
         </View>
-      </Pressable>
+      </KeyboardDismissingView>
     </Modal>
   );
 }

@@ -21,6 +21,7 @@ import { OptionScreen } from './option-screen';
 import { japi } from '../api/api';
 import { sessionToken } from '../kv-storage/session-token';
 import { Logo16 } from './logo';
+import { KeyboardDismissingView } from './keyboard-dismissing-view';
 
 const Stack = createNativeStackNavigator();
 
@@ -107,8 +108,7 @@ const WelcomeScreen_ = (numUsers: number) => ({navigation}) => {
   ), [isLoading, submit]);
 
   return (
-    <Pressable
-      onPress={Keyboard.dismiss}
+    <KeyboardDismissingView
       style={{
         backgroundColor: '#70f',
         width: '100%',
@@ -276,7 +276,7 @@ const WelcomeScreen_ = (numUsers: number) => ({navigation}) => {
           </DefaultText>
         </View>
       </View>
-    </Pressable>
+    </KeyboardDismissingView>
   );
 };
 

@@ -76,12 +76,3 @@ This generates an ad-hoc ipa file:
 ```bash
 eas build --profile preview --platform ios --local
 ```
-
-### TODO
-
-* Check that you can send and recieve messages
-
-* Test that android app still works
-* Test that web app still works
-
-* Bump version number
