@@ -2,14 +2,13 @@ import {
   StyleProp,
   View,
   ViewStyle,
-  SafeAreaView,
-  StyleSheet,
 } from 'react-native';
 import {
   useCallback,
   useState,
   memo,
 } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TopNavBar } from './top-nav-bar';
 import { DefaultText } from './default-text';
 import { ButtonGroup } from './button-group';
@@ -214,6 +213,8 @@ const InDepthScreen = (navigationRef) => ({navigation, route}) => {
   const [idx3, setIdx3] = useState(0);
   const [idx4, setIdx4] = useState(0);
 
+  const insets = useSafeAreaInsets();
+
   const renderItem = useCallback(({item}) => {
     const onStateChange = (state: CardState) => {
       item.item.person_answer = state.answer;
@@ -247,59 +248,58 @@ const InDepthScreen = (navigationRef) => ({navigation, route}) => {
 
   // TODO: Sometimes a spinner shows up at the bottom of the screen that won't go away
   return (
-    <SafeAreaView style={styles.safeAreaView}>
-      <View>
-        <DefaultFlatList
-          contentContainerStyle={{
-            paddingTop: 0,
-            paddingBottom: 20,
-          }}
-          dataKey={
-            idx1 === 1 ? `${idx1}-${idx4}` : `${idx1}-${idx2}-${idx3}`}
-          emptyText={
-            idx1 === 1 ? undefined : "No Q&A answers to show"}
-          endText={
-            idx1 === 1 ? undefined : "No more Q&A answers to show"}
-          fetchPage={
-            idx1 === 1 ?
-            fetchPersonalityPage(personId, idx4) :
-            fetchAnswersPage(
-              personId,
-              ['all', 'agree', 'disagree', 'unanswered'][idx2],
-              ['all', 'values', 'sex', 'interpersonal', 'other'][idx3],
-            )
-          }
-          ListHeaderComponent={
-            <Header
-              name={name}
-              idx1={idx1}
-              idx2={idx2}
-              idx3={idx3}
-              idx4={idx4}
-              onChangeIdx1={setIdx1}
-              onChangeIdx2={setIdx2}
-              onChangeIdx3={setIdx3}
-              onChangeIdx4={setIdx4}
-            />
-          }
-          renderItem={renderItem}
-          disableRefresh={true}
-        />
-        <View
-          style={{
-            position: 'absolute',
-            height: 0,
-            width: '100%',
-            maxWidth: 600,
-            alignSelf: 'center',
-            zIndex: 999,
-          }}
-        >
-          <StatusBarSpacer/>
-          <FloatingBackButton navigationRef={navigationRef} safeAreaView={false}/>
-        </View>
+    <>
+      <DefaultFlatList
+        contentContainerStyle={{
+          paddingTop: 0 + insets.top,
+          paddingBottom: 20 + insets.bottom,
+        }}
+        dataKey={
+          idx1 === 1 ? `${idx1}-${idx4}` : `${idx1}-${idx2}-${idx3}`}
+        emptyText={
+          idx1 === 1 ? undefined : "No Q&A answers to show"}
+        endText={
+          idx1 === 1 ? undefined : "No more Q&A answers to show"}
+        fetchPage={
+          idx1 === 1 ?
+          fetchPersonalityPage(personId, idx4) :
+          fetchAnswersPage(
+            personId,
+            ['all', 'agree', 'disagree', 'unanswered'][idx2],
+            ['all', 'values', 'sex', 'interpersonal', 'other'][idx3],
+          )
+        }
+        ListHeaderComponent={
+          <Header
+            name={name}
+            idx1={idx1}
+            idx2={idx2}
+            idx3={idx3}
+            idx4={idx4}
+            onChangeIdx1={setIdx1}
+            onChangeIdx2={setIdx2}
+            onChangeIdx3={setIdx3}
+            onChangeIdx4={setIdx4}
+          />
+        }
+        renderItem={renderItem}
+        disableRefresh={true}
+      />
+      <View
+        style={{
+          position: 'absolute',
+          top: insets.top,
+          height: 0,
+          width: '100%',
+          maxWidth: 600,
+          alignSelf: 'center',
+          zIndex: 999,
+        }}
+      >
+        <StatusBarSpacer/>
+        <FloatingBackButton navigationRef={navigationRef} safeAreaView={false}/>
       </View>
-    </SafeAreaView>
+    </>
   );
 };
 
@@ -325,12 +325,6 @@ const Charts = ({data}) => {
 };
 
 const ChartsMemo = memo(Charts);
-
-const styles = StyleSheet.create({
-  safeAreaView: {
-    flex: 1
-  }
-});
 
 export {
   InDepthScreen,

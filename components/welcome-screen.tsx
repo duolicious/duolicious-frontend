@@ -1,12 +1,12 @@
 import {
   Linking,
   Platform,
-  Pressable,
   StatusBar,
   Text,
   View,
   useWindowDimensions,
   Keyboard,
+  SafeAreaView,
 } from 'react-native';
 import {
   useCallback,
@@ -108,14 +108,14 @@ const WelcomeScreen_ = (numUsers: number) => ({navigation}) => {
   ), [isLoading, submit]);
 
   return (
-    <KeyboardDismissingView
+    <SafeAreaView
       style={{
         backgroundColor: '#70f',
         width: '100%',
         height: '100%',
       }}
     >
-      <View
+      <KeyboardDismissingView
         style={{
           width: '100%',
           height: '100%',
@@ -275,8 +275,8 @@ const WelcomeScreen_ = (numUsers: number) => ({navigation}) => {
             </DefaultText>
           </DefaultText>
         </View>
-      </View>
-    </KeyboardDismissingView>
+      </KeyboardDismissingView>
+    </SafeAreaView>
   );
 };
 
