@@ -1,0 +1,14 @@
+--- app.config.ts	2024-04-29 20:24:14.944014738 +1000
++++ app.config.ts.b	2024-04-29 20:38:04.589807911 +1000
+@@ -6,9 +6,9 @@
+ const config: ExpoConfig = {
+   name: 'Duolicious',
+   slug: 'duolicious',
+-  icon: './assets/icon.png',
++  icon: './assets/ios-icon.png',
+   splash: {
+-    image: './assets/splash.png',
++    image: './assets/ios-splash.png',
+     resizeMode: 'contain',
+     backgroundColor: '#7700ff',
+   },

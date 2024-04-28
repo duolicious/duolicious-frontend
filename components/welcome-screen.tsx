@@ -165,7 +165,10 @@ const WelcomeScreen_ = (numUsers: number) => ({navigation}) => {
               fontFamily: 'MontserratBlack',
             }}
           >
-            Cute dates & dank memes await...
+            {Platform.OS === 'ios' ?
+              'Meet new people & chat' :
+              'Cute dates & dank memes await...'
+            }
           </DefaultText>
           {(Platform.OS === 'web' || height > 500) &&
             <DefaultText

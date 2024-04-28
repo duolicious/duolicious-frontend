@@ -19,6 +19,7 @@ import { api } from '../api/api';
 import { StatusBarSpacer } from './status-bar-spacer';
 import { FloatingBackButton } from './prospect-profile-screen';
 import { CardState } from './quiz-card';
+import { filteredTraits } from '../data/filtered-traits';
 
 const sideMargins: StyleProp<ViewStyle> = {
   marginLeft: 10,
@@ -306,20 +307,23 @@ const InDepthScreen = (navigationRef) => ({navigation, route}) => {
 const Charts = ({data}) => {
   return (
     <View style={sideMargins}>
-      {data.map((trait) =>
-        <Chart
-          key={JSON.stringify(trait)}
-          dimensionName={trait.trait_min_label ? undefined : trait.trait_name}
-          minLabel={trait.trait_min_label}
-          maxLabel={trait.trait_max_label}
-          name1={trait.prospect_name ?? undefined}
-          percentage1={trait.prospect_percentage ?? undefined}
-          name2="You"
-          percentage2={trait.person_percentage ?? undefined}
-        >
-          {trait.trait_description}
-        </Chart>
-      )}
+      {data
+        .filter((trait) => !filteredTraits.includes(trait.trait_name))
+        .map((trait) =>
+          <Chart
+            key={JSON.stringify(trait)}
+            dimensionName={trait.trait_min_label ? undefined : trait.trait_name}
+            minLabel={trait.trait_min_label}
+            maxLabel={trait.trait_max_label}
+            name1={trait.prospect_name ?? undefined}
+            percentage1={trait.prospect_percentage ?? undefined}
+            name2="You"
+            percentage2={trait.person_percentage ?? undefined}
+          >
+            {trait.trait_description}
+          </Chart>
+        )
+      }
     </View>
   );
 };

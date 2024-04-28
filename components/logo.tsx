@@ -1,5 +1,6 @@
 import * as React from 'react';
 import Svg, { G, Rect } from "react-native-svg"
+import { Platform } from 'react-native';
 
 const Logo16 = ({
   size = 48,
@@ -10,6 +11,10 @@ const Logo16 = ({
   color?: string,
   rectSize?: number,
 }) => {
+  if (Platform.OS === 'ios') {
+    return <></>;
+  }
+
   return (
     <Svg
        width={size}
@@ -227,6 +232,10 @@ const Logo14 = ({
   color?: string,
   rectSize?: number,
 }) => {
+  if (Platform.OS === 'ios') {
+    return <></>;
+  }
+
   return (
     <Svg
        width={size}

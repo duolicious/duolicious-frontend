@@ -1,14 +1,15 @@
 import {
   ActivityIndicator,
   Animated,
+  Platform,
   Pressable,
+  SafeAreaView,
   ScrollView,
   StyleProp,
   StyleSheet,
   TextStyle,
   View,
   ViewStyle,
-  SafeAreaView,
 } from 'react-native';
 import {
   useCallback,
@@ -729,10 +730,10 @@ const Body = ({
           {data?.gender &&
             <Basic icon={faVenusMars}>{data.gender}</Basic>}
 
-          {data?.orientation &&
+          {data?.orientation && Platform.OS !== 'ios' &&
             <Basic icon="person">{data.orientation}</Basic>}
 
-          {data?.relationship_status &&
+          {data?.relationship_status && Platform.OS !== 'ios' &&
             <Basic icon="heart">{data.relationship_status}</Basic>}
 
           {data?.occupation &&
@@ -741,17 +742,17 @@ const Body = ({
           {data?.education &&
             <Basic icon="school">{data.education}</Basic>}
 
-          {data?.has_kids === 'Yes' &&
+          {data?.has_kids === 'Yes' && Platform.OS !== 'ios' &&
             <Basic icon="people">Has kids</Basic>}
-          {data?.has_kids === 'No' &&
+          {data?.has_kids === 'No' && Platform.OS !== 'ios' &&
             <Basic icon="people">Doesn't have kids</Basic>}
 
-          {data?.wants_kids === 'Yes' &&
+          {data?.wants_kids === 'Yes' && Platform.OS !== 'ios' &&
             <Basic icon="people">Wants kids</Basic>}
-          {data?.wants_kids === 'No' &&
+          {data?.wants_kids === 'No' && Platform.OS !== 'ios' &&
             <Basic icon="people">Doesn't want kids</Basic>}
 
-          {data?.looking_for &&
+          {data?.looking_for && Platform.OS !== 'ios' &&
             <Basic icon="eye">Looking for {data.looking_for.toLowerCase()}</Basic>}
 
           {data?.smoking === 'Yes' &&
@@ -770,9 +771,9 @@ const Body = ({
           {data?.religion &&
             <Basic icon={faHandsPraying}>{data.religion}</Basic>}
 
-          {data?.long_distance === 'Yes' &&
+          {data?.long_distance === 'Yes' && Platform.OS !== 'ios' &&
             <Basic icon="globe">Open to long distance</Basic>}
-          {data?.long_distance === 'No' &&
+          {data?.long_distance === 'No' && Platform.OS !== 'ios' &&
             <Basic icon="globe">Not open to long distance</Basic>}
 
           {data?.star_sign &&

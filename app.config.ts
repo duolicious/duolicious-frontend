@@ -29,7 +29,7 @@ const config: ExpoConfig = {
     statusUrl: process.env.DUO_STATUS_URL,
   },
   ios: {
-    bundleIdentifier: "app.duolicious"
+    bundleIdentifier: "app.duolicious",
   },
   plugins: [
     "expo-secure-store",

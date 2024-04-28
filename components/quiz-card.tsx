@@ -2,6 +2,7 @@ import {
   Animated,
   Dimensions,
   ImageBackground,
+  Platform,
   Pressable,
   View,
 } from 'react-native';
@@ -363,8 +364,11 @@ const NonInteractiveQuizCard = ({children, ...props}) => {
               {showTutorial && questionNumber === 1 &&
                 <DefaultText style={{fontSize: adjustedFontSize * 0.8}}>
                   👋 Welcome to Duolicious Q&A, where we pick your brain in the
-                  quest to unearth your perfect match! Let's start with an easy
-                  one:
+                  quest to
+                  {Platform.OS === 'ios' ?
+                    ' find your matches! ' :
+                    ' unearth your perfect match! '}
+                  Let's start with an easy one:
                   {'\n\n'}
                 </DefaultText>
               }
@@ -377,20 +381,20 @@ const NonInteractiveQuizCard = ({children, ...props}) => {
               }
               {showTutorial && questionNumber === 3 &&
                 <DefaultText style={{fontSize: adjustedFontSize * 0.8}}>
-                  You're on a roll! Next question...
+                  You’re on a roll! Next question...
                   {'\n\n'}
                 </DefaultText>
               }
               {showTutorial && questionNumber === 4 &&
                 <DefaultText style={{fontSize: adjustedFontSize * 0.8}}>
                   Some questions seem pretty silly, but we promise they help us
-                  figure out who's right for you. Our smartypants AI told us so.
+                  figure out who’s right for you. Our smartypants AI told us so.
                   {'\n\n'}
                 </DefaultText>
               }
               {showTutorial && questionNumber === 5 &&
                 <DefaultText style={{fontSize: adjustedFontSize * 0.8}}>
-                  ...But if a question is too silly (or controversial, or you're
+                  ...But if a question is too silly (or controversial, or you’re
                   just on the fence), then you can always skip by swiping down.
                   {'\n\n'}
                 </DefaultText>
@@ -398,7 +402,7 @@ const NonInteractiveQuizCard = ({children, ...props}) => {
               {showTutorial && questionNumber === 6 &&
                 <DefaultText style={{fontSize: adjustedFontSize * 0.8}}>
                   If you've got an extra-spicy hot take, you can also answer
-                  privately. Just uncheck "answer publicly". We'll keep your
+                  privately. Just uncheck “answer publicly”. We’ll keep your
                   answer hidden, but still use it to sort the folders from the
                   scrunchers.
                   {'\n\n'}
@@ -406,7 +410,7 @@ const NonInteractiveQuizCard = ({children, ...props}) => {
               }
               {showTutorial && questionNumber === 7 &&
                 <DefaultText style={{fontSize: adjustedFontSize * 0.8}}>
-                  Looks like you've got the hang of it.  We're gonna zip it and
+                  Looks like you’ve got the hang of it.  We’re gonna zip it and
                   let you find your match{'\u00A0'}💑. Happy swiping!
                   {'\n\n'}
                 </DefaultText>
@@ -415,13 +419,13 @@ const NonInteractiveQuizCard = ({children, ...props}) => {
               {showTutorial && questionNumber === 1 &&
                 <DefaultText style={{fontSize: adjustedFontSize * 0.8}}>
                   {'\n\n'}
-                  Drag this card left for "no", or right for "yes"
+                  Drag this card left for “no”, or right for “yes”
                 </DefaultText>
               }
               {showTutorial && questionNumber === 2 &&
                 <DefaultText style={{fontSize: adjustedFontSize * 0.8}}>
                   {'\n\n'}
-                  (Left is "no", right is "yes")
+                  (Left is “no”, right is “yes”)
                 </DefaultText>
               }
               {showTutorial && questionNumber === 3 &&

@@ -17,6 +17,11 @@ import { faCalendar } from '@fortawesome/free-solid-svg-icons/faCalendar'
 import { faPeopleGroup } from '@fortawesome/free-solid-svg-icons/faPeopleGroup'
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { NonNullImageCropperOutput } from '../components/image-cropper';
+import { Platform } from 'react-native';
+
+const unlessIos = (x) => {
+  return Platform.OS === 'ios' ? null : x;
+};
 
 type OptionGroupButtons = {
   buttons: {
@@ -344,8 +349,8 @@ const genderOptionGroup: OptionGroup<OptionGroupButtons> = {
 };
 
 const yourPartnersGenderOptionGroup: OptionGroup<OptionGroupCheckChips> = {
-  title: "Your Partner’s Gender",
-  description: "Which gender do you want to date? You can select more than one option",
+  title: `Your ${Platform.OS === 'ios' ? 'Preferred' : 'Partner’s'} Gender`,
+  description: "Which gender do you want to meet? You can select more than one option",
   input: {
     checkChips: {
       values: genders.map((x) => ({checked: false, label: x})),
@@ -411,7 +416,7 @@ const lookingForOptionGroup: OptionGroup<OptionGroupButtons> = {
 const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
   genderOptionGroup,
   locationOptionGroup,
-  orientationOptionGroup,
+  unlessIos(orientationOptionGroup),
   {
     title: 'Occupation',
     Icon: () => <Ionicons style={{fontSize: 16 }} name="briefcase" />,
@@ -467,7 +472,7 @@ const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
       },
     },
   },
-  lookingForOptionGroup,
+  unlessIos(lookingForOptionGroup),
   {
     title: 'Smoking',
     Icon: () => (
@@ -525,7 +530,7 @@ const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
       }
     },
   },
-  {
+  unlessIos({
     title: 'Long Distance',
     Icon: () => <Ionicons style={{fontSize: 16 }} name="globe" />,
     description: 'Are you willing to enter a long-distance relationship?',
@@ -539,8 +544,8 @@ const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
         },
       }
     },
-  },
-  {
+  }),
+  unlessIos({
     title: 'Relationship Status',
     Icon: () => <Ionicons style={{fontSize: 16 }} name="heart" />,
     description: "What’s your relationship status?",
@@ -556,8 +561,8 @@ const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
         },
       }
     }
-  },
-  {
+  }),
+  unlessIos({
     title: 'Has Kids',
     Icon: () => <Ionicons style={{fontSize: 16 }} name="people" />,
     description: 'Do you have kids?',
@@ -571,8 +576,8 @@ const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
         },
       }
     },
-  },
-  {
+  }),
+  unlessIos({
     title: 'Wants Kids',
     Icon: () => <Ionicons style={{fontSize: 16 }} name="people" />,
     description: 'Do you want kids?',
@@ -586,7 +591,7 @@ const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
         },
       }
     },
-  },
+  }),
   {
     title: 'Exercise',
     Icon: () => <Ionicons style={{fontSize: 16 }} name="barbell" />,
@@ -638,7 +643,7 @@ const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
       }
     },
   },
-];
+].filter(Boolean);
 
 const generalSettingsOptionGroups: OptionGroup<OptionGroupButtons>[] = [
   {
@@ -1016,7 +1021,7 @@ const searchTwoWayBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
 ];
 
 const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
-  {
+  unlessIos({
     title: "Orientation",
     Icon: () => <Ionicons style={{fontSize: 16 }} name="person" />,
     description: "Which orientations would you like to see in search results?",
@@ -1035,7 +1040,7 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
         }
       }
     },
-  },
+  }),
   {
     title: "Height",
     Icon: () => (
@@ -1102,7 +1107,7 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
       }
     },
   },
-  {
+  unlessIos({
     title: "Looking For",
     Icon: () => <Ionicons style={{fontSize: 16 }} name="eye" />,
     description: "What kind of relationships would you like people in search results to be seeking?",
@@ -1125,7 +1130,7 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
         }
       }
     },
-  },
+  }),
   {
     title: "Smoking",
     Icon: () => (
@@ -1210,7 +1215,7 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
       }
     },
   },
-  {
+  unlessIos({
     title: "Long Distance",
     Icon: () => <Ionicons style={{fontSize: 16 }} name="globe" />,
     description: "Do you want search results to include people willing to enter a long-distance relationship?",
@@ -1233,8 +1238,8 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
         }
       }
     },
-  },
-  {
+  }),
+  unlessIos({
     title: "Relationship Status",
     Icon: () => <Ionicons style={{fontSize: 16 }} name="heart" />,
     description: "What relationship statuses are you willing to accept from people in your search results?",
@@ -1257,8 +1262,8 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
         }
       }
     },
-  },
-  {
+  }),
+  unlessIos({
     title: "Has Kids",
     Icon: () => <Ionicons style={{fontSize: 16 }} name="people" />,
     description: "Do you want search results to include people who had kids?",
@@ -1281,8 +1286,8 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
         }
       }
     },
-  },
-  {
+  }),
+  unlessIos({
     title: "Wants Kids",
     Icon: () => <Ionicons style={{fontSize: 16 }} name="people" />,
     description: "Do you want search results to include people who want kids?",
@@ -1305,7 +1310,7 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
         }
       }
     },
-  },
+  }),
   {
     title: "Exercise",
     Icon: () => <Ionicons style={{fontSize: 16 }} name="barbell" />,
@@ -1384,7 +1389,7 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
       }
     },
   },
-];
+].filter(Boolean);
 
 const searchInteractionsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
   {

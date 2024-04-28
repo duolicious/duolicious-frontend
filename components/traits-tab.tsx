@@ -23,6 +23,7 @@ import { DuoliciousTopNavBar } from './top-nav-bar';
 import { referrerId } from '../App';
 import { api } from '../api/api';
 import { useFocusEffect } from '@react-navigation/native';
+import { filteredTraits } from '../data/filtered-traits';
 
 const sideMargins: StyleProp<ViewStyle> = {
   marginLeft: 10,
@@ -156,20 +157,23 @@ const TraitsTab = () => {
           <ShareNotice personId={data.person_id}/>
         }
 
-        {data.personality.map((trait) =>
-          <Chart
-            key={JSON.stringify(trait)}
-            dimensionName={trait.trait_min_label ? undefined : trait.trait_name}
-            minLabel={trait.trait_min_label}
-            maxLabel={trait.trait_max_label}
-            name1={null}
-            percentage1={trait.person_percentage ?? undefined}
-            name2={undefined}
-            percentage2={undefined}
-          >
-            {trait.trait_description}
-          </Chart>
-        )}
+        {data.personality
+          .filter((trait) => !filteredTraits.includes(trait.trait_name))
+          .map((trait) =>
+            <Chart
+              key={JSON.stringify(trait)}
+              dimensionName={trait.trait_min_label ? undefined : trait.trait_name}
+              minLabel={trait.trait_min_label}
+              maxLabel={trait.trait_max_label}
+              name1={null}
+              percentage1={trait.person_percentage ?? undefined}
+              name2={undefined}
+              percentage2={undefined}
+            >
+              {trait.trait_description}
+            </Chart>
+          )
+        }
       </ScrollView>
     </SafeAreaView>
   );
