@@ -393,8 +393,22 @@ const Options = ({navigation, data}) => {
         containerStyle={{
           marginTop: 30,
         }}
+        extraChildren={
+         <View style={{
+           position: 'absolute',
+           top: 0,
+           right: 15,
+           height: '100%',
+           justifyContent: 'center',
+           }}>
+          <Ionicons style={{
+              fontSize: 20,
+              color: 'white',
+          }} name="chevron-forward"/>
+        </View>
+        }
       >
-        Preview your Profile <Ionicons name="open-outline"/>
+        Preview Your Profile
       </ButtonWithCenteredText>
 
       <Title style={{ marginTop: 70 }}>Notification Settings</Title>
