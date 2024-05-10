@@ -663,9 +663,10 @@ const ProspectUserDetails = ({
           />
         </DefaultText>
       </View>
-     {!isViewingSelf && <DonutChart
+     <DonutChart
         percentage={matchPercentage}
-        onPress={onPressDonutChart}
+        onPress={!isViewingSelf ? onPressDonutChart : undefined}
+        style={{opacity: isViewingSelf ? 0 : 1}}
       >
         <DefaultText
           style={{
@@ -677,7 +678,7 @@ const ProspectUserDetails = ({
         >
           See Why ›
         </DefaultText>
-      </DonutChart>}
+      </DonutChart>
     </View>
   );
 };
