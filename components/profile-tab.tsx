@@ -150,24 +150,6 @@ const ProfileTab_ = ({navigation}) => {
             alignSelf: 'center',
           }}
         >
-      <Notice
-        onPress={() => navigation.navigate(
-        'Prospect Profile Screen',
-        {
-          screen: 'Prospect Profile',
-          params: { personId:  signedInUser?.personId, showBottomButtons: false },
-        }
-      )}
-        style={{
-          marginRight: 0,
-          marginTop: 30
-        }}
-      >
-        <DefaultText style={{color: '#70f', marginRight: 10}} >
-        Preview Your Profile
-        </DefaultText>
-        <Ionicons name="open-outline"/>
-      </Notice>
           <Title>Profile Pictures</Title>
           <Images_ data={data}/>
           <AboutPerson navigation={navigation} data={data}/>
@@ -399,6 +381,21 @@ const Options = ({navigation, data}) => {
         When you join a club, mutual members will be shown to you first in
         search results
       </DefaultText>
+
+      <ButtonWithCenteredText
+        onPress={() => navigation.navigate(
+          'Prospect Profile Screen',
+          {
+            screen: 'Prospect Profile',
+            params: { personId:  signedInUser?.personId, showBottomButtons: false },
+          }
+        )}
+        containerStyle={{
+          marginTop: 30,
+        }}
+      >
+        Preview your Profile <Ionicons name="open-outline"/>
+      </ButtonWithCenteredText>
 
       <Title style={{ marginTop: 70 }}>Notification Settings</Title>
       {
