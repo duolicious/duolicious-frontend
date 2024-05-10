@@ -626,6 +626,8 @@ const ProspectUserDetails = ({
   const displayedLocation = (
     userLocation === undefined ? '' : (userLocation ?? 'Private location'));
 
+  const isViewingSelf = personId === signedInUser?.personId;
+
   return (
     <View
       style={{
@@ -661,7 +663,7 @@ const ProspectUserDetails = ({
           />
         </DefaultText>
       </View>
-      <DonutChart
+     {!isViewingSelf && <DonutChart
         percentage={matchPercentage}
         onPress={onPressDonutChart}
       >
@@ -675,7 +677,7 @@ const ProspectUserDetails = ({
         >
           See Why ›
         </DefaultText>
-      </DonutChart>
+      </DonutChart>}
     </View>
   );
 };
@@ -714,6 +716,7 @@ const Body = ({
   const imageUuid4 = imageUuids && imageUuids[4];
   const imageUuid5 = imageUuids && imageUuids[5];
   const imageUuid6 = imageUuids && imageUuids[6];
+  const isViewingSelf = personId === signedInUser?.personId;
 
   return (
     <>
@@ -871,6 +874,7 @@ const Body = ({
           isPrimary={false}
         />
 
+        {!isViewingSelf && (<>
         <SeeQAndAButton
           navigation={navigation}
           personId={personId}
@@ -883,6 +887,7 @@ const Body = ({
           personId={personId}
           isSkipped={data?.is_skipped}
         />
+        </>)}
       </View>
     </>
   );

@@ -50,6 +50,8 @@ import debounce from 'lodash/debounce';
 import { aboutQueue } from '../api/queue';
 import { ClubItem, ClubSelector } from './club-selector';
 import { listen } from '../events/events';
+import { ButtonWithCenteredText } from './button/centered-text';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 const formatHeight = (og: OptionGroup<OptionGroupInputs>): string | undefined => {
   if (!isOptionGroupSlider(og.input)) return '';
@@ -148,6 +150,24 @@ const ProfileTab_ = ({navigation}) => {
             alignSelf: 'center',
           }}
         >
+      <Notice
+        onPress={() => navigation.navigate(
+        'Prospect Profile Screen',
+        {
+          screen: 'Prospect Profile',
+          params: { personId:  signedInUser?.personId, showBottomButtons: false },
+        }
+      )}
+        style={{
+          marginRight: 0,
+          marginTop: 30
+        }}
+      >
+        <DefaultText style={{color: '#70f', marginRight: 10}} >
+        Preview Your Profile
+        </DefaultText>
+        <Ionicons name="open-outline"/>
+      </Notice>
           <Title>Profile Pictures</Title>
           <Images_ data={data}/>
           <AboutPerson navigation={navigation} data={data}/>
