@@ -15,6 +15,7 @@ import {
 } from 'react';
 import {
   DefaultTheme,
+  InitialState,
   NavigationContainer,
   NavigationContainerRef,
 } from '@react-navigation/native';
@@ -180,12 +181,14 @@ const App = () => {
     } else if (typeof existingSessionToken === 'string') {
       const response = await japi('post', '/check-session-token');
       if (response.ok && Boolean(response?.json?.onboarded)) {
-        setSignedInUser({
-          personId: response?.json?.person_id,
-          units: response?.json?.units === 'Imperial' ? 'Imperial' : 'Metric',
-          sessionToken: existingSessionToken,
-          lastNavigationState: await navigationState() ?? undefined
-        });
+      const lastNavigationState = await navigationState();
+			setSignedInUser({
+				personId: response?.json?.person_id,
+				units:
+					response?.json?.units === "Imperial" ? "Imperial" : "Metric",
+				sessionToken: existingSessionToken,
+				lastNavigationState,
+			});
       } else {
         setSignedInUser(undefined);
       }
