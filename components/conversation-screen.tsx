@@ -593,7 +593,7 @@ const ConversationScreen = ({navigation, route}) => {
         }}
       >
         {lastMessageStatus === 'timeout' ?  "Message not delivered. Are you online?" : '' }
-        {lastMessageStatus === 'blocked' ?  name + ' is unavailable right now. Try messaging someone else!' : '' }
+        {lastMessageStatus === 'blocked' ?  name + ' has unfortunately restricted who can talk to them, try talking to somebody else!' : '' }
         {lastMessageStatus === 'not unique' ? `Someone already sent that intro! Try sending ${name} a different message...` : '' }
         {lastMessageStatus === 'too long' ? 'That message is too big! 😩' : '' }
       </DefaultText>
