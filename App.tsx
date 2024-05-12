@@ -185,7 +185,7 @@ const App = () => {
           personId: response?.json?.person_id,
           units: response?.json?.units === 'Imperial' ? 'Imperial' : 'Metric',
           sessionToken: existingSessionToken,
-				  lastNavigationState,
+          lastNavigationState,
         });
       } else {
         setSignedInUser(undefined);
