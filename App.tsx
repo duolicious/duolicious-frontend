@@ -287,7 +287,7 @@ const App = () => {
     if (Platform.OS === 'web') {
       history.pushState((history?.state ?? 0) + 1, "", "#");
     }
-    const stringifiedState = JSON.stringify(state);
+    const stringifiedState = JSON.stringify({...state, stale: true});
     await navigationState(stringifiedState);
     setSignedInUser({...signedInUser as SignedInUser, lastNavigationState: stringifiedState});
   }, []);
