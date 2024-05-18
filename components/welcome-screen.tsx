@@ -44,7 +44,6 @@ const WelcomeScreen = (numUsers: number) => () => {
 const WelcomeScreen_ = (numUsers: number) => ({navigation}) => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [emailNotSent, setEmailNotSent] = useState(false);
   const [loginStatus, setLoginStatus] = useState("")
 
   const { height } = useWindowDimensions();
@@ -53,7 +52,7 @@ const WelcomeScreen_ = (numUsers: number) => ({navigation}) => {
     const suffix_ = suffix ?? '';
     const email_ = email + (email.endsWith(suffix_) ? '': suffix_);
 
-    setEmailNotSent(false);
+    setLoginStatus("");
     setIsLoading(true);
     setEmail(email_);
     otpDestination.value = email_;
@@ -85,7 +84,6 @@ const WelcomeScreen_ = (numUsers: number) => ({navigation}) => {
         },
       );
     } else {
-      setEmailNotSent(true);
       setLoginStatus(
         response.status === 429 ? 'You’re doing that too much' :
         response.status === 403 ? 'Your account has been banned' :
@@ -211,7 +209,7 @@ const WelcomeScreen_ = (numUsers: number) => ({navigation}) => {
               marginLeft: 20,
               marginRight: 20,
               color: 'white',
-              opacity: emailNotSent ? 1 : 0,
+              opacity: loginStatus != "" ? 1 : 0
             }}
           >
             {loginStatus}
