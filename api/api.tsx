@@ -83,7 +83,7 @@ const api = async (
     ok: response?.ok ?? false,
     clientError: response && response.status >= 400 && response.status < 500,
     json: json,
-    status: response.status
+    status: response?.status
   }
 };
 
