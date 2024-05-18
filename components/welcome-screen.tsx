@@ -45,6 +45,7 @@ const WelcomeScreen_ = (numUsers: number) => ({navigation}) => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [emailNotSent, setEmailNotSent] = useState(false);
+  const [loginStatus, setLoginStatus] = useState("")
 
   const { height } = useWindowDimensions();
 
@@ -85,6 +86,12 @@ const WelcomeScreen_ = (numUsers: number) => ({navigation}) => {
       );
     } else {
       setEmailNotSent(true);
+      setLoginStatus(
+        response.status === 429 ? 'You’re doing that too much' :
+        response.status === 403 ? 'Your account has been banned' :
+        response.clientError ? 'We couldn’t send an email there' :
+        'We couldn’t connect to Duolicious'
+      );
     }
   };
 
@@ -207,7 +214,7 @@ const WelcomeScreen_ = (numUsers: number) => ({navigation}) => {
               opacity: emailNotSent ? 1 : 0,
             }}
           >
-            We couldn’t send an email there
+            {loginStatus}
           </DefaultText>
           {(Platform.OS === 'web' || height > 500) &&
             <View
