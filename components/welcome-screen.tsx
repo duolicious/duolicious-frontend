@@ -209,10 +209,10 @@ const WelcomeScreen_ = (numUsers: number) => ({navigation}) => {
               marginLeft: 20,
               marginRight: 20,
               color: 'white',
-              opacity: loginStatus != "" ? 1 : 0
+              opacity: loginStatus !== "" ? 1 : 0
             }}
           >
-            {loginStatus}
+            {loginStatus || '\xa0'}
           </DefaultText>
           {(Platform.OS === 'web' || height > 500) &&
             <View
