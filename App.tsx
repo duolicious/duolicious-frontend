@@ -125,7 +125,7 @@ type SignedInUser = {
   personUuid: string,
   units: 'Metric' | 'Imperial'
   sessionToken: string
-  lastNavigationState?: string
+  lastNavigationState?: any
 };
 
 type ServerStatus = "ok" | "down for maintenance" | "please update";
@@ -285,13 +285,18 @@ const App = () => {
   }, [signedInUser?.personId, signedInUser?.sessionToken]);
 
   const onNavigationStateChange = useCallback(async (state) => {
-    if (!state) return;
     if (Platform.OS === 'web') {
       history.pushState((history?.state ?? 0) + 1, "", "#");
     }
-    const stringifiedState = JSON.stringify({...state, stale: true});
-    await navigationState(stringifiedState);
-    setSignedInUser({...signedInUser as SignedInUser, lastNavigationState: stringifiedState});
+    if (!state) return;
+
+    const lastNavigationState = {...state, stale: true};
+
+    await navigationState(lastNavigationState);
+
+    if (signedInUser) {
+      setSignedInUser({...signedInUser, lastNavigationState});
+    }
   }, []);
 
   const onChangeInbox = useCallback((inbox: Inbox | null) => {
@@ -338,7 +343,7 @@ const App = () => {
       {!isLoading &&
         <NavigationContainer
           ref={navigationContainerRef}
-          initialState={signedInUser?.lastNavigationState ? JSON.parse(signedInUser?.lastNavigationState) : undefined}
+          initialState={signedInUser?.lastNavigationState}
           onStateChange={onNavigationStateChange}
           theme={{
             ...DefaultTheme,

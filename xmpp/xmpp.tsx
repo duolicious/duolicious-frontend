@@ -114,7 +114,9 @@ const emptyInbox = (): Inbox => ({
   archive: { conversations: [], conversationsMap: {} },
 });
 
-let _xmpp: Client & {isReady: boolean; ready: Promise<unknown>} | undefined;
+let _xmpp: Client | undefined;
+
+let _isOnline: Promise<boolean> = new Promise(() => false);
 
 let _inbox: Inbox | null = null;
 const _inboxObservers: Set<(inbox: Inbox | null) => void> = new Set();
@@ -349,12 +351,9 @@ const login = async (username: string, password: string) => {
       resource: await deviceId(),
     });
 
-    _xmpp.isReady = false;
-    _xmpp.ready = new Promise(resolve => {
+    _isOnline = new Promise<boolean>(resolve => {
       _xmpp?.on("online", async () => {
-        if (!_inbox) await refreshInbox();
-        resolve();
-        _xmpp.isReady = true;
+        resolve(true);
       })
     });
 
@@ -369,6 +368,8 @@ const login = async (username: string, password: string) => {
     _xmpp.on("online", async () => {
       if (_xmpp) {
         await _xmpp.send(xml("presence", { type: "available" }));
+
+        if (!_inbox) await refreshInbox();
 
         await registerForPushNotificationsAsync();
 
@@ -414,7 +415,6 @@ const markDisplayed = async (message: Message) => {
     </message>
   `);
 
-  
   await _xmpp.send(stanza);
   await setInboxDisplayed(jidToPersonUuid(message.from));
 };
@@ -635,8 +635,13 @@ const _fetchConversation = async (
   callback: (messages: Message[] | 'timeout') => void,
   beforeId: string = '',
 ) => {
-  if (!_xmpp) return callback('timeout');
-  await _xmpp.ready;
+  const isOnline = await withTimeout(30000, _isOnline);
+
+  if (isOnline !== true)
+    return callback('timeout');
+
+  if (!_xmpp)
+    return callback('timeout');
 
   const queryId = getRandomString(10);
 
@@ -879,6 +884,7 @@ const refreshInbox = async (): Promise<void> => {
 
 const logout = async () => {
   if (_xmpp) {
+    _isOnline = false;
     await _xmpp.send(xml("presence", { type: "unavailable" })).catch(console.error);
     await _xmpp.stop().catch(console.error);
     setInbox(() => null);
