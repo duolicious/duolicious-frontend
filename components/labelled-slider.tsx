@@ -2,7 +2,6 @@ import {
   View,
 } from 'react-native';
 import {
-  useMemo,
   useState,
 } from 'react';
 import Slider from '@react-native-community/slider';
@@ -22,7 +21,7 @@ const LabelledSlider = ({label, minimumValue, maximumValue, ...rest}) => {
   } = rest;
 
   const [valueState, setValueState] = useState(initialValue);
-  const roundedValue = useMemo(() => Math.round(valueState), [valueState]);
+  const roundedValue = Math.round(valueState);
 
   if (value !== undefined && valueState !== value) {
     setValueState(value);

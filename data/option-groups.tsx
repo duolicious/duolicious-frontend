@@ -470,7 +470,7 @@ const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
         step: 1,
         unitsLabel: 'cm',
         submit: async function(height: number) {
-          const ok = (await japi('patch', '/profile-info', { height: String(height) })).ok;
+          const ok = (await japi('patch', '/profile-info', { height })).ok;
           if (ok) this.currentValue = height;
           return ok;
         },

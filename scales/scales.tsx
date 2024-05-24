@@ -8,12 +8,16 @@ const LINEAR_SCALE: Scale = {
   descaleValue: (scaledValue) => scaledValue,
 };
 
-const BASE = 1.5;
-const log = (value: number) => Math.log(value) / Math.log(BASE);
-
 const LOGARITHMIC_SCALE: Scale = {
-  scaleValue: (value, min, max) => Math.pow(BASE, log(min) + ((log(max) - log(min)) / (max - min)) * (value - min)),
-  descaleValue: (scaledValue, min, max) => min + ((log(scaledValue) - log(min)) * (max - min)) / (log(max) - log(min)),
+  scaleValue: (value, min, max) => Math.pow(
+    Math.E,
+    Math.log(min) + (
+      (Math.log(max) - Math.log(min)) / (max - min)) * (value - min)),
+  descaleValue: (scaledValue, min, max) => (
+    min + (
+      (Math.log(scaledValue) - Math.log(min)) * (max - min)) / (
+        Math.log(max) - Math.log(min))
+  ),
 };
 
 export {
