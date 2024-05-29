@@ -391,12 +391,13 @@ const ConversationScreen = ({navigation, route}) => {
 
   // Scroll to end when last message changes
   useEffect(() => {
-    (async () => {
-      await delay(500);
-      if (listRef.current) {
+    if (listRef.current) {
+      if(!lastMessageStatus) {
+        listRef.current.scrollToEnd({animated: false});
+      } else {
         listRef.current.scrollToEnd({animated: true});
       }
-    })();
+    } 
   }, [lastMessage?.id]);
 
 
