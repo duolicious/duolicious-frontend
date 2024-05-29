@@ -28,15 +28,13 @@ import { TopNavBarButton } from './top-nav-bar-button';
 import { inboxOrder, inboxSection } from '../kv-storage/inbox';
 import { signedInUser } from '../App';
 import { Notice } from './notice';
-import React from 'react';
-
 
 const Stack = createNativeStackNavigator();
 
-const IntrosItemMemo = React.memo(IntrosItem);
-const ChatsItemMemo = React.memo(ChatsItem);
+const IntrosItemMemo = memo(IntrosItem);
+const ChatsItemMemo = memo(ChatsItem);
 
-const InboxTab: React.FC<{ navigation: any }> = ({ navigation }) => {
+const InboxTab = ({navigation}) => {
   return (
     <Stack.Navigator
       screenOptions={{
@@ -50,7 +48,7 @@ const InboxTab: React.FC<{ navigation: any }> = ({ navigation }) => {
   );
 };
 
-const InboxTab_: React.FC<{ navigation: any }> = ({ navigation }) => {
+const InboxTab_ = ({navigation}) => {
   const maxIntros = 1000;
 
   const [sectionIndex, setSectionIndex] = useState(0);
@@ -58,13 +56,13 @@ const InboxTab_: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [isTooManyTapped, setIsTooManyTapped] = useState(false);
   const [inbox, setInbox] = useState<Inbox | null>(null);
   const [showArchive, setShowArchive] = useState(false);
-  const listRef = useRef<any>(null);
+  const listRef = useRef<any>(undefined);
 
   const _inboxStats = inbox ? inboxStats(inbox) : null;
 
-  const numUnreadChats = _inboxStats?.numUnreadChats ?? 0;
+  const numUnreadChats  = _inboxStats?.numUnreadChats  ?? 0;
   const numUnreadIntros = _inboxStats?.numUnreadIntros ?? 0;
-  const numIntros = _inboxStats?.numIntros ?? 0;
+  const numIntros       = _inboxStats?.numIntros       ?? 0;
 
   const isIntrosTruncated = numIntros > maxIntros;
   const isUnreadIntrosTruncated = numUnreadIntros > maxIntros;
@@ -72,10 +70,14 @@ const InboxTab_: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   const introsTruncationLabel = isUnreadIntrosTruncated ? '+' : '';
 
-  const introsNumericalLabel = numUnreadIntrosTruncated
-    ? ` (${numUnreadIntrosTruncated}${introsTruncationLabel})`
-    : '';
-  const chatsNumericalLabel = numUnreadChats ? ` (${numUnreadChats})` : '';
+  const introsNumericalLabel = (
+    numUnreadIntrosTruncated ?
+      ` (${numUnreadIntrosTruncated}${introsTruncationLabel})` :
+      '');
+  const chatsNumericalLabel = (
+    numUnreadChats  ?
+    ` (${numUnreadChats})` :
+    '');
 
   const buttonOpacity = useRef(new Animated.Value(0)).current;
 
@@ -99,24 +101,27 @@ const InboxTab_: React.FC<{ navigation: any }> = ({ navigation }) => {
     setSectionIndex(value);
     inboxSection(value);
   }, []);
-  const setSortByIndex_ = useCallback((value: number) => {
+  const setSortByIndex_  = useCallback((value: number) => {
     setSortByIndex(value);
     inboxOrder(value);
   }, []);
 
   const onPressTooMany = useCallback(() => {
-    navigation.navigate('Inbox Option Screen', {
-      optionGroups: [hideMeFromStrangersOptionGroup],
-    });
+    navigation.navigate(
+      'Inbox Option Screen',
+      {
+        optionGroups: [hideMeFromStrangersOptionGroup],
+      }
+    );
     setIsTooManyTapped(true);
   }, []);
 
   const onPressArchiveButton = useCallback(() => {
-    setShowArchive((x) => !x);
+    setShowArchive(x => !x);
   }, []);
 
   const maybeRefresh = useCallback(() => {
-    listRef.current?.refresh && listRef.current.refresh();
+    listRef.current?.refresh && listRef.current.refresh()
   }, [listRef]);
 
   useEffect(() => {
@@ -136,51 +141,68 @@ const InboxTab_: React.FC<{ navigation: any }> = ({ navigation }) => {
   useEffect(maybeRefresh, [maybeRefresh, inbox]);
   useEffect(maybeRefresh, [maybeRefresh, showArchive]);
 
-  const fetchInboxPage = (sectionName: 'chats' | 'intros' | 'archive') => async (pageNumber: number): Promise<Conversation[]> => {
+  const fetchInboxPage = (
+    sectionName: 'chats' | 'intros' | 'archive'
+  ) => async (
+    n: number
+  ): Promise<Conversation[]> => {
     if (inbox === null) {
       return [];
     }
 
     const section = (() => {
       switch (sectionName) {
-        case 'chats':
-          return inbox.chats;
-        case 'intros':
-          return inbox.intros;
-        case 'archive':
-          return inbox.archive;
+        case 'chats':   return inbox.chats;
+        case 'intros':  return inbox.intros;
+        case 'archive': return inbox.archive;
       }
     })();
 
     const pageSize = 10;
-    const start = pageSize * (pageNumber - 1);
-    const end = start + pageSize;
+    const page = section
+      .conversations
+      .sort((a, b) => {
+        if (sectionName === 'archive') {
+          return compareArrays(
+            [+b.lastMessageTimestamp],
+            [+a.lastMessageTimestamp],
+          );
+        } else if (sectionName === 'intros' && sortByIndex === 0) {
+          return compareArrays(
+            [b.matchPercentage, +b.lastMessageTimestamp],
+            [a.matchPercentage, +a.lastMessageTimestamp],
+          );
+        } else {
+          return compareArrays(
+            [+b.lastMessageTimestamp, b.matchPercentage],
+            [+a.lastMessageTimestamp, a.matchPercentage],
+          );
+        }
+      })
+      .slice(
+        0,
+        sectionName === 'intros' ? maxIntros : section.conversations.length
+      )
+      .slice(
+        pageSize * (n - 1),
+        pageSize * n
+      );
 
-    const sortedConversations = section.conversations.sort((a, b) => {
-      if (sectionName === 'archive') {
-        return compareArrays([+b.lastMessageTimestamp], [+a.lastMessageTimestamp]);
-      } else if (sectionName === 'intros' && sortByIndex === 0) {
-        return compareArrays(
-          [b.matchPercentage, +b.lastMessageTimestamp],
-          [a.matchPercentage, +a.lastMessageTimestamp]
-        );
-      } else {
-        return compareArrays([+b.lastMessageTimestamp, b.matchPercentage], [+a.lastMessageTimestamp, a.matchPercentage]);
-      }
-    });
-
-    return sortedConversations.slice(start, end);
+    return page;
   };
 
-  const fetchChatsPage = fetchInboxPage('chats');
-  const fetchIntrosPage = fetchInboxPage('intros');
+  const fetchChatsPage   = fetchInboxPage('chats');
+  const fetchIntrosPage  = fetchInboxPage('intros');
   const fetchArchivePage = fetchInboxPage('archive');
 
   const fetchPage = (() => {
-    if (!showArchive && sectionIndex === 0) return fetchIntrosPage;
-    if (!showArchive && sectionIndex === 1) return fetchChatsPage;
-    if (showArchive) return fetchArchivePage;
-    throw new Error('Unhandled inbox section');
+    if (!showArchive && sectionIndex === 0)
+      return fetchIntrosPage;
+    if (!showArchive && sectionIndex === 1)
+      return fetchChatsPage;
+    if (showArchive)
+      return fetchArchivePage;
+    throw Error('Unhandled inbox section');
   })();
 
   const emptyText = (() => {
@@ -194,8 +216,9 @@ const InboxTab_: React.FC<{ navigation: any }> = ({ navigation }) => {
         'This is where you’ll see active conversations – Chats start once ' +
         'both people have exchanged messages\xa0💬'
       );
-    if (showArchive) return 'No archived conversations to show';
-    throw new Error('Unhandled inbox section');
+    if (showArchive)
+      return 'No archived conversations to show';
+    throw Error('Unhandled inbox section');
   })();
 
   const endText = (() => {
@@ -206,12 +229,14 @@ const InboxTab_: React.FC<{ navigation: any }> = ({ navigation }) => {
       );
     if (!showArchive && sectionIndex === 0 && !isIntrosTruncated)
       return 'Those are all the intros you have for now';
-    if (!showArchive && sectionIndex === 1) return 'No more chats to show';
-    if (showArchive) return 'No more archived conversations to show';
-    throw new Error('Unhandled inbox section');
+    if (!showArchive && sectionIndex === 1)
+      return 'No more chats to show';
+    if (showArchive)
+      return 'No more archived conversations to show';
+    throw Error('Unhandled inbox section');
   })();
 
-  const ListHeaderComponent = useCallback(() => {
+  const ListHeaderComponent = () => {
     useEffect(() => {
       if (sectionIndex === 0) {
         fadeIn();
@@ -223,7 +248,10 @@ const InboxTab_: React.FC<{ navigation: any }> = ({ navigation }) => {
     return (
       <>
         <ButtonGroup
-          buttons={['Intros' + introsNumericalLabel, 'Chats' + chatsNumericalLabel]}
+          buttons={[
+            'Intros' + introsNumericalLabel,
+            'Chats'  + chatsNumericalLabel
+          ]}
           selectedIndex={sectionIndex}
           onPress={setSectionIndex_}
           containerStyle={{
@@ -252,28 +280,35 @@ const InboxTab_: React.FC<{ navigation: any }> = ({ navigation }) => {
         </Animated.View>
       </>
     );
-  }, [sectionIndex, sortByIndex, introsNumericalLabel, chatsNumericalLabel, fadeIn, fadeOut, buttonOpacity, setSectionIndex_, setSortByIndex_]);
-
-const renderItem = useCallback((x: ListRenderItemInfo<Conversation>) => {
-  const item = {
-    wasRead: x.item.lastMessageRead,
-    name: x.item.name,
-    personId: x.item.personId,
-    personUuid: x.item.personUuid,
-    imageUuid: x.item.imageUuid,
-    matchPercentage: x.item.matchPercentage,
-    lastMessage: x.item.lastMessage,
-    lastMessageTimestamp: x.item.lastMessageTimestamp,
-    isAvailableUser: x.item.isAvailableUser,
   };
 
-  if (sectionIndex === 0 && !showArchive) {
-    return <IntrosItemMemo {...item} />
-  } else {
-    return <ChatsItemMemo {...item} />
-  }
-}, [sectionIndex, showArchive]);
-
+  const renderItem = useCallback((x: ListRenderItemInfo<Conversation>) => {
+    if (sectionIndex === 0 && !showArchive) {
+      return <IntrosItemMemo
+        wasRead={x.item.lastMessageRead}
+        name={x.item.name}
+        personId={x.item.personId}
+        personUuid={x.item.personUuid}
+        imageUuid={x.item.imageUuid}
+        matchPercentage={x.item.matchPercentage}
+        lastMessage={x.item.lastMessage}
+        lastMessageTimestamp={x.item.lastMessageTimestamp}
+        isAvailableUser={x.item.isAvailableUser}
+      />
+    } else {
+      return <ChatsItemMemo
+        wasRead={x.item.lastMessageRead}
+        name={x.item.name}
+        personId={x.item.personId}
+        personUuid={x.item.personUuid}
+        imageUuid={x.item.imageUuid}
+        matchPercentage={x.item.matchPercentage}
+        lastMessage={x.item.lastMessage}
+        lastMessageTimestamp={x.item.lastMessageTimestamp}
+        isAvailableUser={x.item.isAvailableUser}
+      />
+    }
+  }, [sectionIndex, showArchive]);
 
   return (
     <SafeAreaView style={styles.safeAreaView}>
@@ -289,33 +324,34 @@ const renderItem = useCallback((x: ListRenderItemInfo<Conversation>) => {
         <TopNavBarButton
           onPress={onPressArchiveButton}
           iconName={showArchive ? 'chatbubbles-outline' : 'file-tray-full-outline'}
-          style={{ right: 15 }}
+          style={{right: 15}}
         />
       </TopNavBar>
-      {inbox === null && (
-        <View style={{ height: '100%', justifyContent: 'center', alignItems: 'center' }}>
+      {inbox === null &&
+        <View style={{height: '100%', justifyContent: 'center', alignItems: 'center'}}>
           <ActivityIndicator size="large" color="#70f" />
         </View>
-      )}
-      {inbox !== null && (
+      }
+      {inbox !== null &&
         <DefaultFlatList
+          ref={listRef}
           emptyText={emptyText}
           endText={endText}
           fetchPage={fetchPage}
-          dataKey={JSON.stringify({ showArchive, sectionIndex })}
+          dataKey={JSON.stringify({showArchive, sectionIndex})}
           ListHeaderComponent={showArchive ? undefined : ListHeaderComponent}
           renderItem={renderItem}
           disableRefresh={true}
         />
-      )}
+      }
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   safeAreaView: {
-    flex: 1,
-  },
+    flex: 1
+  }
 });
 
 export default InboxTab;

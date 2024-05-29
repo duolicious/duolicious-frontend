@@ -16,7 +16,7 @@ import {
   useState,
 } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { DefaultText } from './default-text';
+import { DefaultText }  from './default-text';
 import { ButtonWithCenteredText } from './button/centered-text';
 
 const style: StyleProp<ViewStyle> = {
@@ -34,60 +34,70 @@ const loadMoreStyle = {
   marginBottom: 40,
 };
 
-type DefaultFlatListProps<ItemT> = Omit<
-  FlatListProps<ItemT> & {
-    emptyText?: string,
-    errorText?: string,
-    endText?: string,
-    endTextStyle?: StyleProp<ViewStyle>,
-    fetchPage: (pageNumber: number) => Promise<ItemT[] | null>,
-    firstPage?: number,
-    initialNumberOfPages?: number,
-    hideListHeaderComponentWhenEmpty?: boolean,
-    dataKey?: string,
-    disableRefresh?: boolean,
-    innerRef?: any,
-  },
-  | "ListEmptyComponent"
-  | "ListFooterComponent"
-  | "data"
-  | "keyExtractor"
-  | "onContentSizeChange"
-  | "onRefresh"
-  | "refreshing"
->;
+type DefaultFlatListProps<ItemT> =
+  Omit<
+    FlatListProps<ItemT> & {
+      emptyText?: string,
+      errorText?: string,
+      endText?: string,
+      endTextStyle?: StyleProp<ViewStyle>,
+      fetchPage: (pageNumber: number) => Promise<ItemT[] | null>,
+      firstPage?: number,
+      initialNumberOfPages?: number
+      hideListHeaderComponentWhenEmpty?: boolean,
+      dataKey?: string,
+      disableRefresh?: boolean,
+      innerRef?: any,
+    },
+    | "ListEmptyComponent"
+    | "ListFooterComponent"
+    | "data"
+    | "keyExtractor"
+    | "onContentSizeChange"
+    | "onRefresh"
+    | "refreshing"
+  >;
 
 const ActivityIndicator_ = () => {
-  const style = useRef({
-    marginTop: 20,
-    marginBottom: 20,
-  }).current;
+  const style = useRef(
+    {
+      marginTop: 20,
+      marginBottom: 20,
+    }
+  ).current;
 
   return (
     <View style={style}>
       <ActivityIndicator size="large" color="#70f" />
     </View>
   );
-};
+}
 
 const DefaultFlatList = forwardRef(<ItemT,>(props: DefaultFlatListProps<ItemT>, ref) => {
   const insets = useSafeAreaInsets();
 
+  // This is a workaround for what I think might be a bug in React Native
+  // where the FlatList stops redrawing list items when the flatlist goes
+  // off-screen.
   const [, _forceRender] = useState({});
   const forceRender = () => _forceRender({});
   const allItemsWereInvisible = useRef<boolean>(false);
 
   const flatList = useRef<any>(null);
-  const [datas, setDatas] = useState<{ [dataKey: string]: ItemT[] }>({});
+  const [datas, setDatas] = useState<{[dataKey: string]: ItemT[]} >({});
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const lastFetchedPageNumbers = useRef<{ [dataKey: string]: number }>({});
-  const lastFetchedPages = useRef<{ [dataKey: string]: ItemT[] }>({});
-  const isFetchingRef = useRef<{ [dataKey: string]: boolean }>({});
+  const lastFetchedPageNumbers = useRef<{[dataKey: string]: number} >({});
+  const lastFetchedPages = useRef<{[dataKey: string]: ItemT[]} >({});
+  const isFetchingRef = useRef<{[dataKey: string]: boolean}>({});
   const [isFetchingOnPressState, setIsFetchingOnPressState] = useState<
-    { [dataKey: string]: boolean }
+    {[dataKey: string]: boolean}
   >({});
-  const contentContainerStyle = useRef([style, props.contentContainerStyle]);
-  const scrollToEndNTimes = useRef<{ [dataKey: string]: number }>({});
+  const contentContainerStyle = useRef([
+    style,
+    props.contentContainerStyle,
+  ]);
+  // A horrible hack. Fuck React Native.
+  const scrollToEndNTimes = useRef<{[dataKey: string]: number}>({});
   const [isError, setIsError] = useState(false);
 
   const dataKey = props.dataKey ?? 'default-key';
@@ -95,54 +105,45 @@ const DefaultFlatList = forwardRef(<ItemT,>(props: DefaultFlatListProps<ItemT>, 
 
   scrollToEndNTimes.current[dataKey] = scrollToEndNTimes.current[dataKey] ?? 2;
 
-  const onEndReachedThreshold = props.onEndReachedThreshold ?? 0.5;
+  const onEndReachedThreshold = props.onEndReachedThreshold ?? 1;
   const firstPage = props.firstPage ?? 1;
   const initialNumberOfPages = props.initialNumberOfPages ?? 1;
 
   const keyExtractor = useCallback((item: ItemT, index: number) => {
     const indexKey = props.inverted ? data.length - index : index;
-    return JSON.stringify({ dataKey, indexKey });
+    return JSON.stringify({dataKey, indexKey});
   }, [data?.length ?? -1, props.inverted, dataKey]);
 
   const fetchNextPage = useCallback(async () => {
     if (lastFetchedPages.current[dataKey]?.length === 0) {
-      console.log(`[Pagination] No more pages to fetch for key: ${dataKey}`);
       return;
     }
     if (isFetchingRef.current[dataKey]) {
-      console.log(`[Pagination] Already fetching page for key: ${dataKey}`);
       return;
     }
-  
+
     const pageNumberDelta = props.inverted ? -1 : 1;
-  
-    const pageNumberToFetch =
-      lastFetchedPageNumbers.current[dataKey] === undefined
-        ? firstPage
-        : lastFetchedPageNumbers.current[dataKey] + pageNumberDelta;
-  
-    console.log(`[Pagination] Fetching page ${pageNumberToFetch} for key: ${dataKey}`);
-  
+
+    const pageNumberToFetch = lastFetchedPageNumbers.current[dataKey] === undefined ?
+      firstPage :
+      lastFetchedPageNumbers.current[dataKey] + pageNumberDelta;
+
     isFetchingRef.current[dataKey] = true;
     const page = await props.fetchPage(pageNumberToFetch);
     isFetchingRef.current[dataKey] = false;
-  
+
     if (page === null) {
-      console.error(`[Pagination] Error fetching page for key: ${dataKey}`);
       setIsError(true);
       return;
     }
-  
-    console.log(`[Pagination] Fetched ${page.length} items for page ${pageNumberToFetch} for key: ${dataKey}`);
-  
-    lastFetchedPageNumbers.current[dataKey] =
-      page.length === 0
-        ? lastFetchedPageNumbers.current[dataKey]
-        : pageNumberToFetch;
+
+    lastFetchedPageNumbers.current[dataKey] = page.length === 0 ?
+      lastFetchedPageNumbers.current[dataKey] :
+      pageNumberToFetch;
     lastFetchedPages.current[dataKey] = page;
-  
-    setDatas((datas) => {
-      const newDatas = { ...datas };
+
+    setDatas(datas => {
+      const newDatas = {...datas};
       if (pageNumberToFetch === firstPage) {
         newDatas[dataKey] = page;
       } else if (props.inverted) {
@@ -151,24 +152,22 @@ const DefaultFlatList = forwardRef(<ItemT,>(props: DefaultFlatListProps<ItemT>, 
         newDatas[dataKey] = [...(newDatas[dataKey] ?? []), ...page];
       }
       return newDatas;
-    });
+    })
   }, [props.fetchPage, firstPage, dataKey, setIsError]);
-  
 
-const onPressLoadMore = useCallback(async () => {
-  console.log(`[Pagination] Load more pressed for key: ${dataKey}`);
-  setIsFetchingOnPressState((state) => {
-    const newState = { ...state };
-    newState[dataKey] = true;
-    return newState;
-  });
-  await fetchNextPage();
-  setIsFetchingOnPressState((state) => {
-    const newState = { ...state };
-    newState[dataKey] = false;
-    return newState;
-  });
-}, [fetchNextPage]);
+  const onPressLoadMore = useCallback(async () => {
+    setIsFetchingOnPressState(state => {
+      const newState = {...state};
+      newState[dataKey] = true;
+      return newState;
+    });
+    await fetchNextPage();
+    setIsFetchingOnPressState(state => {
+      const newState = {...state};
+      newState[dataKey] = false;
+      return newState;
+    });
+  }, [fetchNextPage]);
 
   const onRefresh_ = useCallback(() => {
     if (isRefreshing) return;
@@ -176,7 +175,7 @@ const onPressLoadMore = useCallback(async () => {
     setIsRefreshing(true);
     setIsError(false);
 
-    const newDatas = { ...datas };
+    const newDatas = {...datas};
     delete newDatas[dataKey];
 
     delete lastFetchedPageNumbers.current[dataKey];
@@ -194,7 +193,7 @@ const onPressLoadMore = useCallback(async () => {
         style={{
           fontFamily: 'Trueno',
           margin: '20%',
-          textAlign: 'center',
+          textAlign: 'center'
         }}
       >
         {props.emptyText}
@@ -228,20 +227,17 @@ const onPressLoadMore = useCallback(async () => {
     const ListHeaderComponent_ = () => {
       if (isValidElement(props.ListHeaderComponent)) {
         return props.ListHeaderComponent;
-      } else if (typeof props.ListHeaderComponent === 'function') {
-        const Component = props.ListHeaderComponent;
-        return <Component />;
+      } else if (props.ListHeaderComponent) {
+        return <props.ListHeaderComponent/>;
       } else {
         return <></>;
       }
     };
-  
+
     if (data !== undefined && data.length === 0) {
-      return props.hideListHeaderComponentWhenEmpty === true ? (
-        <></>
-      ) : (
-        <ListHeaderComponent_ />
-      );
+      return props.hideListHeaderComponentWhenEmpty === true ?
+        <></> :
+        <ListHeaderComponent_/>;
     } else if (
       lastFetchedPages.current[dataKey] !== undefined &&
       lastFetchedPages.current[dataKey].length === 0 &&
@@ -249,14 +245,14 @@ const onPressLoadMore = useCallback(async () => {
     ) {
       return (
         <>
-          <ListHeaderComponent_ />
-          <EndTextNotice />
+          <ListHeaderComponent_/>
+          <EndTextNotice/>
         </>
       );
     } else if (props.inverted && !isFetchingOnPressState[dataKey]) {
       return (
         <>
-          <ListHeaderComponent_ />
+          <ListHeaderComponent_/>
           <ButtonWithCenteredText
             onPress={onPressLoadMore}
             containerStyle={loadMoreStyle}
@@ -268,12 +264,12 @@ const onPressLoadMore = useCallback(async () => {
     } else if (props.inverted && isFetchingOnPressState[dataKey]) {
       return (
         <>
-          <ListHeaderComponent_ />
-          <ActivityIndicator_ />
+          <ListHeaderComponent_/>
+          <ActivityIndicator_/>
         </>
       );
     } else {
-      return <ListHeaderComponent_ />;
+      return <ListHeaderComponent_/>;
     }
   }, [
     props.ListHeaderComponent,
@@ -281,7 +277,6 @@ const onPressLoadMore = useCallback(async () => {
     isFetchingOnPressState[dataKey],
     data,
   ]);
-  
 
   const ListFooterComponent = useCallback(() => {
     if (data !== undefined && data.length === 0) {
@@ -291,9 +286,9 @@ const onPressLoadMore = useCallback(async () => {
       lastFetchedPages.current[dataKey].length === 0 &&
       !props.inverted
     ) {
-      return <EndTextNotice />;
+      return <EndTextNotice/>;
     } else if (!props.inverted) {
-      return <ActivityIndicator_ />;
+      return <ActivityIndicator_/>;
     } else {
       return <></>;
     }
@@ -304,7 +299,9 @@ const onPressLoadMore = useCallback(async () => {
     if (!props.inverted) return;
 
     if (scrollToEndNTimes.current[dataKey] > 0) {
-      flatList.current.scrollToEnd({ animated: true });
+      // React Native is buggy crap. `scrollToEnd` doesn't work with
+      // `ListHeaderComponent`.
+      flatList.current.scrollToOffset({offset: 999999});
       scrollToEndNTimes.current[dataKey] -= 1;
     }
   }, [
@@ -318,7 +315,7 @@ const onPressLoadMore = useCallback(async () => {
   const append = useCallback((item: ItemT) => {
     scrollToEndNTimes.current[dataKey] = 1;
     setDatas(datas => {
-      const newDatas = { ...datas };
+      const newDatas = {...datas};
       newDatas[dataKey] = [...(newDatas[dataKey] ?? []), item];
       return newDatas;
     });
@@ -367,7 +364,7 @@ const onPressLoadMore = useCallback(async () => {
         style={{
           fontFamily: 'Trueno',
           margin: '20%',
-          textAlign: 'center',
+          textAlign: 'center'
         }}
       >
         {props.errorText ? props.errorText : "Something went wrong"}
