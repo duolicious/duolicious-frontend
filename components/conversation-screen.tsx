@@ -25,6 +25,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { TopNavBar } from './top-nav-bar';
 import { SpeechBubble } from './speech-bubble';
 import { DefaultText } from './default-text';
+import { ParseMessage } from './parse-message';
+import { YouTubePlayer } from './youtube-player';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { faPaperPlane } from '@fortawesome/free-solid-svg-icons/faPaperPlane'
 import {
@@ -246,8 +248,13 @@ const ConversationScreen = ({navigation, route}) => {
   const hasScrolled = useRef(false);
   const hasFetchedAll = useRef(false);
   const hasFinishedFirstLoad = useRef(false);
-  const isFetchingNextPage = useRef(false);
+  const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
   const [isFocused, setIsFocused] = useState(true);
+  const [contentHeight, setContentHeight] = useState(0);
+  const [isLastItemRendered, setIsLastItemRendered] = useState(false);
+  const [previousItemCount, setPreviousItemCount] = useState(0);
+  const [contentHeightBefore, setContentHeightBefore] = useState(0);
+  const [scrollViewY, setScrollViewY] = useState(0);
 
   const personId: number = route?.params?.personId;
   const personUuid: string = route?.params?.personUuid;
@@ -258,7 +265,19 @@ const ConversationScreen = ({navigation, route}) => {
     messages[messages.length - 1] :
     null;
 
-  const listRef = useRef<ScrollView>(null)
+  // Keeps track of messages that have embeded content  
+  const mapOfEmbeds = new Map(); 
+
+  const updateEmbed = (id : string, type : string,  content : string) => {
+    if(mapOfEmbeds.size >= 50) mapOfEmbeds.clear(); // We don't want this to get too big
+    mapOfEmbeds.set(id, [type, content])
+  }
+
+  const checkEmbed = (id : string) => {
+    return mapOfEmbeds.has(id);
+  }
+
+  const listRef = useRef<ScrollView | null>(null);
 
   const lastMamId = (() => {
     if (!messages) return '';
@@ -273,7 +292,6 @@ const ConversationScreen = ({navigation, route}) => {
 
   const onPressSend = useCallback(async (text: string): Promise<MessageStatus> => {
     const isFirstMessage = messages === null || messages.length === 0;
-
     const message: Message = {
       text: text,
       from: '',
@@ -318,14 +336,17 @@ const ConversationScreen = ({navigation, route}) => {
       return;
     }
 
-    if (isFetchingNextPage.current) {
+    if (isFetchingNextPage) {
       return;
     }
-    isFetchingNextPage.current = true;
+
+    setIsFetchingNextPage(true);
+    //console.log('Fetching next page...');
 
     const fetchedMessages = await fetchConversation(personUuid, lastMamId);
 
-    isFetchingNextPage.current = false;
+    setIsFetchingNextPage(false);
+    //console.log('No longer fetching next page...');
 
     setMessageFetchTimeout(fetchedMessages === 'timeout');
     if (fetchedMessages !== 'timeout') {
@@ -350,7 +371,10 @@ const ConversationScreen = ({navigation, route}) => {
     layoutMeasurement.height + contentOffset.y >= contentSize.height;
 
   const onScroll = useCallback(({nativeEvent}) => {
+    const { contentOffset } = nativeEvent;
+    setScrollViewY(contentOffset.y);
     if (isCloseToTop(nativeEvent) && hasFinishedFirstLoad.current) {
+      setContentHeightBefore(nativeEvent.contentSize.height);
       maybeLoadNextPage();
     }
 
@@ -389,16 +413,61 @@ const ConversationScreen = ({navigation, route}) => {
       });
   }, []);
 
-  // Scroll to end when last message changes
-  useEffect(() => {
-    (async () => {
-      await delay(500);
-      if (listRef.current) {
-        listRef.current.scrollToEnd({animated: true});
-      }
-    })();
-  }, [lastMessage?.id]);
+  const onLastItemLayout = () => {
+    setIsLastItemRendered(true);
+  };
 
+  const handleLayout = (event) => {
+    //
+  };
+
+  // Handle the rendering of each message
+  const renderItem = ({ x, index }) => (
+    <SafeAreaView 
+    key={x.id}
+    onLayout={index === (messages?.length ?? 0) - 1 ? onLastItemLayout : undefined}
+    >
+      <SpeechBubble
+        key={x.id}
+        fromCurrentUser={x.fromCurrentUser}
+        timestamp={x.timestamp}
+      >
+        {ParseMessage(x.text, x.id, checkEmbed, updateEmbed)}
+      </SpeechBubble>
+      { Platform.OS === 'web' && ( // TODO: Android/iOS support
+      <View style={{ padding: 10 }}>
+        {mapOfEmbeds.has(x.id) && mapOfEmbeds.get(x.id)[0] === "youtube" ? (
+          <YouTubePlayer videoId={mapOfEmbeds.get(x.id)[1][0] } />
+        ) : null}
+      </View>
+      ) }
+    </SafeAreaView>
+  );
+
+  useEffect(() => {
+    if ((messages?.length ?? 0) > previousItemCount) {
+      setIsLastItemRendered(false);
+    }
+  }, [messages]);
+
+  // Scroll to the end when new messages are added
+  useEffect(() => {
+    if (isLastItemRendered && listRef.current) {
+      listRef.current.scrollTo({ y: contentHeight, animated: true });
+      setPreviousItemCount(messages?.length ?? 0);
+    }
+  }, [isLastItemRendered, contentHeight]);
+
+  const onContentSizeChange = (width, height) => {
+    setContentHeight(height);
+    if (isFetchingNextPage) {
+      const contentHeightDelta = contentHeight - contentHeightBefore
+      if (listRef.current) {
+        listRef.current.scrollTo({ y: contentHeightDelta + scrollViewY, animated: false });
+      }
+    }
+    setContentHeightBefore(contentHeight);
+  };
 
   // Listen for new messages
   useEffect(() => {
@@ -409,6 +478,12 @@ const ConversationScreen = ({navigation, route}) => {
     personUuid,
     isFocused,
   ]);
+
+  useEffect(() => {
+    if ((messages?.length ?? 0) > previousItemCount) {
+      setIsLastItemRendered(false);
+    }
+  }, [messages]);
 
   if (Platform.OS === 'web') {
     useEffect(() => {
@@ -505,6 +580,8 @@ const ConversationScreen = ({navigation, route}) => {
           ref={listRef}
           onScroll={onScroll}
           scrollEventThrottle={0}
+          onContentSizeChange={onContentSizeChange}
+          onLayout={handleLayout}
           maintainVisibleContentPosition={{
             minIndexForVisible: 0
           }}
@@ -569,15 +646,9 @@ const ConversationScreen = ({navigation, route}) => {
               </DefaultText>
             </>
           }
-          {messages.length > 0 && messages.map((x) =>
-            <SpeechBubble
-              key={x.id}
-              fromCurrentUser={x.fromCurrentUser}
-              timestamp={x.timestamp}
-            >
-              {x.text}
-            </SpeechBubble>
-          )}
+          {messages.length > 0 && messages.map((x, index) =>
+              renderItem({ x, index }) 
+          )}           
         </ScrollView>
       }
       <DefaultText
