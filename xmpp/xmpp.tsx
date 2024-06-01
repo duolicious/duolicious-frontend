@@ -116,10 +116,11 @@ const emptyInbox = (): Inbox => ({
 
 let _xmpp: Client | undefined;
 
-let _isOnline: Promise<boolean> = new Promise(() => false);
-
 let _inbox: Inbox | null = null;
 const _inboxObservers: Set<(inbox: Inbox | null) => void> = new Set();
+
+let _isOnline: boolean = false;
+const _isOnlineObservers: Set<(boolean) => void> = new Set();
 
 const observeInbox = (
   callback: (inbox: Inbox | null) => void
@@ -134,11 +135,32 @@ const observeInbox = (
   return () => _inboxObservers.delete(callback);
 };
 
+const observeIsOnline = (
+  callback: (isOnline: boolean) => void
+): (() => void) | undefined => {
+  if (_isOnlineObservers.has(callback))
+    return;
+
+  _isOnlineObservers.add(callback);
+
+  callback(_isOnline);
+
+  return () => _isOnlineObservers.delete(callback);
+};
+
 const setInbox = async (
   setter: (inbox: Inbox | null) => Promise<Inbox | null> | Inbox | null
 ): Promise<void> => {
   _inbox = await setter(_inbox);
   _inboxObservers.forEach((observer) => observer(_inbox));
+};
+
+const setIsOnline = async (isOnline: boolean): Promise<void> => {
+  if (isOnline === _isOnline)
+    return;
+
+  _isOnline = isOnline;
+  _isOnlineObservers.forEach((observer) => observer(isOnline));
 };
 
 const conversationListToMap = (
@@ -351,12 +373,6 @@ const login = async (username: string, password: string) => {
       resource: await deviceId(),
     });
 
-    _isOnline = new Promise<boolean>(resolve => {
-      _xmpp?.on("online", async () => {
-        resolve(true);
-      })
-    });
-
     _xmpp.on("error", (err) => {
       console.error(err);
       if (err.message === "conflict - Replaced by new connection") {
@@ -364,9 +380,14 @@ const login = async (username: string, password: string) => {
       }
     });
 
+    _xmpp.on("offline", async () => {
+      setIsOnline(false);
+    });
 
     _xmpp.on("online", async () => {
       if (_xmpp) {
+        setIsOnline(true);
+
         await _xmpp.send(xml("presence", { type: "available" }));
 
         if (!_inbox) await refreshInbox();
@@ -400,6 +421,7 @@ const login = async (username: string, password: string) => {
     await _xmpp.start();
   } catch (e) {
     _xmpp = undefined;
+    setIsOnline(false);
 
     console.error(e);
   }
@@ -635,11 +657,6 @@ const _fetchConversation = async (
   callback: (messages: Message[] | 'timeout') => void,
   beforeId: string = '',
 ) => {
-  const isOnline = await withTimeout(30000, _isOnline);
-
-  if (isOnline !== true)
-    return callback('timeout');
-
   if (!_xmpp)
     return callback('timeout');
 
@@ -884,7 +901,7 @@ const refreshInbox = async (): Promise<void> => {
 
 const logout = async () => {
   if (_xmpp) {
-    _isOnline = false;
+    setIsOnline(false);
     await _xmpp.send(xml("presence", { type: "unavailable" })).catch(console.error);
     await _xmpp.stop().catch(console.error);
     setInbox(() => null);
@@ -911,6 +928,7 @@ export {
   logout,
   markDisplayed,
   observeInbox,
+  observeIsOnline,
   onReceiveMessage,
   refreshInbox,
   registerPushToken,
