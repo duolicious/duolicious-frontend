@@ -119,9 +119,6 @@ let _xmpp: Client | undefined;
 let _inbox: Inbox | null = null;
 const _inboxObservers: Set<(inbox: Inbox | null) => void> = new Set();
 
-let _isOnline: boolean = false;
-const _isOnlineObservers: Set<(boolean) => void> = new Set();
-
 const observeInbox = (
   callback: (inbox: Inbox | null) => void
 ): (() => void) | undefined => {
@@ -135,32 +132,11 @@ const observeInbox = (
   return () => _inboxObservers.delete(callback);
 };
 
-const observeIsOnline = (
-  callback: (isOnline: boolean) => void
-): (() => void) | undefined => {
-  if (_isOnlineObservers.has(callback))
-    return;
-
-  _isOnlineObservers.add(callback);
-
-  callback(_isOnline);
-
-  return () => _isOnlineObservers.delete(callback);
-};
-
 const setInbox = async (
   setter: (inbox: Inbox | null) => Promise<Inbox | null> | Inbox | null
 ): Promise<void> => {
   _inbox = await setter(_inbox);
   _inboxObservers.forEach((observer) => observer(_inbox));
-};
-
-const setIsOnline = async (isOnline: boolean): Promise<void> => {
-  if (isOnline === _isOnline)
-    return;
-
-  _isOnline = isOnline;
-  _isOnlineObservers.forEach((observer) => observer(isOnline));
 };
 
 const conversationListToMap = (
@@ -381,12 +357,12 @@ const login = async (username: string, password: string) => {
     });
 
     _xmpp.on("offline", async () => {
-      setIsOnline(false);
+      notify('xmpp-is-online', true);
     });
 
     _xmpp.on("online", async () => {
       if (_xmpp) {
-        setIsOnline(true);
+        notify('xmpp-is-online', true);
 
         await _xmpp.send(xml("presence", { type: "available" }));
 
@@ -421,7 +397,7 @@ const login = async (username: string, password: string) => {
     await _xmpp.start();
   } catch (e) {
     _xmpp = undefined;
-    setIsOnline(false);
+    notify('xmpp-is-online', false);
 
     console.error(e);
   }
@@ -901,7 +877,7 @@ const refreshInbox = async (): Promise<void> => {
 
 const logout = async () => {
   if (_xmpp) {
-    setIsOnline(false);
+    notify('xmpp-is-online', false);
     await _xmpp.send(xml("presence", { type: "unavailable" })).catch(console.error);
     await _xmpp.stop().catch(console.error);
     setInbox(() => null);
@@ -928,7 +904,6 @@ export {
   logout,
   markDisplayed,
   observeInbox,
-  observeIsOnline,
   onReceiveMessage,
   refreshInbox,
   registerPushToken,

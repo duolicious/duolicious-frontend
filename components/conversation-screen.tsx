@@ -32,7 +32,6 @@ import {
   MessageStatus,
   fetchConversation,
   markDisplayed,
-  observeIsOnline,
   onReceiveMessage,
   refreshInbox,
   sendMessage,
@@ -398,7 +397,7 @@ const ConversationScreen = ({navigation, route}) => {
   };
 
   useEffect(() => {
-    return observeIsOnline(maybeFetchFirstPage)
+    return listen('xmpp-is-online', maybeFetchFirstPage, true)
   }, []);
 
   // Scroll to end when last message changes
