@@ -523,9 +523,14 @@ type UserData = {
   wants_kids: string | null,
   is_skipped: boolean,
   person_id: number,
+
   verified_age: boolean,
   verified_gender: boolean,
   verified_ethnicity: boolean,
+
+  title_color: string,
+  body_color: string,
+  background_color: string,
 };
 
 const verifiedAnything = (data: UserData | null | undefined): boolean => {
@@ -611,6 +616,7 @@ const Content = (navigationRef) => ({navigation, route, ...props}) => {
           maxWidth: 600,
           alignSelf: 'center',
           paddingBottom: 100,
+          backgroundColor: data?.background_color,
         }}
       >
         <EnlargeableImage
@@ -825,7 +831,7 @@ const Body = ({
           marginBottom: 20,
         }}
       >
-        <Title>Summary</Title>
+        <Title>Basics</Title>
         <Basics>
           {data?.gender &&
             <Basic icon={faVenusMars}>{data.gender}</Basic>}

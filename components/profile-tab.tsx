@@ -35,6 +35,7 @@ import {
   isOptionGroupTextShort,
   notificationSettingsOptionGroups,
   privacySettingsOptionGroups,
+  themePickerOptionGroups,
   verificationOptionGroups,
 } from '../data/option-groups';
 import { Images } from './images';
@@ -390,6 +391,12 @@ const Options = ({ navigation, data }) => {
     return data.clubs.map((clubItem: ClubItem) => clubItem.name).join(', ')
   })();
 
+  const goToThemePicker = useCallback(() => {
+    navigation.navigate(
+      "Profile Option Screen",
+    );
+  }, [navigation]);
+
   const isCompletelyVerified = (
     Object.values(data?.photo_verification ?? {}).every(Boolean) &&
     (data?.verified_gender ?? false) &&
@@ -430,6 +437,7 @@ const Options = ({ navigation, data }) => {
           />
         )
       }
+
       <Title>Clubs</Title>
       <ButtonForOption
         onPress={goToClubSelector}
@@ -448,6 +456,14 @@ const Options = ({ navigation, data }) => {
         When you join a club, mutual members will be shown to you first in
         search results
       </DefaultText>
+
+      <Title>Theme</Title>
+      <Button_
+        setting=""
+        optionGroups={themePickerOptionGroups}
+        showSkipButton={false}
+        theme="light"
+      />
 
       <ButtonWithCenteredText
         onPress={() => navigation.navigate(
