@@ -533,9 +533,11 @@ type UserData = {
   verified_gender: boolean,
   verified_ethnicity: boolean,
 
-  title_color: string,
-  body_color: string,
-  background_color: string,
+  theme: {
+    title_color: string,
+    body_color: string,
+    background_color: string,
+  }
 };
 
 const verifiedAnything = (data: UserData | null | undefined): boolean => {
@@ -617,7 +619,7 @@ const Content = (navigationRef) => ({navigation, route, ...props}) => {
     <>
       <ScrollView
         style={{
-          backgroundColor: data?.background_color,
+          backgroundColor: data?.theme?.background_color,
         }}
         contentContainerStyle={{
           width: '100%',
@@ -641,7 +643,7 @@ const Content = (navigationRef) => ({navigation, route, ...props}) => {
           verified={verifiedAnything(data)}
           matchPercentage={data?.match_percentage}
           userLocation={data?.location}
-          textColor={data?.title_color}
+          textColor={data?.theme?.title_color}
         />
         <Shadow/>
         <Body
@@ -843,7 +845,7 @@ const Body = ({
 
   const basicsTheme = {
     textStyle: {
-      color: data?.body_color,
+      color: data?.theme?.body_color,
     },
   };
 
@@ -856,7 +858,7 @@ const Body = ({
           marginBottom: 20,
         }}
       >
-        <Title style={{color: data?.title_color}}>Basics</Title>
+        <Title style={{color: data?.theme?.title_color}}>Basics</Title>
         <Basics>
           {data?.gender &&
             <Basic {...basicsTheme} icon={faVenusMars}>{data.gender}</Basic>}
@@ -925,7 +927,7 @@ const Body = ({
         </Basics>
 
         {verifiedAnything(data) && <>
-          <Title style={{color: data?.title_color}}>Verification</Title>
+          <Title style={{color: data?.theme?.title_color}}>Verification</Title>
           <DetailedVerificationBadges
             photos={(data?.photo_verifications ?? []).some(Boolean)}
             gender={data?.verified_gender ?? false}
@@ -961,12 +963,12 @@ const Body = ({
         />
 
         {!data?.name &&
-          <Title style={{color: data?.title_color}}>About ...</Title>
+          <Title style={{color: data?.theme?.title_color}}>About ...</Title>
         }
         {!!data?.name && !!data?.about && data.about.trim() &&
           <>
-            <Title style={{color: data?.title_color}}>About {data.name}</Title>
-            <DefaultText style={{color: data?.body_color}} selectable={true}>
+            <Title style={{color: data?.theme?.title_color}}>About {data.name}</Title>
+            <DefaultText style={{color: data?.theme?.body_color}} selectable={true}>
               {data.about}
             </DefaultText>
           </>
@@ -983,7 +985,7 @@ const Body = ({
 
         {data !== undefined && data.mutual_clubs.length > 0 &&
           <>
-            <Title style={{color: data?.title_color}}>
+            <Title style={{color: data?.theme?.title_color}}>
               Mutual clubs
             </Title>
             <Clubs>
@@ -1010,7 +1012,7 @@ const Body = ({
 
         {data !== undefined && data.other_clubs.length > 0 &&
           <>
-            <Title style={{color: data?.title_color}}>
+            <Title style={{color: data?.theme?.title_color}}>
               {data.mutual_clubs.length > 0 ? 'Other clubs' : 'Clubs'}
             </Title>
             <Clubs>

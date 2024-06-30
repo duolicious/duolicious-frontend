@@ -289,9 +289,9 @@ const Options = ({ navigation, data }) => {
           isOptionGroupThemePicker(og.input) ? {
             input: {
               themePicker: {
-                currentTitleColor: data['title_color'],
-                currentBodyColor: data['body_color'],
-                currentBackgroundColor: data['background_color'],
+                currentTitleColor: data?.theme?.title_color,
+                currentBodyColor: data?.theme?.body_color,
+                currentBackgroundColor: data?.theme?.background_color,
               }
             }
           } : {},
