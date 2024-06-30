@@ -21,7 +21,7 @@ const Club = ({
       style={[
         {
           borderColor: (
-            isMutual ? 'rgba(119, 0, 255, 0.1)' : 'rgba(0, 0, 0, 0.2)'),
+            isMutual ? 'rgba(119, 0, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'),
           borderWidth: 1,
           borderRadius: 999,
           paddingTop: 5,
