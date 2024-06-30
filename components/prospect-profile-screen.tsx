@@ -51,6 +51,7 @@ import { faVenusMars } from '@fortawesome/free-solid-svg-icons/faVenusMars'
 import { faPaperPlane } from '@fortawesome/free-solid-svg-icons/faPaperPlane'
 import { faLocationDot } from '@fortawesome/free-solid-svg-icons/faLocationDot'
 import { RotateCcw, Flag, X } from "react-native-feather";
+import { useNextProfileHook } from "./scroll-prospect-profile";
 
 const Stack = createNativeStackNavigator();
 
@@ -555,27 +556,26 @@ const verifiedAnything = (data: UserData | null | undefined): boolean => {
 
 const Content = (navigationRef) => ({navigation, route, ...props}) => {
   navigationRef.current = navigation;
+  
+  const {onScroll, scrollViewRef, item, isEnd, isLoading} = useNextProfileHook(route.params.index);
 
-  const personId = route.params.personId;
-  const personUuid = route.params.personUuid;
+  const personId = route.params.personId ?? item?.prospect_person_id;
+  const personUuid = route.params.personUuid ?? item?.prospect_uuid;
   const showBottomButtons = route.params.showBottomButtons ?? true;
-  const imageBlurhashParam = route.params.imageBlurhash;
+  const imageBlurhashParam = route.params.imageBlurhash ?? item?.profile_photo_blurhash;
 
   const [data, setData] = useState<UserData | undefined>(undefined);
-
+  
+  
   useEffect(() => {
     setData(undefined);
-    (async () => {
+    personUuid && (async () => {
       const response = await api('get', `/prospect-profile/${personUuid}`);
       setData(response?.json);
     })();
   }, [personId]);
 
-  useEffect(() =>
-    listen(`skip-profile-${personId}`, () => navigation.popToTop()),
-    [personId, navigation]
-  );
-
+  
   const imageUuid = data === undefined ?
     undefined :
     data.photo_uuids.length === 0 ?
@@ -621,6 +621,9 @@ const Content = (navigationRef) => ({navigation, route, ...props}) => {
         style={{
           backgroundColor: data?.theme?.background_color,
         }}
+        ref={scrollViewRef}
+        onScroll={showBottomButtons ? onScroll : undefined}
+        scrollEventThrottle={1000}
         contentContainerStyle={{
           width: '100%',
           maxWidth: 600,
@@ -628,30 +631,46 @@ const Content = (navigationRef) => ({navigation, route, ...props}) => {
           paddingBottom: 100,
         }}
       >
-        <EnlargeableImage
-          imageUuid={imageUuid0}
-          imageBlurhash={imageBlurhash0}
-          onChangeEmbiggened={goToGallery(navigation, imageUuid0)}
-          isPrimary={true}
-          verified={imageVerification0}
-        />
-        <ProspectUserDetails
-          navigation={navigation}
-          personId={personId}
-          name={data?.name}
-          age={data?.age}
-          verified={verifiedAnything(data)}
-          matchPercentage={data?.match_percentage}
-          userLocation={data?.location}
-          textColor={data?.theme?.title_color}
-        />
-        <Shadow/>
-        <Body
-          navigation={navigation}
-          personId={personId}
-          personUuid={personUuid}
-          data={data}
-        />
+        {isEnd ? <DefaultText style={{
+            fontFamily: 'TruenoBold',
+            color: '#000',
+            fontSize: 16,
+            textAlign: 'center',
+            alignSelf: 'center',
+            marginTop: 30,
+            marginBottom: 30,
+            marginLeft: '15%',
+            marginRight: '15%',
+          }}>
+            {"No more matches to show"}
+          </DefaultText> :
+          <>
+            <EnlargeableImage
+              imageUuid={imageUuid0}
+              imageBlurhash={imageBlurhash0}
+              onChangeEmbiggened={goToGallery(navigation, imageUuid0)}
+              isPrimary={true}
+              verified={imageVerification0}
+            />
+            <ProspectUserDetails
+              navigation={navigation}
+              personId={personId}
+              name={data?.name}
+              age={data?.age}
+              verified={verifiedAnything(data)}
+              matchPercentage={data?.match_percentage}
+              userLocation={data?.location}
+              textColor={data?.theme?.title_color}
+            />
+            <Shadow/>
+            <Body
+              navigation={navigation}
+              personId={personId}
+              personUuid={personUuid}
+              data={data}
+            />
+          </>
+        }
       </ScrollView>
       {showBottomButtons &&
         <View

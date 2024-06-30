@@ -93,8 +93,10 @@ const ImageOrSkeleton = memo(ImageOrSkeleton_);
 
 const ProfileCard = ({
   item,
+  index
 }: {
   item: PageItem,
+  index: number
 }) => {
   const {
     name: name,
@@ -127,7 +129,7 @@ const ProfileCard = ({
       'Prospect Profile Screen',
       {
         screen: 'Prospect Profile',
-        params: { personId, personUuid, imageBlurhash },
+        params: { index },
       }
     );
   }, [navigation, personUuid]);
