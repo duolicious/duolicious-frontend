@@ -33,6 +33,8 @@ import {
   isOptionGroupLocationSelector,
   isOptionGroupSlider,
   isOptionGroupTextShort,
+  isOptionGroupThemePicker,
+  isOptionGroupVerificationChecker,
   notificationSettingsOptionGroups,
   privacySettingsOptionGroups,
   themePickerOptionGroups,
@@ -284,6 +286,15 @@ const Options = ({ navigation, data }) => {
               }
             }
           } : {},
+          isOptionGroupThemePicker(og.input) ? {
+            input: {
+              themePicker: {
+                currentTitleColor: data['title_color'],
+                currentBodyColor: data['body_color'],
+                currentBackgroundColor: data['background_color'],
+              }
+            }
+          } : {},
         )
     );
 
@@ -292,12 +303,14 @@ const Options = ({ navigation, data }) => {
     _generalSettingsOptionGroups,
     _notificationSettingsOptionGroups,
     _privacySettingsOptionGroups,
+    _themePickerOptionGroups,
   ] = useMemo(
     () => [
       addCurrentValue(basicsOptionGroups),
       addCurrentValue(generalSettingsOptionGroups),
       addCurrentValue(notificationSettingsOptionGroups),
       addCurrentValue(privacySettingsOptionGroups),
+      addCurrentValue(themePickerOptionGroups),
     ],
     [data]
   );
@@ -460,7 +473,7 @@ const Options = ({ navigation, data }) => {
       <Title>Theme</Title>
       <Button_
         setting=""
-        optionGroups={themePickerOptionGroups}
+        optionGroups={_themePickerOptionGroups}
         showSkipButton={false}
         theme="light"
       />

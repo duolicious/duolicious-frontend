@@ -103,11 +103,14 @@ type OptionGroupVerificationChecker = {
 
 type OptionGroupThemePicker = {
   themePicker: {
+    currentTitleColor?: string,
+    currentBodyColor?: string,
+    currentBackgroundColor?: string,
     submit: (
       titleColor: string,
       bodyColor: string,
       backgroundColor: string
-    ) => Promise<boolean>
+    ) => Promise<boolean>,
   }
 };
 
@@ -750,7 +753,11 @@ const themePickerOptionGroups: OptionGroup<OptionGroupThemePicker>[] = [
           };
 
           const ok = (await japi('patch', '/profile-info', { theme })).ok;
-          if (ok) this.currentValue = theme;
+          if (ok) {
+            this.currentTitleColor = titleColor;
+            this.currentBodyColor = bodyColor;
+            this.currentBackgroundColor = backgroundColor;
+          }
           return ok;
         },
       },

@@ -1054,9 +1054,12 @@ const VerificationChecker = forwardRef((props: InputProps<OptionGroupVerificatio
 
 const ThemePicker = forwardRef((props: InputProps<OptionGroupThemePicker>, ref) => {
   // TODO: These should be loaded from the person's profile
-  const [titleColor, setTitleColor] = useState('#000000');
-  const [bodyColor, setBodyColor] = useState('#555555');
-  const [backgroundColor, setBackgroundColor] = useState('#ffffff');
+  const [titleColor, setTitleColor] = useState(
+    props.input.themePicker.currentTitleColor ?? '#000000');
+  const [bodyColor, setBodyColor] = useState(
+    props.input.themePicker.currentBodyColor ?? '#000000');
+  const [backgroundColor, setBackgroundColor] = useState(
+    props.input.themePicker.currentBackgroundColor ?? '#ffffff');
 
   const lastSetter = useRef(setTitleColor);
 
