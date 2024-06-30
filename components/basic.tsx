@@ -43,7 +43,7 @@ const Basic = ({children, ...rest}) => {
     <View
       style={[
         {
-          borderColor: 'rgba(0, 0, 0, 0.2)',
+          borderColor: 'rgba(0, 0, 0, 0.1)',
           borderWidth: 1,
           borderRadius: 999,
           paddingTop: 5,
