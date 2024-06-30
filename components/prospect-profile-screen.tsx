@@ -641,8 +641,7 @@ const Content = (navigationRef) => ({navigation, route, ...props}) => {
           verified={verifiedAnything(data)}
           matchPercentage={data?.match_percentage}
           userLocation={data?.location}
-          titleColor={data?.title_color}
-          bodyColor={data?.body_color}
+          textColor={data?.title_color}
         />
         <Shadow/>
         <Body
@@ -714,8 +713,7 @@ const ProspectUserDetails = ({
   verified,
   matchPercentage,
   userLocation,
-  titleColor,
-  bodyColor,
+  textColor,
 }) => {
   const onPressDonutChart = useCallback(() => {
     if (personId === undefined) return;
@@ -755,7 +753,7 @@ const ProspectUserDetails = ({
             style={{
               fontWeight: '700',
               fontSize: 24,
-              color: titleColor,
+              color: textColor,
             }}
           >
             {[
@@ -770,7 +768,7 @@ const ProspectUserDetails = ({
         <DefaultText
           style={{
             textAlign: 'left',
-            color: bodyColor,
+            color: textColor,
           }}
         >
           {displayedLocation}{' '}
@@ -779,7 +777,7 @@ const ProspectUserDetails = ({
             style={{
               transform: [ { translateY: 2 } ]
             }}
-            color={bodyColor}
+            color={textColor}
           />
         </DefaultText>
       </View>
@@ -787,7 +785,7 @@ const ProspectUserDetails = ({
         percentage={matchPercentage}
         onPress={!isViewingSelf ? onPressDonutChart : undefined}
         textStyle={{
-          color: titleColor,
+          color: textColor,
         }}
         style={{
           opacity: isViewingSelf ? 0 : 1,
@@ -799,7 +797,7 @@ const ProspectUserDetails = ({
             fontWeight: '500',
             fontSize: 10,
             opacity: matchPercentage === undefined ? 0 : 1,
-            color: bodyColor,
+            color: textColor,
           }}
         >
           See Why ›

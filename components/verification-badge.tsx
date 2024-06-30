@@ -32,13 +32,16 @@ const VerificationBadge = (props) => {
           right: 1,
           backgroundColor: 'white',
           borderRadius: 999,
-          zIndex: -999,
+          zIndex: 999,
         }}
       />
       <FontAwesomeIcon
         icon={faCircleCheck}
         color={color}
         size={size}
+        style={{
+          zIndex: 9999,
+        }}
       />
     </View>
   );
