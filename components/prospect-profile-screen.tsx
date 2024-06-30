@@ -837,7 +837,7 @@ const Body = ({
           marginBottom: 20,
         }}
       >
-        <Title>Basics</Title>
+        <Title style={{data?.title_color}}>Basics</Title>
         <Basics>
           {data?.gender &&
             <Basic icon={faVenusMars}>{data.gender}</Basic>}
@@ -906,7 +906,7 @@ const Body = ({
         </Basics>
 
         {verifiedAnything(data) && <>
-          <Title>Verification</Title>
+          <Title style={{data?.title_color}}>Verification</Title>
           <DetailedVerificationBadges
             photos={(data?.photo_verifications ?? []).some(Boolean)}
             gender={data?.verified_gender ?? false}
@@ -937,11 +937,11 @@ const Body = ({
         />
 
         {!data?.name &&
-          <Title>About ...</Title>
+          <Title style={{data?.title_color}}>About ...</Title>
         }
         {!!data?.name && !!data?.about && data.about.trim() &&
           <>
-            <Title>About {data.name}</Title>
+            <Title style={{data?.title_color}}>About {data.name}</Title>
             <DefaultText selectable={true}>
               {data.about}
             </DefaultText>
@@ -959,7 +959,7 @@ const Body = ({
 
         {data !== undefined && data.mutual_clubs.length > 0 &&
           <>
-            <Title>Mutual clubs</Title>
+            <Title style={{data?.title_color}}>Mutual clubs</Title>
             <Clubs>
               {data.mutual_clubs.map((clubName, i) =>
                 <Club
@@ -983,7 +983,7 @@ const Body = ({
 
         {data !== undefined && data.other_clubs.length > 0 &&
           <>
-            <Title>{data.mutual_clubs.length > 0 ? 'Other clubs' : 'Clubs'}</Title>
+            <Title style={{data?.title_color}}>{data.mutual_clubs.length > 0 ? 'Other clubs' : 'Clubs'}</Title>
             <Clubs>
               {data.other_clubs.map((clubName, i) =>
                 <Club
