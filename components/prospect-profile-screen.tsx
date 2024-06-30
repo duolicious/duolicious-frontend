@@ -641,7 +641,6 @@ const Content = (navigationRef) => ({navigation, route, ...props}) => {
           personId={personId}
           personUuid={personUuid}
           data={data}
-          onChangeEmbiggened={() => {}}
         />
       </ScrollView>
       {showBottomButtons &&
@@ -791,13 +790,11 @@ const Body = ({
   personId,
   personUuid,
   data,
-  onChangeEmbiggened,
 }: {
   navigation: any,
   personId: number,
   personUuid: string,
   data: UserData | undefined,
-  onChangeEmbiggened: (uuid: string) => void,
 }) => {
   const imageUuid1 = data?.photo_uuids && data?.photo_uuids[1];
   const imageUuid2 = data?.photo_uuids && data?.photo_uuids[2];
