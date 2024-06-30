@@ -634,6 +634,7 @@ const Content = (navigationRef) => ({navigation, route, ...props}) => {
           verified={verifiedAnything(data)}
           matchPercentage={data?.match_percentage}
           userLocation={data?.location}
+          textColor={data?.title_color}
         />
         <Shadow/>
         <Body
@@ -705,6 +706,7 @@ const ProspectUserDetails = ({
   verified,
   matchPercentage,
   userLocation,
+  textColor,
 }) => {
   const onPressDonutChart = useCallback(() => {
     if (personId === undefined) return;
@@ -744,6 +746,7 @@ const ProspectUserDetails = ({
             style={{
               fontWeight: '700',
               fontSize: 24,
+              color: textColor,
             }}
           >
             {[
@@ -755,13 +758,19 @@ const ProspectUserDetails = ({
             <VerificationBadge/>
           }
         </View>
-        <DefaultText style={{textAlign: 'left'}}>
+        <DefaultText
+          style={{
+            textAlign: 'left',
+            color: textColor,
+          }}
+        >
           {displayedLocation}{' '}
           <FontAwesomeIcon
             icon={faLocationDot}
             style={{
               transform: [ { translateY: 2 } ]
             }}
+            color={textColor}
           />
         </DefaultText>
       </View>
