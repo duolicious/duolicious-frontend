@@ -622,7 +622,7 @@ const Content = (navigationRef) => ({navigation, route, ...props}) => {
           backgroundColor: data?.theme?.background_color,
         }}
         ref={scrollViewRef}
-        onScroll={showBottomButtons ? onScroll : undefined}
+        onScroll={showBottomButtons && !isLoading ? onScroll : undefined}
         scrollEventThrottle={1000}
         contentContainerStyle={{
           width: '100%',
