@@ -790,7 +790,7 @@ const ProspectUserDetails = ({
           color: titleColor,
         }}
         style={{
-          opacity: isViewingSelf ? 1 : 1, // TODO: shit
+          opacity: isViewingSelf ? 0 : 1,
         }}
       >
         <DefaultText
