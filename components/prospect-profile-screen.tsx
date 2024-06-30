@@ -51,7 +51,7 @@ import { faVenusMars } from '@fortawesome/free-solid-svg-icons/faVenusMars'
 import { faPaperPlane } from '@fortawesome/free-solid-svg-icons/faPaperPlane'
 import { faLocationDot } from '@fortawesome/free-solid-svg-icons/faLocationDot'
 import { RotateCcw, Flag, X } from "react-native-feather";
-import { useNextProfileHook } from "./scroll-prospect-profile";
+import { useNextProfileHook } from "./next-profile-hook";
 
 const Stack = createNativeStackNavigator();
 
