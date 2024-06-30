@@ -557,11 +557,11 @@ const verifiedAnything = (data: UserData | null | undefined): boolean => {
 const Content = (navigationRef) => ({navigation, route, ...props}) => {
   navigationRef.current = navigation;
   
-  const {onScroll, scrollViewRef, item, isEnd, isLoading} = useNextProfileHook(route.params.index);
+  const showBottomButtons = route.params.showBottomButtons ?? true;
+  const {onScroll, scrollViewRef, item, isEnd, isLoading} = useNextProfileHook(route.params.index, showBottomButtons);
 
   const personId = route.params.personId ?? item?.prospect_person_id;
   const personUuid = route.params.personUuid ?? item?.prospect_uuid;
-  const showBottomButtons = route.params.showBottomButtons ?? true;
   const imageBlurhashParam = route.params.imageBlurhash ?? item?.profile_photo_blurhash;
 
   const [data, setData] = useState<UserData | undefined>(undefined);

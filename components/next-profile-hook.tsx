@@ -4,7 +4,11 @@ import {ScrollView} from "react-native";
 import {delay} from "../util/util";
 import {listen} from "../events/events";
 
-export const useNextProfileHook = (index: number) => {
+export const useNextProfileHook = (index: number, isActive: boolean) => {
+  if (!isActive) {
+    return {}
+  }
+  
   const scrollViewRef = useRef<ScrollView>(null)
   const page = Math.floor(index / RESULTS_PER_PAGE) + 1;
   const profileIdx = index % RESULTS_PER_PAGE
