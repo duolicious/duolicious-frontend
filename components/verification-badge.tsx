@@ -58,6 +58,8 @@ const DetailedVerificationBadge = ({verified, name}) => {
           alignItems: 'center',
           flexDirection: 'row',
           opacity: verified ? 1 : 0.4,
+          borderColor: 'rgba(255, 255, 255, 0.2)',
+          borderWidth: 1,
       }}
     >
       {verified &&
@@ -98,7 +100,7 @@ const DetailedVerificationBadges = ({
   gender: boolean
   age: boolean
   ethnicity: boolean
-  style: any
+  style?: any
 }) => {
   const verifications = [
     { name: 'Photos',    verified: photos },
