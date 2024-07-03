@@ -53,10 +53,10 @@ type PageItem = {
   verified: boolean
 };
 
-const fetchPage = async (pageNumber: number): Promise<PageItem[] | null> => {
-  const resultsPerPage = 10;
-  const offset = resultsPerPage * (pageNumber - 1);
-  const response = await japi('get', `/search?n=${resultsPerPage}&o=${offset}`);
+export const RESULTS_PER_PAGE = 10;
+export const fetchPage = async (pageNumber: number): Promise<PageItem[] | null> => {
+  const offset = RESULTS_PER_PAGE * (pageNumber - 1);
+  const response = await japi('get', `/search?n=${RESULTS_PER_PAGE}&o=${offset}`);
 
   return response.ok ? response.json : null;
 };
@@ -94,7 +94,7 @@ const SearchScreen_ = ({navigation}) => {
 
   const renderItem = useCallback((x: any) => {
     const item: PageItem = x.item;
-    return <ProfileCardMemo item={item} />
+    return <ProfileCardMemo item={item} index={x.index} />
   }, []);
 
   return (
