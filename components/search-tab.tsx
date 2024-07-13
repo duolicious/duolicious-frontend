@@ -126,7 +126,7 @@ const fetchPage = (club: string | null) => async (pageNumber: number): Promise<P
     `/search` +
     `?n=${resultsPerPage}` +
     `&o=${offset}` +
-    `&club=${encodeURIComponent(club === null ? null : club)}`
+    `&club=${encodeURIComponent(club === null ? '\0' : club)}`
   );
 
   return response.ok ? response.json : null;
