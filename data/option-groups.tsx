@@ -1497,7 +1497,7 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
         style={{color: 'black'}}
       />
     ),
-    description: "Do you want search results to include people who exercise?",
+    description: "What religions do you want to see in search results?",
     input: {
       checkChips: {
       values: [
