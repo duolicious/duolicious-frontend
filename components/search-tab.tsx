@@ -27,7 +27,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { isMobile } from '../util/util';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ClubItem } from './club-selector';
-import { listen } from '../events/events';
+import { listen, lastEvent } from '../events/events';
 
 const styles = StyleSheet.create({
   safeAreaView: {
@@ -100,6 +100,18 @@ const scrollIndicatorInsets = {
   top: 50,
 };
 
+const getStateFromClubItems = (cs: ClubItem[] | undefined) => {
+  const clubs = cs ?? [];
+
+  const hasClubs = clubs
+    .length > 0;
+  const selectedClub = clubs
+    .find((c) => c.search_preference === true)
+    ?.name;
+
+  return { hasClubs, selectedClub };
+};
+
 const Stack = createNativeStackNavigator();
 
 const SearchScreen = ({navigation}) => {
@@ -150,6 +162,130 @@ type ClubSelectorProps = {
   onChangeSelectedClub: (s: string | null) => any;
 };
 
+const LeftContinuation = ({scrollLeft}) => {
+  if (isMobile()) {
+    return (
+      <LinearGradient
+        start={{x: 0, y: 0 }}
+        end={{x: 1, y: 0 }}
+        colors={['#00000044', '#00000000']}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+
+          height: '100%',
+          width: 10,
+
+          zIndex: 999,
+        }}
+      />
+    );
+  } else {
+    return (
+      <Pressable
+        onPress={scrollLeft}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+
+          height: '100%',
+          width: 40,
+
+          zIndex: 999,
+        }}
+      >
+        <LinearGradient
+          start={{x: 0, y: 0 }}
+          end={{x: 1, y: 0 }}
+          locations={[0.0, 0.8, 1.0]}
+          colors={[
+            'rgba(255, 255, 255, 1.0)',
+            'rgba(255, 255, 255, 0.9)',
+            'rgba(255, 255, 255, 0.0)',
+          ]}
+          style={{
+            height: '100%',
+            width: '100%',
+            justifyContent: 'center',
+            alignItems: 'flex-start',
+          }}
+        >
+          <Ionicons
+            style={{
+              fontSize: 26,
+            }}
+            name="chevron-back"
+          />
+        </LinearGradient>
+      </Pressable>
+    );
+  }
+};
+
+const RightContinuation = ({scrollRight}) => {
+  if (isMobile()) {
+    return (
+      <LinearGradient
+        start={{x: 0, y: 0 }}
+        end={{x: 1, y: 0 }}
+        colors={['#00000000', '#00000044']}
+        style={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+
+          height: '100%',
+          width: 10,
+
+          zIndex: 999,
+        }}
+      />
+    );
+  } else {
+    return (
+      <Pressable
+        onPress={scrollRight}
+        style={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+
+          height: '100%',
+          width: 40,
+
+          zIndex: 999,
+        }}
+      >
+        <LinearGradient
+          start={{x: 0, y: 0 }}
+          end={{x: 1, y: 0 }}
+          locations={[0.0, 0.2, 1.0]}
+          colors={[
+            'rgba(255, 255, 255, 0.0)',
+            'rgba(255, 255, 255, 0.9)',
+            'rgba(255, 255, 255, 1.0)',
+          ]}
+          style={{
+            height: '100%',
+            width: '100%',
+            justifyContent: 'center',
+            alignItems: 'flex-end',
+          }}
+        >
+          <Ionicons
+            style={{
+              fontSize: 26,
+            }}
+            name="chevron-forward"
+          />
+        </LinearGradient>
+      </Pressable>
+    );
+  }
+};
+
 const ClubSelector = (props: ClubSelectorProps) => {
   const scrollJumpSize = 150;
 
@@ -160,7 +296,8 @@ const ClubSelector = (props: ClubSelectorProps) => {
   const [isBottom, setIsBottom] = useState(true);
   const [contentWidth, setContentWidth] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
-  const [clubs, setClubs] = useState<ClubItem[]>([]);
+  const [clubs, setClubs] = useState<ClubItem[] | undefined>(
+    lastEvent('updated-clubs'));
 
   const checkIsTop = useCallback((nativeEvent) => {
     const isCloseToTop = nativeEvent.contentOffset.x <= 10;
@@ -237,136 +374,12 @@ const ClubSelector = (props: ClubSelectorProps) => {
   }, []);
 
   useEffect(() => {
-    if (clubs.every((club) => club.name !== props.selectedClub)) {
+    if (clubs && clubs.every((club) => club.name !== props.selectedClub)) {
       props.onChangeSelectedClub(null);
     }
   }, [props.selectedClub, JSON.stringify(clubs)]);
 
-  const LeftContinuation = useCallback(() => {
-    if (isMobile()) {
-      return (
-        <LinearGradient
-          start={{x: 0, y: 0 }}
-          end={{x: 1, y: 0 }}
-          colors={['#00000044', '#00000000']}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-
-            height: '100%',
-            width: 10,
-
-            zIndex: 999,
-          }}
-        />
-      );
-    } else {
-      return (
-        <Pressable
-          onPress={scrollLeft}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-
-            height: '100%',
-            width: 40,
-
-            zIndex: 999,
-          }}
-        >
-          <LinearGradient
-            start={{x: 0, y: 0 }}
-            end={{x: 1, y: 0 }}
-            locations={[0.0, 0.8, 1.0]}
-            colors={[
-              'rgba(255, 255, 255, 1.0)',
-              'rgba(255, 255, 255, 0.9)',
-              'rgba(255, 255, 255, 0.0)',
-            ]}
-            style={{
-              height: '100%',
-              width: '100%',
-              justifyContent: 'center',
-              alignItems: 'flex-start',
-            }}
-          >
-            <Ionicons
-              style={{
-                fontSize: 26,
-              }}
-              name="chevron-back"
-            />
-          </LinearGradient>
-        </Pressable>
-      );
-    }
-  }, [scrollViewRef, scrollRight]);
-
-  const RightContinuation = useCallback(() => {
-    if (isMobile()) {
-      return (
-        <LinearGradient
-          start={{x: 0, y: 0 }}
-          end={{x: 1, y: 0 }}
-          colors={['#00000000', '#00000044']}
-          style={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
-
-            height: '100%',
-            width: 10,
-
-            zIndex: 999,
-          }}
-        />
-      );
-    } else {
-      return (
-        <Pressable
-          onPress={scrollRight}
-          style={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
-
-            height: '100%',
-            width: 40,
-
-            zIndex: 999,
-          }}
-        >
-          <LinearGradient
-            start={{x: 0, y: 0 }}
-            end={{x: 1, y: 0 }}
-            locations={[0.0, 0.2, 1.0]}
-            colors={[
-              'rgba(255, 255, 255, 0.0)',
-              'rgba(255, 255, 255, 0.9)',
-              'rgba(255, 255, 255, 1.0)',
-            ]}
-            style={{
-              height: '100%',
-              width: '100%',
-              justifyContent: 'center',
-              alignItems: 'flex-end',
-            }}
-          >
-            <Ionicons
-              style={{
-                fontSize: 26,
-              }}
-              name="chevron-forward"
-            />
-          </LinearGradient>
-        </Pressable>
-      );
-    }
-  }, [scrollViewRef, scrollRight]);
-
-  if (!clubs.length) {
+  if (!clubs || !clubs.length) {
     return null;
   }
 
@@ -420,8 +433,8 @@ const ClubSelector = (props: ClubSelectorProps) => {
           )}
         </ScrollView>
 
-        {!isTop && <LeftContinuation/>}
-        {!isBottom && <RightContinuation/>}
+        {!isTop && <LeftContinuation scrollLeft={scrollLeft} />}
+        {!isBottom && <RightContinuation scrollRight={scrollRight} />}
       </View>
     </View>
   );
@@ -456,10 +469,22 @@ const ListHeaderComponent = ({
 };
 
 const SearchScreen_ = ({navigation}) => {
+  const {
+    hasClubs: initialHasClubs,
+    selectedClub: initialSelectedClub,
+  } = getStateFromClubItems(lastEvent<ClubItem[]>('updated-clubs'));
+
   const listRef = useRef<any>(undefined);
 
-  const [hasClubs, setHasClubs] = useState<boolean>(false);
-  const [selectedClub, setSelectedClub] = useState<string | null>(null);
+  const [
+    hasClubs,
+    setHasClubs,
+  ] = useState<boolean>(initialHasClubs);
+
+  const [
+    selectedClub,
+    setSelectedClub,
+  ] = useState<string | null>(initialSelectedClub ?? null);
 
   const onPressRefresh = useCallback(() => {
     const refresh = listRef?.current?.refresh;
@@ -472,9 +497,6 @@ const SearchScreen_ = ({navigation}) => {
       params: { onPressRefresh },
     });
   }, [onPressRefresh]);
-
-  const fetchPageHavingClub = useCallback(
-    fetchPage(selectedClub), [selectedClub]);
 
   useEffect(() => {
     const refresh = listRef?.current?.refresh;
@@ -489,8 +511,17 @@ const SearchScreen_ = ({navigation}) => {
   useEffect(() => {
     return listen(
       'updated-clubs',
-      (cs: ClubItem[] | undefined) => setHasClubs((cs ?? []).length > 0),
-      true
+      (cs: ClubItem[] | undefined) => {
+        const { hasClubs, selectedClub } = getStateFromClubItems(cs);
+
+        if (hasClubs !== undefined) {
+          setHasClubs(hasClubs);
+        }
+
+        if (selectedClub !== undefined) {
+          setSelectedClub(selectedClub);
+        }
+      }
     );
   }, []);
 
@@ -527,7 +558,7 @@ const SearchScreen_ = ({navigation}) => {
         endText={
           "No more matches to show"
         }
-        fetchPage={fetchPageHavingClub}
+        fetchPage={fetchPage(selectedClub)}
         dataKey={JSON.stringify(selectedClub)}
         hideListHeaderComponentWhenEmpty={!hasClubs}
         hideListHeaderComponentWhenLoading={!hasClubs}
