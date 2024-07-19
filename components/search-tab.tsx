@@ -24,7 +24,7 @@ import { DefaultFlatList } from './default-flat-list';
 import { japi } from '../api/api';
 import { TopNavBarButton } from './top-nav-bar-button';
 import { LinearGradient } from 'expo-linear-gradient';
-import { isMobile } from '../util/util';
+import { delay, isMobile } from '../util/util';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ClubItem } from './club-selector';
 import { listen, lastEvent } from '../events/events';
@@ -111,6 +111,21 @@ const getStateFromClubItems = (cs: ClubItem[] | undefined) => {
 
   return { hasClubs, selectedClub };
 };
+
+const sortClubs = (cs: ClubItem[] | undefined) => {
+  const unsortedCs = cs ?? [];
+  const sortedCs = unsortedCs.sort((a, b) => {
+    if (a.name.toLowerCase() > b.name.toLowerCase()) return +1;
+    if (a.name.toLowerCase() < b.name.toLowerCase()) return -1;
+
+    if (a.name > b.name) return +1;
+    if (a.name < b.name) return -1;
+
+    return 0;
+  });
+
+  return sortedCs;
+}
 
 const Stack = createNativeStackNavigator();
 
@@ -296,8 +311,9 @@ const ClubSelector = (props: ClubSelectorProps) => {
   const [isBottom, setIsBottom] = useState(true);
   const [contentWidth, setContentWidth] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
-  const [clubs, setClubs] = useState<ClubItem[] | undefined>(
-    lastEvent('updated-clubs'));
+  const [clubs, setClubs] = useState<ClubItem[]>(
+    sortClubs(lastEvent('updated-clubs')));
+
 
   const checkIsTop = useCallback((nativeEvent) => {
     const isCloseToTop = nativeEvent.contentOffset.x <= 10;
@@ -313,7 +329,7 @@ const ClubSelector = (props: ClubSelectorProps) => {
     setIsBottom(isCloseToBottom);
   }, [setIsBottom]);
 
-  const handleScroll = useCallback(({ nativeEvent }) => {
+  const onScroll = useCallback(({ nativeEvent }) => {
     scrollXRef.current = nativeEvent.contentOffset.x;
 
     checkIsTop(nativeEvent);
@@ -323,14 +339,21 @@ const ClubSelector = (props: ClubSelectorProps) => {
   const onContentSizeChange = useCallback((width, height) =>
     setContentWidth(width), []);
 
-  const onLayout = useCallback(({ nativeEvent }) =>
+  const onScrollViewLayout = useCallback(({ nativeEvent }) =>
     setContainerWidth(nativeEvent.layout.width), []);
 
-  useEffect(() => {
-    if (containerWidth > 0 && contentWidth > 0) {
-      setIsBottom(containerWidth >= contentWidth);
-    }
-  }, [containerWidth, contentWidth]);
+  const onSelectedClubLayout = useCallback(({ nativeEvent }) => {
+    (async () => {
+      if (!scrollViewRef.current) {
+        return;
+      }
+
+      scrollViewRef.current.scrollTo({
+        x: nativeEvent.layout.x - scrollJumpSize,
+        animated: false,
+      });
+    })();
+  }, []);
 
   const scrollLeft = useCallback(() => {
     if (!scrollViewRef.current) {
@@ -353,23 +376,18 @@ const ClubSelector = (props: ClubSelectorProps) => {
   }, []);
 
   useEffect(() => {
+    if (containerWidth > 0 && contentWidth > 0) {
+      setIsBottom(containerWidth >= contentWidth);
+    }
+  }, [containerWidth, contentWidth]);
+
+  useEffect(() => {
     return listen(
       'updated-clubs',
       (maybeCs: ClubItem[] | undefined) => {
-        const unsortedCs = maybeCs ?? [];
-        const sortedCs = unsortedCs.sort((a, b) => {
-          if (a.name.toLowerCase() > b.name.toLowerCase()) return +1;
-          if (a.name.toLowerCase() < b.name.toLowerCase()) return -1;
-
-          if (a.name > b.name) return +1;
-          if (a.name < b.name) return -1;
-
-          return 0;
-        });
-
+        const sortedCs = sortClubs(maybeCs);
         setClubs(sortedCs);
-      },
-      true
+      }
     );
   }, []);
 
@@ -391,9 +409,9 @@ const ClubSelector = (props: ClubSelectorProps) => {
           horizontal={true}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.clubsScrollViewContainer}
-          onScroll={handleScroll}
+          onScroll={onScroll}
           onContentSizeChange={onContentSizeChange}
-          onLayout={onLayout}
+          onLayout={onScrollViewLayout}
         >
           <DefaultText style={styles.clubTitle} >
             CLUBS
@@ -419,6 +437,11 @@ const ClubSelector = (props: ClubSelectorProps) => {
               style={styles.clubContainer}
               key={club.name}
               onPress={() => props.onChangeSelectedClub(club.name)}
+              onLayout={
+                props.selectedClub === club.name ?
+                  onSelectedClubLayout :
+                  undefined
+              }
             >
               <DefaultText
                 style={
