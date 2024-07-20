@@ -25,6 +25,24 @@ import { Logo16 } from './logo';
 import { KeyboardDismissingView } from './keyboard-dismissing-view';
 import { otpDestination } from '../App';
 
+const ActiveMembers = ({
+  numActiveMembers,
+  minActiveMembers,
+  color,
+}) => {
+  return (
+    <DefaultText
+      style={{
+        textAlign: 'center',
+        color,
+        opacity: numActiveMembers < minActiveMembers ? 0 : 1,
+      }}
+    >
+      {numActiveMembers.toLocaleString()} active member{numActiveMembers === 1 ? '' : 's'}
+    </DefaultText>
+  );
+};
+
 const Stack = createNativeStackNavigator();
 
 const WelcomeScreen = (numUsers: number) => () => {
@@ -40,13 +58,188 @@ const WelcomeScreen = (numUsers: number) => () => {
       }}
     >
       <Stack.Screen name="Welcome Screen" component={WelcomeScreen__} />
-
       <Stack.Screen name="Create Account Or Sign In Screen" component={OptionScreen} />
+      <Stack.Screen name="Invite Screen" component={InviteScreen} />
     </Stack.Navigator>
   );
 };
 
-const WelcomeScreen_ = (numUsers: number) => ({navigation}) => {
+const InviteScreen = ({navigation, route}) => {
+  const clubNameUri = route.params?.clubNameUri as string;
+  const numUsers = 69; // TODO
+
+  if (typeof clubNameUri !== 'string') {
+    throw new Error('clubNameUri should be a string');
+  }
+
+  if (typeof numUsers !== 'number') {
+    throw new Error('numUsers should be a number');
+  }
+
+  const clubName = decodeURIComponent(clubNameUri);
+
+  const submit = () => {
+    navigation.navigate('Welcome Screen', { clubName, numUsers });
+  };
+
+  return (
+    <SafeAreaView
+      style={{
+        backgroundColor: '#70f',
+        width: '100%',
+        height: '100%',
+      }}
+    >
+      <KeyboardDismissingView
+        style={{
+          width: '100%',
+          height: '100%',
+          maxWidth: 600,
+          alignSelf: 'center',
+          flexDirection: 'column',
+        }}
+      >
+        <View
+          style={{
+            marginTop: 10 + (Platform.OS === 'web' ? 0 : StatusBar.currentHeight ?? 0),
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 1,
+          }}
+        >
+          <Logo16 size={32} rectSize={0.3} />
+          <Text
+            style={{
+              color: 'white',
+              alignSelf: 'center',
+              fontFamily: 'TruenoBold',
+              fontSize: 20,
+            }}
+            selectable={false}
+          >
+            Duolicious
+          </Text>
+        </View>
+        <View
+          style={{
+            alignSelf: 'center',
+            justifyContent: 'center',
+            flex: 1,
+            width: '100%',
+            paddingHorizontal: 10,
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: 'white',
+              borderRadius: 10,
+              shadowOffset: {
+                width: 0,
+                height: 2,
+              },
+              shadowOpacity: 0.5,
+              shadowRadius: 10,
+              elevation: 3,
+              paddingTop: 20,
+              width: '100%',
+            }}
+          >
+            <View
+              style={{
+                flex: 1,
+                alignSelf: 'center',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 10,
+                width: '100%',
+                paddingHorizontal: 10,
+              }}
+            >
+              <DefaultText
+                style={{
+                  textAlign: 'center',
+                  color: '#555',
+                }}
+              >
+                You’re invited to join
+              </DefaultText>
+              <DefaultText
+                style={{
+                  textAlign: 'center',
+                  color: 'black',
+                  fontSize: 26,
+                  fontFamily: 'MontserratBlack',
+                  flexShrink: 1,
+                  width: '100%',
+                }}
+              >
+                {clubName}
+              </DefaultText>
+              <ActiveMembers
+                numActiveMembers={numUsers}
+                minActiveMembers={10}
+                color="#555" />
+            </View>
+            <View
+              style={{
+                justifyContent: 'center',
+                padding: 20,
+                paddingTop: 40,
+                alignSelf: 'flex-start',
+                width: '100%',
+              }}
+            >
+              <ButtonWithCenteredText
+                onPress={() => submit()}
+                borderWidth={0}
+              >
+                <Text style={{fontWeight: '700'}}>Accept Invite</Text>
+              </ButtonWithCenteredText>
+              <DefaultText
+                style={{
+                  color: '#777',
+                  textAlign: 'center',
+                  alignSelf: 'center',
+                  lineHeight: 28,
+                }}
+              >
+                By signing up you agree to our {}
+                <DefaultText
+                  style={{
+                    fontWeight: '600',
+                  }}
+                  onPress={() => Linking.openURL('https://duolicious.app/terms')}
+                >
+                  Terms
+                </DefaultText>
+                {}, {}
+                <DefaultText
+                  style={{ fontWeight: '600' }}
+                  onPress={() => Linking.openURL('https://duolicious.app/privacy')}
+                >
+                  Privacy Policy
+                </DefaultText>
+                {} and {}
+                <DefaultText
+                  style={{ fontWeight: '600' }}
+                  onPress={() => Linking.openURL('https://duolicious.app/guidelines')}
+                >
+                  Community Guidelines
+                </DefaultText>
+              </DefaultText>
+            </View>
+          </View>
+        </View>
+      </KeyboardDismissingView>
+    </SafeAreaView>
+  );
+};
+
+const WelcomeScreen_ = (numUsers: number) => ({navigation, route}) => {
+  const clubName_ = (route.params?.clubName) as string | undefined;
+  const numUsers_ = (route.params?.numUsers ?? numUsers) as number | undefined;
+
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [loginStatus, setLoginStatus] = useState("")
@@ -104,9 +297,7 @@ const WelcomeScreen_ = (numUsers: number) => ({navigation}) => {
       borderWidth={0}
       secondary={true}
       containerStyle={{
-        marginTop: 5,
-        marginBottom: 5,
-        margin: 5,
+        margin: 0,
         height: undefined,
       }}
       backgroundColor="rgb(228, 204, 255)"
@@ -165,6 +356,7 @@ const WelcomeScreen_ = (numUsers: number) => ({navigation}) => {
             alignSelf: 'center',
             alignItems: 'center',
             justifyContent: 'center',
+            gap: 10,
           }}
         >
           <DefaultText
@@ -176,20 +368,15 @@ const WelcomeScreen_ = (numUsers: number) => ({navigation}) => {
               fontFamily: 'MontserratBlack',
             }}
           >
-            Cute dates & dank memes await...
+            {clubName_ ?
+              `Join ${clubName_} on Duolicious` :
+              'Cute dates & dank memes await...'}
           </DefaultText>
           {(Platform.OS === 'web' || height > 500) &&
-            <DefaultText
-              style={{
-                marginTop: 10,
-                width: 320,
-                textAlign: 'center',
-                color: 'white',
-                opacity: numUsers < 0 ? 0 : 1,
-              }}
-            >
-              {numUsers.toLocaleString()} active member{numUsers === 1 ? '' : 's'}
-            </DefaultText>
+            <ActiveMembers
+              numActiveMembers={numUsers_}
+              minActiveMembers={0}
+              color="white" />
           }
         </View>
         <View style={{
@@ -224,8 +411,10 @@ const WelcomeScreen_ = (numUsers: number) => ({navigation}) => {
               style={{
                 flexDirection: 'row',
                 flexWrap: 'wrap',
+                marginTop: 5,
                 marginLeft: 20,
                 marginRight: 20,
+                gap: 10,
               }}
             >
               <SuffixButton suffix="@gmail.com" />
@@ -239,8 +428,8 @@ const WelcomeScreen_ = (numUsers: number) => ({navigation}) => {
         <View
           style={{
             justifyContent: 'center',
-            padding: 20,
-            paddingBottom: 20,
+            paddingHorizontal: 20,
+            paddingBottom: 10,
             alignSelf: 'flex-start',
             width: '100%',
           }}
