@@ -25,20 +25,28 @@ import { Logo16 } from './logo';
 import { KeyboardDismissingView } from './keyboard-dismissing-view';
 import { otpDestination } from '../App';
 
+const activeMembersText = (
+  numActiveMembers: number,
+  minActiveMembers: number,
+) => {
+  if (numActiveMembers < minActiveMembers) {
+    return 'on the Duolicious dating app';
+  } else {
+    return (
+      `${numActiveMembers.toLocaleString()} active member` +
+      (numActiveMembers === 1 ? '' : 's')
+    );
+  }
+};
+
 const ActiveMembers = ({
   numActiveMembers,
   minActiveMembers,
   color,
 }) => {
   return (
-    <DefaultText
-      style={{
-        textAlign: 'center',
-        color,
-        opacity: numActiveMembers < minActiveMembers ? 0 : 1,
-      }}
-    >
-      {numActiveMembers.toLocaleString()} active member{numActiveMembers === 1 ? '' : 's'}
+    <DefaultText style={{ textAlign: 'center', color }}>
+      {activeMembersText(numActiveMembers, minActiveMembers)}
     </DefaultText>
   );
 };
@@ -59,14 +67,13 @@ const WelcomeScreen = (numUsers: number) => () => {
     >
       <Stack.Screen name="Welcome Screen" component={WelcomeScreen__} />
       <Stack.Screen name="Create Account Or Sign In Screen" component={OptionScreen} />
-      <Stack.Screen name="Invite Screen" component={InviteScreen} />
     </Stack.Navigator>
   );
 };
 
 const InviteScreen = ({navigation, route}) => {
-  const clubNameUri = route.params?.clubNameUri as string;
-  const numUsers = 69; // TODO
+  const clubNameUri = route.params?.clubNameUri as string | undefined;
+  const numUsers = route.params?.numUsers as string | undefined;
 
   if (typeof clubNameUri !== 'string') {
     throw new Error('clubNameUri should be a string');
@@ -78,6 +85,7 @@ const InviteScreen = ({navigation, route}) => {
 
   const clubName = decodeURIComponent(clubNameUri);
 
+  // TODO: Should navigate to search screen if logged in
   const submit = () => {
     navigation.navigate('Welcome Screen', { clubName, numUsers });
   };
@@ -204,7 +212,7 @@ const InviteScreen = ({navigation, route}) => {
                   lineHeight: 28,
                 }}
               >
-                By signing up you agree to our {}
+                By joining you agree to our {}
                 <DefaultText
                   style={{
                     fontWeight: '600',
@@ -492,5 +500,6 @@ const WelcomeScreen_ = (numUsers: number) => ({navigation, route}) => {
 };
 
 export {
+  InviteScreen,
   WelcomeScreen,
 };
