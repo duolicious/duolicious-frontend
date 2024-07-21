@@ -24,6 +24,9 @@ import { sessionToken } from '../kv-storage/session-token';
 import { Logo16 } from './logo';
 import { KeyboardDismissingView } from './keyboard-dismissing-view';
 import { otpDestination } from '../App';
+import { signedInUser } from '../App';
+import { notify, lastEvent } from '../events/events';
+import { ClubItem, joinClub } from './club-selector';
 
 const activeMembersText = (
   numActiveMembers: number,
@@ -72,6 +75,8 @@ const WelcomeScreen = (numUsers: number) => () => {
 };
 
 const InviteScreen = ({navigation, route}) => {
+  const [loading, setLoading] = useState(false);
+
   const clubNameUri = route.params?.clubNameUri as string | undefined;
   const numUsers = route.params?.numUsers as string | undefined;
 
@@ -85,9 +90,23 @@ const InviteScreen = ({navigation, route}) => {
 
   const clubName = decodeURIComponent(clubNameUri);
 
-  // TODO: Should navigate to search screen if logged in
-  const submit = () => {
-    navigation.navigate('Welcome Screen', { clubName, numUsers });
+  const submit = async () => {
+    if (signedInUser) {
+      setLoading(true);
+
+      await joinClub(clubName, numUsers, true);
+
+      setLoading(false);
+
+      if (Platform.OS === 'web') {
+        history.pushState((history?.state ?? 0) + 1, "", "/#");
+      }
+
+      navigation.navigate('Home', { screen: 'Search' });
+    } else {
+      // TODO: Should set search preference to recently joined club
+      navigation.navigate('Welcome Screen', { clubName, numUsers });
+    }
   };
 
   return (
@@ -199,8 +218,9 @@ const InviteScreen = ({navigation, route}) => {
               }}
             >
               <ButtonWithCenteredText
-                onPress={() => submit()}
+                onPress={submit}
                 borderWidth={0}
+                loading={loading}
               >
                 <Text style={{fontWeight: '700'}}>Accept Invite</Text>
               </ButtonWithCenteredText>

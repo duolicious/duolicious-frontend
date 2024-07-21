@@ -129,7 +129,6 @@ type SignedInUser = {
   personUuid: string,
   units: 'Metric' | 'Imperial'
   sessionToken: string
-  lastNavigationState?: any
   clubs: ClubItem[]
 };
 
@@ -199,8 +198,6 @@ const App = () => {
       return;
     }
 
-    const lastNavigationState = await navigationState();
-
     const clubs: ClubItem[] = response?.json?.clubs;
 
     setSignedInUser({
@@ -209,7 +206,6 @@ const App = () => {
       units: response?.json?.units === 'Imperial' ? 'Imperial' : 'Metric',
       clubs: clubs,
       sessionToken: existingSessionToken,
-      lastNavigationState,
     });
 
     notify<ClubItem[]>('updated-clubs', clubs);
@@ -319,11 +315,21 @@ const App = () => {
 
   useEffect(() => {
     (async () => {
-      if (signedInUser?.personId && signedInUser?.sessionToken) {
-        login(signedInUser.personUuid, signedInUser.sessionToken);
-      } else {
+
+      if (!signedInUser?.personId || !signedInUser?.sessionToken) {
         logout();
+        return;
       }
+
+      const lastNavigationState = await navigationState();
+
+      const navigationContainer = navigationContainerRef?.current;
+
+      if (navigationContainer && lastNavigationState) {
+        navigationContainer.reset(lastNavigationState);
+      }
+
+      login(signedInUser.personUuid, signedInUser.sessionToken);
     })();
   }, [signedInUser?.personId, signedInUser?.sessionToken]);
 
@@ -331,16 +337,15 @@ const App = () => {
     if (Platform.OS === 'web' && !(await parseUrl())) {
       history.pushState((history?.state ?? 0) + 1, "", "#");
     }
+
     if (!state) return;
 
     const lastNavigationState = {...state, stale: true};
 
-    await navigationState(lastNavigationState);
-
     if (signedInUser) {
-      setSignedInUser({...signedInUser, lastNavigationState});
+      await navigationState(lastNavigationState);
     }
-  }, []);
+  }, [signedInUser]);
 
   const onChangeInbox = useCallback((inbox: Inbox | null) => {
     const stats = inbox ? inboxStats(inbox) : undefined;
@@ -389,7 +394,6 @@ const App = () => {
     <>
       <NavigationContainer
         ref={navigationContainerRef}
-        initialState={signedInUser?.lastNavigationState}
         onStateChange={onNavigationStateChange}
         theme={{
           ...DefaultTheme,
