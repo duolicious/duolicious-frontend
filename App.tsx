@@ -54,6 +54,8 @@ import { ClubItem } from './components/club-selector';
 // TODO: Add the ability to reply to things (e.g. pictures, quiz responses) from people's profiles. You'll need to change the navigation to make it easier to reply to things. Consider breaking profiles into sections which can be replied to, each having one image or block of text. Letting people reply to specific things on the profile will improve intro quality.
 // TODO: A profile prompts. e.g. "If I had three wishes, I'd wish for...", "My favourite move is..."
 
+// TODO: Dynamic distance needs to account for when users join clubs
+
 setNofications();
 verificationWatcher();
 
@@ -129,7 +131,6 @@ type SignedInUser = {
   personUuid: string,
   units: 'Metric' | 'Imperial'
   sessionToken: string
-  clubs: ClubItem[]
 };
 
 type ServerStatus = "ok" | "down for maintenance" | "please update";
@@ -204,7 +205,6 @@ const App = () => {
       personId: response?.json?.person_id,
       personUuid: response?.json?.person_uuid,
       units: response?.json?.units === 'Imperial' ? 'Imperial' : 'Metric',
-      clubs: clubs,
       sessionToken: existingSessionToken,
     });
 
