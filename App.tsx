@@ -323,6 +323,8 @@ const App = () => {
         return;
       }
 
+      login(signedInUser.personUuid, signedInUser.sessionToken);
+
       const lastNavigationState = await navigationState();
 
       const navigationContainer = navigationContainerRef?.current;
@@ -337,16 +339,16 @@ const App = () => {
             numUsers: joinedClub.count_members,
           },
         );
+      } else if (Platform.OS === 'web' && (await parseUrl())) {
+        ; // Don't restore last navigation state
       } else if (navigationContainer && lastNavigationState) {
         navigationContainer.reset(lastNavigationState);
       }
-
-      login(signedInUser.personUuid, signedInUser.sessionToken);
     })();
   }, [signedInUser?.personId, signedInUser?.sessionToken]);
 
   const onNavigationStateChange = useCallback(async (state) => {
-    if (Platform.OS === 'web' && !(await parseUrl())) {
+    if (Platform.OS === 'web') {
       history.pushState((history?.state ?? 0) + 1, "", "#");
     }
 
