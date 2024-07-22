@@ -131,7 +131,7 @@ type SignedInUser = {
   personUuid: string,
   units: 'Metric' | 'Imperial'
   sessionToken: string
-  joinedClub: ClubItem | null
+  pendingClub: ClubItem | null
 };
 
 type ServerStatus = "ok" | "down for maintenance" | "please update";
@@ -207,7 +207,7 @@ const App = () => {
       personUuid: response?.json?.person_uuid,
       units: response?.json?.units === 'Imperial' ? 'Imperial' : 'Metric',
       sessionToken: existingSessionToken,
-      joinedClub: response?.json?.joined_club,
+      pendingClub: response?.json?.pending_club,
     });
 
     notify<ClubItem[]>('updated-clubs', clubs);
@@ -329,16 +329,10 @@ const App = () => {
 
       const navigationContainer = navigationContainerRef?.current;
 
-      const joinedClub = signedInUser?.joinedClub;
+      const pendingClub = signedInUser?.pendingClub;
 
-      if (navigationContainer && joinedClub) {
-        navigationContainerRef.current.navigate(
-          'Invite Screen',
-          {
-            clubName: joinedClub.name,
-            numUsers: joinedClub.count_members,
-          },
-        );
+      if (navigationContainer && pendingClub) {
+        navigationContainerRef.current.navigate('Search');
       } else if (Platform.OS === 'web' && (await parseUrl())) {
         ; // Don't restore last navigation state
       } else if (navigationContainer && lastNavigationState) {

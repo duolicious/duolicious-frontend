@@ -28,6 +28,14 @@ import { signedInUser } from '../App';
 import { notify, lastEvent } from '../events/events';
 import { ClubItem, joinClub } from './club-selector';
 
+// TODO: Bug:
+//  - sign in
+//  - visit /invite/asdf
+//  - accept invite
+//  - you should now be on the search screen
+//  - click the 'profile' tab
+//  - now you'll incorrectly be on the invite tab again
+
 const activeMembersText = (
   numActiveMembers: number,
   minActiveMembers: number,
@@ -288,7 +296,10 @@ const WelcomeScreen_ = (numUsers: number) => ({navigation, route}) => {
     const response = await japi(
       'post',
       '/request-otp',
-      { email: email_ },
+      {
+        email: email_,
+        ...(clubName_ && { pending_club_name: clubName_ }),
+      },
       9999 * 1000
     );
 
@@ -296,6 +307,10 @@ const WelcomeScreen_ = (numUsers: number) => ({navigation, route}) => {
 
     if (response.ok) {
       await sessionToken(response.json.session_token);
+
+      if (Platform.OS === 'web') {
+        history.pushState((history?.state ?? 0) + 1, "", "/#");
+      }
 
       navigation.navigate(
         'Create Account Or Sign In Screen',

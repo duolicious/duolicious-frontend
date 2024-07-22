@@ -897,7 +897,7 @@ const createAccountOptionGroups: OptionGroup<OptionGroupInputs>[] = [
               personUuid: response?.json?.person_uuid,
               units: response?.json?.units === 'Imperial' ? 'Imperial' : 'Metric',
               sessionToken: existingSessionToken,
-              joinedClub: response?.json?.joined_club,
+              pendingClub: response?.json?.pending_club,
             }));
 
             notify<ClubItem[]>('updated-clubs', clubs);
@@ -1004,7 +1004,7 @@ const createAccountOptionGroups: OptionGroup<OptionGroupInputs>[] = [
               personId: response?.json?.person_id,
               personUuid: response?.json?.person_uuid,
               units: response?.json?.units === 'Imperial' ? 'Imperial' : 'Metric',
-              joinedClub: response?.json?.joined_club,
+              pendingClub: response?.json?.pending_club,
             }));
 
             notify<ClubItem[]>('updated-clubs', clubs);
