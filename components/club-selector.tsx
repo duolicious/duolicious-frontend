@@ -56,7 +56,13 @@ const joinClub = async (
   const existingClubs = lastEvent<ClubItem[]>('updated-clubs') ?? [];
 
   const updatedClubs = [
-    ...existingClubs.filter((c) => c.name !== name),
+    ...existingClubs
+      .filter((c) => c.name !== name)
+      .map((c) => ({
+        ...c,
+        search_preference:
+          searchPreference === true ? false : c.search_preference
+      })),
     {
       name,
       count_members: countMembers,
