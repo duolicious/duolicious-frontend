@@ -83,7 +83,7 @@ const parseUrl = async () => {
 
   const url = new URL(initialUrl);
 
-  const match = url.pathname.match(/([^\/]+)\/([^\/]+)$/);
+  const match = url.pathname.match(/^\/([^\/]+)\/([^\/]+)$/);
   const left = match ? match[1] : undefined;
   const right = match ? match[2] : undefined;
 
