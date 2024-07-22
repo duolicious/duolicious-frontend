@@ -220,7 +220,9 @@ const InviteScreen = ({navigation, route}) => {
                 borderWidth={0}
                 loading={loading}
               >
-                <Text style={{fontWeight: '700'}}>Accept Invite</Text>
+                <DefaultText style={{fontWeight: '700'}}>
+                  Accept Invite
+                </DefaultText>
               </ButtonWithCenteredText>
               <DefaultText
                 style={{
