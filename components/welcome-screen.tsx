@@ -77,18 +77,16 @@ const WelcomeScreen = (numUsers: number) => () => {
 const InviteScreen = ({navigation, route}) => {
   const [loading, setLoading] = useState(false);
 
-  const clubNameUri = route.params?.clubNameUri as string | undefined;
+  const clubName = route.params?.clubName as string | undefined;
   const numUsers = route.params?.numUsers as string | undefined;
 
-  if (typeof clubNameUri !== 'string') {
-    throw new Error('clubNameUri should be a string');
+  if (typeof clubName !== 'string') {
+    throw new Error('clubName should be a string');
   }
 
   if (typeof numUsers !== 'number') {
     throw new Error('numUsers should be a number');
   }
-
-  const clubName = decodeURIComponent(clubNameUri);
 
   const submit = async () => {
     if (signedInUser) {

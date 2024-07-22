@@ -131,6 +131,7 @@ type SignedInUser = {
   personUuid: string,
   units: 'Metric' | 'Imperial'
   sessionToken: string
+  joinedClub: ClubItem | null
 };
 
 type ServerStatus = "ok" | "down for maintenance" | "please update";
@@ -206,6 +207,7 @@ const App = () => {
       personUuid: response?.json?.person_uuid,
       units: response?.json?.units === 'Imperial' ? 'Imperial' : 'Metric',
       sessionToken: existingSessionToken,
+      joinedClub: response?.json?.joined_club,
     });
 
     notify<ClubItem[]>('updated-clubs', clubs);
@@ -255,7 +257,7 @@ const App = () => {
       case 'invite': {
         const response = await japi(
           'GET',
-          '/stats?club-name=' + encodeURIComponent(parsedUrl.right));
+          '/stats?club-name=' + parsedUrl.right);
 
         if (!response.ok)
           break;
@@ -263,7 +265,7 @@ const App = () => {
         navigationContainerRef.current.navigate(
           'Invite Screen',
           {
-            clubNameUri: parsedUrl.right,
+            clubName: decodeURIComponent(parsedUrl.right),
             numUsers: response.json.num_active_users,
           },
         );
@@ -325,7 +327,17 @@ const App = () => {
 
       const navigationContainer = navigationContainerRef?.current;
 
-      if (navigationContainer && lastNavigationState) {
+      const joinedClub = signedInUser?.joinedClub;
+
+      if (navigationContainer && joinedClub) {
+        navigationContainerRef.current.navigate(
+          'Invite Screen',
+          {
+            clubName: joinedClub.name,
+            numUsers: joinedClub.count_members,
+          },
+        );
+      } else if (navigationContainer && lastNavigationState) {
         navigationContainer.reset(lastNavigationState);
       }
 
