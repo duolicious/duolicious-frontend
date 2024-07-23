@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test('has correct onboarding flow', async ({ page }) => {
   await page.goto('http://localhost:8081');
 
-  await page.routeFromHAR('./playwright-hars/onboarding.har', { update: false });
+  await page.routeFromHAR('./playwright-hars/onboarding.har', { update: true });
 
   await page.getByPlaceholder('Enter your email to begin').click();
   await page.getByPlaceholder('Enter your email to begin').fill('user1@example.com');

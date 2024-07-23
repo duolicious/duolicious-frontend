@@ -80,7 +80,7 @@ export default defineConfig({
   webServer: {
     command: 'npx expo start',
     url: 'http://localhost:8081',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     env: {
       DUO_STATUS_URL: 'http://localhost:8080',
       DUO_API_URL: 'http://localhost:5000',
