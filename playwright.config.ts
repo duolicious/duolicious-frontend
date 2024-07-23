@@ -77,10 +77,10 @@ export default defineConfig({
     url: 'http://localhost:8081',
     reuseExistingServer: !process.env.CI,
     env: {
-      DUO_STATUS_URL: 'http://192.168.0.11:8080',
-      DUO_API_URL: 'http://192.168.0.11:5000',
-      DUO_CHAT_URL: 'ws://192.168.0.11:5443',
-      DUO_IMAGES_URL: 'http://192.168.0.11:9090/s3-mock-bucket',
+      DUO_STATUS_URL: 'http://localhost:8080',
+      DUO_API_URL: 'http://localhost:5000',
+      DUO_CHAT_URL: 'ws://localhost:5443',
+      DUO_IMAGES_URL: 'http://localhost:9090/s3-mock-bucket',
     }
   },
 });
