@@ -52,7 +52,9 @@
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",
+    "@playwright/test": "^1.45.3",
     "@types/lodash": "^4.17.6",
+    "@types/node": "^20.14.11",
     "@types/xmpp__client": "^0.13.3",
     "patch-package": "^6.5.1",
     "ts-node": "^10.9.2",

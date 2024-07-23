@@ -29,6 +29,14 @@ export DUO_IMAGES_URL=http://192.168.0.11:9090/s3-mock-bucket
 npx expo start
 ```
 
+## Running Tests
+
+```
+npx playwright test --trace on
+npx playwright show-trace -b firefox playwright-report/data/*.zip
+```
+
+
 ## Building the Android APK
 
 Add these to `~/.gradle/gradle.properties`:
