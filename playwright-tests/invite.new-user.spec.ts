@@ -70,6 +70,10 @@ test('has correct invite flow for new users', async ({ page }) => {
 
   await page.getByText('Continue').nth(6).click();
 
+  await expect(page.getByText('Everyone')).toBeVisible();
+  await expect(page.getByText('cool club').last()).toBeVisible();
+  await expect(page).toHaveScreenshot({ maxDiffPixelRatio: 0.01 });
+
   await page.locator('button', { hasText: /Profile$/ }).last().click();
   await page.getByText('Sign Out').nth(1).click();
 });
