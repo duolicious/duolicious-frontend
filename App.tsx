@@ -54,8 +54,6 @@ import { ClubItem } from './components/club-selector';
 // TODO: Add the ability to reply to things (e.g. pictures, quiz responses) from people's profiles. You'll need to change the navigation to make it easier to reply to things. Consider breaking profiles into sections which can be replied to, each having one image or block of text. Letting people reply to specific things on the profile will improve intro quality.
 // TODO: A profile prompts. e.g. "If I had three wishes, I'd wish for...", "My favourite move is..."
 
-// TODO: Dynamic distance needs to account for when users join clubs
-
 setNofications();
 verificationWatcher();
 
@@ -290,7 +288,6 @@ const App = () => {
         loadFonts(),
         lockScreenOrientation(),
         fetchSignInState(),
-        parseUrl_(),
         fetchServerStatusState(),
       ]);
 
@@ -384,10 +381,13 @@ const App = () => {
     }, [onChangeInbox]);
   }
 
-  const onLayoutRootView = useCallback(async () => {
-    if (!isLoading) {
-      await SplashScreen.hideAsync();
-    }
+  useEffect(() => {
+    (async () => {
+      if (!isLoading) {
+        await parseUrl_();
+        await SplashScreen.hideAsync();
+      }
+    })();
   }, [isLoading]);
 
   const WelcomeScreen_ = useMemo(() => {
@@ -400,57 +400,60 @@ const App = () => {
 
   return (
     <>
-      <NavigationContainer
-        ref={navigationContainerRef}
-        onStateChange={onNavigationStateChange}
-        theme={{
-          ...DefaultTheme,
-          colors: {
-            ...DefaultTheme.colors,
-            background: 'white',
-          },
-        }}
-        onReady={onLayoutRootView}
-        documentTitle={{
-          formatter: () =>
-            (numUnreadTitle ? `(${numUnreadTitle}) ` : '') + 'Duolicious'
-        }}
-      >
-        <StatusBar
-          translucent={true}
-          backgroundColor="transparent"
-          barStyle="dark-content"
-        />
-        <Stack.Navigator
-          screenOptions={{
-            headerShown: false,
-            presentation: 'card',
-          }}
-        >
-          {
-            referrerId !== undefined ? (
-              <Tab.Screen name="Traits Screen" component={TraitsTab} />
-            ) : signedInUser ? (
-              <>
-                <Tab.Screen name="Home" component={HomeTabs} />
-                <Tab.Screen name="Conversation Screen" component={ConversationScreen} />
-                <Tab.Screen name="Prospect Profile Screen" component={ProspectProfileScreen} />
-                <Tab.Screen name="Invite Screen" component={InviteScreen} />
-              </>
-            ) : (
-              <>
-                <Tab.Screen name="Welcome" component={WelcomeScreen_} />
-                <Tab.Screen name="Invite Screen" component={InviteScreen} />
-              </>
-            )
-          }
-        </Stack.Navigator>
-      </NavigationContainer>
-      <ReportModal/>
-      <ImageCropper/>
+      {!isLoading &&
+        <>
+          <NavigationContainer
+            ref={navigationContainerRef}
+            onStateChange={onNavigationStateChange}
+            theme={{
+              ...DefaultTheme,
+              colors: {
+                ...DefaultTheme.colors,
+                background: 'white',
+              },
+            }}
+            documentTitle={{
+              formatter: () =>
+                (numUnreadTitle ? `(${numUnreadTitle}) ` : '') + 'Duolicious'
+            }}
+          >
+            <StatusBar
+              translucent={true}
+              backgroundColor="transparent"
+              barStyle="dark-content"
+            />
+            <Stack.Navigator
+              screenOptions={{
+                headerShown: false,
+                presentation: 'card',
+              }}
+            >
+              {
+                referrerId !== undefined ? (
+                  <Tab.Screen name="Traits Screen" component={TraitsTab} />
+                ) : signedInUser ? (
+                  <>
+                    <Tab.Screen name="Home" component={HomeTabs} />
+                    <Tab.Screen name="Conversation Screen" component={ConversationScreen} />
+                    <Tab.Screen name="Prospect Profile Screen" component={ProspectProfileScreen} />
+                    <Tab.Screen name="Invite Screen" component={InviteScreen} />
+                  </>
+                ) : (
+                  <>
+                    <Tab.Screen name="Welcome" component={WelcomeScreen_} />
+                    <Tab.Screen name="Invite Screen" component={InviteScreen} />
+                  </>
+                )
+              }
+            </Stack.Navigator>
+          </NavigationContainer>
+          <ReportModal/>
+          <ImageCropper/>
+          <StreamErrorModal/>
+          <ColorPickerModal/>
+        </>
+      }
       <WebSplashScreen loading={isLoading}/>
-      <StreamErrorModal/>
-      <ColorPickerModal/>
     </>
   );
 };

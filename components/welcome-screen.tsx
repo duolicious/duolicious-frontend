@@ -28,14 +28,6 @@ import { signedInUser } from '../App';
 import { notify, lastEvent } from '../events/events';
 import { ClubItem, joinClub } from './club-selector';
 
-// TODO: Bug:
-//  - sign in
-//  - visit /invite/asdf
-//  - accept invite
-//  - you should now be on the search screen
-//  - click the 'profile' tab
-//  - now you'll incorrectly be on the invite tab again
-
 const activeMembersText = (
   numActiveMembers: number,
   minActiveMembers: number,
@@ -110,7 +102,6 @@ const InviteScreen = ({navigation, route}) => {
 
       navigation.navigate('Home', { screen: 'Search' });
     } else {
-      // TODO: Should set search preference to recently joined club
       navigation.navigate('Welcome Screen', { clubName, numUsers });
     }
   };
@@ -340,7 +331,8 @@ const WelcomeScreen_ = (numUsers: number) => ({navigation, route}) => {
       borderWidth={0}
       secondary={true}
       containerStyle={{
-        margin: 0,
+        marginTop: 0,
+        marginBottom: 0,
         height: undefined,
       }}
       backgroundColor="rgb(228, 204, 255)"
