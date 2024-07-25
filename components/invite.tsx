@@ -25,8 +25,7 @@ import { ClubItem, SelectedClub } from './club-selector';
 import { ButtonWithCenteredText } from './button/centered-text';
 import { notify } from '../events/events';
 import { faLink } from '@fortawesome/free-solid-svg-icons/faLink'
-
-// TODO: Copy link to clipboard
+import * as Clipboard from 'expo-clipboard';
 
 const LinkCopiedToast = () => {
   return (
@@ -77,6 +76,15 @@ const InvitePicker = ({navigation}) => {
   const goBack = useCallback(() => {
     navigation.goBack();
   }, [navigation]);
+
+  const onPressInvite = (clubName: string) => async () => {
+    const url = (
+      `https://get.duolicious.app/invite/${encodeURIComponent(clubName)}`);
+
+    await Clipboard.setStringAsync(url);
+
+    notify<React.FC>('toast', LinkCopiedToast)
+  };
 
   return (
     <SafeAreaView style={styles.safeAreaView}>
@@ -155,7 +163,7 @@ const InvitePicker = ({navigation}) => {
                 marginBottom: 0,
               }}
               secondary={true}
-              onPress={() => notify<React.FC>('toast', LinkCopiedToast)}
+              onPress={onPressInvite(club.name)}
             >
               Invite
             </ButtonWithCenteredText>
