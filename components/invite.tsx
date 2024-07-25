@@ -31,7 +31,7 @@ const LinkCopiedToast = () => {
   return (
     <View
       style={{
-        marginTop: 10,
+        marginTop: 70,
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: 'white',
@@ -60,7 +60,7 @@ const LinkCopiedToast = () => {
           fontWeight: '700',
         }}
       >
-        Link Copied!
+        Invite Link Copied!
       </DefaultText>
     </View>
   );
@@ -218,7 +218,7 @@ const InviteEntrypoint = ({navigation}) => {
           opacity,
         }}
       >
-        <DefaultText style={{ fontWeight: '700', fontSize: 16 }}>
+        <DefaultText style={{ fontSize: 16 }}>
           Invite
         </DefaultText>
         <FontAwesomeIcon
