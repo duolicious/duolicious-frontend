@@ -101,3 +101,9 @@ This generates an ad-hoc ipa file:
 ```bash
 eas build --profile preview --platform ios --local
 ```
+
+### Making patch files
+
+```
+diff -u original modified > changes.patch
+```

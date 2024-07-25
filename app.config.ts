@@ -48,6 +48,19 @@ const config: ExpoConfig = {
       foregroundImage: "./assets/adaptive-icon.png",
       backgroundColor: "#ffffff"
     },
+    intentFilters: [
+      {
+        action: "VIEW",
+        autoVerify: true,
+        data: [
+          {
+            scheme: "https",
+            host: "get.duolicious.app"
+          }
+        ],
+        category: ["BROWSABLE", "DEFAULT"]
+      }
+    ]
   },
   plugins: [
     "expo-secure-store",
