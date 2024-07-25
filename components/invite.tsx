@@ -23,8 +23,49 @@ import { TopNavBarButton } from './top-nav-bar-button';
 import { listen, lastEvent } from '../events/events';
 import { ClubItem, SelectedClub } from './club-selector';
 import { ButtonWithCenteredText } from './button/centered-text';
+import { notify } from '../events/events';
+import { faLink } from '@fortawesome/free-solid-svg-icons/faLink'
 
 // TODO: Copy link to clipboard
+
+const LinkCopiedToast = () => {
+  return (
+    <View
+      style={{
+        marginTop: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'white',
+        borderRadius: 999,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        flexDirection: 'row',
+        shadowOffset: {
+          width: 0,
+          height: 4,
+        },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 8,
+        gap: 10,
+      }}
+    >
+      <FontAwesomeIcon
+        icon={faLink}
+        color="black"
+        size={24}
+      />
+      <DefaultText
+        style={{
+          color: 'black',
+          fontWeight: '700',
+        }}
+      >
+        Link Copied!
+      </DefaultText>
+    </View>
+  );
+};
 
 const InvitePicker = ({navigation}) => {
   const [clubs, setClubs] = useState(lastEvent<ClubItem[]>('updated-clubs'));
@@ -114,6 +155,7 @@ const InvitePicker = ({navigation}) => {
                 marginBottom: 0,
               }}
               secondary={true}
+              onPress={() => notify<React.FC>('toast', LinkCopiedToast)}
             >
               Invite
             </ButtonWithCenteredText>
