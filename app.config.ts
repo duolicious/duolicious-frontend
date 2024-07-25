@@ -38,7 +38,8 @@ const config: ExpoConfig = {
   },
   ios: {
     bundleIdentifier: "app.duolicious",
-    supportsTablet: true
+    supportsTablet: true,
+    associatedDomains: ["applinks:get.duolicious.app"],
   },
   android: {
     googleServicesFile: "./google-services.json",
