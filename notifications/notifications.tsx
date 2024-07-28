@@ -5,7 +5,7 @@ import Constants from 'expo-constants';
 import { registerPushToken } from '../xmpp/xmpp';
 
 const setNofications = () => {
-  if (!Device.isDevice) {
+  if (Platform.OS === 'web') {
     return;
   }
 
@@ -29,10 +29,6 @@ const setNofications = () => {
 
 const registerForPushNotificationsAsync = async (): Promise<void> => {
   if (Platform.OS === 'web') {
-    return;
-  }
-
-  if (!Device.isDevice) {
     return;
   }
 
