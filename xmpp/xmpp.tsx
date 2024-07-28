@@ -19,6 +19,8 @@ import { notify, listen } from '../events/events';
 
 import { registerForPushNotificationsAsync } from '../notifications/notifications';
 
+// TODO: Update when app is foregrounded but screen is locked
+
 let _xmpp: Client | undefined;
 
 notify('inbox', null);
@@ -437,31 +439,9 @@ const login = async (username: string, password: string) => {
       if (_xmpp) {
         notify('xmpp-is-online', true);
 
-        await _xmpp.send(xml("presence", { type: "available" }));
-
         !getInbox() && refreshInbox();
 
         await registerForPushNotificationsAsync();
-
-        // This is a hack to help figure out if the user is online. The
-        // server-side notification logic relies on coarse-grained last-online
-        // information to figure out if a notification should be sent.
-        //
-        // The XMPP server's mod_last module records the last disconnection
-        // time. But other than that, I don't see an indication of online
-        // status. So we periodically set users to "unavailable" to refresh the
-        // last disconnection time. Caveat: Messages can't be received while
-        // offline, so if someone gets a message during the split second they're
-        // unavailable, they won't see it until they refresh the app. So it
-        // could be better to set this to a higher number in the future.
-        (async () => {
-          while (true) {
-            if (!_xmpp) break;
-            await delay(3 * 60 * 1000); // 3 minutes
-            await _xmpp.send(xml("presence", { type: "unavailable" }));
-            await _xmpp.send(xml("presence", { type: "available" }));
-          }
-        })();
       }
     });
 
@@ -997,7 +977,6 @@ const refreshInbox = async (): Promise<void> => {
 const logout = async () => {
   if (_xmpp) {
     notify('xmpp-is-online', false);
-    await _xmpp.send(xml("presence", { type: "unavailable" })).catch(console.error);
     await _xmpp.stop().catch(console.error);
     notify('inbox', null);
   }
