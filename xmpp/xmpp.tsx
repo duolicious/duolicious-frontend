@@ -474,7 +474,6 @@ const _sendMessage = (
   recipientPersonUuid: string,
   message: string,
   callback: (messageStatus: Omit<MessageStatus, 'unsent: error'>) => void,
-  checkUniqueness: boolean,
 ): void => {
   const id = getRandomString(40);
   const fromJid = (
@@ -494,7 +493,6 @@ const _sendMessage = (
       from: fromJid,
       to: toJid,
       id: id,
-      check_uniqueness: checkUniqueness ? 'true' : 'false',
     },
     xml("body", {}, message),
     xml("request", { xmlns: 'urn:xmpp:receipts' }),
@@ -554,11 +552,10 @@ const _sendMessage = (
 const sendMessage = async (
   recipientPersonUuid: string,
   message: string,
-  checkUniqueness: boolean = false,
 ): Promise<MessageStatus> => {
   const __sendMessage = new Promise(
     (resolve: (messageStatus: MessageStatus) => void) =>
-      _sendMessage(recipientPersonUuid, message, resolve, checkUniqueness)
+      _sendMessage(recipientPersonUuid, message, resolve)
   );
 
   return await withTimeout(30000, __sendMessage);

@@ -272,8 +272,6 @@ const ConversationScreen = ({navigation, route}) => {
   })();
 
   const onPressSend = useCallback(async (text: string): Promise<MessageStatus> => {
-    const isFirstMessage = messages === null || messages.length === 0;
-
     const message: Message = {
       text: text,
       from: '',
@@ -285,11 +283,7 @@ const ConversationScreen = ({navigation, route}) => {
 
     setLastMessageStatus(null);
 
-    const messageStatus = await sendMessage(
-      personUuid,
-      message.text,
-      isFirstMessage,
-    );
+    const messageStatus = await sendMessage(personUuid, message.text);
 
     if (messageStatus === 'sent') {
       hasScrolled.current = false;
