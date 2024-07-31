@@ -260,7 +260,7 @@ const ConversationScreen = ({navigation, route}) => {
 
   const listRef = useRef<ScrollView>(null)
 
-  const lastMamId = (() => {
+  const getLastMamId = (messages: Message[] | null) => {
     if (!messages) return '';
     if (!messages.length) return '';
 
@@ -269,7 +269,9 @@ const ConversationScreen = ({navigation, route}) => {
     if (!mamId) return '';
 
     return mamId;
-  })();
+  };
+
+  const lastMamId = getLastMamId(messages);
 
   const onPressSend = useCallback(async (text: string): Promise<MessageStatus> => {
     const message: Message = {
@@ -306,6 +308,32 @@ const ConversationScreen = ({navigation, route}) => {
       );
     }
   }, [isAvailableUser, personId, name]);
+
+  const fetchMessagesDuringInactivity = async () => {
+    let _lastMamId = lastMamId;
+    const messagesDuringInactivity: Message[] = [];
+
+    while (true) {
+      const page = await fetchConversation(
+        personUuid || String(personId),
+        '',
+        _lastMamId
+      );
+
+      if (page === 'timeout' || page === undefined || page.length === 0) {
+        break;
+      }
+
+      messagesDuringInactivity.push(...page);
+
+      _lastMamId = getLastMamId(page);
+    }
+
+    setMessages([
+      ...(messages ?? []),
+      ...messagesDuringInactivity,
+    ]);
+  };
 
   const maybeLoadNextPage = useCallback(async () => {
     if (hasFetchedAll.current) {
@@ -442,6 +470,10 @@ const ConversationScreen = ({navigation, route}) => {
       };
     }, [markLastMessageRead]);
   }
+
+  useEffect(() => {
+    return listen('enter-active-state', fetchMessagesDuringInactivity);
+  }, []);
 
   return (
     <SafeAreaView style={styles.safeAreaView}>

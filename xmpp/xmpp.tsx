@@ -685,6 +685,7 @@ const _fetchConversation = async (
   withPersonUuid: string,
   callback: (messages: Message[] | 'timeout') => void,
   beforeId: string = '',
+  afterId: string = '',
 ) => {
   if (!_xmpp)
     return callback('timeout');
@@ -705,6 +706,7 @@ const _fetchConversation = async (
         <set xmlns='http://jabber.org/protocol/rsm'>
           <max>50</max>
           <before>${beforeId}</before>
+          <after>${afterId}</after>
         </set>
       </query>
     </iq>
@@ -794,10 +796,11 @@ const _fetchConversation = async (
 const fetchConversation = async (
   withPersonUuid: string,
   beforeId: string = '',
+  afterId: string = '',
 ): Promise<Message[] | undefined | 'timeout'> => {
   const __fetchConversation = new Promise(
     (resolve: (messages: Message[] | undefined | 'timeout') => void) =>
-      _fetchConversation(withPersonUuid, resolve, beforeId)
+      _fetchConversation(withPersonUuid, resolve, beforeId, afterId)
     );
 
   return await withTimeout(30000, __fetchConversation);
