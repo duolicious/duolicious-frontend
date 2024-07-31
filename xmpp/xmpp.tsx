@@ -19,7 +19,8 @@ import { notify, listen } from '../events/events';
 
 import { registerForPushNotificationsAsync } from '../notifications/notifications';
 
-// TODO: Update when app is foregrounded but screen is locked
+// TODO: Update conversation when app is foregrounded but screen is locked
+// TODO: Update inbox when app is foregrounded but screen is locked
 
 let _xmpp: Client | undefined;
 
