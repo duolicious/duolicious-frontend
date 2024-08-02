@@ -1,17 +1,19 @@
 import {
   ActivityIndicator,
   Animated,
+  AppState,
+  AppStateStatus,
+  KeyboardAvoidingView,
   Platform,
   Pressable,
+  SafeAreaView,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TextStyle,
   View,
   ViewStyle,
-  SafeAreaView,
-  StyleSheet,
-  KeyboardAvoidingView,
 } from 'react-native';
 import {
   useCallback,
@@ -44,7 +46,7 @@ import { RotateCcw, Flag, X } from "react-native-feather";
 import { setSkipped } from '../hide-and-block/hide-and-block';
 import { delay, isMobile } from '../util/util';
 import { ReportModalInitialData } from './report-modal';
-import { listen, notify } from '../events/events';
+import { listen, notify, lastEvent } from '../events/events';
 import { Image, ImageBackground } from 'expo-image';
 
 const Menu = ({navigation, name, personId, personUuid, messages, closeFn}) => {
@@ -258,9 +260,9 @@ const ConversationScreen = ({navigation, route}) => {
     messages[messages.length - 1] :
     null;
 
-  const listRef = useRef<ScrollView>(null)
+  const listRef = useRef<ScrollView>(null);
 
-  const getLastMamId = (messages: Message[] | null) => {
+  const lastMamId = (() => {
     if (!messages) return '';
     if (!messages.length) return '';
 
@@ -269,9 +271,7 @@ const ConversationScreen = ({navigation, route}) => {
     if (!mamId) return '';
 
     return mamId;
-  };
-
-  const lastMamId = getLastMamId(messages);
+  })();
 
   const onPressSend = useCallback(async (text: string): Promise<MessageStatus> => {
     const message: Message = {
@@ -308,32 +308,6 @@ const ConversationScreen = ({navigation, route}) => {
       );
     }
   }, [isAvailableUser, personId, name]);
-
-  const fetchMessagesDuringInactivity = async () => {
-    let _lastMamId = lastMamId;
-    const messagesDuringInactivity: Message[] = [];
-
-    while (true) {
-      const page = await fetchConversation(
-        personUuid || String(personId),
-        '',
-        _lastMamId
-      );
-
-      if (page === 'timeout' || page === undefined || page.length === 0) {
-        break;
-      }
-
-      messagesDuringInactivity.push(...page);
-
-      _lastMamId = getLastMamId(page);
-    }
-
-    setMessages([
-      ...(messages ?? []),
-      ...messagesDuringInactivity,
-    ]);
-  };
 
   const maybeLoadNextPage = useCallback(async () => {
     if (hasFetchedAll.current) {
@@ -408,20 +382,28 @@ const ConversationScreen = ({navigation, route}) => {
     if (!isOnline) {
       return;
     }
-    if (messages !== null) {
-      return;
-    }
 
     const fetchedMessages = await fetchConversation(
       personUuid || String(personId)
     );
 
-    if (fetchedMessages === 'timeout') {
-      setMessageFetchTimeout(true);
-    } else {
+    setMessageFetchTimeout(fetchedMessages === 'timeout');
+    if (fetchedMessages !== 'timeout') {
       setMessages(fetchedMessages ?? []);
     }
-  }, [messages, personUuid]);
+  }, [personUuid]);
+
+  useEffect(() => {
+    const onChangeAppState = (state: AppStateStatus) => {
+      if (state === 'active') {
+        maybeFetchFirstPage(lastEvent('xmpp-is-online') ?? false);
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', onChangeAppState);
+
+    return () => subscription.remove();
+  }, [maybeFetchFirstPage]);
 
   useEffect(() => {
     return listen('xmpp-is-online', maybeFetchFirstPage, true)
@@ -470,10 +452,6 @@ const ConversationScreen = ({navigation, route}) => {
       };
     }, [markLastMessageRead]);
   }
-
-  useEffect(() => {
-    return listen('enter-active-state', fetchMessagesDuringInactivity);
-  }, []);
 
   return (
     <SafeAreaView style={styles.safeAreaView}>
@@ -620,9 +598,8 @@ const ConversationScreen = ({navigation, route}) => {
               key={x.id}
               fromCurrentUser={x.fromCurrentUser}
               timestamp={x.timestamp}
-            >
-              {x.text}
-            </SpeechBubble>
+              text={x.text}
+            />
           )}
         </ScrollView>
       }

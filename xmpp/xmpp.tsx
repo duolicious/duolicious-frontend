@@ -15,12 +15,12 @@ import { deviceId } from '../kv-storage/device-id';
 import { japi } from '../api/api';
 import { deleteFromArray, withTimeout, delay } from '../util/util';
 
-import { notify, listen } from '../events/events';
+import { notify, lastEvent } from '../events/events';
 
 import { registerForPushNotificationsAsync } from '../notifications/notifications';
 
-// TODO: Update conversation when app is foregrounded but screen is locked
 // TODO: Update inbox when app is foregrounded but screen is locked
+// TODO: Navigate to conversations from notification
 
 let _xmpp: Client | undefined;
 
@@ -105,9 +105,7 @@ type Inbox = {
 };
 
 const getInbox = (): Inbox | null => {
-  let inbox: Inbox | null = null;
-  listen<Inbox | null>('inbox', (i) => inbox = (i ?? null), true)();
-  return inbox;
+  return lastEvent<Inbox | null>('inbox') ?? null;
 }
 
 const inboxStats = (inbox: Inbox): {
@@ -455,7 +453,7 @@ const login = async (username: string, password: string) => {
 
     console.error(e);
   }
-}
+};
 
 const markDisplayed = async (message: Message) => {
   if (!_xmpp) return;
@@ -680,13 +678,12 @@ const onReceiveMessage = (
 
   _xmpp.addListener("stanza", _onReceiveMessage);
   return _removeListener;
-}
+};
 
 const _fetchConversation = async (
   withPersonUuid: string,
   callback: (messages: Message[] | 'timeout') => void,
   beforeId: string = '',
-  afterId: string = '',
 ) => {
   if (!_xmpp)
     return callback('timeout');
@@ -707,7 +704,6 @@ const _fetchConversation = async (
         <set xmlns='http://jabber.org/protocol/rsm'>
           <max>50</max>
           <before>${beforeId}</before>
-          <after>${afterId}</after>
         </set>
       </query>
     </iq>
@@ -797,11 +793,10 @@ const _fetchConversation = async (
 const fetchConversation = async (
   withPersonUuid: string,
   beforeId: string = '',
-  afterId: string = '',
 ): Promise<Message[] | undefined | 'timeout'> => {
   const __fetchConversation = new Promise(
     (resolve: (messages: Message[] | undefined | 'timeout') => void) =>
-      _fetchConversation(withPersonUuid, resolve, beforeId, afterId)
+      _fetchConversation(withPersonUuid, resolve, beforeId)
     );
 
   return await withTimeout(30000, __fetchConversation);

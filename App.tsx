@@ -1,8 +1,6 @@
 import {
   ActivityIndicator,
   Animated,
-  AppState,
-  AppStateStatus,
   Platform,
   StatusBar,
   UIManager,
@@ -376,24 +374,6 @@ const App = () => {
       }
     })();
   }, [isLoading]);
-
-  useEffect(() => {
-    const onChangeAppState = (state: AppStateStatus) => {
-      if (Platform.OS !== 'web') {
-        return;
-      }
-
-      if (state === 'active') {
-        notify('enter-active-state', new Date());
-      } else {
-        notify('leave-active-state', new Date());
-      }
-    };
-
-    const subscription = AppState.addEventListener('change', onChangeAppState);
-
-    return () => subscription.remove();
-  }, []);
 
   if (serverStatus !== "ok") {
     return <UtilityScreen serverStatus={serverStatus}/>
