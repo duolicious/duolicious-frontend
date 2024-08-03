@@ -22,10 +22,10 @@ import { registerForPushNotificationsAsync } from '../notifications/notification
 import {
   AppState,
   AppStateStatus,
+  Platform,
 } from 'react-native';
 
 // TODO: Navigate to conversations from notification
-// TODO: Typing indicator
 
 let _xmpp: Client | undefined;
 
@@ -1000,7 +1000,7 @@ const registerPushToken = async (token: string) => {
 };
 
 const onChangeAppState = (state: AppStateStatus) => {
-  if (state === 'active') {
+  if (Platform.OS !== 'web' && state === 'active') {
     refreshInbox();
   }
 };

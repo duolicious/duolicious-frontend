@@ -410,7 +410,7 @@ const ConversationScreen = ({navigation, route}) => {
 
   useEffect(() => {
     const onChangeAppState = (state: AppStateStatus) => {
-      if (state === 'active') {
+      if (Platform.OS !== 'web' && state === 'active') {
         maybeFetchFirstPage(lastEvent('xmpp-is-online') ?? false);
       }
     };
