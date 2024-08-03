@@ -49,6 +49,20 @@ import { ReportModalInitialData } from './report-modal';
 import { listen, notify, lastEvent } from '../events/events';
 import { Image, ImageBackground } from 'expo-image';
 
+const propAt = (messages: Message[] | null | undefined, index: number, prop: string): string => {
+  if (!messages) return '';
+
+  const message = messages[index];
+
+  if (!message) return '';
+
+  return message[prop] ?? '';
+};
+
+const lastPropAt = (messages: Message[] | null | undefined, prop: string): string => {
+  return propAt(messages, (messages ?? []).length - 1, prop);
+}
+
 const Menu = ({navigation, name, personId, personUuid, messages, closeFn}) => {
   const [isSkipped, setIsSkipped] = useState<boolean | undefined>();
   const [isUpdating, setIsUpdating] = useState(false);
@@ -262,17 +276,6 @@ const ConversationScreen = ({navigation, route}) => {
 
   const listRef = useRef<ScrollView>(null);
 
-  const lastMamId = (() => {
-    if (!messages) return '';
-    if (!messages.length) return '';
-
-    const mamId = messages[0].mamId;
-
-    if (!mamId) return '';
-
-    return mamId;
-  })();
-
   const onPressSend = useCallback(async (text: string): Promise<MessageStatus> => {
     const message: Message = {
       text: text,
@@ -321,7 +324,7 @@ const ConversationScreen = ({navigation, route}) => {
 
     const fetchedMessages = await fetchConversation(
       personUuid || String(personId),
-      lastMamId
+      propAt(messages, 0, 'mamId')
     );
 
     isFetchingNextPage.current = false;
@@ -336,7 +339,7 @@ const ConversationScreen = ({navigation, route}) => {
 
       hasFetchedAll.current = !(fetchedMessages && fetchedMessages.length);
     }
-  }, [messages, lastMamId]);
+  }, [messages]);
 
   const _onReceiveMessage = useCallback((msg) => {
     hasScrolled.current = false;
@@ -388,10 +391,22 @@ const ConversationScreen = ({navigation, route}) => {
     );
 
     setMessageFetchTimeout(fetchedMessages === 'timeout');
-    if (fetchedMessages !== 'timeout') {
-      setMessages(fetchedMessages ?? []);
+
+    if (fetchedMessages === 'timeout') {
+      return;
     }
-  }, [personUuid]);
+
+    if (fetchedMessages === undefined) {
+      return;
+    }
+
+    const lastIdOfPage = lastPropAt(fetchedMessages, 'id');
+    const lastIdOfConversation = lastPropAt(messages, 'id');
+
+    if (messages === null || lastIdOfPage !== lastIdOfConversation) {
+      setMessages(fetchedMessages);
+    }
+  }, [personUuid, messages]);
 
   useEffect(() => {
     const onChangeAppState = (state: AppStateStatus) => {
@@ -406,8 +421,8 @@ const ConversationScreen = ({navigation, route}) => {
   }, [maybeFetchFirstPage]);
 
   useEffect(() => {
-    return listen('xmpp-is-online', maybeFetchFirstPage, true)
-  }, [maybeFetchFirstPage]);
+    return listen('xmpp-is-online', maybeFetchFirstPage, messages === null)
+  }, [maybeFetchFirstPage, messages]);
 
   // Scroll to end when last message changes
   useEffect(() => {

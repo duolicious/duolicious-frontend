@@ -793,7 +793,7 @@ const _fetchConversation = async (
   _xmpp.addListener("stanza", maybeCollect);
   _xmpp.addListener("stanza", maybeFin);
 
-  await _xmpp.send(queryStanza);
+  await _xmpp.send(queryStanza).catch(console.warn);
 };
 
 const fetchConversation = async (
@@ -942,7 +942,7 @@ const _fetchInboxPage = async (
   _xmpp.addListener("stanza", maybeCollect);
   _xmpp.addListener("stanza", maybeFin);
 
-  await _xmpp.send(queryStanza);
+  await _xmpp.send(queryStanza).catch(console.warn);
 };
 
 const fetchInboxPage = async (
