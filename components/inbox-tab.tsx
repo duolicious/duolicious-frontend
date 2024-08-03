@@ -122,7 +122,7 @@ const InboxTab_ = ({navigation}) => {
   }, []);
 
   const maybeRefresh = useCallback(() => {
-    listRef.current?.refresh && listRef.current.refresh()
+    listRef.current?.refresh && listRef.current.refresh();
   }, [listRef]);
 
   useEffect(() => {
@@ -143,10 +143,7 @@ const InboxTab_ = ({navigation}) => {
     })();
   }, []);
 
-  useEffect(maybeRefresh, [maybeRefresh, sectionIndex]);
-  useEffect(maybeRefresh, [maybeRefresh, sortByIndex]);
   useEffect(maybeRefresh, [maybeRefresh, inbox]);
-  useEffect(maybeRefresh, [maybeRefresh, showArchive]);
 
   const fetchInboxPage = (
     sectionName: 'chats' | 'intros' | 'archive'
@@ -319,6 +316,8 @@ const InboxTab_ = ({navigation}) => {
     }
   }, [sectionIndex, showArchive]);
 
+  const keyExtractor = useCallback((c: Conversation) => JSON.stringify(c), []);
+
   return (
     <SafeAreaView style={styles.safeAreaView}>
       <TopNavBar>
@@ -351,6 +350,7 @@ const InboxTab_ = ({navigation}) => {
           ListHeaderComponent={showArchive ? undefined : ListHeaderComponent}
           hideListHeaderComponentWhenLoading={false}
           renderItem={renderItem}
+          keyExtractor={keyExtractor}
           disableRefresh={true}
         />
       }

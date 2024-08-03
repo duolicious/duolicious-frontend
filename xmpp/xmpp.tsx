@@ -19,8 +19,14 @@ import { notify, lastEvent } from '../events/events';
 
 import { registerForPushNotificationsAsync } from '../notifications/notifications';
 
-// TODO: Update inbox when app is foregrounded but screen is locked
+import {
+  AppState,
+  AppStateStatus,
+} from 'react-native';
+
 // TODO: Navigate to conversations from notification
+// TODO: Log into XMPP in parallel with API
+// TODO: Typing indicator
 
 let _xmpp: Client | undefined;
 
@@ -438,7 +444,7 @@ const login = async (username: string, password: string) => {
       if (_xmpp) {
         notify('xmpp-is-online', true);
 
-        !getInbox() && refreshInbox();
+        refreshInbox();
 
         await registerForPushNotificationsAsync();
       }
@@ -961,13 +967,13 @@ const refreshInbox = async (): Promise<void> => {
     );
 
     if (isLastPage) {
-      notify<Inbox>('inbox', inbox);
       break;
     } else {
       inbox = mergeInbox(inbox, page);
-      notify<Inbox>('inbox', inbox);
     }
   }
+
+  notify<Inbox>('inbox', inbox);
 };
 
 const logout = async () => {
@@ -985,6 +991,14 @@ const registerPushToken = async (token: string) => {
 
   await _xmpp.send(stanza);
 };
+
+const onChangeAppState = (state: AppStateStatus) => {
+  if (state === 'active') {
+    refreshInbox();
+  }
+};
+
+AppState.addEventListener('change', onChangeAppState);
 
 export {
   Conversation,
