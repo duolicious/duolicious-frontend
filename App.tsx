@@ -35,7 +35,7 @@ import { ConversationScreen } from './components/conversation-screen';
 import { UtilityScreen } from './components/utility-screen';
 import { ProspectProfileScreen } from './components/prospect-profile-screen';
 import { InviteScreen, WelcomeScreen } from './components/welcome-screen';
-import { sessionToken } from './kv-storage/session-token';
+import { sessionToken, sessionPersonUuid } from './kv-storage/session-token';
 import { japi, SUPPORTED_API_VERSIONS } from './api/api';
 import { login, logout, Inbox, inboxStats } from './xmpp/xmpp';
 import { STATUS_URL } from './env/env';
@@ -184,6 +184,8 @@ const App = () => {
     const existingSessionToken = await sessionToken();
 
     if (existingSessionToken === null) {
+      await sessionPersonUuid(null);
+      await sessionToken(null);
       setSignedInUser(undefined);
       return;
     }
@@ -195,6 +197,8 @@ const App = () => {
     const response = await japi('post', '/check-session-token');
 
     if (!response.ok || !response?.json?.onboarded) {
+      await sessionPersonUuid(null);
+      await sessionToken(null);
       setSignedInUser(undefined);
       return;
     }
@@ -208,6 +212,8 @@ const App = () => {
       sessionToken: existingSessionToken,
       pendingClub: response?.json?.pending_club,
     });
+
+    await sessionPersonUuid(response?.json?.person_uuid);
 
     notify<ClubItem[]>('updated-clubs', clubs);
   }, []);
@@ -243,6 +249,17 @@ const App = () => {
       setServerStatus(latestServerStatus);
     }
   }, [serverStatus]);
+
+  const ensureLoggedIntoXmpp = async () => {
+    const personUuid = (await sessionPersonUuid()) ?? signedInUser?.personUuid;
+    const token = await sessionToken();
+
+    if (!personUuid || !token) {
+      return;
+    }
+
+    await login(personUuid, token);
+  };
 
   const parseUrl_ = useCallback(async () => {
     const parsedUrl = await parseUrl();
@@ -281,6 +298,10 @@ const App = () => {
   }, []);
 
   useEffect(() => {
+      ensureLoggedIntoXmpp()
+  }, [signedInUser?.personUuid]);
+
+  useEffect(() => {
     // Without this flag, an infinite loop will start each time this effect
     // starts, which would effectively be whenever the server's status changes.
     // That would lead to multiple infinite loops running concurrently.
@@ -304,8 +325,6 @@ const App = () => {
         logout();
         return;
       }
-
-      login(signedInUser.personUuid, signedInUser.sessionToken);
 
       const lastNavigationState = await navigationState();
 

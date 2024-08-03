@@ -25,7 +25,6 @@ import {
 } from 'react-native';
 
 // TODO: Navigate to conversations from notification
-// TODO: Log into XMPP in parallel with API
 // TODO: Typing indicator
 
 let _xmpp: Client | undefined;
@@ -215,23 +214,19 @@ const conversationListToMap = (
 };
 
 const populateConversationList = async (
-  conversationList: Conversation[]
+  conversationList: Conversation[],
+  apiData: any,
 ): Promise<void> => {
   const personUuids: string[] = conversationList
     .map(c => c.personUuid)
     .filter(isValidUuid);
 
-  // TODO: Better error handling
-  const response = (
-    await japi('post', '/inbox-info', {person_uuids: []})
-  ).json;
-
-  const personIdToInfo = response.reduce((obj, item) => {
+  const personIdToInfo = apiData.reduce((obj, item) => {
     obj[item.person_id] = item;
     return obj;
   }, {});
 
-  const personUuidToInfo = response.reduce((obj, item) => {
+  const personUuidToInfo = apiData.reduce((obj, item) => {
     obj[item.person_uuid] = item;
     return obj;
   }, {});
@@ -258,7 +253,11 @@ const populateConversationList = async (
 const populateConversation = async (
   conversation: Conversation
 ): Promise<void> => {
-  await populateConversationList([conversation]);
+  const apiData = (
+    await japi('post',
+    '/inbox-info',
+    {person_uuids: [conversation.personUuid]})).json;
+  await populateConversationList([conversation], apiData);
 };
 
 const inboxToPersonUuids = (inbox: Inbox): string[] => {
@@ -420,6 +419,10 @@ const select1 = (query: string, stanza: Element): xpath.SelectedValue => {
 };
 
 const login = async (username: string, password: string) => {
+  if (_xmpp) {
+    return; // Already logged in
+  }
+
   try {
     _xmpp = client({
       service: CHAT_URL,
@@ -817,6 +820,8 @@ const _fetchInboxPage = async (
     return callback(undefined);
   }
 
+  const apiDataPromise = japi('post', '/inbox-info', {person_uuids: []});
+
   const queryId = getRandomString(10);
 
   const endTimestampFragment = !endTimestamp ? '' : `
@@ -927,7 +932,8 @@ const _fetchInboxPage = async (
       conversationsMap: conversationListToMap(conversationList),
     };
 
-    await populateConversationList(conversations.conversations);
+    const apiData = (await apiDataPromise).json;
+    await populateConversationList(conversations.conversations, apiData);
 
     const inbox = conversationsToInbox(conversations.conversations);
 
@@ -967,13 +973,13 @@ const refreshInbox = async (): Promise<void> => {
     );
 
     if (isLastPage) {
+      notify<Inbox>('inbox', inbox);
       break;
     } else {
       inbox = mergeInbox(inbox, page);
+      notify<Inbox>('inbox', inbox);
     }
   }
-
-  notify<Inbox>('inbox', inbox);
 };
 
 const logout = async () => {
@@ -981,6 +987,7 @@ const logout = async () => {
     notify('xmpp-is-online', false);
     await _xmpp.stop().catch(console.error);
     notify('inbox', null);
+    _xmpp = undefined;
   }
 };
 
