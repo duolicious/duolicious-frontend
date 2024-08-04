@@ -25,8 +25,6 @@ import {
   Platform,
 } from 'react-native';
 
-// TODO: Navigate to conversations from notification
-
 let _xmpp: Client | undefined;
 
 notify('inbox', null);

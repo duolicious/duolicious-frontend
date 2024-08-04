@@ -23,6 +23,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import * as Font from 'expo-font';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import * as SplashScreen from 'expo-splash-screen';
+import * as Notifications from 'expo-notifications';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { TabBar } from './components/tab-bar';
@@ -43,7 +44,7 @@ import { delay, parseUrl } from './util/util';
 import { ReportModal } from './components/report-modal';
 import { ImageCropper } from './components/image-cropper';
 import { StreamErrorModal } from './components/stream-error-modal';
-import { setNofications } from './notifications/notifications';
+import { setNofications, useNotificationObserver } from './notifications/notifications';
 import { navigationState } from './kv-storage/navigation-state';
 import { listen, notify } from './events/events';
 import { verificationWatcher } from './verification/verification';
@@ -271,10 +272,14 @@ const App = () => {
       }
 
       case 'invite': {
-        navigationContainerRef.current.navigate(
-          'Invite Screen',
-          { clubName: decodeURIComponent(parsedUrl.right) },
-        );
+        const navigationContainer = navigationContainerRef?.current;
+
+        if (navigationContainer) {
+          navigationContainerRef.current.navigate(
+            'Invite Screen',
+            { clubName: decodeURIComponent(parsedUrl.right) },
+          );
+        }
         break;
       }
 
@@ -333,7 +338,7 @@ const App = () => {
       const pendingClub = signedInUser?.pendingClub;
 
       if (navigationContainer && pendingClub) {
-        navigationContainerRef.current.navigate('Search');
+        navigationContainer.navigate('Search');
       } else if (await parseUrl()) {
         ; // Don't restore last navigation state
       } else if (navigationContainer && lastNavigationState) {
@@ -384,6 +389,19 @@ const App = () => {
       return listen<Inbox | null>('inbox', onChangeInbox, true);
     }, [onChangeInbox]);
   }
+
+  useNotificationObserver((notification: Notifications.Notification) => {
+    if (!isLoading) {
+      const navigationContainer = navigationContainerRef.current;
+
+      const { screen, params } = notification.request.content.data;
+
+      if (!navigationContainer) return;
+      if (!screen) return;
+
+      navigationContainer.navigate(screen, params);
+    }
+  }, [isLoading]);
 
   useEffect(() => {
     (async () => {
