@@ -143,7 +143,10 @@ const InboxTab_ = ({navigation}) => {
     })();
   }, []);
 
+  useEffect(maybeRefresh, [maybeRefresh, sectionIndex]);
+  useEffect(maybeRefresh, [maybeRefresh, sortByIndex]);
   useEffect(maybeRefresh, [maybeRefresh, inbox]);
+  useEffect(maybeRefresh, [maybeRefresh, showArchive]);
 
   const fetchInboxPage = (
     sectionName: 'chats' | 'intros' | 'archive'
