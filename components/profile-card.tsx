@@ -25,6 +25,7 @@ import { ImageBackground } from 'expo-image';
 import { VerificationBadge } from './verification-badge';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { faLock } from '@fortawesome/free-solid-svg-icons/faLock'
+import { verificationOptionGroups } from '../data/option-groups';
 
 const ImageOrSkeleton_ = ({resolution, imageUuid, imageBlurhash, ...rest}) => {
   const {
@@ -114,18 +115,22 @@ const ProfileCard = ({
   const navigation = useNavigation<any>();
 
   const itemOnPress = useCallback(() => {
-    if (!personUuid) {
+    if (!navigation) {
       return;
     }
 
-    return navigation.navigate(
-      'Prospect Profile Screen',
-      {
-        screen: 'Prospect Profile',
-        params: { personId, personUuid, imageBlurhash },
-      }
-    );
-  }, [navigation, personUuid]);
+    if (verificationRequired) {
+      return navigation.navigate('Profile');
+    } else if (personUuid) {
+      return navigation.navigate(
+        'Prospect Profile Screen',
+        {
+          screen: 'Prospect Profile',
+          params: { personId, personUuid, imageBlurhash },
+        }
+      );
+    }
+  }, [navigation, personUuid, verificationRequired]);
 
   const onHide = useCallback(() => setIsSkipped(true), [setIsSkipped]);
   const onUnhide = useCallback(() => setIsSkipped(false), [setIsSkipped]);
@@ -332,141 +337,7 @@ const UserDetails = ({name, age, matchPercentage, verified, ...rest}) => {
   );
 };
 
-const VerticalProfileCard = ({name, age, location, ...props}) => {
-  const {
-    style,
-    unread = false,
-    timeVisited,
-    ...rest
-  } = props;
-
-  const animated = useRef(new Animated.Value(1)).current;
-
-  const backgroundColor = animated.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['rgba(0, 0, 0, 0.2)', 'rgba(0, 0, 0, 0.05)'],
-    extrapolate: 'clamp',
-  });
-
-  const fadeIn = useCallback(() => {
-    Animated.timing(animated, {
-      toValue: 0,
-      duration: 50,
-      useNativeDriver: false,
-    }).start();
-  }, []);
-
-  const fadeOut = useCallback(() => {
-    Animated.timing(animated, {
-      toValue: 1,
-      duration: 100,
-      useNativeDriver: false,
-    }).start();
-  }, []);
-
-  return (
-    <Pressable
-      onPressIn={fadeIn}
-      onPressOut={fadeOut}
-      style={{
-        width: '100%',
-        maxWidth: 600,
-        alignSelf: 'center',
-      }}
-      {...rest}
-    >
-      <Animated.View
-        style={{
-          backgroundColor: backgroundColor,
-          flexDirection: 'row',
-          alignItems: 'center',
-          borderRadius: 5,
-          marginTop: 5,
-          marginBottom: 5,
-          marginLeft: 10,
-          marginRight: 10,
-          paddingTop: 5,
-          paddingBottom: 5,
-          paddingLeft: 10,
-          ...style,
-        }}
-      >
-        <Avatar percentage={99}/>
-        <View
-          style={{
-            paddingLeft: 10,
-            paddingRight: 20,
-            flexDirection: 'column',
-            flex: 1,
-            flexGrow: 1,
-          }}
-        >
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-            }}
-          >
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'center',
-                alignItems: 'center',
-                paddingBottom: 5,
-                  flexShrink: 1,
-              }}
-            >
-              <DefaultText
-                style={{
-                  fontSize: 16,
-                  fontWeight: '700',
-                  flexWrap: 'wrap',
-                  flexShrink: 1,
-                  overflow: 'hidden',
-                }}
-              >
-                {name}, {age}
-              </DefaultText>
-              {unread &&
-                <View
-                  style={{
-                    marginLeft: 5,
-                    marginRight: 5,
-                    height: 10,
-                    width: 10,
-                    borderRadius: 999,
-                    backgroundColor: '#70f',
-                  }}
-                />
-              }
-            </View>
-            {timeVisited &&
-              <DefaultText
-                style={{
-                  color: 'grey',
-                }}
-              >
-                {timeVisited}
-              </DefaultText>
-            }
-          </View>
-          <DefaultText
-            numberOfLines={1}
-            style={{
-              fontWeight: '400',
-              color: 'grey',
-            }}
-          >
-            {location}
-          </DefaultText>
-        </View>
-      </Animated.View>
-    </Pressable>
-  );
-};
-
 export {
   ImageOrSkeleton,
   ProfileCard,
-  VerticalProfileCard,
 };
