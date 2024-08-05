@@ -23,6 +23,8 @@ import { X } from "react-native-feather";
 import { PageItem } from './search-tab';
 import { ImageBackground } from 'expo-image';
 import { VerificationBadge } from './verification-badge';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
+import { faLock } from '@fortawesome/free-solid-svg-icons/faLock'
 
 const ImageOrSkeleton_ = ({resolution, imageUuid, imageBlurhash, ...rest}) => {
   const {
@@ -66,7 +68,7 @@ const ImageOrSkeleton_ = ({resolution, imageUuid, imageBlurhash, ...rest}) => {
           alignItems: 'center',
         }}
       >
-        {imageUuid === null &&
+        {imageUuid === null && imageBlurhash === null &&
           <Ionicons
             style={{fontSize: 100, color: '#eee'}}
             name={'person'}
@@ -95,6 +97,7 @@ const ProfileCard = ({
     person_messaged_prospect: personMessagedProspect,
     prospect_messaged_person: prospectMessagedPerson,
     verified: verified,
+    verification_required_to_view: verificationRequired,
   } = item;
 
   const [isSkipped, setIsSkipped] = useState(false);
@@ -111,6 +114,10 @@ const ProfileCard = ({
   const navigation = useNavigation<any>();
 
   const itemOnPress = useCallback(() => {
+    if (!personUuid) {
+      return;
+    }
+
     return navigation.navigate(
       'Prospect Profile Screen',
       {
@@ -160,12 +167,14 @@ const ProfileCard = ({
   );
 
   return (
-    <Pressable onPress={itemOnPress} style={{ flex: 0.5, aspectRatio: 1 }}>
+    <Pressable
+      onPress={itemOnPress}
+      style={{ flex: 0.5, aspectRatio: 1, overflow: 'hidden', borderRadius: 5 }}
+    >
       <View
         style={{
           width: '100%',
           height: '100%',
-          borderRadius: 5,
           overflow: 'hidden',
         }}
       >
@@ -227,6 +236,48 @@ const ProfileCard = ({
             height={48}
             width={48}
           />
+        </View>
+      }
+      {verificationRequired &&
+        <View
+          style={{
+            position: 'absolute',
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <FontAwesomeIcon
+            icon={faLock}
+            size={30}
+            style={{color: 'white'}}
+          />
+          <DefaultText
+            style={{
+              color: 'white',
+              fontWeight: '900',
+              fontSize: 22,
+              textAlign: 'center',
+              padding: 10,
+            }}
+          >
+            Verification Required
+          </DefaultText>
+          <DefaultText
+            style={{
+              fontSize: 12,
+              color: '#ccc',
+              textAlign: 'center',
+              paddingHorizontal: 10,
+            }}
+          >
+            This person only lets people with
+            verified {verificationRequired} see them
+          </DefaultText>
         </View>
       }
     </Pressable>
