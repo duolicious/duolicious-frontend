@@ -438,7 +438,7 @@ const login = async (username: string, password: string) => {
     });
 
     _xmpp.on("offline", async () => {
-      notify('xmpp-is-online', true);
+      notify('xmpp-is-online', false);
     });
 
     _xmpp.on("online", async () => {
