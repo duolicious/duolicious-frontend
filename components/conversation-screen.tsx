@@ -779,7 +779,7 @@ const TextInputWithButton = ({
               }}
             >
               {isLoading &&
-                <ActivityIndicator size="large" color="#70f" />
+                <ActivityIndicator size="small" color="#70f" />
               }
               {!isLoading &&
                 <FontAwesomeIcon
