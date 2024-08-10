@@ -334,7 +334,7 @@ const ConversationScreen = ({navigation, route}) => {
     if (fetchedMessages !== 'timeout') {
       // Prevents the list from moving up to the newly added speech bubbles and
       // triggering another fetch
-      if (listRef.current) listRef.current.scrollTo({y: 1, animated: false});
+      if (listRef.current) listRef.current.scrollTo({y: 2, animated: false});
 
       setMessages([...(fetchedMessages ?? []), ...(messages ?? [])]);
 
@@ -347,7 +347,7 @@ const ConversationScreen = ({navigation, route}) => {
     setMessages(msgs => [...(msgs ?? []), msg]);
   }, []);
 
-  const isCloseToTop = ({contentOffset}) => contentOffset.y === 0;
+  const isCloseToTop = ({contentOffset}) => contentOffset.y < 1;
 
   const isAtBottom = ({layoutMeasurement, contentOffset, contentSize}) =>
     layoutMeasurement.height + contentOffset.y >= contentSize.height;
