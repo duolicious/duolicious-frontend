@@ -987,6 +987,11 @@ const refreshInbox = async (): Promise<void> => {
       inbox = mergeInbox(inbox, page);
       notify<Inbox>('inbox', inbox);
     }
+
+    // This code was originally intended to speed up fetching the inbox in the
+    // hope this would be faster, though it's actually slower, so we can stop at
+    // the first (very big) page.
+    break;
   }
 };
 
