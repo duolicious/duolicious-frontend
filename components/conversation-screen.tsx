@@ -252,6 +252,7 @@ const Menu = ({navigation, name, personId, personUuid, messages, closeFn}) => {
 };
 
 const ConversationScreen = ({navigation, route}) => {
+  const [isOnline, setIsOnline] = useState(lastEvent<boolean>('xmpp-is-online'));
   const [showMenu, setShowMenu] = useState(false);
   const [messageFetchTimeout, setMessageFetchTimeout] = useState(false);
   const [messages, setMessages] = useState<Message[] | null>(null);
@@ -424,6 +425,8 @@ const ConversationScreen = ({navigation, route}) => {
     return listen('xmpp-is-online', maybeFetchFirstPage, messages === null)
   }, [maybeFetchFirstPage, messages]);
 
+  useEffect(() => listen<boolean>('xmpp-is-online', setIsOnline), []);
+
   // Scroll to end when last message changes
   useEffect(() => {
     (async () => {
@@ -481,6 +484,7 @@ const ConversationScreen = ({navigation, route}) => {
           style={{
             justifyContent: 'center',
             alignItems: 'center',
+            maxWidth: 220,
           }}
         >
           <Image
@@ -501,9 +505,21 @@ const ConversationScreen = ({navigation, route}) => {
               fontWeight: '700',
               fontSize: 20,
             }}
+            numberOfLines={1}
           >
             {name ?? '...'}
           </DefaultText>
+          {!isOnline &&
+            <ActivityIndicator
+              size="small"
+              color="#70f"
+              style={{
+                position: 'absolute',
+                right: -40,
+                top: 3,
+              }}
+            />
+          }
         </Pressable>
         {isAvailableUser &&
           <TopNavBarButton
@@ -523,18 +539,9 @@ const ConversationScreen = ({navigation, route}) => {
           />
         }
       </TopNavBar>
-      {messages === null && !messageFetchTimeout &&
+      {messages === null &&
         <View style={{flexGrow: 1, justifyContent: 'center', alignItems: 'center'}}>
           <ActivityIndicator size="large" color="#70f" />
-        </View>
-      }
-      {messages === null && messageFetchTimeout &&
-        <View style={{flexGrow: 1, justifyContent: 'center', alignItems: 'center'}}>
-          <DefaultText
-            style={{fontFamily: 'Trueno'}}
-          >
-            You’re offline
-          </DefaultText>
         </View>
       }
       {messages !== null &&
@@ -636,10 +643,10 @@ const ConversationScreen = ({navigation, route}) => {
         {lastMessageStatus === 'not unique' ? `Someone already sent that intro! Try sending ${name} a different message...` : '' }
         {lastMessageStatus === 'too long' ? 'That message is too big! 😩' : '' }
       </DefaultText>
-      {!messageFetchTimeout && isAvailableUser &&
+      {isAvailableUser &&
         <TextInputWithButton onPress={onPressSend}/>
       }
-      {!messageFetchTimeout && !isAvailableUser &&
+      {!isAvailableUser &&
         <DefaultText
           style={{
             maxWidth: 600,

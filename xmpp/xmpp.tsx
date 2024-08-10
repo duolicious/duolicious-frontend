@@ -437,9 +437,13 @@ const login = async (username: string, password: string) => {
       }
     });
 
-    _xmpp.on("offline", async () => {
-      notify('xmpp-is-online', false);
-    });
+    _xmpp.on("offline",       () => notify('xmpp-is-online', false));
+    _xmpp.on("connecting",    () => notify('xmpp-is-online', false));
+    _xmpp.on("opening",       () => notify('xmpp-is-online', false));
+    _xmpp.on("closing",       () => notify('xmpp-is-online', false));
+    _xmpp.on("close",         () => notify('xmpp-is-online', false));
+    _xmpp.on("disconnecting", () => notify('xmpp-is-online', false));
+    _xmpp.on("disconnect",    () => notify('xmpp-is-online', false));
 
     _xmpp.on("online", async () => {
       if (_xmpp) {
