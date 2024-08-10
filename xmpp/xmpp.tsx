@@ -425,8 +425,6 @@ const login = async (username: string, password: string) => {
     return; // Already logged in
   }
 
-  const listeners: (() => void)[] = [];
-
   try {
     const options = {
       service: CHAT_URL,
@@ -471,16 +469,12 @@ const login = async (username: string, password: string) => {
       notify('xmpp-stanza', stanza)
     });
 
-    listeners.push(onReceiveMessage() ?? (() => {})); // Updates inbox
-
     await _xmpp.current.start();
   } catch (e) {
     _xmpp.current = undefined;
     notify('xmpp-is-online', false);
 
     console.error(e);
-  } finally {
-    listeners.forEach(cb => cb());
   }
 };
 
@@ -643,9 +637,6 @@ const onReceiveMessage = (
   otherPersonUuid?: string,
   doMarkDisplayed?: boolean,
 ): (() => void) | undefined => {
-  if (!_xmpp.current)
-    return undefined;
-
   const _onReceiveMessage = async (stanza: Element) => {
     const doc = new DOMParser().parseFromString(stanza.toString(), 'text/xml');
 
@@ -1018,7 +1009,11 @@ const onChangeAppState = (state: AppStateStatus) => {
   }
 };
 
+// Update the inbox when resuming from an inactive state
 AppState.addEventListener('change', onChangeAppState);
+
+// Update the inbox upon receiving a message
+onReceiveMessage();
 
 export {
   Conversation,
