@@ -15,7 +15,7 @@ import { deviceId } from '../kv-storage/device-id';
 import { japi } from '../api/api';
 import { deleteFromArray, withTimeout, delay } from '../util/util';
 
-import { notify, lastEvent } from '../events/events';
+import { listen, notify, lastEvent } from '../events/events';
 
 import { registerForPushNotificationsAsync } from '../notifications/notifications';
 
@@ -25,7 +25,11 @@ import {
   Platform,
 } from 'react-native';
 
-let _xmpp: Client | undefined;
+const _xmpp: {
+  current: Client | undefined;
+} = {
+  current: undefined
+};
 
 notify('inbox', null);
 
@@ -417,12 +421,12 @@ const select1 = (query: string, stanza: Element): xpath.SelectedValue => {
 };
 
 const login = async (username: string, password: string) => {
-  if (_xmpp) {
+  if (_xmpp.current) {
     return; // Already logged in
   }
 
   try {
-    _xmpp = client({
+    _xmpp.current = client({
       service: CHAT_URL,
       domain: "duolicious.app",
       username: username,
@@ -430,23 +434,23 @@ const login = async (username: string, password: string) => {
       resource: await deviceId(),
     });
 
-    _xmpp.on("error", (err) => {
+    _xmpp.current.on("error", (err) => {
       console.error(err);
       if (err.message === "conflict - Replaced by new connection") {
         notify('stream-error');
       }
     });
 
-    _xmpp.on("offline",       () => notify('xmpp-is-online', false));
-    _xmpp.on("connecting",    () => notify('xmpp-is-online', false));
-    _xmpp.on("opening",       () => notify('xmpp-is-online', false));
-    _xmpp.on("closing",       () => notify('xmpp-is-online', false));
-    _xmpp.on("close",         () => notify('xmpp-is-online', false));
-    _xmpp.on("disconnecting", () => notify('xmpp-is-online', false));
-    _xmpp.on("disconnect",    () => notify('xmpp-is-online', false));
+    _xmpp.current.on("offline",       () => notify('xmpp-is-online', false));
+    _xmpp.current.on("connecting",    () => notify('xmpp-is-online', false));
+    _xmpp.current.on("opening",       () => notify('xmpp-is-online', false));
+    _xmpp.current.on("closing",       () => notify('xmpp-is-online', false));
+    _xmpp.current.on("close",         () => notify('xmpp-is-online', false));
+    _xmpp.current.on("disconnecting", () => notify('xmpp-is-online', false));
+    _xmpp.current.on("disconnect",    () => notify('xmpp-is-online', false));
 
-    _xmpp.on("online", async () => {
-      if (_xmpp) {
+    _xmpp.current.on("online", async () => {
+      if (_xmpp.current) {
         notify('xmpp-is-online', true);
 
         refreshInbox();
@@ -457,9 +461,9 @@ const login = async (username: string, password: string) => {
 
     onReceiveMessage(); // Updates inbox
 
-    await _xmpp.start();
+    await _xmpp.current.start();
   } catch (e) {
-    _xmpp = undefined;
+    _xmpp.current = undefined;
     notify('xmpp-is-online', false);
 
     console.error(e);
@@ -467,7 +471,7 @@ const login = async (username: string, password: string) => {
 };
 
 const markDisplayed = async (message: Message) => {
-  if (!_xmpp) return;
+  if (!_xmpp.current) return;
   if (message.fromCurrentUser) return;
 
   const stanza = parse(`
@@ -476,7 +480,7 @@ const markDisplayed = async (message: Message) => {
     </message>
   `);
 
-  await _xmpp.send(stanza);
+  await _xmpp.current.send(stanza);
   setInboxDisplayed(jidToBareJid(message.from));
 };
 
@@ -493,7 +497,7 @@ const _sendMessage = (
   );
   const toJid = personUuidToJid(recipientPersonUuid);
 
-  if (!_xmpp) return;
+  if (!_xmpp.current) return;
   if (!fromJid) return;
 
   const messageXml = xml(
@@ -549,14 +553,14 @@ const _sendMessage = (
       callback('sent');
     }
 
-    if (_xmpp) {
-      _xmpp.removeListener("input", messageStatusListener);
+    if (_xmpp.current) {
+      _xmpp.current.removeListener("input", messageStatusListener);
     }
   };
 
-  _xmpp.addListener("input", messageStatusListener);
+  _xmpp.current.addListener("input", messageStatusListener);
 
-  _xmpp.send(messageXml);
+  _xmpp.current.send(messageXml);
 };
 
 const sendMessage = async (
@@ -627,7 +631,7 @@ const onReceiveMessage = (
   otherPersonUuid?: string,
   doMarkDisplayed?: boolean,
 ): (() => void) | undefined => {
-  if (!_xmpp)
+  if (!_xmpp.current)
     return undefined;
 
   const _onReceiveMessage = async (stanza: Element) => {
@@ -683,11 +687,11 @@ const onReceiveMessage = (
   };
 
   const _removeListener = () => {
-    if (!_xmpp) return;
-    _xmpp.removeListener("stanza", _onReceiveMessage);
+    if (!_xmpp.current) return;
+    _xmpp.current.removeListener("stanza", _onReceiveMessage);
   };
 
-  _xmpp.addListener("stanza", _onReceiveMessage);
+  _xmpp.current.addListener("stanza", _onReceiveMessage);
   return _removeListener;
 };
 
@@ -696,7 +700,7 @@ const _fetchConversation = async (
   callback: (messages: Message[] | 'timeout') => void,
   beforeId: string = '',
 ) => {
-  if (!_xmpp)
+  if (!_xmpp.current)
     return callback('timeout');
 
   const queryId = getRandomString(10);
@@ -789,16 +793,16 @@ const _fetchConversation = async (
       await markDisplayed(lastMessage);
     }
 
-    if (_xmpp) {
-      _xmpp.removeListener("stanza", maybeCollect);
-      _xmpp.removeListener("stanza", maybeFin);
+    if (_xmpp.current) {
+      _xmpp.current.removeListener("stanza", maybeCollect);
+      _xmpp.current.removeListener("stanza", maybeFin);
     }
   };
 
-  _xmpp.addListener("stanza", maybeCollect);
-  _xmpp.addListener("stanza", maybeFin);
+  _xmpp.current.addListener("stanza", maybeCollect);
+  _xmpp.current.addListener("stanza", maybeFin);
 
-  await _xmpp.send(queryStanza).catch(console.warn);
+  await _xmpp.current.send(queryStanza).catch(console.warn);
 };
 
 const fetchConversation = async (
@@ -818,7 +822,7 @@ const _fetchInboxPage = async (
   endTimestamp: Date | null,
   pageSize: number | null,
 ) => {
-  if (!_xmpp) {
+  if (!_xmpp.current) {
     return callback(undefined);
   }
 
@@ -941,16 +945,16 @@ const _fetchInboxPage = async (
 
     callback(inbox);
 
-    if (_xmpp) {
-      _xmpp.removeListener("stanza", maybeCollect);
-      _xmpp.removeListener("stanza", maybeFin);
+    if (_xmpp.current) {
+      _xmpp.current.removeListener("stanza", maybeCollect);
+      _xmpp.current.removeListener("stanza", maybeFin);
     }
   };
 
-  _xmpp.addListener("stanza", maybeCollect);
-  _xmpp.addListener("stanza", maybeFin);
+  _xmpp.current.addListener("stanza", maybeCollect);
+  _xmpp.current.addListener("stanza", maybeFin);
 
-  await _xmpp.send(queryStanza).catch(console.warn);
+  await _xmpp.current.send(queryStanza).catch(console.warn);
 };
 
 const fetchInboxPage = async (
@@ -985,20 +989,20 @@ const refreshInbox = async (): Promise<void> => {
 };
 
 const logout = async () => {
-  if (_xmpp) {
+  if (_xmpp.current) {
     notify('xmpp-is-online', false);
-    await _xmpp.stop().catch(console.error);
+    await _xmpp.current.stop().catch(console.error);
     notify('inbox', null);
-    _xmpp = undefined;
+    _xmpp.current = undefined;
   }
 };
 
 const registerPushToken = async (token: string) => {
-  if (!_xmpp) return;
+  if (!_xmpp.current) return;
 
   const stanza = parse(`<duo_register_push_token token='${token}' />`);
 
-  await _xmpp.send(stanza);
+  await _xmpp.current.send(stanza);
 };
 
 const onChangeAppState = (state: AppStateStatus) => {
