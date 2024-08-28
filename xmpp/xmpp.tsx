@@ -436,6 +436,10 @@ const login = async (username: string, password: string) => {
 
     _xmpp.current = client(options);
 
+    // The default is 1 second. We set it to 3 seconds here, but it's a shame
+    // xmpp.js doesn't support exponential backoff
+    _xmpp.current.reconnect.delay = 3 * 1000;
+
     _xmpp.current.on("error", (err) => {
       console.error(err);
       if (err.message === "conflict - Replaced by new connection") {
