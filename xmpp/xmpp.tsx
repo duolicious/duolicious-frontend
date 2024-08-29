@@ -30,9 +30,13 @@ const fetchConversationTimeout = 15000;
 const fetchInboxTimeout = 30000;
 
 const _xmpp: {
-  current: Client | undefined;
+  current: {
+    client: Client
+    username: string
+    password: string
+  } | null
 } = {
-  current: undefined
+  current: null
 };
 
 notify('inbox', null);
@@ -438,28 +442,32 @@ const login = async (username: string, password: string) => {
       resource: await deviceId(),
     };
 
-    _xmpp.current = client(options);
+    _xmpp.current = {
+      client: client(options),
+      username,
+      password,
+    };
 
     // The default is 1 second. We set it to 3 seconds here, but it's a shame
     // xmpp.js doesn't support exponential backoff
-    _xmpp.current.reconnect.delay = 3 * 1000;
+    _xmpp.current.client.reconnect.delay = 3 * 1000;
 
-    _xmpp.current.on("error", (err) => {
+    _xmpp.current.client.on("error", (err) => {
       console.error(err);
       if (err.message === "conflict - Replaced by new connection") {
         notify('stream-error');
       }
     });
 
-    _xmpp.current.on("offline",       () => notify('xmpp-is-online', false));
-    _xmpp.current.on("connecting",    () => notify('xmpp-is-online', false));
-    _xmpp.current.on("opening",       () => notify('xmpp-is-online', false));
-    _xmpp.current.on("closing",       () => notify('xmpp-is-online', false));
-    _xmpp.current.on("close",         () => notify('xmpp-is-online', false));
-    _xmpp.current.on("disconnecting", () => notify('xmpp-is-online', false));
-    _xmpp.current.on("disconnect",    () => notify('xmpp-is-online', false));
+    _xmpp.current.client.on("offline",       () => notify('xmpp-is-online', false));
+    _xmpp.current.client.on("connecting",    () => notify('xmpp-is-online', false));
+    _xmpp.current.client.on("opening",       () => notify('xmpp-is-online', false));
+    _xmpp.current.client.on("closing",       () => notify('xmpp-is-online', false));
+    _xmpp.current.client.on("close",         () => notify('xmpp-is-online', false));
+    _xmpp.current.client.on("disconnecting", () => notify('xmpp-is-online', false));
+    _xmpp.current.client.on("disconnect",    () => notify('xmpp-is-online', false));
 
-    _xmpp.current.on("online", async () => {
+    _xmpp.current.client.on("online", async () => {
       if (_xmpp.current) {
         notify('xmpp-is-online', true);
 
@@ -469,17 +477,17 @@ const login = async (username: string, password: string) => {
       }
     });
 
-    _xmpp.current.on("input", async (input: Element) => {
+    _xmpp.current.client.on("input", async (input: Element) => {
       notify('xmpp-input', input);
     });
 
-    _xmpp.current.on("stanza", async (stanza: Element) => {
+    _xmpp.current.client.on("stanza", async (stanza: Element) => {
       notify('xmpp-stanza', stanza)
     });
 
-    await _xmpp.current.start();
+    await _xmpp.current.client.start();
   } catch (e) {
-    _xmpp.current = undefined;
+    _xmpp.current = null;
     notify('xmpp-is-online', false);
 
     console.error(e);
@@ -496,7 +504,7 @@ const markDisplayed = async (message: Message) => {
     </message>
   `);
 
-  await _xmpp.current.send(stanza);
+  await _xmpp.current.client.send(stanza);
   setInboxDisplayed(jidToBareJid(message.from));
 };
 
@@ -574,7 +582,7 @@ const _sendMessage = (
 
   const removeListener = listen<Element>('xmpp-input', messageStatusListener);
 
-  _xmpp.current.send(messageXml);
+  _xmpp.current.client.send(messageXml);
 };
 
 const sendMessage = async (
@@ -805,7 +813,7 @@ const _fetchConversation = async (
   const removeListener1 = listen<Element>('xmpp-stanza', maybeCollect);
   const removeListener2 = listen<Element>('xmpp-stanza', maybeFin);
 
-  await _xmpp.current.send(queryStanza).catch(console.warn);
+  await _xmpp.current.client.send(queryStanza).catch(console.warn);
 };
 
 const fetchConversation = async (
@@ -955,7 +963,7 @@ const _fetchInboxPage = async (
   const removeListener1 = listen<Element>('xmpp-stanza', maybeCollect);
   const removeListener2 = listen<Element>('xmpp-stanza', maybeFin);
 
-  await _xmpp.current.send(queryStanza).catch(console.warn);
+  await _xmpp.current.client.send(queryStanza).catch(console.warn);
 };
 
 const fetchInboxPage = async (
@@ -1005,9 +1013,9 @@ const refreshInbox = async (): Promise<void> => {
 const logout = async () => {
   if (_xmpp.current) {
     notify('xmpp-is-online', false);
-    await _xmpp.current.stop().catch(console.error);
+    await _xmpp.current.client.stop().catch(console.error);
     notify('inbox', null);
-    _xmpp.current = undefined;
+    _xmpp.current =  null;
   }
 };
 
@@ -1020,7 +1028,18 @@ const registerPushToken = async (token: string | null) => {
 
   const stanza = parse(xmlStr);
 
-  await _xmpp.current.send(stanza);
+  await _xmpp.current.client.send(stanza);
+};
+
+const recreateChatClient = async () => {
+  if (!_xmpp.current) {
+    return; // Already logged in
+  };
+
+  const { username, password } = _xmpp.current;
+
+  await logout();
+  await login(username, password);
 };
 
 const onChangeAppState = (state: AppStateStatus) => {
