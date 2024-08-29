@@ -25,6 +25,10 @@ import {
   Platform,
 } from 'react-native';
 
+const messageTimeout = 10000;
+const fetchConversationTimeout = 15000;
+const fetchInboxTimeout = 30000;
+
 const _xmpp: {
   current: Client | undefined;
 } = {
@@ -582,7 +586,7 @@ const sendMessage = async (
       _sendMessage(recipientPersonUuid, message, resolve)
   );
 
-  return await withTimeout(30000, __sendMessage);
+  return await withTimeout(messageTimeout, __sendMessage);
 };
 
 const conversationsToInbox = (conversations: Conversation[]): Inbox => {
@@ -813,7 +817,7 @@ const fetchConversation = async (
       _fetchConversation(withPersonUuid, resolve, beforeId)
     );
 
-  return await withTimeout(30000, __fetchConversation);
+  return await withTimeout(fetchConversationTimeout, __fetchConversation);
 };
 
 const _fetchInboxPage = async (
@@ -957,9 +961,13 @@ const _fetchInboxPage = async (
 const fetchInboxPage = async (
   endTimestamp: Date | null = null,
   pageSize: number | null = null,
-): Promise<Inbox | undefined> => {
-  return new Promise((resolve) =>
-    _fetchInboxPage(resolve, endTimestamp, pageSize));
+): Promise<Inbox | undefined | 'timeout'> => {
+  const __fetchInboxPage = new Promise(
+    (resolve: (inbox: Inbox | undefined) => void) =>
+      _fetchInboxPage(resolve, endTimestamp, pageSize)
+  );
+
+  return await withTimeout(fetchInboxTimeout, __fetchInboxPage);
 };
 
 const refreshInbox = async (): Promise<void> => {
@@ -967,6 +975,10 @@ const refreshInbox = async (): Promise<void> => {
 
   while (true) {
     const page = await fetchInboxPage(inbox.endTimestamp);
+
+    if (page === 'timeout') {
+      continue;
+    }
 
     const isEmptyPage = (
       !page ||
