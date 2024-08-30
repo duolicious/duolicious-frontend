@@ -24,10 +24,7 @@ import { AppState, AppStateStatus } from 'react-native';
 const messageTimeout = 10000;
 const fetchConversationTimeout = 15000;
 const fetchInboxTimeout = 30000;
-const pingTimeout = 5000; // TODO
-
-// TODO What happens if the app is offline?
-// TODO What happens if the server is offline?
+const pingTimeout = 5000;
 
 const _xmpp: {
   current: {
@@ -504,7 +501,6 @@ const login = async (username: string, password: string) => {
 
     await _xmpp.current.client.start();
   } catch (e) {
-    _xmpp.current = null;
     notify('xmpp-is-online', false);
 
     console.error(e);
@@ -608,8 +604,6 @@ const sendMessage = async (
   recipientPersonUuid: string,
   message: string,
 ): Promise<MessageStatus> => {
-  console.log('sendMessage'); // TODO
-
   const __sendMessage = new Promise(
     (resolve: (messageStatus: MessageStatus) => void) =>
       _sendMessage(recipientPersonUuid, message, resolve)
@@ -844,8 +838,6 @@ const fetchConversation = async (
   withPersonUuid: string,
   beforeId: string = '',
 ): Promise<Message[] | undefined | 'timeout'> => {
-  console.log('fetchConversation'); // TODO
-
   const __fetchConversation = new Promise(
     (resolve: (messages: Message[] | undefined | 'timeout') => void) =>
       _fetchConversation(withPersonUuid, resolve, beforeId)
@@ -999,8 +991,6 @@ const fetchInboxPage = async (
   endTimestamp: Date | null = null,
   pageSize: number | null = null,
 ): Promise<Inbox | undefined | 'timeout'> => {
-  console.log('fetchInboxPage'); // TODO
-
   const __fetchInboxPage = new Promise(
     (resolve: (inbox: Inbox | undefined) => void) =>
       _fetchInboxPage(resolve, endTimestamp, pageSize)
@@ -1046,12 +1036,9 @@ const logout = async () => {
     return;
   }
 
-  const currentClient = _xmpp.current.client;
-  _xmpp.current = null;
-
   notify('xmpp-is-online', false);
-  await currentClient.reconnect.stop();
-  await currentClient.stop().catch(console.warn);
+  await _xmpp.current.client.reconnect.stop();
+  await _xmpp.current.client.stop().catch(console.warn);
   notify('inbox', null);
   _xmpp.current =  null;
 };
@@ -1069,16 +1056,12 @@ const registerPushToken = async (token: string | null) => {
 };
 
 const _pingServer = (resolve: (result: Pong | null | 'timeout') => void) => {
-  console.log('_pingServer'); // TODO
-
   if (!_xmpp.current) {
-    console.log('_pingServer: no current'); // TODO
     resolve(null);
     return;
   }
 
   if (_xmpp.current.client.status !== 'online') {
-    console.log('_pingServer: status', _xmpp.current.client.status); // TODO
     resolve(null);
     return;
   }
@@ -1174,8 +1157,6 @@ const withReconnectOnTimeout = async <T,>(ms: number, promise: Promise<T>): Prom
 };
 
 const onChangeAppState = (state: AppStateStatus) => {
-  console.log('state', state); // TODO
-
   if (state === 'active') {
     pingServer();
   }
