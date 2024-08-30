@@ -19,15 +19,15 @@ import { listen, notify, lastEvent } from '../events/events';
 
 import { registerForPushNotificationsAsync } from '../notifications/notifications';
 
-import {
-  AppState,
-  AppStateStatus,
-  Platform,
-} from 'react-native';
+import { AppState, AppStateStatus } from 'react-native';
 
 const messageTimeout = 10000;
 const fetchConversationTimeout = 15000;
 const fetchInboxTimeout = 30000;
+const pingTimeout = 5000; // TODO
+
+// TODO What happens if the app is offline?
+// TODO What happens if the server is offline?
 
 const _xmpp: {
   current: {
@@ -71,6 +71,18 @@ const parseUuidOrEmtpy = (uuid: string) => {
   return isValidUuid(uuid) ? uuid : '';
 }
 
+const safeSend = async (element: Element) => {
+  if (!_xmpp.current) {
+    return;
+  }
+
+  if (_xmpp.current.client.status !== 'online') {
+    return;
+  }
+
+  await _xmpp.current.client.send(element);
+};
+
 // TODO: Catch more exceptions. If a network request fails, that shouldn't crash the app.
 // TODO: Update match percentages when user answers some questions
 
@@ -89,6 +101,11 @@ type Message = {
   id: string
   mamId?: string | undefined
   timestamp: Date
+};
+
+type Pong = {
+  preferredInterval: number
+  preferredTimeout: number
 };
 
 type Conversation = {
@@ -504,14 +521,14 @@ const markDisplayed = async (message: Message) => {
     </message>
   `);
 
-  await _xmpp.current.client.send(stanza);
+  await safeSend(stanza).catch(console.warn);
   setInboxDisplayed(jidToBareJid(message.from));
 };
 
 const _sendMessage = (
   recipientPersonUuid: string,
   message: string,
-  callback: (messageStatus: Omit<MessageStatus, 'unsent: error'>) => void,
+  callback: (messageStatus: MessageStatus) => void,
 ): void => {
   const id = getRandomString(40);
   const fromJid = (
@@ -582,19 +599,23 @@ const _sendMessage = (
 
   const removeListener = listen<Element>('xmpp-input', messageStatusListener);
 
-  _xmpp.current.client.send(messageXml);
+  setTimeout(removeListener, messageTimeout);
+
+  safeSend(messageXml).catch(console.warn);
 };
 
 const sendMessage = async (
   recipientPersonUuid: string,
   message: string,
 ): Promise<MessageStatus> => {
+  console.log('sendMessage'); // TODO
+
   const __sendMessage = new Promise(
     (resolve: (messageStatus: MessageStatus) => void) =>
       _sendMessage(recipientPersonUuid, message, resolve)
   );
 
-  return await withTimeout(messageTimeout, __sendMessage);
+  return await withReconnectOnTimeout(messageTimeout, __sendMessage);
 };
 
 const conversationsToInbox = (conversations: Conversation[]): Inbox => {
@@ -813,19 +834,24 @@ const _fetchConversation = async (
   const removeListener1 = listen<Element>('xmpp-stanza', maybeCollect);
   const removeListener2 = listen<Element>('xmpp-stanza', maybeFin);
 
-  await _xmpp.current.client.send(queryStanza).catch(console.warn);
+  setTimeout(removeListener1, fetchConversationTimeout);
+  setTimeout(removeListener2, fetchConversationTimeout);
+
+  await safeSend(queryStanza).catch(console.warn);
 };
 
 const fetchConversation = async (
   withPersonUuid: string,
   beforeId: string = '',
 ): Promise<Message[] | undefined | 'timeout'> => {
+  console.log('fetchConversation'); // TODO
+
   const __fetchConversation = new Promise(
     (resolve: (messages: Message[] | undefined | 'timeout') => void) =>
       _fetchConversation(withPersonUuid, resolve, beforeId)
     );
 
-  return await withTimeout(fetchConversationTimeout, __fetchConversation);
+  return await withReconnectOnTimeout(fetchConversationTimeout, __fetchConversation);
 };
 
 const _fetchInboxPage = async (
@@ -963,19 +989,24 @@ const _fetchInboxPage = async (
   const removeListener1 = listen<Element>('xmpp-stanza', maybeCollect);
   const removeListener2 = listen<Element>('xmpp-stanza', maybeFin);
 
-  await _xmpp.current.client.send(queryStanza).catch(console.warn);
+  setTimeout(removeListener1, fetchInboxTimeout);
+  setTimeout(removeListener2, fetchInboxTimeout);
+
+  await safeSend(queryStanza).catch(console.warn);
 };
 
 const fetchInboxPage = async (
   endTimestamp: Date | null = null,
   pageSize: number | null = null,
 ): Promise<Inbox | undefined | 'timeout'> => {
+  console.log('fetchInboxPage'); // TODO
+
   const __fetchInboxPage = new Promise(
     (resolve: (inbox: Inbox | undefined) => void) =>
       _fetchInboxPage(resolve, endTimestamp, pageSize)
   );
 
-  return await withTimeout(fetchInboxTimeout, __fetchInboxPage);
+  return await withReconnectOnTimeout(fetchInboxTimeout, __fetchInboxPage);
 };
 
 const refreshInbox = async (): Promise<void> => {
@@ -1011,12 +1042,18 @@ const refreshInbox = async (): Promise<void> => {
 };
 
 const logout = async () => {
-  if (_xmpp.current) {
-    notify('xmpp-is-online', false);
-    await _xmpp.current.client.stop().catch(console.error);
-    notify('inbox', null);
-    _xmpp.current =  null;
+  if (!_xmpp.current) {
+    return;
   }
+
+  const currentClient = _xmpp.current.client;
+  _xmpp.current = null;
+
+  notify('xmpp-is-online', false);
+  await currentClient.reconnect.stop();
+  await currentClient.stop().catch(console.warn);
+  notify('inbox', null);
+  _xmpp.current =  null;
 };
 
 const registerPushToken = async (token: string | null) => {
@@ -1028,12 +1065,96 @@ const registerPushToken = async (token: string | null) => {
 
   const stanza = parse(xmlStr);
 
-  await _xmpp.current.client.send(stanza);
+  await safeSend(stanza).catch(console.warn);
+};
+
+const _pingServer = (resolve: (result: Pong | null | 'timeout') => void) => {
+  console.log('_pingServer'); // TODO
+
+  if (!_xmpp.current) {
+    console.log('_pingServer: no current'); // TODO
+    resolve(null);
+    return;
+  }
+
+  if (_xmpp.current.client.status !== 'online') {
+    console.log('_pingServer: status', _xmpp.current.client.status); // TODO
+    resolve(null);
+    return;
+  }
+
+
+  const listenerRemovers: (() => void)[] = [];
+
+  const removeListners = () => listenerRemovers.forEach(lr => lr());
+
+  const stanza = parse('<duo_ping />');
+
+  const resolveTimeout = () => {
+    resolve('timeout');
+    removeListners();
+  };
+
+  const timeout = setTimeout(() => resolve('timeout'), pingTimeout);
+
+  const maybeClearPingTimeout = (input: string) => {
+    let stanza: Element | null = null;
+
+    try {
+      stanza = parse(input);
+    } catch (e) {
+      return;
+    }
+
+    if (stanza.name !== 'duo_pong') {
+      return;
+    }
+
+    const duo_pong: Pong = {
+      preferredInterval: parseInt(stanza.getAttr('preferred_interval')),
+      preferredTimeout: parseInt(stanza.getAttr('preferred_timeout')),
+    };
+
+    clearTimeout(timeout);
+    resolve(duo_pong);
+    removeListners();
+  };
+
+  listenerRemovers.push(listen<string>('xmpp-input', maybeClearPingTimeout));
+
+  safeSend(stanza).catch(console.warn);
+};
+
+const pingServer = async (timeout?: number): Promise<Pong | null | 'timeout'> => {
+  const __pingServer = new Promise(
+    (resolve: (result: Pong | null | 'timeout') => void) =>
+      _pingServer(resolve)
+  );
+
+  return await withReconnectOnTimeout(timeout ?? pingTimeout, __pingServer);
+};
+
+
+const pingServerForever = async () => {
+  let pong: Pong = {
+    preferredInterval: 10000,
+    preferredTimeout: pingTimeout,
+  };
+
+  while (true) {
+    const maybePong = await pingServer(pong.preferredTimeout);
+
+    if (maybePong !== 'timeout' && maybePong !== null) {
+      pong = maybePong;
+    }
+
+    await delay(pong.preferredInterval);
+  };
 };
 
 const recreateChatClient = async () => {
   if (!_xmpp.current) {
-    return; // Already logged in
+    return; // No current session to recreate
   };
 
   const { username, password } = _xmpp.current;
@@ -1042,10 +1163,21 @@ const recreateChatClient = async () => {
   await login(username, password);
 };
 
+const withReconnectOnTimeout = async <T,>(ms: number, promise: Promise<T>): Promise<T | 'timeout'> => {
+  const result = await withTimeout(ms, promise);
+
+  if (result === 'timeout') {
+    recreateChatClient();
+  }
+
+  return result;
+};
+
 const onChangeAppState = (state: AppStateStatus) => {
-  const hasInitialInbox = lastEvent<Inbox>('inbox');
-  if (Platform.OS !== 'web' && state === 'active' && hasInitialInbox) {
-    refreshInbox();
+  console.log('state', state); // TODO
+
+  if (state === 'active') {
+    pingServer();
   }
 };
 
@@ -1054,6 +1186,11 @@ AppState.addEventListener('change', onChangeAppState);
 
 // Update the inbox upon receiving a message
 onReceiveMessage();
+
+// Triggers reconnection if the server goes away. This should be handled by
+// xmpp.js, though I think we're affected by this bug:
+// https://github.com/xmppjs/xmpp.js/issues/902
+pingServerForever();
 
 export {
   Conversation,
