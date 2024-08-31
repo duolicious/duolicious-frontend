@@ -31,9 +31,11 @@ const _xmpp: {
     client: Client
     username: string
     password: string
-  } | null
+  } | null,
+  reconnecting: boolean
 } = {
-  current: null
+  current: null,
+  reconnecting: false,
 };
 
 notify('inbox', null);
@@ -77,7 +79,7 @@ const safeSend = async (element: Element) => {
     return;
   }
 
-  await _xmpp.current.client.send(element);
+  await _xmpp.current.client.send(element).catch(console.error);
 };
 
 // TODO: Catch more exceptions. If a network request fails, that shouldn't crash the app.
@@ -442,8 +444,13 @@ const select1 = (query: string, stanza: Element): xpath.SelectedValue => {
   return xpath.select1(query, doc);
 };
 
-const login = async (username: string, password: string) => {
+const login = async (
+  username: string,
+  password: string,
+) => {
+  console.log('login'); // TODO
   if (_xmpp.current) {
+    console.log('login: returning early; already logged in'); // TODO
     return; // Already logged in
   }
 
@@ -466,10 +473,11 @@ const login = async (username: string, password: string) => {
     // xmpp.js doesn't support exponential backoff
     _xmpp.current.client.reconnect.delay = 3 * 1000;
 
-    _xmpp.current.client.on("error", (err) => {
+    _xmpp.current.client.on("error", async (err) => {
       console.error(err);
       if (err.message === "conflict - Replaced by new connection") {
         notify('stream-error');
+        await logout();
       }
     });
 
@@ -482,13 +490,17 @@ const login = async (username: string, password: string) => {
     _xmpp.current.client.on("disconnect",    () => notify('xmpp-is-online', false));
 
     _xmpp.current.client.on("online", async () => {
-      if (_xmpp.current) {
-        notify('xmpp-is-online', true);
-
-        refreshInbox();
-
-        await registerForPushNotificationsAsync();
+      if (!_xmpp.current) {
+        return;
       }
+
+      _xmpp.reconnecting = false;
+
+      notify('xmpp-is-online', true);
+
+      await refreshInbox();
+
+      await registerForPushNotificationsAsync();
     });
 
     _xmpp.current.client.on("input", async (input: Element) => {
@@ -501,9 +513,9 @@ const login = async (username: string, password: string) => {
 
     await _xmpp.current.client.start();
   } catch (e) {
-    notify('xmpp-is-online', false);
-
     console.error(e);
+
+    await logout();
   }
 };
 
@@ -1032,14 +1044,18 @@ const refreshInbox = async (): Promise<void> => {
 };
 
 const logout = async () => {
+  console.log('logout'); // TODO
   if (!_xmpp.current) {
+    console.log('logout: returning early; no current'); // TODO
     return;
   }
 
-  notify('xmpp-is-online', false);
-  await _xmpp.current.client.reconnect.stop();
+  _xmpp.current.client.reconnect.stop();
   await _xmpp.current.client.stop().catch(console.warn);
+
+  notify('xmpp-is-online', false);
   notify('inbox', null);
+
   _xmpp.current =  null;
 };
 
@@ -1066,6 +1082,12 @@ const _pingServer = (resolve: (result: Pong | null | 'timeout') => void) => {
     return;
   }
 
+  if (_xmpp.reconnecting) {
+    resolve(null);
+    return;
+  }
+
+  console.log('pinging server'); // TODO
 
   const listenerRemovers: (() => void)[] = [];
 
@@ -1137,8 +1159,19 @@ const pingServerForever = async () => {
 
 const recreateChatClient = async () => {
   if (!_xmpp.current) {
+    console.log('recreateChatClient: no current; returning early'); // TODO
     return; // No current session to recreate
   };
+
+  if (_xmpp.reconnecting) {
+    // If we're already attempting to reconnect, we don't want to interrupt that
+    // attempt, otherwise we risk creating two streams at once and triggering
+    // the exception "conflict - Replaced by new connection"
+    console.log('recreateChatClient: reconnecting; returning early'); // TODO
+    return;
+  }
+
+  _xmpp.reconnecting = true;
 
   const { username, password } = _xmpp.current;
 
@@ -1147,9 +1180,22 @@ const recreateChatClient = async () => {
 };
 
 const withReconnectOnTimeout = async <T,>(ms: number, promise: Promise<T>): Promise<T | 'timeout'> => {
+  // If we received other traffic during the time this promise timed-out, we're
+  // still connected, we we'd rather not call `recreateChatClient`.
+  var recievedAnyInput = false;
+
+  const removeInputListener = listen<string>(
+    'xmpp-input',
+    () => recievedAnyInput = true,
+  );
+
   const result = await withTimeout(ms, promise);
 
-  if (result === 'timeout') {
+  removeInputListener();
+
+  console.log('timeout, recievedAnyInput', result === 'timeout', recievedAnyInput); // TODO
+
+  if (result === 'timeout' && !recievedAnyInput) {
     recreateChatClient();
   }
 
