@@ -496,7 +496,7 @@ const login = async (
 
       notify('xmpp-is-online', true);
 
-      await refreshInbox();
+      refreshInbox();
 
       await registerForPushNotificationsAsync();
     });
