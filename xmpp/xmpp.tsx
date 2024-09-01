@@ -448,9 +448,7 @@ const login = async (
   username: string,
   password: string,
 ) => {
-  console.log('login'); // TODO
   if (_xmpp.current) {
-    console.log('login: returning early; already logged in'); // TODO
     return; // Already logged in
   }
 
@@ -1044,9 +1042,7 @@ const refreshInbox = async (): Promise<void> => {
 };
 
 const logout = async () => {
-  console.log('logout'); // TODO
   if (!_xmpp.current) {
-    console.log('logout: returning early; no current'); // TODO
     return;
   }
 
@@ -1086,8 +1082,6 @@ const _pingServer = (resolve: (result: Pong | null | 'timeout') => void) => {
     resolve(null);
     return;
   }
-
-  console.log('pinging server'); // TODO
 
   const listenerRemovers: (() => void)[] = [];
 
@@ -1159,7 +1153,6 @@ const pingServerForever = async () => {
 
 const recreateChatClient = async () => {
   if (!_xmpp.current) {
-    console.log('recreateChatClient: no current; returning early'); // TODO
     return; // No current session to recreate
   };
 
@@ -1167,7 +1160,6 @@ const recreateChatClient = async () => {
     // If we're already attempting to reconnect, we don't want to interrupt that
     // attempt, otherwise we risk creating two streams at once and triggering
     // the exception "conflict - Replaced by new connection"
-    console.log('recreateChatClient: reconnecting; returning early'); // TODO
     return;
   }
 
@@ -1192,8 +1184,6 @@ const withReconnectOnTimeout = async <T,>(ms: number, promise: Promise<T>): Prom
   const result = await withTimeout(ms, promise);
 
   removeInputListener();
-
-  console.log('timeout, recievedAnyInput', result === 'timeout', recievedAnyInput); // TODO
 
   if (result === 'timeout' && !recievedAnyInput) {
     recreateChatClient();
