@@ -113,10 +113,10 @@ const DonationNagModalWeb = ({
             >
               While we’re 100% volunteer-run, servers aren’t free. Thankfully, {}
               <DefaultText style={{ fontWeight: '700' }}>
-                just 2¢ per user will keep Duolicious online for a month.
+                just 2¢ per user keeps us online another month.
               </DefaultText>
               {} That's less than 1% of what Tinder charges, but without the
-              paywalls and ads. Learn more about donating {}
+              paywalls or ads. Learn more about donating {}
               <DefaultText
                 onPress={() => Linking.openURL('https://duolicious.app/donation-faq/')}
                 style={{
@@ -125,7 +125,7 @@ const DonationNagModalWeb = ({
               >
                 here
               </DefaultText>
-              .
+              {} or donate now.
             </DefaultText>
           </View>
 
