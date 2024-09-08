@@ -52,6 +52,7 @@ import { ColorPickerModal } from './components/color-picker-modal/color-picker-m
 import { ClubItem } from './components/club-selector';
 import { Toast } from './components/toast';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { DonationNagModal } from './components/donation-nag-modal';
 
 // TODO: iOS UI testing
 // TODO: Add the ability to reply to things (e.g. pictures, quiz responses) from people's profiles. You'll need to change the navigation to make it easier to reply to things. Consider breaking profiles into sections which can be replied to, each having one image or block of text. Letting people reply to specific things on the profile will improve intro quality.
@@ -471,11 +472,12 @@ const App = () => {
               }
             </Stack.Navigator>
           </NavigationContainer>
+          <DonationNagModal/>
           <ReportModal/>
           <ImageCropper/>
-          <StreamErrorModal/>
           <ColorPickerModal/>
           <Toast/>
+          <StreamErrorModal/>
         </>
       }
       <WebSplashScreen loading={isLoading}/>
