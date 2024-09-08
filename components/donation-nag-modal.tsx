@@ -10,39 +10,51 @@ import {
 } from 'react';
 import { DefaultText } from './default-text';
 import { ButtonWithCenteredText } from './button/centered-text';
-
-// TODO: Trigger when appropriate
-// TODO: Include name
-// TODO: POST /dismiss-donation endpoint
+import { signedInUser } from '../App';
+import { api } from '../api/api';
 
 const DonationNagModal = () => {
+  const name = signedInUser?.name;
+  const estimatedEndDate = signedInUser?.estimatedEndDate;
+  const doShowDonationNag = signedInUser?.doShowDonationNag;
+
+  if (!name) return null;
+  if (!estimatedEndDate) return null;
+  if (!doShowDonationNag) return null;
+
+  const props = { name, estimatedEndDate };
+
   if (Platform.OS === 'web') {
-    return <DonationNagModalWeb/>;
+    return <DonationNagModalWeb { ...props } />;
   } else {
-    return <DonationNagModalMobile/>;
+    return <DonationNagModalMobile { ...props } />;
   }
 };
 
-const DonationNagModalWeb = () => {
-  // TODO
+const DonationNagModalWeb = ({
+  name,
+  estimatedEndDate,
+}: {
+  name: string
+  estimatedEndDate: Date
+}) => {
   const [isVisible, setIsVisible] = useState(true);
 
-  // TODO
-  const name = null;
-  // const name = 'Adam';
-  // const name = 'Adammmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm';
+  const onPressDismiss = () => {
+    setIsVisible(false);
+    api('post', '/dismiss-donation');
+  };
 
-  // TODO targetDate in UTC. Ensure the UTC time is rendered properly
-  const targetDate = "2024-09-15T12:00:00";
-
-  const onRequestClose = () => setIsVisible(false);
+  const onPressDonate = () => {
+    Linking.openURL('https://ko-fi.com/duolicious');
+    onPressDismiss();
+  };
 
   return (
     <Modal
       animationType="fade"
       transparent={true}
       visible={isVisible}
-      onRequestClose={onRequestClose}
       statusBarTranslucent={true}
     >
       <View
@@ -81,14 +93,10 @@ const DonationNagModalWeb = () => {
                 color: 'white',
               }}
             >
-              {
-                name ?
-                `${name}, we need your help!` :
-                'We need your help!'
-              }
+              {name}, we need your help!
             </DefaultText>
 
-            <CountdownTimer targetDate={targetDate} />
+            <CountdownTimer targetDate={estimatedEndDate} />
           </View>
 
           <View
@@ -128,7 +136,7 @@ const DonationNagModalWeb = () => {
             }}
           >
             <ButtonWithCenteredText
-              onPress={() => Linking.openURL('https://ko-fi.com/duolicious')}
+              onPress={onPressDonate}
               textStyle={{
                 fontWeight: '700',
               }}
@@ -137,7 +145,7 @@ const DonationNagModalWeb = () => {
             </ButtonWithCenteredText>
 
             <ButtonWithCenteredText
-              onPress={onRequestClose}
+              onPress={onPressDismiss}
               secondary={true}
               textStyle={{
                 fontWeight: '700',
@@ -152,16 +160,22 @@ const DonationNagModalWeb = () => {
   );
 };
 
-const DonationNagModalMobile = () => {
+const DonationNagModalMobile = ({
+  name,
+  estimatedEndDate,
+}: {
+  name: string
+  estimatedEndDate: Date
+}) => {
   return null;
 };
 
-const CountdownTimer = ({ targetDate }) => {
+const CountdownTimer = ({ targetDate }: { targetDate: Date }) => {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   const doUpdate = () => {
     const currentTime = new Date().getTime();
-    const targetTime = new Date(targetDate).getTime();
+    const targetTime = targetDate.getTime();
     const difference = targetTime - currentTime;
 
     if (difference <= 0) {

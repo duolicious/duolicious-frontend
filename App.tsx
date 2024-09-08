@@ -134,6 +134,9 @@ type SignedInUser = {
   units: 'Metric' | 'Imperial'
   sessionToken: string
   pendingClub: ClubItem | null
+  doShowDonationNag: boolean
+  estimatedEndDate: Date
+  name: string | null
 };
 
 type ServerStatus = "ok" | "down for maintenance" | "please update";
@@ -215,6 +218,9 @@ const App = () => {
       units: response?.json?.units === 'Imperial' ? 'Imperial' : 'Metric',
       sessionToken: existingSessionToken,
       pendingClub: response?.json?.pending_club,
+      doShowDonationNag: response?.json?.do_show_donation_nag,
+      estimatedEndDate: new Date(response?.json?.estimated_end_date),
+      name: response?.json?.name,
     });
 
     await sessionPersonUuid(response?.json?.person_uuid);
