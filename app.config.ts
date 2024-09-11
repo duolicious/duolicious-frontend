@@ -66,12 +66,6 @@ const config: ExpoConfig = {
     playStoreUrl: "https://play.google.com/store/apps/details?id=app.duolicious",
   },
   plugins: [
-    [
-      "expo-dev-launcher",
-      {
-        "launchMode": "most-recent"
-      }
-    ],
     "expo-secure-store",
     [
       "expo-notifications",
