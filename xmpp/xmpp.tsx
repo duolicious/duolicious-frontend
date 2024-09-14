@@ -286,15 +286,6 @@ const populateConversation = async (
   await populateConversationList([conversation], apiData);
 };
 
-const inboxToPersonUuids = (inbox: Inbox): string[] => {
-  const personUuids = new Set<string>();
-
-  inbox.chats .conversations.forEach((c) => personUuids.add(c.personUuid));
-  inbox.intros.conversations.forEach((c) => personUuids.add(c.personUuid));
-
-  return [...personUuids];
-};
-
 const jidToBareJid = (jid: string): string =>
   jid.split('@')[0];
 
