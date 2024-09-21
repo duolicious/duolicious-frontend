@@ -781,7 +781,6 @@ const ProspectUserDetails = ({
             color: textColor,
           }}
         >
-          {displayedLocation}{' '}
           <FontAwesomeIcon
             icon={faLocationDot}
             style={{
@@ -789,6 +788,8 @@ const ProspectUserDetails = ({
             }}
             color={textColor}
           />
+          {'\u2002'}
+          {displayedLocation}
         </DefaultText>
       </View>
       <DonutChart
