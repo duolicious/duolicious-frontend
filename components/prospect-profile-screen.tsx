@@ -857,6 +857,17 @@ const Body = ({
     },
   };
 
+  const clubsTheme = {
+    ...basicsTheme,
+  };
+
+  const mutualClubsTheme = {
+    ...basicsTheme,
+    style: {
+      borderColor: clubsTheme.textStyle.color,
+    },
+  };
+
   return (
     <>
       <View
@@ -1008,7 +1019,7 @@ const Body = ({
                   key={i}
                   name={clubName}
                   isMutual={true}
-                  {...basicsTheme}
+                  {...mutualClubsTheme}
                 />
               )}
             </Clubs>
@@ -1035,7 +1046,7 @@ const Body = ({
                   key={i}
                   name={clubName}
                   isMutual={false}
-                  {...basicsTheme}
+                  {...clubsTheme}
                 />
               )}
             </Clubs>
