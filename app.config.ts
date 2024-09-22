@@ -64,6 +64,10 @@ const config: ExpoConfig = {
       }
     ],
     playStoreUrl: "https://play.google.com/store/apps/details?id=app.duolicious",
+    blockedPermissions: [
+      'android.permission.READ_MEDIA_IMAGES',
+      'android.permission.READ_MEDIA_VIDEO',
+    ],
   },
   plugins: [
     "expo-image-picker",
