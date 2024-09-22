@@ -45,7 +45,7 @@ const config: ExpoConfig = {
   android: {
     googleServicesFile: "./google-services.json",
     package: "app.duolicious",
-    versionCode: 21,
+    versionCode: 21000,
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
       backgroundColor: "#ffffff"
@@ -66,6 +66,7 @@ const config: ExpoConfig = {
     playStoreUrl: "https://play.google.com/store/apps/details?id=app.duolicious",
   },
   plugins: [
+    "expo-image-picker",
     "expo-secure-store",
     [
       "expo-notifications",
