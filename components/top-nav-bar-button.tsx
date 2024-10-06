@@ -50,10 +50,10 @@ const TopNavBarButton = ({
     >
       <Animated.View style={{
         opacity: opacity,
-        borderColor: secondary || isMobile() ? undefined : 'black',
+        borderColor: secondary || isMobile() ? undefined : '#ccc',
         borderWidth: secondary || isMobile() ? undefined : 1,
-        borderRadius: 999,
-        padding: 4,
+        borderRadius: 7,
+        padding: secondary || isMobile() ? undefined : 4,
         aspectRatio: 1,
         alignItems: 'center',
         justifyContent: 'center',
