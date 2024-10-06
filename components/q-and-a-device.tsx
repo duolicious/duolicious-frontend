@@ -1,4 +1,5 @@
 import {
+  Platform,
   View,
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -13,36 +14,37 @@ const QAndADevice = ({
   const yesIcon = isBold ? 'checkmark-circle' : 'checkmark-circle-outline';
 
   return (
-    <View style={{flexDirection: 'row'}}>
+    <View
+      style={{
+        flexDirection: 'row',
+        marginHorizontal: spacing / 2,
+      }}
+    >
       <View
         style={{
           backgroundColor: 'white',
           borderRadius: 999,
           overflow: 'hidden',
+          aspectRatio: Platform.OS === 'web' ? 1 : undefined,
+          justifyContent: 'center',
+          alignItems: 'center',
+          right: spacing / 2,
         }}
       >
-        <Ionicons
-          style={{color: color, fontSize: fontSize}}
-          name={noIcon}
-        />
+        <Ionicons style={{color: color, fontSize: fontSize}} name={noIcon} />
       </View>
       <View
         style={{
           backgroundColor: 'white',
           borderRadius: 999,
           overflow: 'hidden',
-          marginLeft: spacing,
+          aspectRatio: Platform.OS === 'web' ? 1 : undefined,
+          justifyContent: 'center',
+          alignItems: 'center',
+          left: spacing / 2,
         }}
       >
-        <Ionicons
-          style={{
-            color: color,
-            fontSize: fontSize,
-            flexShrink: 1,
-            overflow: 'hidden',
-          }}
-          name={yesIcon}
-        />
+        <Ionicons style={{ color: color, fontSize: fontSize }} name={yesIcon} />
       </View>
     </View>
   );
