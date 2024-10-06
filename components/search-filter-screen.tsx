@@ -304,7 +304,8 @@ const SearchFilterScreen_ = ({navigation, route}) => {
         <TopNavBarButton
           onPress={goBack}
           iconName="arrow-back"
-          style={{left: 15}}
+          position="left"
+          secondary={true}
         />
         <DefaultText
           style={{
