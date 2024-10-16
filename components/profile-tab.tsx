@@ -19,6 +19,7 @@ import { DuoliciousTopNavBar } from './top-nav-bar';
 import { OptionScreen } from './option-screen';
 import { Title } from './title';
 import { DefaultLongTextInput } from './default-long-text-input';
+import { DefaultTextInput } from './default-text-input';
 import { Notice } from './notice';
 import {
   OptionGroup,
@@ -51,7 +52,7 @@ import {
 } from '../env/env';
 import * as _ from "lodash";
 import debounce from 'lodash/debounce';
-import { aboutQueue } from '../api/queue';
+import { aboutQueue, nameQueue } from '../api/queue';
 import { ClubItem, ClubSelector } from './club-selector';
 import { listen, notify } from '../events/events';
 import { ButtonWithCenteredText } from './button/centered-text';
@@ -75,6 +76,24 @@ const formatHeight = (og: OptionGroup<OptionGroupInputs>): string | undefined =>
       cmToFeetInchesStr(currentValue) :
       `${currentValue} cm`;
   }
+};
+
+const enqueueAbout = async (about: string, cb: (ok: boolean) => void) => {
+  aboutQueue.addTask(
+    async () => {
+      const response = await japi('patch', '/profile-info', { about });
+      cb(response.ok);
+    }
+  );
+};
+
+const enqueueName = async (name: string, cb: (ok: boolean) => void) => {
+  nameQueue.addTask(
+    async () => {
+      const response = await japi('patch', '/profile-info', { name });
+      cb(response.ok);
+    }
+  );
 };
 
 const Stack = createNativeStackNavigator();
@@ -199,24 +218,37 @@ const ProfileTab_ = ({navigation}) => {
   );
 };
 
-const enqueueAbout = async (about: string, cb: (ok: boolean) => void) => {
-  aboutQueue.addTask(
-    async () => {
-      const response = await japi('patch', '/profile-info', { about });
-      cb(response.ok);
-    }
-  );
-};
+const DisplayNameAndAboutPerson = ({navigation, data}) => {
+  const [name, setName] = useState<string>(data.name ?? '');
 
-const AboutPerson = ({navigation, data}) => {
+  const [nameState, setNameState] = useState<
+    'unchanged' | 'saving...' | 'saved' | 'error'
+  >('unchanged');
+
   const [aboutState, setAboutState] = useState<
     'unchanged' | 'saving...' | 'saved' | 'error'
   >('unchanged');
+
+  const debouncedOnChangeNameText = useCallback(
+    debounce(enqueueName, 1000),
+    []
+  );
 
   const debouncedOnChangeAboutText = useCallback(
     debounce(enqueueAbout, 1000),
     []
   );
+
+  const onChangeNameText = useCallback(async (name: string) => {
+    setNameState('saving...');
+    await debouncedOnChangeNameText(
+      name,
+      (ok) => {
+        setNameState(ok ? 'saved' : 'error');
+        setName(name);
+      },
+    );
+  }, []);
 
   const onChangeAboutText = useCallback(async (about: string) => {
     setAboutState('saving...');
@@ -231,7 +263,30 @@ const AboutPerson = ({navigation, data}) => {
   return (
     <View>
       <Title>
-        About {data.name} {}
+        Display Name {}
+        {nameState !== 'unchanged' &&
+          <DefaultText
+            style={{
+              fontSize: 14,
+              fontWeight: '400',
+              color: '#777',
+            }}
+          >
+            ({nameState})
+          </DefaultText>
+        }
+      </Title>
+      <DefaultTextInput
+        defaultValue={data?.name ?? ''}
+        onChangeText={onChangeNameText}
+        style={{
+          marginLeft: 0,
+          marginRight: 0,
+        }}
+      />
+
+      <Title>
+        About {name} {}
         {aboutState !== 'unchanged' &&
           <DefaultText
             style={{
@@ -466,7 +521,7 @@ const Options = ({ navigation, data }) => {
         />
       }
 
-      <AboutPerson navigation={navigation} data={data}/>
+      <DisplayNameAndAboutPerson navigation={navigation} data={data}/>
 
       <Title>Basics</Title>
       {
