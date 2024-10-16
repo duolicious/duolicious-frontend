@@ -221,13 +221,19 @@ const ProfileTab_ = ({navigation}) => {
 const DisplayNameAndAboutPerson = ({navigation, data}) => {
   const [name, setName] = useState<string>(data.name ?? '');
 
-  const [nameState, setNameState] = useState<
-    'unchanged' | 'saving...' | 'saved' | 'error'
-  >('unchanged');
+  type State
+    = 'unchanged'
+    | 'saving...'
+    | 'saved'
+    | 'error'
+    | 'too short'
+    | 'too long';
 
-  const [aboutState, setAboutState] = useState<
-    'unchanged' | 'saving...' | 'saved' | 'error'
-  >('unchanged');
+  const [nameState, setNameState] = useState<State>('unchanged');
+
+  const [aboutState, setAboutState] = useState<State>('unchanged');
+
+  const errorStates: State[] = ['error', 'too short', 'too long'];
 
   const debouncedOnChangeNameText = useCallback(
     debounce(enqueueName, 1000),
@@ -244,6 +250,9 @@ const DisplayNameAndAboutPerson = ({navigation, data}) => {
     await debouncedOnChangeNameText(
       name,
       (ok) => {
+        if (name.length <  1) { setNameState('too short'); return; }
+        if (name.length > 64) { setNameState('too long'); return; }
+
         setNameState(ok ? 'saved' : 'error');
         setName(name);
       },
@@ -268,8 +277,10 @@ const DisplayNameAndAboutPerson = ({navigation, data}) => {
           <DefaultText
             style={{
               fontSize: 14,
-              fontWeight: '400',
-              color: '#777',
+              fontWeight: (
+                errorStates.includes(nameState) ? '700' : '400'),
+              color: (
+                errorStates.includes(nameState) ? 'red' : '#777'),
             }}
           >
             ({nameState})
