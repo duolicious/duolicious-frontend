@@ -31,6 +31,8 @@ const ImageOrSkeleton_ = ({resolution, imageUuid, imageBlurhash, ...rest}) => {
     showGradient = true,
   } = rest;
 
+  const transition = !imageUuid ? { duration: 0, effect: null } : 150;
+
   return (
     <ImageBackground
       key={String(imageUuid) + ' ' + String(imageBlurhash)}
@@ -38,7 +40,7 @@ const ImageOrSkeleton_ = ({resolution, imageUuid, imageBlurhash, ...rest}) => {
         uri: `${IMAGES_URL}/${resolution}-${imageUuid}.jpg`
       }}
       placeholder={imageBlurhash && { blurhash: imageBlurhash }}
-      transition={150}
+      transition={transition}
       style={[
         {
           width: '100%',
@@ -250,7 +252,7 @@ const ProfileCard = ({
             bottom: 0,
             left: 0,
             right: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
             justifyContent: 'center',
             alignItems: 'center',
           }}
