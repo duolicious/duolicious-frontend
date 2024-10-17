@@ -31,6 +31,10 @@ const ImageOrSkeleton_ = ({resolution, imageUuid, imageBlurhash, ...rest}) => {
     showGradient = true,
   } = rest;
 
+  // This is a workaround for an issue where images that are only blurhashes
+  // appear as blank. I'm guessing the root cause is another issue I vaguely
+  // remember in React Native, where animations can be blocked by the rendering
+  // of a flat list.
   const transition = !imageUuid ? { duration: 0, effect: null } : 150;
 
   return (
