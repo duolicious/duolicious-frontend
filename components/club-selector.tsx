@@ -23,8 +23,8 @@ import { api, japi } from '../api/api';
 import * as _ from "lodash";
 import debounce from 'lodash/debounce';
 import { Basic } from './basic';
-import { notify } from '../events/events';
-import { ClubItem } from '../club/club';
+import { listen, lastEvent  } from '../events/events';
+import { ClubItem, joinClub, leaveClub } from '../club/club';
 
 const SelectedClub = ({
   clubItem,
@@ -166,10 +166,10 @@ const fetchClubItems = async (q: string): Promise<ClubItem[]> => {
   return response.ok ? response.json : [];
 };
 
-const ClubSelector = ({navigation, route}) => {
-  const [selectedClubs, setSelectedClubs] = useState<
-    ClubItem[]
-  >(route?.params?.selectedClubs ?? []);
+const ClubSelector = ({navigation}) => {
+  const [selectedClubs, setSelectedClubs] = useState(
+    lastEvent<ClubItem[]>('updated-clubs') ?? []
+  );
 
   const [searchResults, setSearchResults] = useState<ClubItem[]>([]);
 
@@ -195,33 +195,25 @@ const ClubSelector = ({navigation, route}) => {
   }, [_fetchClubItems]);
 
   const onSelectClub = useCallback((club: ClubItem) => {
-    japi('post', '/join-club', { name: club.name });
-
-    const newSelectedClubs = [...selectedClubs, club];
-
-    const newUnselectedClubs = searchResults.filter((c) => c !== club);
-
-    setSelectedClubs(newSelectedClubs);
-    setSearchResults(newUnselectedClubs);
-
-    notify<ClubItem[]>('updated-clubs', newSelectedClubs);
-  }, [selectedClubs, searchResults]);
+    joinClub(club.name, club.count_members, club.search_preference);
+  }, []);
 
   const onUnselectClub = useCallback((club: ClubItem) => {
-    japi('post', '/leave-club', { name: club.name });
+    leaveClub(club.name);
+  }, []);
 
-    const newSelectedClubs = selectedClubs.filter((c) => c !== club);
-    const newUnselectedClubs = [...searchResults, club].sort((a, b) => {
-      if (a.count_members < b.count_members) return +1;
-      if (a.count_members > b.count_members) return -1;
-      return 0;
-    });
+  useEffect(
+    () => listen<ClubItem[]>(
+      'updated-clubs',
+      (cs) => setSelectedClubs(cs ?? [])
+    ),
+    [],
+  );
 
-    setSelectedClubs(newSelectedClubs);
-    setSearchResults(newUnselectedClubs);
+  const clubsToFilter = new Set(selectedClubs.map(club => club.name));
 
-    notify<ClubItem[]>('updated-clubs', newSelectedClubs);
-  }, [selectedClubs, searchResults]);
+  const filteredSearchResults = searchResults
+    .filter(club => !clubsToFilter.has(club.name));
 
   return (
     <SafeAreaView style={styles.safeAreaView}>
@@ -344,7 +336,7 @@ const ClubSelector = ({navigation, route}) => {
             <ActivityIndicator size="large" color="#70f"/>
           </View>
         }
-        {!isLoading && searchText !== "" && _.isEmpty(searchResults) &&
+        {!isLoading && searchText !== "" && _.isEmpty(filteredSearchResults) &&
           <DefaultText
             style={{
               fontFamily: 'Trueno',
@@ -355,9 +347,9 @@ const ClubSelector = ({navigation, route}) => {
             Your search didn’t match any clubs
           </DefaultText>
         }
-        {!isLoading && searchText !== "" && !_.isEmpty(searchResults) &&
+        {!isLoading && searchText !== "" && !_.isEmpty(filteredSearchResults) &&
           <>
-            {(searchResults ?? []).map((a, i) =>
+            {filteredSearchResults.map((a, i) =>
               <UnselectedClub
                 key={String(i)}
                 clubItem={a}

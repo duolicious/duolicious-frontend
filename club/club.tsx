@@ -1,5 +1,6 @@
 import { japi } from '../api/api';
 import { notify, lastEvent } from '../events/events';
+import { searchQueue } from '../api/queue';
 
 type ClubItem = {
   name: string,
@@ -22,12 +23,12 @@ const sortClubs = (cs: ClubItem[] | undefined) => {
   return sortedCs;
 }
 
-const joinClub = async (
+const joinClub = (
   name: string,
   countMembers: number,
   searchPreference?: boolean,
-): Promise<void> => {
-  await japi('post', '/join-club', { name });
+): void => {
+  searchQueue.addTask(async () => await japi('post', '/join-club', { name }));
 
   const existingClubs = lastEvent<ClubItem[]>('updated-clubs') ?? [];
 
@@ -51,8 +52,21 @@ const joinClub = async (
   notify<ClubItem[]>('updated-clubs', updatedClubs);
 };
 
+const leaveClub = (name: string): void => {
+  searchQueue.addTask(async () => await japi('post', '/leave-club', { name }));
+
+  const existingClubs = lastEvent<ClubItem[]>('updated-clubs') ?? [];
+
+  const updatedClubs = existingClubs.filter((c) => c.name !== name);
+
+  sortClubs(updatedClubs)
+
+  notify<ClubItem[]>('updated-clubs', updatedClubs);
+};
+
 export {
   ClubItem,
   joinClub,
+  leaveClub,
   sortClubs,
 };
