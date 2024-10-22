@@ -23,57 +23,8 @@ import { api, japi } from '../api/api';
 import * as _ from "lodash";
 import debounce from 'lodash/debounce';
 import { Basic } from './basic';
-import { notify, lastEvent } from '../events/events';
-
-type ClubItem = {
-  name: string,
-  count_members: number,
-  search_preference?: boolean,
-};
-
-const sortClubs = (cs: ClubItem[] | undefined) => {
-  const unsortedCs = cs ?? [];
-  const sortedCs = unsortedCs.sort((a, b) => {
-    if (a.name.toLowerCase() > b.name.toLowerCase()) return +1;
-    if (a.name.toLowerCase() < b.name.toLowerCase()) return -1;
-
-    if (a.name > b.name) return +1;
-    if (a.name < b.name) return -1;
-
-    return 0;
-  });
-
-  return sortedCs;
-}
-
-const joinClub = async (
-  name: string,
-  countMembers: number,
-  searchPreference?: boolean,
-): Promise<void> => {
-  await japi('post', '/join-club', { name });
-
-  const existingClubs = lastEvent<ClubItem[]>('updated-clubs') ?? [];
-
-  const updatedClubs = [
-    ...existingClubs
-      .filter((c) => c.name !== name)
-      .map((c) => ({
-        ...c,
-        search_preference:
-          searchPreference === true ? false : c.search_preference
-      })),
-    {
-      name,
-      count_members: countMembers,
-      search_preference: searchPreference
-    },
-  ];
-
-  sortClubs(updatedClubs)
-
-  notify<ClubItem[]>('updated-clubs', updatedClubs);
-};
+import { notify } from '../events/events';
+import { ClubItem } from '../club/club';
 
 const SelectedClub = ({
   clubItem,
@@ -441,9 +392,6 @@ const styles = StyleSheet.create({
 });
 
 export {
-  ClubItem,
   ClubSelector,
   SelectedClub,
-  joinClub,
-  sortClubs,
 };

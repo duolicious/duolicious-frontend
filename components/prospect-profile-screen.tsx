@@ -1017,7 +1017,7 @@ const Body = ({
             <Clubs>
               {data.mutual_clubs.map((clubName, i) =>
                 <Club
-                  key={i}
+                  key={clubName}
                   name={clubName}
                   isMutual={true}
                   {...mutualClubsTheme}
@@ -1044,7 +1044,7 @@ const Body = ({
             <Clubs>
               {data.other_clubs.map((clubName, i) =>
                 <Club
-                  key={i}
+                  key={clubName}
                   name={clubName}
                   isMutual={false}
                   {...clubsTheme}
