@@ -72,6 +72,7 @@ const Basics = ({children}) => {
   return (
     <View
       style={{
+        zIndex: 999,
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: 5,
