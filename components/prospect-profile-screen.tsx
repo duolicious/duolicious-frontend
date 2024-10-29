@@ -109,6 +109,7 @@ const EnlargeableImage = ({
   imageBlurhash,
   onChangeEmbiggened,
   style,
+  innerStyle,
   isPrimary,
   verified = false,
 }: {
@@ -116,6 +117,7 @@ const EnlargeableImage = ({
   imageBlurhash: string | undefined | null,
   onChangeEmbiggened: (uuid: string) => void,
   style?: any,
+  innerStyle?: any,
   isPrimary: boolean,
   verified?: boolean,
 }) => {
@@ -139,6 +141,7 @@ const EnlargeableImage = ({
         imageUuid={imageUuid}
         imageBlurhash={imageBlurhash}
         showGradient={false}
+        style={innerStyle}
       />
       {verified &&
         <VerificationBadge
@@ -1103,6 +1106,7 @@ const Body = ({
           imageBlurhash={imageBlurhash1}
           onChangeEmbiggened={goToGallery(navigation, imageUuid1)}
           style={styles.secondaryEnlargeableImage}
+          innerStyle={styles.secondaryEnlargeableImageInner}
           isPrimary={false}
           verified={imageVerification1}
         />
@@ -1124,6 +1128,7 @@ const Body = ({
           imageBlurhash={imageBlurhash2}
           onChangeEmbiggened={goToGallery(navigation, imageUuid2)}
           style={styles.secondaryEnlargeableImage}
+          innerStyle={styles.secondaryEnlargeableImageInner}
           isPrimary={false}
           verified={imageVerification2}
         />
@@ -1133,6 +1138,7 @@ const Body = ({
           imageBlurhash={imageBlurhash3}
           onChangeEmbiggened={goToGallery(navigation, imageUuid3)}
           style={styles.secondaryEnlargeableImage}
+          innerStyle={styles.secondaryEnlargeableImageInner}
           isPrimary={false}
           verified={imageVerification3}
         />
@@ -1150,6 +1156,7 @@ const Body = ({
           imageBlurhash={imageBlurhash4}
           onChangeEmbiggened={goToGallery(navigation, imageUuid4)}
           style={styles.secondaryEnlargeableImage}
+          innerStyle={styles.secondaryEnlargeableImageInner}
           isPrimary={false}
           verified={imageVerification4}
         />
@@ -1159,6 +1166,7 @@ const Body = ({
           imageBlurhash={imageBlurhash5}
           onChangeEmbiggened={goToGallery(navigation, imageUuid5)}
           style={styles.secondaryEnlargeableImage}
+          innerStyle={styles.secondaryEnlargeableImageInner}
           isPrimary={false}
           verified={imageVerification5}
         />
@@ -1168,6 +1176,7 @@ const Body = ({
           imageBlurhash={imageBlurhash6}
           onChangeEmbiggened={goToGallery(navigation, imageUuid6)}
           style={styles.secondaryEnlargeableImage}
+          innerStyle={styles.secondaryEnlargeableImageInner}
           isPrimary={false}
           verified={imageVerification6}
         />
@@ -1194,10 +1203,21 @@ const Body = ({
 
 const styles = StyleSheet.create({
   secondaryEnlargeableImage: {
-    borderRadius: 10,
-    overflow: 'hidden',
     marginTop: 10,
     marginBottom: 10,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+    borderRadius: 10,
+    overflow: 'visible',
+  },
+  secondaryEnlargeableImageInner: {
+    borderRadius: 10,
+    overflow: 'hidden',
   },
   wFull: {
     width: '100%',

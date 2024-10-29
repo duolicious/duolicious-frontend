@@ -53,6 +53,7 @@ const ImageOrSkeleton_ = ({resolution, imageUuid, imageBlurhash, ...rest}) => {
         },
         rest.style,
       ]}
+      contentFit="contain"
     >
       <LinearGradient
         colors={showGradient ? [
