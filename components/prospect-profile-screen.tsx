@@ -1233,21 +1233,12 @@ const Body = ({
 
 const styles = StyleSheet.create({
   secondaryEnlargeableImage: {
-    marginTop: 10,
-    marginBottom: 10,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
-    borderRadius: 10,
-    overflow: 'visible',
-  },
-  secondaryEnlargeableImageInner: {
     borderRadius: 10,
     overflow: 'hidden',
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  secondaryEnlargeableImageInner: {
   },
   wFull: {
     width: '100%',
