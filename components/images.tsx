@@ -136,6 +136,7 @@ const UserImage = ({
 
   const fetchImage = useCallback(async () => {
     const getUri = input.photos.getUri;
+    const getExtraExts = input.photos.getExtraExts;;
     const getBlurhash = input.photos.getBlurhash;
 
     if (getUri) {

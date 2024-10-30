@@ -634,6 +634,7 @@ type UserData = {
   match_percentage: number,
   count_answers: number,
   photo_uuids: string[],
+  photo_extra_exts: string[],
   photo_blurhashes: string[],
   photo_verifications: boolean[],
   age: number | null,
