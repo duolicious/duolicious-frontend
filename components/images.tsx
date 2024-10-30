@@ -186,14 +186,16 @@ const UserImage = ({
     const width = result.assets[0].width;
     const height = result.assets[0].height;
     const mimeType = result.assets[0].mimeType;
-    const base64Uri = result.assets[0].uri;
+    const base64 = result.assets[0].base64;
     if (!width) return;
     if (!height) return;
     if (!mimeType) return;
-    if (!base64Uri) {
+    if (!base64) {
       console.warn('Unexpected output from launchImageLibraryAsync');
       return;
     }
+
+    const base64Uri = `data:${mimeType};base64,${base64}`;
 
     setIsLoading(true);
     setIsLoading_(true);
