@@ -368,7 +368,7 @@ const FloatingSendIntroButton = ({
   );
 };
 
-const SeeQAndAButton = ({navigation, personId, name, countAnswers}) => {
+const SeeQAndAButton = ({navigation, personId, name}) => {
   const containerStyle = useRef({
     marginTop: 40,
     marginLeft: 10,
@@ -401,10 +401,6 @@ const SeeQAndAButton = ({navigation, personId, name, countAnswers}) => {
 
   const determiner = String(name).endsWith('s') ? "'" : "'s";
 
-  if (!countAnswers) {
-    return <></>;
-  }
-
   return (
     <ButtonWithCenteredText
       containerStyle={containerStyle}
@@ -415,7 +411,7 @@ const SeeQAndAButton = ({navigation, personId, name, countAnswers}) => {
       borderColor="rgba(255, 255, 255, 0.2)"
       borderWidth={1}
     >
-      {name}{determiner} Q&A Answers ({countAnswers})
+      {name}{determiner} Q&A Answers
     </ButtonWithCenteredText>
   );
 };
@@ -1212,21 +1208,44 @@ const Body = ({
           verified={imageVerification6}
         />
 
-        {!isViewingSelf && (<>
-        <SeeQAndAButton
-          navigation={navigation}
-          personId={personId}
-          name={data?.name}
-          countAnswers={data?.count_answers}
-        />
-        <BlockButton
-          navigation={navigation}
-          name={data?.name}
-          personId={personId}
-          personUuid={personUuid}
-          isSkipped={data?.is_skipped}
-        />
-        </>)}
+        <Title style={{color: data?.theme?.title_color}}>Stats</Title>
+        <Basics>
+          <Basic {...basicsTheme}>
+            <DefaultText style={{ fontWeight: '700' }}>Last Online:</DefaultText>
+            {} 1 hour ago
+          </Basic>
+          <Basic {...basicsTheme}>
+            <DefaultText style={{ fontWeight: '700' }}>Q&A Answers:</DefaultText>
+            {} 597
+          </Basic>
+          <Basic {...basicsTheme}>
+            <DefaultText style={{ fontWeight: '700' }}>Gives Replies To:</DefaultText>
+            {} 93% of intros
+          </Basic>
+          <Basic {...basicsTheme}>
+            <DefaultText style={{ fontWeight: '700' }}>Gets Replies To:</DefaultText>
+            {} 33% of intros
+          </Basic>
+          <Basic {...basicsTheme}>
+            <DefaultText style={{ fontWeight: '700' }}>Account Age:</DefaultText>
+            {} 7 days
+          </Basic>
+        </Basics>
+
+        {!isViewingSelf && !!data?.count_answers &&
+          <SeeQAndAButton
+            navigation={navigation}
+            personId={personId}
+            name={data?.name}
+          />}
+        {!isViewingSelf &&
+          <BlockButton
+            navigation={navigation}
+            name={data?.name}
+            personId={personId}
+            personUuid={personUuid}
+            isSkipped={data?.is_skipped}
+          />}
       </View>
     </>
   );
