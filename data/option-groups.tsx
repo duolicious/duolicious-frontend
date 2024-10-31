@@ -18,7 +18,7 @@ import { faCalendar } from '@fortawesome/free-solid-svg-icons/faCalendar'
 import { faPeopleGroup } from '@fortawesome/free-solid-svg-icons/faPeopleGroup'
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { NonNullImageCropperOutput } from '../components/image-cropper';
-import { logout } from '../xmpp/xmpp';
+import { login, logout } from '../xmpp/xmpp';
 import { LOGARITHMIC_SCALE, Scale } from "../scales/scales";
 import { VerificationBadge } from '../components/verification-badge';
 import { VerificationEvent } from '../verification/verification';
@@ -1007,7 +1007,9 @@ const createAccountOptionGroups: OptionGroup<OptionGroupInputs>[] = [
           if (typeof existingSessionToken !== 'string') return false;
 
           const onboarded = response.json.onboarded;
+          const clubs: ClubItem[] = response?.json?.clubs;
           const pendingClub = response?.json?.pending_club;
+          const personUuid: string = response?.json?.person_uuid;
 
           if (!onboarded) {
             return true;
@@ -1034,20 +1036,20 @@ const createAccountOptionGroups: OptionGroup<OptionGroupInputs>[] = [
             });
           }
 
-          const clubs: ClubItem[] = response?.json?.clubs;
+          login(personUuid, existingSessionToken);
 
           setSignedInUser((signedInUser) => ({
             personId: response?.json?.person_id,
-            personUuid: response?.json?.person_uuid,
+            personUuid: personUuid,
             units: response?.json?.units === 'Imperial' ? 'Imperial' : 'Metric',
             sessionToken: existingSessionToken,
-            pendingClub: response?.json?.pending_club,
+            pendingClub: pendingClub,
             doShowDonationNag: response?.json?.do_show_donation_nag,
             estimatedEndDate: new Date(response?.json?.estimated_end_date),
             name: response?.json?.name,
           }));
 
-          await sessionPersonUuid(response?.json?.person_uuid);
+          await sessionPersonUuid(personUuid);
 
           notify<ClubItem[]>('updated-clubs', clubs);
 
@@ -1140,34 +1142,19 @@ const createAccountOptionGroups: OptionGroup<OptionGroupInputs>[] = [
       none: {
         description: FinishOnboardingDescription,
         submit: async () => {
-          const _sessionToken = await sessionToken();
+          const existingSessionToken = await sessionToken();
           const response = await japi('post', '/finish-onboarding');
 
-          if (!response.ok) {
-            return false
-          }
+          if (!response.ok) return false;
+          if (typeof existingSessionToken !== 'string') return false;
 
           const clubs: ClubItem[] = response?.json?.clubs;
-
           const pendingClub = response?.json?.pending_club;
+          const personUuid: string = response?.json?.person_uuid;
 
-          setSignedInUser((signedInUser) => ({
-            sessionToken: _sessionToken ?? '',
-            ...signedInUser,
-            personId: response?.json?.person_id,
-            personUuid: response?.json?.person_uuid,
-            units: response?.json?.units === 'Imperial' ? 'Imperial' : 'Metric',
-            pendingClub: pendingClub,
-            doShowDonationNag: response?.json?.do_show_donation_nag,
-            estimatedEndDate: new Date(response?.json?.estimated_end_date),
-            name: response?.json?.name,
-          }));
-
-          await sessionPersonUuid(response?.json?.person_uuid);
-
-          notify<ClubItem[]>('updated-clubs', clubs);
-
-          if (pendingClub) {
+          if (!navigationContainerRef.current) {
+            ;
+          } else if (pendingClub) {
             navigationContainerRef.reset({
               routes: [
                 {
@@ -1182,7 +1169,29 @@ const createAccountOptionGroups: OptionGroup<OptionGroupInputs>[] = [
                 }
               ]
             });
+          } else {
+            navigationContainerRef.reset({
+              routes: [ { name: 'Home' } ]
+            });
           }
+
+          login(personUuid, existingSessionToken);
+
+          setSignedInUser((signedInUser) => ({
+            sessionToken: existingSessionToken ?? '',
+            ...signedInUser,
+            personId: response?.json?.person_id,
+            personUuid: personUuid,
+            units: response?.json?.units === 'Imperial' ? 'Imperial' : 'Metric',
+            pendingClub: pendingClub,
+            doShowDonationNag: response?.json?.do_show_donation_nag,
+            estimatedEndDate: new Date(response?.json?.estimated_end_date),
+            name: response?.json?.name,
+          }));
+
+          await sessionPersonUuid(response?.json?.person_uuid);
+
+          notify<ClubItem[]>('updated-clubs', clubs);
 
           return false;
         }
