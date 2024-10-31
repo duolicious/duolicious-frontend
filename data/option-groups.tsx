@@ -31,6 +31,7 @@ import {
   View,
 } from 'react-native';
 import { FC } from 'react';
+import { onboardingQueue } from '../api/queue';
 
 const noneFontSize = 16;
 
@@ -1063,11 +1064,13 @@ const createAccountOptionGroups: OptionGroup<OptionGroupInputs>[] = [
     description: "This could be your first name, or an alias",
     input: {
       givenName: {
-        submit: async (input) => (await japi(
-          'patch',
-          '/onboardee-info',
-          { name: input }
-        )).ok
+        submit: async (input) => await onboardingQueue.addTask(
+          async () =>
+            (await japi(
+              'patch',
+              '/onboardee-info',
+              { name: input })).ok
+        ),
       }
     },
   },
@@ -1078,11 +1081,13 @@ const createAccountOptionGroups: OptionGroup<OptionGroupInputs>[] = [
       title: 'Step 2 of 5: Your Gender',
       input: {
         buttons: {
-          submit: async (input) => (await japi(
-            'patch',
-            '/onboardee-info',
-            { gender: input }
-          )).ok,
+          submit: async (input) => await onboardingQueue.addTask(
+            async () =>
+              (await japi(
+                'patch',
+                '/onboardee-info',
+                { gender: input })).ok
+          ),
           currentValue: 'Man',
         }
       }
@@ -1095,11 +1100,13 @@ const createAccountOptionGroups: OptionGroup<OptionGroupInputs>[] = [
       title: 'Step 3 of 5: ' + yourPartnersGenderOptionGroup.title,
       input: {
         checkChips: {
-          submit: async (input: string[]) => (await japi(
-            'patch',
-            '/onboardee-info',
-            { other_peoples_genders: input }
-          )).ok
+          submit: async (input: string[]) => await onboardingQueue.addTask(
+            async () =>
+              (await japi(
+                'patch',
+                '/onboardee-info',
+                { other_peoples_genders: input })).ok
+          ),
         }
       }
     },
@@ -1109,11 +1116,13 @@ const createAccountOptionGroups: OptionGroup<OptionGroupInputs>[] = [
     description: "When were you born? You can’t change this later",
     input: {
       date: {
-        submit: async (input) => (await japi(
-          'patch',
-          '/onboardee-info',
-          { date_of_birth: input }
-        )).ok
+        submit: async (input) => await onboardingQueue.addTask(
+          async () =>
+            (await japi(
+              'patch',
+              '/onboardee-info',
+              { date_of_birth: input })).ok
+        ),
       }
     },
     scrollView: false,
@@ -1125,11 +1134,13 @@ const createAccountOptionGroups: OptionGroup<OptionGroupInputs>[] = [
       title: 'Step 5 of 5: ' + locationOptionGroup.title,
       input: {
         locationSelector: {
-          submit: async (input) => (await japi(
-            'patch',
-            '/onboardee-info',
-            { location: input }
-          )).ok
+          submit: async (input) => await onboardingQueue.addTask(
+            async () =>
+              (await japi(
+                'patch',
+                '/onboardee-info',
+                { location: input })).ok
+          ),
         }
       }
     },
@@ -1143,7 +1154,9 @@ const createAccountOptionGroups: OptionGroup<OptionGroupInputs>[] = [
         description: FinishOnboardingDescription,
         submit: async () => {
           const existingSessionToken = await sessionToken();
-          const response = await japi('post', '/finish-onboarding');
+          const response = await onboardingQueue.addTask(
+            async () => await japi('post', '/finish-onboarding')
+          );
 
           if (!response.ok) return false;
           if (typeof existingSessionToken !== 'string') return false;
