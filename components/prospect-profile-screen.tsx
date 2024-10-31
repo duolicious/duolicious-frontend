@@ -57,6 +57,7 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { ClubItem, joinClub, leaveClub } from '../club/club';
 import _ from 'lodash';
+import { friendlyTimeAgo } from '../util/util';
 
 // TODO: Handle the case where club stealing causes someone to join too many clubs
 
@@ -667,6 +668,12 @@ type UserData = {
     body_color: string,
     background_color: string,
   }
+
+  seconds_since_last_online: number | null,
+  seconds_since_sign_up: number,
+
+  gets_reply_percentage: number | null,
+  gives_reply_percentage: number | null,
 };
 
 const verifiedAnything = (data: UserData | null | undefined): boolean => {
@@ -1210,25 +1217,41 @@ const Body = ({
 
         <Title style={{color: data?.theme?.title_color}}>Stats</Title>
         <Basics>
-          <Basic {...basicsTheme}>
-            <DefaultText style={{ fontWeight: '700' }}>Last Online:</DefaultText>
-            {} 1 hour ago
-          </Basic>
+          {data?.seconds_since_last_online !== null &&
+            <Basic {...basicsTheme}>
+              <DefaultText style={{ fontWeight: '700' }}>Last Online:</DefaultText>
+              {} {
+                data === undefined ?
+                'Loading...' :
+                data.seconds_since_last_online < 300 ?
+                'Now' :
+                `${friendlyTimeAgo(data.seconds_since_last_online)} ago`
+              }
+            </Basic>
+          }
           <Basic {...basicsTheme}>
             <DefaultText style={{ fontWeight: '700' }}>Q&A Answers:</DefaultText>
-            {} 597
+            {} {data?.count_answers ?? 'Loading...'}
           </Basic>
-          <Basic {...basicsTheme}>
-            <DefaultText style={{ fontWeight: '700' }}>Gives Replies To:</DefaultText>
-            {} 93% of intros
-          </Basic>
-          <Basic {...basicsTheme}>
-            <DefaultText style={{ fontWeight: '700' }}>Gets Replies To:</DefaultText>
-            {} 33% of intros
-          </Basic>
+          {data && !_.isNil(data.gives_reply_percentage) &&
+            <Basic {...basicsTheme}>
+              <DefaultText style={{ fontWeight: '700' }}>Gives Replies To:</DefaultText>
+              {} {Math.round(data.gives_reply_percentage)}% of intros
+            </Basic>
+          }
+          {data && !_.isNil(data.gets_reply_percentage) &&
+            <Basic {...basicsTheme}>
+              <DefaultText style={{ fontWeight: '700' }}>Gets Replies To:</DefaultText>
+              {} {Math.round(data.gets_reply_percentage)}% of intros
+            </Basic>
+          }
           <Basic {...basicsTheme}>
             <DefaultText style={{ fontWeight: '700' }}>Account Age:</DefaultText>
-            {} 7 days
+            {} {
+              data === undefined ?
+              'Loading...' :
+              friendlyTimeAgo(data.seconds_since_sign_up)
+            }
           </Basic>
         </Basics>
 
