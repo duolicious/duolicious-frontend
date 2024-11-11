@@ -449,7 +449,7 @@ const BlockButton = ({navigation, name, personId, personUuid, isSkipped}) => {
     `You have skipped ${name}. Press to unskip.` :
     `Report ${name}`;
 
-  const iconStroke = isLoading ? "transparent" : 'black';
+  const iconStroke = isLoading ? "transparent" : 'rgba(0, 0, 0, 0.5)';
 
   return (
     <Pressable
@@ -460,8 +460,7 @@ const BlockButton = ({navigation, name, personId, personUuid, isSkipped}) => {
         alignSelf: 'center',
         flexDirection: 'row',
         gap: 7,
-        backgroundColor: 'white',
-        opacity: 0.5,
+        backgroundColor: 'rgba(255, 255, 255, 0.3)',
         padding: 8,
         borderRadius: 5,
       }}
@@ -490,6 +489,7 @@ const BlockButton = ({navigation, name, personId, personUuid, isSkipped}) => {
           style={{
             overflow: 'hidden',
             textAlign: 'center',
+            color: 'rgba(0, 0, 0, 0.5)',
           }}
         >
           {name === undefined ? '...' : text}
@@ -1134,8 +1134,7 @@ const Body = ({
           />
           <View
             style={{
-              backgroundColor: 'white',
-              opacity: 0.4,
+              backgroundColor: 'rgba(255, 255, 255, 0.3)',
               borderRadius: 3,
               overflow: 'hidden',
               marginBottom: 10,
@@ -1143,8 +1142,8 @@ const Body = ({
           >
             <DefaultText
               style={{
-                color: 'black',
-                padding: 1,
+                color: 'rgba(0, 0, 0, 0.5)',
+                padding: 2,
               }}
             >
               Verification is based on selfies analyzed by our AI. Verified
