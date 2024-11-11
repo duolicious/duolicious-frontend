@@ -115,7 +115,7 @@ const friendlyTimeAgo = (secondsAgo: number): string => {
 }
 
 const possessive = (s: string) => {
-  const possessiveMarker = String(name).endsWith('s') ? "'" : "'s";
+  const possessiveMarker = String(s).endsWith('s') ? "'" : "'s";
 
   return s + possessiveMarker;
 };

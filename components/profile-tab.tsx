@@ -228,6 +228,151 @@ const ProfileTab_ = ({navigation}) => {
   );
 };
 
+const AudioBio = () => {
+  type MemoryState =
+    | 'No recording yet'
+    | 'Unsaved recording'
+    | 'Saved';
+
+  type PlayingState =
+    | 'Stopped'
+    | 'Playing'
+    | 'Recording';
+
+  const [memoryState, setMemoryState] = useState<MemoryState>(
+    'No recording yet');
+
+  const [playingState, setPlayingState] = useState<PlayingState>(
+    'Stopped');
+
+  const formattedStatus = (() => {
+    if (playingState === 'Recording') {
+      return 'Recording (0:00)'; // TODO Insert time
+    }
+
+    if (playingState === 'Playing') {
+      return 'Playing (0:00)'; // TODO Insert time
+    }
+
+    return memoryState;
+  })();
+
+  const recordButtonEnabled = playingState !== 'Playing';
+
+  const playButtonEnabled = (
+    (playingState === 'Playing' || playingState === 'Stopped') &&
+    (memoryState === 'Unsaved recording' || memoryState === 'Saved')
+  );
+
+  const discardButtonEnabled = (
+    memoryState === 'Unsaved recording' || memoryState === 'Saved'
+  );
+
+  const saveButtonEnabled = (
+    memoryState === 'Unsaved recording' || memoryState === 'Saved'
+  );
+
+  return (
+    <>
+      <Title>Audio Bio</Title>
+      <View
+        style={{
+          width: '100%',
+          borderRadius: 10,
+          borderWidth: 1,
+          borderColor: '#ccc',
+          padding: 10,
+          gap: 15,
+        }}
+      >
+        <View
+          style={{
+            width: '100%',
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: 20,
+          }}
+        >
+          <View
+            style={{
+              gap: 20,
+              flexDirection: 'row',
+              flex: 1,
+              justifyContent: 'flex-start',
+              alignItems: 'center',
+            }}
+          >
+            <Ionicons
+              disabled={!recordButtonEnabled}
+              onPress={
+                () => recordButtonEnabled && setPlayingState(
+                  playingState === 'Recording' ? 'Stopped' : 'Recording')}
+              style={{
+                fontSize: 52,
+                color: 'crimson',
+                opacity: recordButtonEnabled ? 1 : 0.2,
+              }}
+              name={playingState === 'Recording' ? 'stop-circle' : 'mic'}
+            />
+          </View>
+
+          <View style={{ flex: 4 }} >
+            <View
+              style={{
+                gap: 10,
+                flexDirection: 'row',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <Ionicons
+                disabled={!playButtonEnabled}
+                onPress={
+                  () => playButtonEnabled && setPlayingState(
+                    playingState === 'Playing' ? 'Stopped' : 'Playing')}
+                style={{
+                  flexShrink: 1,
+                  fontSize: 52,
+                  opacity: playButtonEnabled ? 1 : 0.2,
+                }}
+                name="play-circle"
+              />
+              <ButtonWithCenteredText
+                containerStyle={{
+                  flex: 1,
+                  marginTop: 0,
+                  marginBottom: 0,
+                  opacity: discardButtonEnabled ? 1 : 0.2,
+                }}
+                secondary={true}
+              >
+                {memoryState === 'Saved' ? 'Delete' : 'Discard'}
+              </ButtonWithCenteredText>
+              <ButtonWithCenteredText
+                containerStyle={{
+                  flex: 1,
+                  marginTop: 0,
+                  marginBottom: 0,
+                  opacity: saveButtonEnabled ? 1 : 0.2,
+                }}
+              >
+                Save
+              </ButtonWithCenteredText>
+            </View>
+          </View>
+        </View>
+        <DefaultText>
+          <DefaultText style={{ fontWeight: '700' }}>
+            Status: {}
+          </DefaultText>
+          {formattedStatus}
+        </DefaultText>
+      </View>
+    </>
+  );
+};
+
 const DisplayNameAndAboutPerson = ({navigation, data}) => {
   const [name, setName] = useState<string>(data.name ?? '');
 
@@ -544,6 +689,8 @@ const Options = ({ navigation, data }) => {
       }
 
       <DisplayNameAndAboutPerson navigation={navigation} data={data}/>
+
+      <AudioBio/>
 
       <Title>Basics</Title>
       {

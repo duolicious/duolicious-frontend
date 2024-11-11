@@ -409,7 +409,7 @@ const SeeQAndAButton = ({navigation, personId, name}) => {
       borderColor="rgba(255, 255, 255, 0.2)"
       borderWidth={1}
     >
-      possessive(String(name)) Q&A Answers
+      {possessive(String(name))} Q&A Answers
     </ButtonWithCenteredText>
   );
 };
@@ -1010,7 +1010,7 @@ const AudioPlayer = ({
       />
 
       <DefaultText style={styles.audioPlayerMiddleText}>
-        {name ? possessive(name) : '...'} audio bio
+        {name ? `${possessive(name)} ` : ''}audio bio
       </DefaultText>
 
 
