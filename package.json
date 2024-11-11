@@ -23,7 +23,7 @@
     "@xmldom/xmldom": "^0.8.10",
     "@xmpp/client": "^0.13.1",
     "date-fns": "^2.30.0",
-    "expo": "~51.0.38",
+    "expo": "~51.0.39",
     "expo-checkbox": "~3.0.0",
     "expo-clipboard": "~6.0.3",
     "expo-constants": "~16.0.2",
@@ -36,7 +36,7 @@
     "expo-notifications": "~0.28.19",
     "expo-screen-orientation": "~7.0.5",
     "expo-secure-store": "~13.0.2",
-    "expo-splash-screen": "~0.27.6",
+    "expo-splash-screen": "~0.27.7",
     "expo-status-bar": "~1.12.1",
     "expo-store-review": "~7.0.2",
     "lodash": "^4.17.21",
@@ -50,7 +50,8 @@
     "react-native-svg": "15.2.0",
     "react-native-web": "~0.19.10",
     "xpath": "^0.0.33",
-    "react-native-reanimated": "~3.10.1"
+    "react-native-reanimated": "~3.10.1",
+    "expo-av": "~14.0.7"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",
