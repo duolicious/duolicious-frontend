@@ -58,7 +58,7 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { ClubItem, joinClub, leaveClub } from '../club/club';
 import _ from 'lodash';
-import { friendlyTimeAgo } from '../util/util';
+import { friendlyTimeAgo, possessive } from '../util/util';
 
 const Stack = createNativeStackNavigator();
 
@@ -399,8 +399,6 @@ const SeeQAndAButton = ({navigation, personId, name}) => {
     navigation.navigate('In-Depth', { personId, name });
   }, [personId, name]);
 
-  const determiner = String(name).endsWith('s') ? "'" : "'s";
-
   return (
     <ButtonWithCenteredText
       containerStyle={containerStyle}
@@ -411,7 +409,7 @@ const SeeQAndAButton = ({navigation, personId, name}) => {
       borderColor="rgba(255, 255, 255, 0.2)"
       borderWidth={1}
     >
-      {name}{determiner} Q&A Answers
+      possessive(String(name)) Q&A Answers
     </ButtonWithCenteredText>
   );
 };
@@ -978,6 +976,51 @@ const ProspectUserDetails = ({
   );
 };
 
+const AudioPlayer = ({
+  name
+}: {
+  name: string | undefined
+}) => {
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [secondsRemaining, setSecondsRemaining] = useState(60 + 32);
+
+  const playIcon = isPlaying ? 'pause-circle' : 'play-circle';
+
+  return (
+    <View
+      style={{
+        width: '100%',
+        marginTop: 20,
+        flexDirection: 'row',
+        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        borderColor: 'rgba(0, 0, 0, 0.1)',
+        borderWidth: 1,
+        borderRadius: 10,
+        paddingHorizontal: 10,
+        paddingVertical: 10,
+        gap: 20,
+      }}
+    >
+      <Ionicons
+        onPress={() => setIsPlaying(x => !x)}
+        style={{ fontSize: 42, flex: 1 }}
+        name={playIcon}
+      />
+
+      <DefaultText style={styles.audioPlayerMiddleText}>
+        {name ? possessive(name) : '...'} audio bio
+      </DefaultText>
+
+
+      <DefaultText style={{ flex: 1, textAlign: 'right', paddingRight: 5 }}>
+        -{Math.floor(secondsRemaining / 60)}:{secondsRemaining % 60}
+      </DefaultText>
+    </View>
+  );
+};
+
 const Body = ({
   navigation,
   personId,
@@ -1053,6 +1096,7 @@ const Body = ({
           marginBottom: 20,
         }}
       >
+        <AudioPlayer name={data?.name}/>
         <Title style={{color: data?.theme?.title_color}}>Basics</Title>
         <Basics>
           {data?.gender &&
@@ -1335,6 +1379,12 @@ const styles = StyleSheet.create({
   },
   wFull: {
     width: '100%',
+  },
+  audioPlayerMiddleText: {
+    fontWeight: 700,
+    flex: 3,
+    wordBreak: 'break-all',
+    textAlign: 'center',
   },
 });
 

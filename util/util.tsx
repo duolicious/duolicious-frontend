@@ -114,6 +114,12 @@ const friendlyTimeAgo = (secondsAgo: number): string => {
   return _.capitalize(formatDistanceToNow(lastOnlineDate));
 }
 
+const possessive = (s: string) => {
+  const possessiveMarker = String(name).endsWith('s') ? "'" : "'s";
+
+  return s + possessiveMarker;
+};
+
 export {
   compareArrays,
   delay,
@@ -123,5 +129,6 @@ export {
   isMobile,
   longFriendlyTimestamp,
   parseUrl,
+  possessive,
   withTimeout,
 };
