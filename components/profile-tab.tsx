@@ -11,6 +11,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -44,10 +45,11 @@ import {
 import { Images } from './images';
 import { DefaultText } from './default-text';
 import { sessionToken, sessionPersonUuid } from '../kv-storage/session-token';
-import { api, japi } from '../api/api';
+import { api, japi, uriToBase64 } from '../api/api';
 import { signedInUser, setSignedInUser } from '../App';
 import { cmToFeetInchesStr } from '../units/units';
 import {
+  AUDIO_URL,
   IMAGES_URL,
 } from '../env/env';
 import * as _ from "lodash";
@@ -66,7 +68,11 @@ import {
 import { InviteEntrypoint } from './invite';
 import { InvitePicker } from './invite';
 import { Audio, AVPlaybackStatus } from 'expo-av';
+import { secToMinSec } from '../util/util';
+import { SomethingWentWrongToast } from './toast';
 
+// TODO: Audio bio deletion
+// TODO: Update Uri after recording
 
 const formatHeight = (og: OptionGroup<OptionGroupInputs>): string | undefined => {
   if (!isOptionGroupSlider(og.input)) return '';
@@ -229,10 +235,18 @@ const ProfileTab_ = ({navigation}) => {
   );
 };
 
-const AudioBio = () => {
+const AudioBio = ({
+  initialSavedRecordingUri,
+  maxDuration,
+}: {
+  initialSavedRecordingUri: string | null
+  maxDuration: number
+}) => {
   type MemoryState =
     | 'No recording yet'
     | 'Unsaved recording'
+    | 'Saving'
+    | 'Deleting'
     | 'Saved';
 
   type PlayingState =
@@ -240,24 +254,63 @@ const AudioBio = () => {
     | 'Playing'
     | 'Recording';
 
-  const [memoryState, setMemoryState] = useState<MemoryState>(
-    'No recording yet');
+  const [savedRecordingUri, setSavedRecordingUri] = useState(
+    initialSavedRecordingUri);
+
+  const [unsavedRecordingUri, setUnsavedRecordingUri] = useState<
+    null | string>(null);
 
   const [playingState, setPlayingState] = useState<PlayingState>(
     'Stopped');
 
-  // TODO: Needs to come from the server
-  const [existingRecording, setExistingRecording] = useState(null);
+  const recording = useRef<Audio.Recording>();
 
-  const [recording, setRecording] = useState<Audio.Recording>();
-
-  const [sound, setSound] = useState<Audio.Sound>();
+  const sound = useRef<Audio.Sound>();
 
   const [permissionResponse, requestPermission] = Audio.usePermissions();
 
   const [duration, setDuration] = useState<null | number>(); // seconds
 
-  const [recordingUri, setRecordingUri] = useState<null | string>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const [saving, setSaving] = useState(false);
+
+  const memoryState: MemoryState = (() => {
+    if (saving) {
+      return 'Saving';
+    }
+
+    if (deleting) {
+      return 'Deleting';
+    }
+
+    if (unsavedRecordingUri) {
+      return 'Unsaved recording'
+    }
+
+    if (savedRecordingUri) {
+      return 'Saved';
+    }
+
+    return 'No recording yet';
+  })();
+
+  const loading = saving || deleting;
+
+  const playableRecordingUri = unsavedRecordingUri ?? savedRecordingUri;
+
+  const recordButtonEnabled = playingState !== 'Playing' && !loading;
+
+  const playButtonEnabled = (
+    (playingState === 'Playing' || playingState === 'Stopped') &&
+    (memoryState === 'Unsaved recording' || memoryState === 'Saved')
+  );
+
+  const discardButtonEnabled = (
+    memoryState === 'Unsaved recording' || memoryState === 'Saved'
+  );
+
+  const saveButtonEnabled = memoryState === 'Unsaved recording';
 
   const startRecording = async () => {
     try {
@@ -270,14 +323,20 @@ const AudioBio = () => {
         playsInSilentModeIOS: true,
       });
 
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY,
-        (status: Audio.RecordingStatus) => {
-          setDuration(Math.floor(status.durationMillis / 1000));
-        }
-      );
+      const onRecordingStatusUpdate = (status: Audio.RecordingStatus) => {
+        const seconds = Math.floor(status.durationMillis / 1000);
 
-      setRecording(recording);
+        setDuration(seconds);
+
+        if (seconds >= maxDuration) {
+          stopRecording();
+        }
+      };
+
+      recording.current = (await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY,
+        onRecordingStatusUpdate,
+      )).recording;
 
       setPlayingState('Recording');
 
@@ -290,52 +349,37 @@ const AudioBio = () => {
   }
 
   const stopRecording = async () => {
-    setRecording(undefined);
-    setPlayingState('Stopped');
+    const currentRecording = recording.current;
+    recording.current = undefined;
 
-    if (recording) {
-      await recording.stopAndUnloadAsync();
-      setRecordingUri(recording.getURI());
-      setMemoryState('Unsaved recording');
+    if (!currentRecording) {
+      return;
     }
 
-    await Audio.setAudioModeAsync(
-      {
-        allowsRecordingIOS: false,
-      }
-    );
+    await currentRecording.stopAndUnloadAsync();
+
+    await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
+
+    const uri = currentRecording.getURI();
+
+    if (!uri) {
+      console.error('Recording URI was unexpectedly null');
+      return;
+    }
+
+    setUnsavedRecordingUri(uri);
+
+    setPlayingState('Stopped');
 
     return true;
   }
 
   const startPlayback = async () => {
-    if (!recordingUri) {
+    if (!sound.current) {
       return false;
     }
 
-    const { sound } = await Audio.Sound.createAsync(
-      { uri: recordingUri },
-      {},
-      (status: AVPlaybackStatus) => {
-        if (!status.isLoaded) {
-          return;
-        }
-
-        if (status.durationMillis) {
-          setDuration(Math.floor(status.positionMillis / 1000));
-        } else {
-          setDuration(null);
-        }
-
-        if (status.didJustFinish) {
-          setPlayingState('Stopped');
-        }
-      }
-    );
-
-    setSound(sound);
-
-    await sound.playAsync();
+    await sound.current.playAsync();
 
     setPlayingState('Playing');
 
@@ -343,46 +387,107 @@ const AudioBio = () => {
   };
 
   const stopPlayback = async () => {
-    if (!sound) {
+    if (!sound.current) {
       return false;
     }
 
-    await sound.stopAsync();
+    await sound.current.stopAsync();
 
     setPlayingState('Stopped');
 
     return true;
   };
 
+  const discard = async () => {
+    if (unsavedRecordingUri) {
+      stopPlayback();
+      setDuration(null);
+      recording.current = undefined;
+      setUnsavedRecordingUri(null);
+    } else if (savedRecordingUri) {
+      setDeleting(true);
+      ; // TODO: Delete
+      setDeleting(false);
+    }
+  };
+
+  const save = async () => {
+    if (!unsavedRecordingUri) {
+      return false;
+    }
+
+    setSaving(true);
+
+    const base64 = await uriToBase64(unsavedRecordingUri);
+
+    const response = await japi(
+      'patch',
+      '/profile-info',
+      {
+        base64_audio_file: {
+          base64: `data:audio/*;base64,${base64}`,
+        }
+      },
+    );
+
+    if (response.ok) {
+      setSavedRecordingUri(unsavedRecordingUri);
+      setUnsavedRecordingUri(null);
+    } else {
+      notify<React.FC>('toast', SomethingWentWrongToast);
+    }
+
+    setSaving(false);
+
+    return true;
+  };
+
   const formattedStatus = (() => {
-    const minutes = String(Math.floor((duration ?? 0) / 60));
-    const seconds = String((duration ?? 0) % 60).padStart(2, '0');
+    const [mins, secs] = secToMinSec(duration ?? 0);
+    const [maxMins, maxSecs] = secToMinSec(maxDuration);
 
     if (playingState === 'Recording') {
-      return `Recording (${minutes}:${seconds})`;
+      return `Recording (${mins}:${secs}/${maxMins}:${maxSecs})`;
     }
 
     if (playingState === 'Playing') {
-      return `Playing (${minutes}:${seconds})`;
+      return `Playing (${mins}:${secs})`;
     }
 
     return memoryState;
   })();
 
-  const recordButtonEnabled = playingState !== 'Playing';
+  useEffect(() => {
+    const onPlaybackStatusUpdate = (status: AVPlaybackStatus) => {
+      if (!status.isLoaded) {
+        return;
+      }
 
-  const playButtonEnabled = (
-    (playingState === 'Playing' || playingState === 'Stopped') &&
-    (memoryState === 'Unsaved recording' || memoryState === 'Saved')
-  );
+      if (status.durationMillis) {
+        setDuration(Math.floor(status.positionMillis / 1000));
+      } else {
+        setDuration(null);
+      }
 
-  const discardButtonEnabled = (
-    memoryState === 'Unsaved recording' || memoryState === 'Saved'
-  );
+      if (status.didJustFinish) {
+        setPlayingState('Stopped');
+      }
+    };
 
-  const saveButtonEnabled = (
-    memoryState === 'Unsaved recording' || memoryState === 'Saved'
-  );
+    const go = async () => {
+      if (!playableRecordingUri) {
+        return;
+      }
+
+      sound.current = (await Audio.Sound.createAsync(
+        { uri: playableRecordingUri },
+        {},
+        onPlaybackStatusUpdate,
+      )).sound;
+    };
+
+    go();
+  }, [playableRecordingUri]);
 
   return (
     <>
@@ -472,6 +577,7 @@ const AudioBio = () => {
                   playingState === 'Playing' ? 'stop-circle' : 'play-circle'}
               />
               <ButtonWithCenteredText
+                loading={loading}
                 containerStyle={{
                   flex: 1,
                   marginTop: 0,
@@ -479,36 +585,30 @@ const AudioBio = () => {
                   opacity: discardButtonEnabled ? 1 : 0.2,
                 }}
                 secondary={true}
-                onPress={() => {
+                onPress={async () => {
                   if (!discardButtonEnabled) {
                     return;
                   }
 
-                  if (
-                    memoryState === 'Unsaved recording' &&
-                    existingRecording === null
-                  ) {
-                    stopPlayback();
-                    setMemoryState('No recording yet');
-                    setDuration(null);
-                    setRecording(undefined);
-                    setRecordingUri(null);
-                  }
+                  await discard();
                 }}
               >
                 {memoryState === 'Saved' ? 'Delete' : 'Discard'}
               </ButtonWithCenteredText>
               <ButtonWithCenteredText
+                loading={loading}
                 containerStyle={{
                   flex: 1,
                   marginTop: 0,
                   marginBottom: 0,
                   opacity: saveButtonEnabled ? 1 : 0.2,
                 }}
-                onPress={() => {
+                onPress={async () => {
                   if (!saveButtonEnabled) {
                     return;
                   }
+
+                  await save();
                 }}
               >
                 Save
@@ -844,7 +944,10 @@ const Options = ({ navigation, data }) => {
 
       <DisplayNameAndAboutPerson navigation={navigation} data={data}/>
 
-      <AudioBio/>
+      <AudioBio
+        initialSavedRecordingUri={`${AUDIO_URL}/${data.audio_bio}.webm`}
+        maxDuration={data.audio_bio_max_seconds}
+      />
 
       <Title>Basics</Title>
       {
