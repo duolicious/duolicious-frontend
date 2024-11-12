@@ -65,6 +65,7 @@ import {
 } from '../verification/verification';
 import { InviteEntrypoint } from './invite';
 import { InvitePicker } from './invite';
+import { Audio, AVPlaybackStatus } from 'expo-av';
 
 
 const formatHeight = (og: OptionGroup<OptionGroupInputs>): string | undefined => {
@@ -245,13 +246,124 @@ const AudioBio = () => {
   const [playingState, setPlayingState] = useState<PlayingState>(
     'Stopped');
 
+  // TODO: Needs to come from the server
+  const [existingRecording, setExistingRecording] = useState(null);
+
+  const [recording, setRecording] = useState<Audio.Recording>();
+
+  const [sound, setSound] = useState<Audio.Sound>();
+
+  const [permissionResponse, requestPermission] = Audio.usePermissions();
+
+  const [duration, setDuration] = useState<null | number>(); // seconds
+
+  const [recordingUri, setRecordingUri] = useState<null | string>(null);
+
+  const startRecording = async () => {
+    try {
+      if (permissionResponse?.status !== 'granted') {
+        await requestPermission();
+      }
+
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+
+      const { recording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY,
+        (status: Audio.RecordingStatus) => {
+          setDuration(Math.floor(status.durationMillis / 1000));
+        }
+      );
+
+      setRecording(recording);
+
+      setPlayingState('Recording');
+
+      return true;
+    } catch (err) {
+      console.error('Failed to start recording', err);
+    }
+
+    return false;
+  }
+
+  const stopRecording = async () => {
+    setRecording(undefined);
+    setPlayingState('Stopped');
+
+    if (recording) {
+      await recording.stopAndUnloadAsync();
+      setRecordingUri(recording.getURI());
+      setMemoryState('Unsaved recording');
+    }
+
+    await Audio.setAudioModeAsync(
+      {
+        allowsRecordingIOS: false,
+      }
+    );
+
+    return true;
+  }
+
+  const startPlayback = async () => {
+    if (!recordingUri) {
+      return false;
+    }
+
+    const { sound } = await Audio.Sound.createAsync(
+      { uri: recordingUri },
+      {},
+      (status: AVPlaybackStatus) => {
+        if (!status.isLoaded) {
+          return;
+        }
+
+        if (status.durationMillis) {
+          setDuration(Math.floor(status.positionMillis / 1000));
+        } else {
+          setDuration(null);
+        }
+
+        if (status.didJustFinish) {
+          setPlayingState('Stopped');
+        }
+      }
+    );
+
+    setSound(sound);
+
+    await sound.playAsync();
+
+    setPlayingState('Playing');
+
+    return true;
+  };
+
+  const stopPlayback = async () => {
+    if (!sound) {
+      return false;
+    }
+
+    await sound.stopAsync();
+
+    setPlayingState('Stopped');
+
+    return true;
+  };
+
   const formattedStatus = (() => {
+    const minutes = String(Math.floor((duration ?? 0) / 60));
+    const seconds = String((duration ?? 0) % 60).padStart(2, '0');
+
     if (playingState === 'Recording') {
-      return 'Recording (0:00)'; // TODO Insert time
+      return `Recording (${minutes}:${seconds})`;
     }
 
     if (playingState === 'Playing') {
-      return 'Playing (0:00)'; // TODO Insert time
+      return `Playing (${minutes}:${seconds})`;
     }
 
     return memoryState;
@@ -305,9 +417,19 @@ const AudioBio = () => {
           >
             <Ionicons
               disabled={!recordButtonEnabled}
-              onPress={
-                () => recordButtonEnabled && setPlayingState(
-                  playingState === 'Recording' ? 'Stopped' : 'Recording')}
+              onPress={() => {
+                if (!recordButtonEnabled) {
+                  return;
+                }
+
+                if (playingState === 'Stopped') {
+                  startRecording();
+                }
+
+                if (playingState === 'Recording') {
+                  stopRecording();
+                }
+              }}
               style={{
                 fontSize: 52,
                 color: 'crimson',
@@ -328,15 +450,26 @@ const AudioBio = () => {
             >
               <Ionicons
                 disabled={!playButtonEnabled}
-                onPress={
-                  () => playButtonEnabled && setPlayingState(
-                    playingState === 'Playing' ? 'Stopped' : 'Playing')}
+                onPress={async () => {
+                  if (!playButtonEnabled) {
+                    return;
+                  }
+
+                  if (playingState === 'Stopped') {
+                    await startPlayback();
+                  }
+
+                  if (playingState === 'Playing') {
+                    await stopPlayback();
+                  }
+                }}
                 style={{
                   flexShrink: 1,
                   fontSize: 52,
                   opacity: playButtonEnabled ? 1 : 0.2,
                 }}
-                name="play-circle"
+                name={
+                  playingState === 'Playing' ? 'stop-circle' : 'play-circle'}
               />
               <ButtonWithCenteredText
                 containerStyle={{
@@ -346,6 +479,22 @@ const AudioBio = () => {
                   opacity: discardButtonEnabled ? 1 : 0.2,
                 }}
                 secondary={true}
+                onPress={() => {
+                  if (!discardButtonEnabled) {
+                    return;
+                  }
+
+                  if (
+                    memoryState === 'Unsaved recording' &&
+                    existingRecording === null
+                  ) {
+                    stopPlayback();
+                    setMemoryState('No recording yet');
+                    setDuration(null);
+                    setRecording(undefined);
+                    setRecordingUri(null);
+                  }
+                }}
               >
                 {memoryState === 'Saved' ? 'Delete' : 'Discard'}
               </ButtonWithCenteredText>
@@ -355,6 +504,11 @@ const AudioBio = () => {
                   marginTop: 0,
                   marginBottom: 0,
                   opacity: saveButtonEnabled ? 1 : 0.2,
+                }}
+                onPress={() => {
+                  if (!saveButtonEnabled) {
+                    return;
+                  }
                 }}
               >
                 Save
