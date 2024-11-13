@@ -406,7 +406,19 @@ const AudioBio = ({
       setUnsavedRecordingUri(null);
     } else if (savedRecordingUri) {
       setDeleting(true);
-      ; // TODO: Delete
+
+      const response = await japi(
+        'delete',
+        '/profile-info',
+        { audio_files: [-1] },
+      );
+
+      if (response.ok) {
+        setSavedRecordingUri(null);
+      } else {
+        notify<React.FC>('toast', SomethingWentWrongToast);
+      }
+
       setDeleting(false);
     }
   };
@@ -945,7 +957,9 @@ const Options = ({ navigation, data }) => {
       <DisplayNameAndAboutPerson navigation={navigation} data={data}/>
 
       <AudioBio
-        initialSavedRecordingUri={`${AUDIO_URL}/${data.audio_bio}.webm`}
+        initialSavedRecordingUri={
+          data.audio_bio ? `${AUDIO_URL}/${data.audio_bio}.webm` : null
+        }
         maxDuration={data.audio_bio_max_seconds}
       />
 
