@@ -58,7 +58,11 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { ClubItem, joinClub, leaveClub } from '../club/club';
 import _ from 'lodash';
-import { friendlyTimeAgo, possessive } from '../util/util';
+import { friendlyTimeAgo, possessive, secToMinSec } from '../util/util';
+import { Audio, AVPlaybackStatus } from 'expo-av';
+import {
+  AUDIO_URL,
+} from '../env/env';
 
 const Stack = createNativeStackNavigator();
 
@@ -634,6 +638,7 @@ type UserData = {
   photo_extra_exts: string[][],
   photo_blurhashes: string[],
   photo_verifications: boolean[],
+  audio_bio_uuid: string | null,
   age: number | null,
   location: string | null
   drinking: string | null,
@@ -977,14 +982,88 @@ const ProspectUserDetails = ({
 };
 
 const AudioPlayer = ({
-  name
+  name,
+  uuid,
 }: {
   name: string | undefined
+  uuid: string
 }) => {
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [secondsRemaining, setSecondsRemaining] = useState(60 + 32);
+  const sound = useRef<Audio.Sound>();
+
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const [secondsRemaining, setSecondsRemaining] = useState(0);
+
+  const [minutes, seconds] = secToMinSec(secondsRemaining);
 
   const playIcon = isPlaying ? 'pause-circle' : 'play-circle';
+
+  const play = async () => {
+    if (!sound.current) {
+      return;
+    }
+
+    try {
+      const response = await sound.current.playAsync();
+      setIsPlaying(response.isLoaded);
+    } catch (e) {
+    }
+  };
+
+  const pause = async () => {
+    if (!sound.current) {
+      return;
+    }
+
+    setIsPlaying(true);
+
+    await sound.current.pauseAsync();
+  };
+
+  const togglePlayPlause = () => {
+    if (isPlaying) {
+      pause();
+    } else {
+      play();
+    }
+
+    setIsPlaying(!isPlaying);
+  };
+
+  useEffect(() => {
+    const onPlaybackStatusUpdate = (status: AVPlaybackStatus) => {
+      if (!status.isLoaded) {
+        return;
+      }
+
+      if (status.durationMillis) {
+        const remainingMillis = status.durationMillis - status.positionMillis;
+        setSecondsRemaining(Math.floor(remainingMillis / 1000));
+      } else {
+        setSecondsRemaining(0);
+      }
+
+      if (status.didJustFinish) {
+        setIsPlaying(false);
+      }
+    };
+
+    const go = async () => {
+      if (!uuid) {
+        return;
+      }
+
+      sound.current = (await Audio.Sound.createAsync(
+        { uri: `${AUDIO_URL}/${uuid}.webm` },
+        {},
+        onPlaybackStatusUpdate,
+      )).sound;
+
+      await play();
+    };
+
+    go();
+  }, [uuid]);
 
   return (
     <View
@@ -1004,7 +1083,7 @@ const AudioPlayer = ({
       }}
     >
       <Ionicons
-        onPress={() => setIsPlaying(x => !x)}
+        onPress={togglePlayPlause}
         style={{ fontSize: 42, flex: 1 }}
         name={playIcon}
       />
@@ -1015,7 +1094,7 @@ const AudioPlayer = ({
 
 
       <DefaultText style={{ flex: 1, textAlign: 'right', paddingRight: 5 }}>
-        -{Math.floor(secondsRemaining / 60)}:{secondsRemaining % 60}
+        -{minutes}:{seconds}
       </DefaultText>
     </View>
   );
@@ -1096,7 +1175,9 @@ const Body = ({
           marginBottom: 20,
         }}
       >
-        <AudioPlayer name={data?.name}/>
+        {data?.audio_bio_uuid &&
+          <AudioPlayer name={data?.name} uuid={data?.audio_bio_uuid} />
+        }
         <Title style={{color: data?.theme?.title_color}}>Basics</Title>
         <Basics>
           {data?.gender &&

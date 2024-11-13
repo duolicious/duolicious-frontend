@@ -71,9 +71,6 @@ import { Audio, AVPlaybackStatus } from 'expo-av';
 import { secToMinSec } from '../util/util';
 import { SomethingWentWrongToast } from './toast';
 
-// TODO: Audio bio deletion
-// TODO: Update Uri after recording
-
 const formatHeight = (og: OptionGroup<OptionGroupInputs>): string | undefined => {
   if (!isOptionGroupSlider(og.input)) return '';
 
