@@ -1054,7 +1054,7 @@ const AudioPlayer = ({
       }
 
       sound.current = (await Audio.Sound.createAsync(
-        { uri: `${AUDIO_URL}/${uuid}.webm` },
+        { uri: `${AUDIO_URL}/${uuid}.aac` },
         {},
         onPlaybackStatusUpdate,
       )).sound;

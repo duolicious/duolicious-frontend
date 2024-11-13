@@ -955,7 +955,7 @@ const Options = ({ navigation, data }) => {
 
       <AudioBio
         initialSavedRecordingUri={
-          data.audio_bio ? `${AUDIO_URL}/${data.audio_bio}.webm` : null
+          data.audio_bio ? `${AUDIO_URL}/${data.audio_bio}.aac` : null
         }
         maxDuration={data.audio_bio_max_seconds}
       />
