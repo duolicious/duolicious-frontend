@@ -1078,6 +1078,12 @@ const AudioPlayer = ({
     };
 
     go();
+
+    return () => {
+      if (sound.current) {
+        sound.current.unloadAsync();
+      }
+    };
   }, [uuid]);
 
   return (

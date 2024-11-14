@@ -123,6 +123,10 @@ const AudioBio = ({
         }
       };
 
+      if (recording.current) {
+        await recording.current.stopAndUnloadAsync();
+      }
+
       recording.current = (await Audio.Recording.createAsync(
         Audio.RecordingOptionsPresets.HIGH_QUALITY,
         onRecordingStatusUpdate,
@@ -279,6 +283,10 @@ const AudioBio = ({
     const go = async () => {
       if (!playableRecordingUri) {
         return;
+      }
+
+      if (sound.current) {
+        await sound.current.unloadAsync();
       }
 
       sound.current = (await Audio.Sound.createAsync(
