@@ -65,11 +65,8 @@ import {
 } from '../env/env';
 
 // TODO: Playing a finished clip doesn't restart it
-// TODO: Recorder's timer doesn't advance on Android
-// TODO: Player's timer doesn't advance on Android
 // TODO: https://github.com/expo/expo/issues/31225
 // TODO: Switch the positions of the save and delete buttons to make accidental deletion harder
-// TODO: don't used didJustFinish; It's broken on Android
 
 const Stack = createNativeStackNavigator();
 
@@ -509,12 +506,15 @@ const BlockButton = ({navigation, name, personId, personUuid, isSkipped}) => {
 };
 
 const AllClubsItem = ({kind, kids, props, ...rest}) => {
+  const propsWithoutKey = { ...props };
+  delete propsWithoutKey['key'];
+
   if (kind === 'Title') {
-    return <Title {...props}>{kids}</Title>;
+    return <Title {...propsWithoutKey}>{kids}</Title>;
   }
 
   if (kind === 'Club') {
-    return <Club {...props}>{kids}</Club>;
+    return <Club {...propsWithoutKey}>{kids}</Club>;
   }
 
   throw Error('Unexpected club kind');
@@ -1043,8 +1043,6 @@ const AudioPlayer = ({
         return;
       }
 
-      console.log('qqqq', status); // TODO
-
       if (status.durationMillis) {
         const remainingMillis = status.durationMillis - status.positionMillis;
         setSecondsRemaining(Math.floor(remainingMillis / 1000));
@@ -1067,16 +1065,6 @@ const AudioPlayer = ({
         {},
         onPlaybackStatusUpdate,
       )).sound;
-
-      // TODO
-      (async () => {
-        while (true) {
-          if (sound.current) {
-            console.log('manual', await sound.current.getStatusAsync());
-          }
-          await delay(1500);
-        }
-      })();
 
       await play();
     };
