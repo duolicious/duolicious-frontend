@@ -814,7 +814,6 @@ const TextInputWithButton = ({
         placeholder="Type a message"
         placeholderTextColor="#888888"
         multiline={true}
-        numberOfLines={2}
       />
       <View
         style={{
