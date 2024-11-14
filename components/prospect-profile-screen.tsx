@@ -1009,9 +1009,15 @@ const AudioPlayer = ({
     }
 
     try {
+      await Audio.setAudioModeAsync({
+        playsInSilentModeIOS: true,
+      });
+
       const response = await sound.current.playAsync();
+
       setIsPlaying(response.isLoaded);
-    } catch (e) {
+    } catch (err) {
+      console.error('Failed to start recording', err);
     }
   };
 
