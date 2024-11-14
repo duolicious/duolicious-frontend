@@ -591,6 +591,24 @@ const AudioBio = ({
                   flex: 1,
                   marginTop: 0,
                   marginBottom: 0,
+                  opacity: saveButtonEnabled ? 1 : 0.2,
+                }}
+                onPress={async () => {
+                  if (!saveButtonEnabled) {
+                    return;
+                  }
+
+                  await save();
+                }}
+              >
+                Save
+              </ButtonWithCenteredText>
+              <ButtonWithCenteredText
+                loading={loading}
+                containerStyle={{
+                  flex: 1,
+                  marginTop: 0,
+                  marginBottom: 0,
                   opacity: discardButtonEnabled ? 1 : 0.2,
                 }}
                 secondary={true}
@@ -603,24 +621,6 @@ const AudioBio = ({
                 }}
               >
                 {memoryState === 'Saved' ? 'Delete' : 'Discard'}
-              </ButtonWithCenteredText>
-              <ButtonWithCenteredText
-                loading={loading}
-                containerStyle={{
-                  flex: 1,
-                  marginTop: 0,
-                  marginBottom: 0,
-                  opacity: saveButtonEnabled ? 1 : 0.2,
-                }}
-                onPress={async () => {
-                  if (!saveButtonEnabled) {
-                    return;
-                  }
-
-                  await save();
-                }}
-              >
-                Save
               </ButtonWithCenteredText>
             </View>
           </View>

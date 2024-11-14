@@ -66,7 +66,6 @@ import {
 
 // TODO: Playing a finished clip doesn't restart it
 // TODO: https://github.com/expo/expo/issues/31225
-// TODO: Switch the positions of the save and delete buttons to make accidental deletion harder
 
 const Stack = createNativeStackNavigator();
 
