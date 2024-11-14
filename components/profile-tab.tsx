@@ -500,7 +500,7 @@ const AudioBio = ({
 
   return (
     <>
-      <Title>Audio Bio</Title>
+      <Title>Voice Bio</Title>
       <View
         style={{
           width: '100%',

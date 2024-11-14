@@ -1095,7 +1095,7 @@ const AudioPlayer = ({
       />
 
       <DefaultText style={styles.audioPlayerMiddleText}>
-        {name ? `${possessive(name)} ` : ''}audio bio
+        {name ? `${possessive(name)} ` : ''}voice bio
       </DefaultText>
 
 
