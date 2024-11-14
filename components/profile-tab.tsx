@@ -685,8 +685,6 @@ const DisplayNameAndAboutPerson = ({navigation, data}) => {
     );
   }, []);
 
-  const style = Platform.OS === 'ios' ? {style: {height: 200}} : null;
-
   return (
     <View>
       <Title>
@@ -732,7 +730,9 @@ const DisplayNameAndAboutPerson = ({navigation, data}) => {
         defaultValue={data?.about ?? ''}
         onChangeText={onChangeAboutText}
         numberOfLines={8}
-        {...style}
+        style={{
+          height: 200,
+        }}
       />
     </View>
   );
