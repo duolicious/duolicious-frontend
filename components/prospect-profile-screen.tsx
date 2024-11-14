@@ -64,7 +64,6 @@ import {
   AUDIO_URL,
 } from '../env/env';
 
-// TODO: Playing a finished clip doesn't restart it
 // TODO: https://github.com/expo/expo/issues/31225
 
 const Stack = createNativeStackNavigator();
@@ -1037,7 +1036,7 @@ const AudioPlayer = ({
   };
 
   useEffect(() => {
-    const onPlaybackStatusUpdate = (status: AVPlaybackStatus) => {
+    const onPlaybackStatusUpdate = async (status: AVPlaybackStatus) => {
       if (!status.isLoaded) {
         return;
       }
@@ -1051,6 +1050,10 @@ const AudioPlayer = ({
 
       if (status.didJustFinish) {
         setIsPlaying(false);
+        if (sound.current) {
+          await sound.current.pauseAsync();
+          await sound.current.setPositionAsync(0);
+        }
       }
     };
 

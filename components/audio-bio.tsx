@@ -169,7 +169,7 @@ const AudioBio = ({
       return false;
     }
 
-    await sound.current.playAsync();
+    await sound.current.playFromPositionAsync(0);
 
     setPlayingState('Playing');
 
