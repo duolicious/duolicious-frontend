@@ -506,7 +506,7 @@ const WelcomeScreen_ = ({navigation, route}) => {
           >
             {clubName_ ?
               `Join ${clubName_} on Duolicious` :
-              'Cute dates & dank memes await...'}
+              'Love is Blind & Cute dates await...'}
           </DefaultText>
           {(Platform.OS === 'web' || height > 500) &&
             <ActiveMembers
