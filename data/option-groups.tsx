@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { faPalette } from '@fortawesome/free-solid-svg-icons/faPalette'
 import { faRulerVertical } from '@fortawesome/free-solid-svg-icons/faRulerVertical'
 import { faRuler } from '@fortawesome/free-solid-svg-icons/faRuler'
+import { faEyeSlash } from '@fortawesome/free-solid-svg-icons/faEyeSlash'
 import { faHandsPraying } from '@fortawesome/free-solid-svg-icons/faHandsPraying'
 import { faPills } from '@fortawesome/free-solid-svg-icons/faPills'
 import { faSmoking } from '@fortawesome/free-solid-svg-icons/faSmoking'
@@ -936,6 +937,33 @@ const themePickerOptionGroups: OptionGroup<OptionGroupThemePicker>[] = [
 ];
 
 const generalSettingsOptionGroups: OptionGroup<OptionGroupButtons>[] = [
+  {
+    title: 'Hide Lewd Content',
+    Icon: () => (
+      <FontAwesomeIcon
+        icon={faEyeSlash}
+        size={14}
+        style={{color: 'black'}}
+      />
+    ),
+    description: "Do you want to hide content which was automatically flagged as being potentially lewd?",
+    input: {
+      buttons: {
+        values: yesNo,
+        submit: async function(hideLewdContent: string) {
+          const ok = (await japi(
+            'patch',
+            '/profile-info',
+            { hide_lewd_content: hideLewdContent }
+          )).ok;
+          if (ok) {
+            this.currentValue = hideLewdContent;
+          }
+          return ok;
+        },
+      }
+    }
+  },
   {
     title: 'Units',
     Icon: () => (
