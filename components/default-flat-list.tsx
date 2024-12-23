@@ -181,7 +181,6 @@ type DefaultFlatListProps<ItemT> =
     | "ListEmptyComponent"
     | "ListFooterComponent"
     | "data"
-    | "onContentSizeChange"
     | "onLayout"
     | "onRefresh"
     | "refreshing"
@@ -335,13 +334,28 @@ const DefaultFlatList = forwardRef(<ItemT,>(props: DefaultFlatListProps<ItemT>, 
     fetchNextPage();
   };
 
-  useImperativeHandle(ref, () => ({ refresh: onRefresh }), [onRefresh]);
+  useImperativeHandle(
+    ref,
+    () => ({
+      refresh: onRefresh,
+      scrollToOffset: (x) => {
+        if (flatList.current) {
+          flatList.current.scrollToOffset(x);
+        }
+      },
+    }),
+    [onRefresh]
+  );
 
   const onContentSizeChange = (width: number, height: number) => {
     contentHeight.current = height;
 
     if (contentHeight.current < viewportHeight.current) {
       fetchNextPage();
+    }
+
+    if (props.onContentSizeChange) {
+      props.onContentSizeChange(width, height);
     }
   };
 

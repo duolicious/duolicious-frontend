@@ -24,11 +24,12 @@ import { DefaultFlatList } from './default-flat-list';
 import { japi } from '../api/api';
 import { TopNavBarButton } from './top-nav-bar-button';
 import { LinearGradient } from 'expo-linear-gradient';
-import { delay, isMobile } from '../util/util';
+import { isMobile } from '../util/util';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ClubItem, sortClubs } from '../club/club';
-import { listen, lastEvent } from '../events/events';
+import { listen, lastEvent, notify } from '../events/events';
 import { searchQueue } from '../api/queue';
+import { ScrollViewData } from './navigation/scroll-bar';
 
 const styles = StyleSheet.create({
   safeAreaView: {
@@ -554,6 +555,18 @@ const SearchScreen_ = ({navigation}) => {
     );
   }, []);
 
+  useEffect(() => {
+    notify<ScrollViewData>(
+      'main-scroll-view-mount',
+      {
+        onThumbDrag: (offset: number) => listRef.current.scrollToOffset({
+          offset,
+          animated: false,
+        })
+      }
+    );
+  }, []);
+
   return (
     <SafeAreaView style={styles.safeAreaView}>
       <DuoliciousTopNavBar>
@@ -605,6 +618,23 @@ const SearchScreen_ = ({navigation}) => {
         }
         renderItem={({item}: any) => <ProfileCardMemo item={item} />}
         scrollIndicatorInsets={scrollIndicatorInsets}
+        onContentSizeChange={
+          (contentWidth, contentHeight) => {
+            notify<ScrollViewData>(
+              'main-scroll-view-change-height',
+              { contentHeight }
+            )
+          }
+        }
+        onScroll={
+          ({nativeEvent}) => {
+            notify<ScrollViewData>(
+              'main-scroll-view-change-offset',
+              { offset: nativeEvent.contentOffset.y }
+            )
+          }
+        }
+        showsVerticalScrollIndicator={isMobile()}
         stickyHeaderHiddenOnScroll={hasClubs}
         stickyHeaderIndices={hasClubs ? [0] : []}
         columnWrapperStyle={styles.listColumnWraperStyle}

@@ -61,6 +61,10 @@ import { DonationNagModal } from './components/donation-nag-modal';
 import { createWebNavigator } from './components/navigation/web-navigator';
 import { isMobile } from './util/util';
 
+
+// TODO: Ensure that search filters and refresh button are present/prominent
+// TODO: Onboarding works
+
 setNofications();
 verificationWatcher();
 

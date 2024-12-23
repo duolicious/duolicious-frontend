@@ -1,10 +1,10 @@
 import {
-  View,
-  Text,
   Pressable,
+  StyleSheet,
+  Text,
+  View,
   type StyleProp,
   type ViewStyle,
-  StyleSheet,
 } from 'react-native';
 import {
   createNavigatorFactory,
@@ -20,6 +20,7 @@ import {
   useNavigationBuilder,
 } from '@react-navigation/native';
 import { WebBar } from './web-bar';
+import { Scrollbar } from './scroll-bar';
 
 // Props accepted by the view
 type TabNavigationConfig = {
@@ -142,6 +143,7 @@ function WebNavigator<Navigation>({
             })}
           </View>
         </View>
+        <Scrollbar/>
       </View>
     </NavigationContent>
   );
