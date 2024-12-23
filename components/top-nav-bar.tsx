@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBarSpacer } from './status-bar-spacer';
 import { DefaultText } from './default-text';
 import { Logo16 } from './logo';
+import { isMobile } from '../util/util';
 
 const TopNavBar = (props) => {
   return (
@@ -36,6 +37,10 @@ const TopNavBar = (props) => {
 };
 
 const DuoliciousTopNavBar = (props) => {
+  if (!isMobile()) {
+    return <View style={{ height: 10 }} />;
+  }
+
   const {style, backgroundColor, textColor} = props;
 
   return (

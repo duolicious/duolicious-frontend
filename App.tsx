@@ -26,7 +26,7 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 import * as SplashScreen from 'expo-splash-screen';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import { TabBar } from './components/tab-bar';
+import { TabBar } from './components/navigation/tab-bar';
 import SearchTab from './components/search-tab';
 import { QuizTab } from './components/quiz-tab';
 import ProfileTab from './components/profile-tab';
@@ -58,6 +58,8 @@ import { ClubItem } from './club/club';
 import { Toast } from './components/toast';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { DonationNagModal } from './components/donation-nag-modal';
+import { createWebNavigator } from './components/navigation/web-navigator';
+import { isMobile } from './util/util';
 
 setNofications();
 verificationWatcher();
@@ -66,6 +68,7 @@ SplashScreen.preventAutoHideAsync();
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+const WebNavigator = createWebNavigator();
 
 if (
   Platform.OS === 'android' &&
@@ -75,19 +78,35 @@ if (
 }
 
 const HomeTabs = () => {
-  return (
-    <Tab.Navigator
-      backBehavior="history"
-      screenOptions={{ headerShown: false, animation: 'shift' }}
-      tabBar={props => <TabBar {...props} />}
-    >
-      <Tab.Screen name="Q&A" component={QuizTab} />
-      <Tab.Screen name="Search" component={SearchTab} />
-      <Tab.Screen name="Inbox" component={InboxTab} />
-      <Tab.Screen name="Traits" component={TraitsTab} />
-      <Tab.Screen name="Profile" component={ProfileTab} />
-    </Tab.Navigator>
-  );
+  if (isMobile()) {
+    return (
+      <Tab.Navigator
+        backBehavior="history"
+        screenOptions={{ headerShown: false, animation: 'shift' }}
+        tabBar={props => <TabBar {...props} />}
+      >
+        <Tab.Screen name="Q&A" component={QuizTab} />
+        <Tab.Screen name="Search" component={SearchTab} />
+        <Tab.Screen name="Inbox" component={InboxTab} />
+        <Tab.Screen name="Traits" component={TraitsTab} />
+        <Tab.Screen name="Profile" component={ProfileTab} />
+      </Tab.Navigator>
+    );
+  } else {
+    return (
+      <WebNavigator.Navigator
+        backBehavior="history"
+        screenOptions={{ headerShown: false, animation: 'shift' }}
+        tabBar={props => <TabBar {...props} />}
+      >
+        <Tab.Screen name="Q&A" component={QuizTab} />
+        <Tab.Screen name="Search" component={SearchTab} />
+        <Tab.Screen name="Inbox" component={InboxTab} />
+        <Tab.Screen name="Traits" component={TraitsTab} />
+        <Tab.Screen name="Profile" component={ProfileTab} />
+      </WebNavigator.Navigator>
+    )
+  }
 };
 
 const WebSplashScreen = ({loading}) => {
