@@ -37,11 +37,16 @@ const TopNavBar = (props) => {
 };
 
 const DuoliciousTopNavBar = (props) => {
-  if (!isMobile()) {
+  const {
+    style,
+    backgroundColor,
+    textColor,
+    children,
+  } = props;
+
+  if (!isMobile() && !children) {
     return <View style={{ height: 10 }} />;
   }
-
-  const {style, backgroundColor, textColor} = props;
 
   return (
     <TopNavBar
@@ -54,17 +59,20 @@ const DuoliciousTopNavBar = (props) => {
       }}
       backgroundColor={backgroundColor}
     >
-      <Logo16 size={16 * 2} color="#70f" rectSize={0.35} />
-      <DefaultText
-        style={{
-          fontFamily: 'TruenoBold',
-          color: textColor || '#70f',
-          fontSize: 22,
-        }}
-      >
-        Duolicious
-      </DefaultText>
-      {props.children}
+      {isMobile() && <>
+        <Logo16 size={16 * 2} color="#70f" rectSize={0.35} />
+        <DefaultText
+          style={{
+            fontFamily: 'TruenoBold',
+            color: textColor || '#70f',
+            fontSize: 22,
+          }}
+        >
+          Duolicious
+        </DefaultText>
+        </>
+      }
+      {children}
     </TopNavBar>
   );
 };

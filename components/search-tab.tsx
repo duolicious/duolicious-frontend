@@ -572,6 +572,7 @@ const SearchScreen_ = ({navigation}) => {
             iconName="refresh"
             position="left"
             secondary={true}
+            label="Refresh"
           />
         }
         <TopNavBarButton
@@ -579,6 +580,7 @@ const SearchScreen_ = ({navigation}) => {
           iconName="options-outline"
           position="right"
           secondary={false}
+          label="Search Filters"
         />
       </DuoliciousTopNavBar>
       <DefaultFlatList

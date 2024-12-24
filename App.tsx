@@ -63,9 +63,7 @@ import { isMobile } from './util/util';
 import { ScrollViewData } from './components/navigation/scroll-bar';
 
 
-// TODO: Ensure that search filters and refresh button are present/prominent
 // TODO: Onboarding works
-// TODO: Scroll bar should be hidden or appear upon load, if the right screen is displayed
 
 setNofications();
 verificationWatcher();
@@ -73,8 +71,7 @@ verificationWatcher();
 SplashScreen.preventAutoHideAsync();
 
 const Stack = createNativeStackNavigator();
-const Tab = createBottomTabNavigator();
-const WebNavigator = createWebNavigator();
+const Tab = isMobile() ? createBottomTabNavigator() : createWebNavigator();
 
 if (
   Platform.OS === 'android' &&
@@ -84,35 +81,19 @@ if (
 }
 
 const HomeTabs = () => {
-  if (isMobile()) {
-    return (
-      <Tab.Navigator
-        backBehavior="history"
-        screenOptions={{ headerShown: false, animation: 'shift' }}
-        tabBar={props => <TabBar {...props} />}
-      >
-        <Tab.Screen name="Q&A" component={QuizTab} />
-        <Tab.Screen name="Search" component={SearchTab} />
-        <Tab.Screen name="Inbox" component={InboxTab} />
-        <Tab.Screen name="Traits" component={TraitsTab} />
-        <Tab.Screen name="Profile" component={ProfileTab} />
-      </Tab.Navigator>
-    );
-  } else {
-    return (
-      <WebNavigator.Navigator
-        backBehavior="history"
-        screenOptions={{ headerShown: false, animation: 'shift' }}
-        tabBar={props => <TabBar {...props} />}
-      >
-        <Tab.Screen name="Q&A" component={QuizTab} />
-        <Tab.Screen name="Search" component={SearchTab} />
-        <Tab.Screen name="Inbox" component={InboxTab} />
-        <Tab.Screen name="Traits" component={TraitsTab} />
-        <Tab.Screen name="Profile" component={ProfileTab} />
-      </WebNavigator.Navigator>
-    )
-  }
+  return (
+    <Tab.Navigator
+      backBehavior="history"
+      screenOptions={{ headerShown: false, animation: 'shift' }}
+      tabBar={props => <TabBar {...props} />}
+    >
+      <Tab.Screen name="Q&A" component={QuizTab} />
+      <Tab.Screen name="Search" component={SearchTab} />
+      <Tab.Screen name="Inbox" component={InboxTab} />
+      <Tab.Screen name="Traits" component={TraitsTab} />
+      <Tab.Screen name="Profile" component={ProfileTab} />
+    </Tab.Navigator>
+  );
 };
 
 const WebSplashScreen = ({loading}) => {

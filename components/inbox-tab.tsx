@@ -380,6 +380,7 @@ const InboxTabNavBar = ({
           iconName={showArchive ? 'chatbubbles-outline' : 'file-tray-full-outline'}
           position="right"
           secondary={false}
+          label={showArchive ? "Inbox" : "Archive"}
         />
       </TopNavBar>
   );
