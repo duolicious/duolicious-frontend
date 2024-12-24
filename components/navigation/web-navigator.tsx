@@ -103,6 +103,7 @@ function WebNavigator<Navigation>({
             alignItems: 'flex-end',
             borderRightWidth: 5,
             borderColor: 'black',
+            paddingRight: 12,
           }}
         >
           <WebBar
@@ -111,7 +112,6 @@ function WebNavigator<Navigation>({
             tabBarStyle={tabBarStyle}
             descriptors={descriptors}
           />
-
         </View>
         <View
           style={{

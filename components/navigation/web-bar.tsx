@@ -30,7 +30,7 @@ const Logo = () => {
       style={{
         flexDirection: 'row',
         padding: 16,
-        gap: 10,
+        gap: 6,
       }}
     >
       <View
@@ -46,7 +46,7 @@ const Logo = () => {
           color: 'white',
           alignSelf: 'center',
           fontFamily: 'TruenoBold',
-          fontSize: 24,
+          fontSize: 22,
           textAlign: 'center',
         }}
         selectable={false}
@@ -135,9 +135,12 @@ const NavigationItems = ({state, navigation, descriptors}) => {
               }
             }}
             style={{
-              padding: 16,
+              padding: 12,
+              margin: 4,
               flexDirection: 'row',
-              gap: 10,
+              gap: 6,
+              borderRadius: 999,
+              backgroundColor: isFocused ? 'white' : 'transparent',
             }}
           >
             <View
@@ -150,16 +153,16 @@ const NavigationItems = ({state, navigation, descriptors}) => {
                 label={label}
                 isFocused={isFocused}
                 unreadIndicatorOpacity={unreadIndicatorOpacity}
-                color="white"
-                backgroundColor="#70f"
-                fontSize={28}
+                color={isFocused ? "black" : "white"}
+                backgroundColor={isFocused ? "white" : "#70f"}
+                fontSize={26}
               />
             </View>
             <DefaultText
               style={{
-                color: 'white',
+                color: isFocused ? 'black' : 'white',
                 fontWeight: isFocused ? 900 : 700,
-                fontSize: 22,
+                fontSize: 20,
               }}
             >
               {descriptors[route.key].options.title || route.name}
@@ -176,7 +179,7 @@ const WebBar = ({state, navigation, tabBarStyle, descriptors}) => {
     <View style={[
         {
           flexDirection: 'column',
-          width: 280,
+          width: 260,
           gap: 20,
         },
         tabBarStyle,
