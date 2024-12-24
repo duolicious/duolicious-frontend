@@ -588,7 +588,7 @@ const SearchScreen_ = ({navigation}) => {
           String(hasClubs)
         }
         ref={listRef}
-        innerRef={observeListRef()}
+        innerRef={observeListRef}
         emptyText={
           "No matches found. Try adjusting your search filters to include " +
           "more people."

@@ -66,28 +66,30 @@ const useScrollbar = (controller: string) => {
       )
     },
     showsVerticalScrollIndicator: isMobile(),
-    observeListRef: (listRef?: any) => (node): React.MutableRefObject<any> => {
-      if (listRef !== undefined) {
-        listRef.current = node;
-      }
-
+    observeListRef: (node): void => {
       if (isMobile()) {
-        return listRef;
+        return;
       }
       if (!node) {
-        return listRef;
+        return;
       }
 
       if (observer.current) {
         observer.current.disconnect();
       }
 
-      console.log('making observer', controller); // TODO
+      const onThumbDrag = (offset: number) => {
+        if (typeof node.scrollToOffset === 'function') {
+          node.scrollToOffset({ offset, animated: false });
+        } else if (typeof node.scrollTo === 'function') {
+          node.scrollTo({ y: offset, animated: false });
+        } else {
+          throw new Error('No scroll method found on ref');
+        }
+      };
 
       observer.current = new IntersectionObserver(
         ([entry]) => {
-          console.log('is intersecting', controller, entry.isIntersecting); // TODO
-
           if (!entry.isIntersecting) {
             notify<ScrollViewData>(
               'main-scroll-view',
@@ -100,8 +102,6 @@ const useScrollbar = (controller: string) => {
             return;
           }
 
-          console.log('last offset', controller, lastOffset.current); // TODO
-
           notify<ScrollViewData>(
             'main-scroll-view',
             {
@@ -109,10 +109,7 @@ const useScrollbar = (controller: string) => {
               scrollViewHeight: lastScrollViewHeight.current,
               contentHeight: lastContentHeight.current,
               offset: lastOffset.current,
-              onThumbDrag: (offset: number) => node.scrollToOffset({
-                offset,
-                animated: false,
-              })
+              onThumbDrag: onThumbDrag,
             }
           );
         },
@@ -120,8 +117,6 @@ const useScrollbar = (controller: string) => {
       );
 
       observer.current.observe(findDOMNode(node));
-
-      return listRef;
     }
   }).current;
 };

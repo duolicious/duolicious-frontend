@@ -56,10 +56,13 @@ const Scrollbar = () => {
   const { height: trackHeight } = useWindowDimensions();
 
   // Compute thumb size and max offset each render
-  const thumbHeight = Math.max(
-    (scrollViewHeight / contentHeight) * scrollViewHeight,
-    30
-  );
+  const minThumbHeight = 30;
+  const thumbHeight = contentHeight <= 0
+    ? minThumbHeight
+    : Math.max(
+        (scrollViewHeight / contentHeight) * scrollViewHeight,
+        minThumbHeight);
+
   const maxThumbOffset = trackHeight - thumbHeight;
 
   // ---
@@ -220,7 +223,6 @@ const Scrollbar = () => {
     return listen<ScrollViewData>(
       'main-scroll-view',
       (data) => {
-        console.log('CONTROLLER DATA', data); // TODO
         if (!tryControl(data)) {
           return;
         }
@@ -245,7 +247,6 @@ const Scrollbar = () => {
     );
   }, []);
 
-  console.log('CONTROLLER IS', controller); // TODO
   if (!controller) {
     return null;
   }

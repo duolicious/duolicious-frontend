@@ -322,7 +322,7 @@ const InboxTab = ({navigation}) => {
       {inbox !== null &&
         <DefaultFlatList
           ref={listRef}
-          innerRef={observeListRef()}
+          innerRef={observeListRef}
           emptyText={emptyText}
           endText={endText}
           fetchPage={fetchPage}
