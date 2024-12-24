@@ -882,6 +882,7 @@ const styles = StyleSheet.create({
   textInput: {
     backgroundColor: '#eee',
     borderRadius: 10,
+    borderWidth: 0,
     padding: 10,
     fontSize: 16,
     flex: 1,
