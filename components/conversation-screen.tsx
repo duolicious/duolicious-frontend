@@ -839,7 +839,6 @@ const TextInputWithButton = ({
             backgroundColor: 'rgb(228, 204, 255)',
             borderRadius: 999,
             borderWidth: 1,
-            borderBottomWidth: 3,
             borderColor: '#70f',
             opacity: opacity,
           }}
