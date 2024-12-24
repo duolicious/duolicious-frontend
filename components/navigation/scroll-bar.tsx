@@ -13,20 +13,31 @@ import {
 } from 'react-native';
 import { listen } from '../../events/events';
 
-type OnThumbDrag = (x: number) => void;
-
 type ScrollViewData = {
+  // The name of the Scrollview which is in control of the Scrollbar, or `null`
+  // if no Scrollview is in control.
+  controller: string | null,
+
+  // A callback to call when the Scrollbar's thumb is dragged
   onThumbDrag?: (offset: number) => void,
+
+  // The height of the controlling Scrollview's content
   contentHeight?: number,
+
+  // The height of the controlling Scrollview's viewport
+  scrollViewHeight?: number,
+
+  // How far down the Scrollview has been scrolled
   offset?: number,
 };
 
 const Scrollbar = () => {
-  const [scrollViewIsMounted, setScrollViewIsMounted] = useState(false);
+  const [controller, setController] = useState<null | string>(null);
   const [contentHeight, setContentHeight] = useState(0);
+  const [scrollViewHeight, setScrollViewHeight] = useState(0);
 
   // We store the scrollView's info (including onThumbDrag) here
-  const scrollViewDataRef = useRef<ScrollViewData>({});
+  const scrollViewDataRef = useRef<ScrollViewData>({ controller: null });
 
   // The current Animated thumb position
   const thumbPosition = useRef(new Animated.Value(0)).current;
@@ -42,12 +53,11 @@ const Scrollbar = () => {
   // Keep track of the old contentHeight so we can preserve offset after changes
   const oldContentHeightRef = useRef(0);
 
-  const { height: scrollHeight } = useWindowDimensions();
-  const trackHeight = scrollHeight;
+  const { height: trackHeight } = useWindowDimensions();
 
   // Compute thumb size and max offset each render
   const thumbHeight = Math.max(
-    (scrollHeight / contentHeight) * scrollHeight,
+    (scrollViewHeight / contentHeight) * scrollViewHeight,
     30
   );
   const maxThumbOffset = trackHeight - thumbHeight;
@@ -57,7 +67,7 @@ const Scrollbar = () => {
   // without being re-created. We’ll update them in an effect below.
   // ---
   const contentHeightRef = useRef(contentHeight);
-  const scrollHeightRef = useRef(scrollHeight);
+  const scrollHeightRef = useRef(scrollViewHeight);
   const maxThumbOffsetRef = useRef(maxThumbOffset);
 
   // The function that sets the thumb position immediately
@@ -65,11 +75,42 @@ const Scrollbar = () => {
     const maxScroll = contentHeightRef.current - scrollHeightRef.current;
     const ratio = maxScroll <= 0 ? 0 : scrollY / maxScroll;
     const newThumbOffset = ratio * maxThumbOffsetRef.current;
-    Animated.timing(thumbPosition, {
-      toValue: newThumbOffset,
-      duration: 0,
-      useNativeDriver: false,
-    }).start();
+    thumbPosition.setValue(newThumbOffset);
+  };
+
+  // We track the ScrollView which is currently in control. There should only be
+  // one ScrollView in charge of the Scrollbar at a time. This function checks
+  // if the event emitter has permission to control the Scrollbar.
+  //
+  // It's effectively a semaphore that prevents race conditions around the times
+  // when one ScrollView goes off-screen and appears on-screen in short
+  // succession. Events could be received out-of-order in this case.
+  //
+  // `tryControl` checks if the `controller` can control the scrollbar and
+  // returns true if so.
+  const tryControl = (data: ScrollViewData): boolean => {
+    // Attempt to acquire lock. Control can be "stolen" from another ScrollView.
+    if (data.onThumbDrag) {
+      setController(data.controller);
+      scrollViewDataRef.current.controller = data.controller;
+      return true;
+    }
+
+    // Attempt to release lock. The ScrollView which emitted the event needs to
+    // be in control of the scrollbar in order to release it. Otherwise it might
+    // actually be releasing another ScrollView's control.
+    if (
+      data.onThumbDrag === null &&
+      data.controller === scrollViewDataRef.current.controller
+    ) {
+      setController(null);
+      scrollViewDataRef.current.controller = null;
+      return false;
+    }
+
+
+    // Do we already have the lock?
+    return scrollViewDataRef.current.controller === data.controller;
   };
 
   // Create the PanResponder once. All the dynamic data is read from refs.
@@ -107,7 +148,9 @@ const Scrollbar = () => {
           maxScroll <= 0 ? 0 : (newOffset / currentMaxThumbOffset) * maxScroll;
 
         // Notify parent to scroll
-        scrollViewDataRef.current.onThumbDrag?.(newScrollY);
+        if (scrollViewDataRef.current.onThumbDrag) {
+          scrollViewDataRef.current.onThumbDrag(newScrollY);
+        }
 
         // Update the thumb immediately
         thumbPosition.setValue(newOffset);
@@ -135,9 +178,9 @@ const Scrollbar = () => {
   // Whenever contentHeight or scrollHeight changes, store them in refs.
   useEffect(() => {
     contentHeightRef.current = contentHeight;
-    scrollHeightRef.current = scrollHeight;
+    scrollHeightRef.current = scrollViewHeight;
     maxThumbOffsetRef.current = maxThumbOffset;
-  }, [contentHeight, scrollHeight, maxThumbOffset]);
+  }, [contentHeight, scrollViewHeight, maxThumbOffset]);
 
   // Preserve the user’s scroll offset when new content arrives (like infinite scroll).
   // We'll do that only if we're NOT currently dragging. (Your choice.)
@@ -156,8 +199,8 @@ const Scrollbar = () => {
     }
 
     // The current thumb offset => oldScrollY in px
-    const oldMaxScroll = oldContentHeight - scrollHeight;
-    const newMaxScroll = contentHeight - scrollHeight;
+    const oldMaxScroll = oldContentHeight - scrollViewHeight;
+    const newMaxScroll = contentHeight - scrollViewHeight;
 
     let oldScrollY = 0;
     if (oldMaxScroll > 0 && maxThumbOffsetRef.current > 0) {
@@ -167,68 +210,49 @@ const Scrollbar = () => {
     }
 
     // Keep same absolute offset, but clamp if new content is smaller
-    let newScrollY = oldScrollY;
-    if (newScrollY < 0) {
-      newScrollY = 0;
-    }
-    if (newMaxScroll < newScrollY) {
-      newScrollY = newMaxScroll;
-    }
+    const newScrollY = Math.max(0, Math.min(newMaxScroll, oldScrollY));
 
     updateThumbPosition(newScrollY);
-  }, [contentHeight, scrollHeight]);
-
-  // If you only want to start at the top the very first time the scrollbar mounts,
-  // do it here. That way it won’t jump back to top on subsequent changes.
-  useEffect(() => {
-    updateThumbPosition(0);
-  }, []);
+  }, [contentHeight, scrollViewHeight]);
 
   // Listen for the scrollview to mount
   useEffect(() => {
     return listen<ScrollViewData>(
-      'main-scroll-view-mount',
+      'main-scroll-view',
       (data) => {
-        setScrollViewIsMounted(true);
-        scrollViewDataRef.current = data;
-      },
-      true
-    );
-  }, []);
+        console.log('CONTROLLER DATA', data); // TODO
+        if (!tryControl(data)) {
+          return;
+        }
 
-  // Listen for content-height changes
-  useEffect(() => {
-    return listen<ScrollViewData>(
-      'main-scroll-view-change-height',
-      (data) => {
-        setContentHeight(data.contentHeight || 0);
-      },
-      true
-    );
-  }, []);
+        if (data.onThumbDrag !== undefined) {
+          scrollViewDataRef.current.onThumbDrag = data.onThumbDrag;
+        }
 
-  // Listen for offset changes and update the thumb unless the user is dragging
-  useEffect(() => {
-    return listen<ScrollViewData>(
-      'main-scroll-view-change-offset',
-      (data) => {
-        const offset = data.offset ?? 0;
-        // Typically skip changing the thumb if the user is already dragging it
-        if (!isDragging.current) {
-          updateThumbPosition(offset);
+        if (data.contentHeight !== undefined) {
+          setContentHeight(data.contentHeight);
+        }
+
+        if (data.scrollViewHeight !== undefined) {
+          setScrollViewHeight(data.scrollViewHeight);
+        }
+
+        if (data.offset !== undefined && !isDragging.current) {
+          updateThumbPosition(data.offset);
         }
       },
       true
     );
   }, []);
 
-  if (!scrollViewIsMounted) {
+  console.log('CONTROLLER IS', controller); // TODO
+  if (!controller) {
     return null;
   }
 
   return (
     <View
-      style={[styles.scrollbar, { height: scrollHeight }]}
+      style={[styles.scrollbar, { height: trackHeight }]}
     >
       <Animated.View
         {...panResponderRef.current.panHandlers}

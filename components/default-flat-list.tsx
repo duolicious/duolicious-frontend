@@ -181,7 +181,6 @@ type DefaultFlatListProps<ItemT> =
     | "ListEmptyComponent"
     | "ListFooterComponent"
     | "data"
-    | "onLayout"
     | "onRefresh"
     | "refreshing"
   >;
@@ -334,18 +333,7 @@ const DefaultFlatList = forwardRef(<ItemT,>(props: DefaultFlatListProps<ItemT>, 
     fetchNextPage();
   };
 
-  useImperativeHandle(
-    ref,
-    () => ({
-      refresh: onRefresh,
-      scrollToOffset: (x) => {
-        if (flatList.current) {
-          flatList.current.scrollToOffset(x);
-        }
-      },
-    }),
-    [onRefresh]
-  );
+  useImperativeHandle(ref, () => ({ refresh: onRefresh }), [onRefresh]);
 
   const onContentSizeChange = (width: number, height: number) => {
     contentHeight.current = height;
@@ -359,8 +347,12 @@ const DefaultFlatList = forwardRef(<ItemT,>(props: DefaultFlatListProps<ItemT>, 
     }
   };
 
-  const onLayout = useCallback(({ nativeEvent: { layout: { height } } }) => {
-    viewportHeight.current = height;
+  const onLayout = useCallback((params) => {
+    viewportHeight.current = params.nativeEvent.layout.height;
+
+    if (props.onLayout) {
+      props.onLayout(params);
+    }
   }, []);
 
   if (props.contentContainerStyle !== contentContainerStyle[1]) {
@@ -375,7 +367,17 @@ const DefaultFlatList = forwardRef(<ItemT,>(props: DefaultFlatListProps<ItemT>, 
 
   return (
     <FlatList
-      ref={flatList}
+      ref={(node) => {
+        flatList.current = node;
+
+        if (props.innerRef === undefined) {
+          ;
+        } else if (typeof props.innerRef === 'function') {
+          props.innerRef(node);
+        } else {
+          props.innerRef.current = node;
+        }
+      }}
       refreshing={false}
       onRefresh={props.disableRefresh ? undefined : onRefresh}
       onEndReachedThreshold={props.onEndReachedThreshold ?? 1}

@@ -27,9 +27,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { isMobile } from '../util/util';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ClubItem, sortClubs } from '../club/club';
-import { listen, lastEvent, notify } from '../events/events';
+import { listen, lastEvent } from '../events/events';
 import { searchQueue } from '../api/queue';
-import { ScrollViewData } from './navigation/scroll-bar';
+import { useScrollbar } from './navigation/scroll-bar-hooks';
 
 const styles = StyleSheet.create({
   safeAreaView: {
@@ -511,6 +511,14 @@ const SearchScreen_ = ({navigation}) => {
 
   const listRef = useRef<any>(undefined);
 
+  const {
+    onLayout,
+    onContentSizeChange,
+    onScroll,
+    showsVerticalScrollIndicator,
+    observeListRef,
+  } = useScrollbar('search');
+
   const [
     hasClubs,
     setHasClubs,
@@ -555,18 +563,6 @@ const SearchScreen_ = ({navigation}) => {
     );
   }, []);
 
-  useEffect(() => {
-    notify<ScrollViewData>(
-      'main-scroll-view-mount',
-      {
-        onThumbDrag: (offset: number) => listRef.current.scrollToOffset({
-          offset,
-          animated: false,
-        })
-      }
-    );
-  }, []);
-
   return (
     <SafeAreaView style={styles.safeAreaView}>
       <DuoliciousTopNavBar>
@@ -592,6 +588,7 @@ const SearchScreen_ = ({navigation}) => {
           String(hasClubs)
         }
         ref={listRef}
+        innerRef={observeListRef()}
         emptyText={
           "No matches found. Try adjusting your search filters to include " +
           "more people."
@@ -618,23 +615,10 @@ const SearchScreen_ = ({navigation}) => {
         }
         renderItem={({item}: any) => <ProfileCardMemo item={item} />}
         scrollIndicatorInsets={scrollIndicatorInsets}
-        onContentSizeChange={
-          (contentWidth, contentHeight) => {
-            notify<ScrollViewData>(
-              'main-scroll-view-change-height',
-              { contentHeight }
-            )
-          }
-        }
-        onScroll={
-          ({nativeEvent}) => {
-            notify<ScrollViewData>(
-              'main-scroll-view-change-offset',
-              { offset: nativeEvent.contentOffset.y }
-            )
-          }
-        }
-        showsVerticalScrollIndicator={isMobile()}
+        onLayout={onLayout}
+        onContentSizeChange={onContentSizeChange}
+        onScroll={onScroll}
+        showsVerticalScrollIndicator={showsVerticalScrollIndicator}
         stickyHeaderHiddenOnScroll={hasClubs}
         stickyHeaderIndices={hasClubs ? [0] : []}
         columnWrapperStyle={styles.listColumnWraperStyle}
