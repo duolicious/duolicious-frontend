@@ -28,7 +28,6 @@ import { inboxOrder, inboxSection } from '../kv-storage/inbox';
 import { signedInUser } from '../App';
 import { Notice } from './notice';
 import { listen, lastEvent } from '../events/events';
-import { ScrollViewData } from './navigation/scroll-bar';
 import { useScrollbar } from './navigation/scroll-bar-hooks';
 
 

@@ -60,7 +60,6 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { DonationNagModal } from './components/donation-nag-modal';
 import { createWebNavigator } from './components/navigation/web-navigator';
 import { isMobile } from './util/util';
-import { ScrollViewData } from './components/navigation/scroll-bar';
 
 
 // TODO: Onboarding works
@@ -401,11 +400,9 @@ const App = () => {
   }, [fetchServerStatusState]);
 
   const onNavigationStateChange = useCallback(async (state) => {
-    const currentScreen = getCurrentScreen(state);
-
     if (Platform.OS !== 'web') {
       ; // Only update the URL bar on web
-    } else if (currentScreen === 'Prospect Profile Screen/Prospect Profile') {
+    } else if (getCurrentScreen(state) === 'Prospect Profile Screen/Prospect Profile') {
       const uri = `/profile/${getCurrentParams(state).personUuid}`;
       history.pushState((history?.state ?? 0) + 1, "", uri);
     } else {

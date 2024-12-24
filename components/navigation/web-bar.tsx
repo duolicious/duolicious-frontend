@@ -155,6 +155,7 @@ const NavigationItems = ({state, navigation, descriptors}) => {
                 unreadIndicatorOpacity={unreadIndicatorOpacity}
                 color={isFocused ? "black" : "white"}
                 backgroundColor={isFocused ? "white" : "#70f"}
+                unreadIndicatorColor={isFocused ? '#70f' : 'white'}
                 fontSize={26}
               />
             </View>
