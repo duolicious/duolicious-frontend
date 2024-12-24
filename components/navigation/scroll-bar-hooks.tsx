@@ -9,8 +9,6 @@ import { findDOMNode } from 'react-dom';
 import { notify } from '../../events/events';
 import { ScrollViewData } from '../navigation/scroll-bar';
 
-// TODO: make the functions do nothing on mobile
-
 const useScrollbar = (controller: string) => {
   const observer = useRef<IntersectionObserver | null>(null);
 
@@ -19,6 +17,10 @@ const useScrollbar = (controller: string) => {
   const lastOffset = useRef(0);
 
   useEffect(() => {
+    if (isMobile()) {
+      return;
+    }
+
     return () => {
       if (observer.current) {
         observer.current.disconnect();
@@ -29,6 +31,10 @@ const useScrollbar = (controller: string) => {
 
   return useRef({
     onLayout: (params) => {
+      if (isMobile()) {
+        return;
+      }
+
       lastScrollViewHeight.current = params.nativeEvent.layout.height;
 
       notify<ScrollViewData>(
@@ -42,6 +48,10 @@ const useScrollbar = (controller: string) => {
       );
     },
     onContentSizeChange: (contentWidth, contentHeight) => {
+      if (isMobile()) {
+        return;
+      }
+
       lastContentHeight.current = contentHeight;
 
       notify<ScrollViewData>(
@@ -55,6 +65,10 @@ const useScrollbar = (controller: string) => {
       );
     },
     onScroll: ({nativeEvent}) => {
+      if (isMobile()) {
+        return;
+      }
+
       lastOffset.current = nativeEvent.contentOffset.y;
 
       notify<ScrollViewData>(
