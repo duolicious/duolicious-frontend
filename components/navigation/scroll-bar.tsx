@@ -59,9 +59,11 @@ const Scrollbar = () => {
   const minThumbHeight = 30;
   const thumbHeight = contentHeight <= 0
     ? minThumbHeight
-    : Math.max(
-        (scrollViewHeight / contentHeight) * scrollViewHeight,
-        minThumbHeight);
+    : Math.min(
+        trackHeight,
+        Math.max(
+            (scrollViewHeight / contentHeight) * scrollViewHeight,
+            minThumbHeight));
 
   const maxThumbOffset = trackHeight - thumbHeight;
 
@@ -281,7 +283,7 @@ const Scrollbar = () => {
     updateThumbPosition(newScrollY);
   };
 
-  if (!controller) {
+  if (!controller || thumbHeight === trackHeight) {
     return null;
   }
 
