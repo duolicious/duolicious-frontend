@@ -186,7 +186,7 @@ const WebBar = ({state, navigation, tabBarStyle, descriptors}) => {
           alignItems: 'flex-end',
           borderRightWidth: 5,
           borderColor: 'black',
-          paddingRight: 12,
+          paddingHorizontal: 12,
         },
         tabBarStyle,
       ]}

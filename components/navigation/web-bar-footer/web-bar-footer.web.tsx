@@ -1,8 +1,11 @@
+import { WEB_VERSION } from '../../../env/env';
+
 const discordIcon = require('../../../assets/social/discord-white.svg');
 const twitterIcon = require('../../../assets/social/twitter-white.svg');
 const redditIcon = require('../../../assets/social/reddit-white.svg');
 const githubIcon = require('../../../assets/social/github-white.svg');
 const koFiIcon = require('../../../assets/social/ko-fi.png');
+
 
 const WebBarFooter = () => {
   return (
@@ -11,6 +14,9 @@ const WebBarFooter = () => {
         width: '100%',
         marginLeft: '15px',
         marginRight: '15px',
+        justifyContent: 'center',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       <ul
@@ -24,8 +30,6 @@ const WebBarFooter = () => {
           gap: '30px',
           border: 'none',
           padding: '0',
-          paddingTop: '20px',
-          borderTop: '1px solid #ffffff',
         }}
       >
         <li>
@@ -54,6 +58,17 @@ const WebBarFooter = () => {
           </a>
         </li>
       </ul>
+      <span
+        style={{
+          textAlign: 'center',
+          color: 'white',
+          fontFamily: 'MontserratRegular',
+          fontSize: 12,
+          opacity: 0.4,
+        }}
+      >
+        Duolicious Web Version {WEB_VERSION}
+      </span>
     </div>
   );
 };

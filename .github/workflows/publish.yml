@@ -15,7 +15,12 @@ jobs:
     name: Publish to Cloudflare Pages
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set DUO_WEB_VERSION
+        run: echo "DUO_WEB_VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
       - uses: actions/setup-node@v4
+
       - run: |
           npm install
           npx patch-package
