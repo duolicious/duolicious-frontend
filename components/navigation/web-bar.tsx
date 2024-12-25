@@ -23,6 +23,7 @@ import {
 } from './util';
 import { Inbox, inboxStats } from '../../xmpp/xmpp';
 import { listen } from '../../events/events';
+import { WebBarFooter } from './web-bar-footer/web-bar-footer';
 
 const Logo = () => {
   return (
@@ -192,17 +193,31 @@ const WebBar = ({state, navigation, tabBarStyle, descriptors}) => {
     >
       <View
         style={{
-          flexDirection: 'column',
-          width: 260,
-          gap: 20,
+          flex: 1,
+          justifyContent: 'space-between',
         }}
       >
-        <Logo/>
-        <NavigationItems
-          state={state}
-          navigation={navigation}
-          descriptors={descriptors}
-        />
+        <View
+          style={{
+            width: 260,
+            gap: 20,
+          }}
+        >
+          <Logo/>
+          <NavigationItems
+            state={state}
+            navigation={navigation}
+            descriptors={descriptors}
+          />
+        </View>
+        <View
+          style={{
+            paddingBottom: 10,
+            alignItems: 'center',
+          }}
+        >
+          <WebBarFooter/>
+        </View>
       </View>
     </View>
   );
