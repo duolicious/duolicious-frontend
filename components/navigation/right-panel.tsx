@@ -107,7 +107,8 @@ const RightPanel = () => {
   return (
     <View
       style={{
-        width: 300,
+        maxWidth: 360,
+        padding: 20,
       }}
     >
       <View
@@ -115,7 +116,6 @@ const RightPanel = () => {
           borderRadius: 10,
           backgroundColor: '#70f',
           width: '100%',
-          margin: 20,
           padding: 20,
           gap: 20,
         }}

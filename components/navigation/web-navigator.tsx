@@ -5,6 +5,7 @@ import {
   View,
   type StyleProp,
   type ViewStyle,
+  useWindowDimensions,
 } from 'react-native';
 import {
   createNavigatorFactory,
@@ -87,6 +88,8 @@ function WebNavigator<Navigation>({
       backBehavior,
     });
 
+  const { width: windowWidth } = useWindowDimensions();
+
   return (
     <NavigationContent>
       <View
@@ -96,17 +99,7 @@ function WebNavigator<Navigation>({
           justifyContent: 'center',
         }}
       >
-        <View
-          style={{
-            flex: 5,
-            minWidth: 280,
-            backgroundColor: '#70f',
-            alignItems: 'flex-end',
-            borderRightWidth: 5,
-            borderColor: 'black',
-            paddingRight: 12,
-          }}
-        >
+        <View style={{ height: '100%', flex: 1, minWidth: 280 }}>
           <WebBar
             state={state}
             navigation={navigation}
@@ -114,38 +107,31 @@ function WebNavigator<Navigation>({
             descriptors={descriptors}
           />
         </View>
-        <View
-          style={{
-            flex: 13,
-            flexDirection: 'row',
-          }}
-        >
-          <View style={[{
-            width: '100%',
-            maxWidth: 600,
-            height: '100%',
-          }, contentStyle]}>
-            {state.routes.map((route, i) => {
-              return (
-                <View
-                  key={route.key}
-                  style={[
-                    StyleSheet.absoluteFill,
-                    {
-                      paddingHorizontal: 20,
-                      display: i === state.index ? 'flex' : 'none',
-                      borderRightWidth: 1,
-                      borderColor: 'black',
-                    },
-                  ]}
-                >
-                  {descriptors[route.key].render()}
-                </View>
-              );
-            })}
-          </View>
-          <RightPanel/>
+        <View style={{ height: '100%', flex: 3, maxWidth: 600 }}>
+          {state.routes.map((route, i) => {
+            return (
+              <View
+                key={route.key}
+                style={[
+                  StyleSheet.absoluteFill,
+                  {
+                    paddingHorizontal: 20,
+                    display: i === state.index ? 'flex' : 'none',
+                    borderRightWidth: 1,
+                    borderColor: 'black',
+                  },
+                ]}
+              >
+                {descriptors[route.key].render()}
+              </View>
+            );
+          })}
         </View>
+        {windowWidth > 1100 &&
+          <View style={{ height: '100%', flex: 1 }}>
+            <RightPanel/>
+          </View>
+        }
         <Scrollbar/>
       </View>
     </NavigationContent>
