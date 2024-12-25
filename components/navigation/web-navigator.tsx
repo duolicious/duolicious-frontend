@@ -21,6 +21,7 @@ import {
 } from '@react-navigation/native';
 import { WebBar } from './web-bar';
 import { Scrollbar } from './scroll-bar';
+import { RightPanel } from './right-panel';
 
 // Props accepted by the view
 type TabNavigationConfig = {
@@ -116,6 +117,7 @@ function WebNavigator<Navigation>({
         <View
           style={{
             flex: 13,
+            flexDirection: 'row',
           }}
         >
           <View style={[{
@@ -142,6 +144,7 @@ function WebNavigator<Navigation>({
               );
             })}
           </View>
+          <RightPanel/>
         </View>
         <Scrollbar/>
       </View>
