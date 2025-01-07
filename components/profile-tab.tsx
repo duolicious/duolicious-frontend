@@ -271,6 +271,8 @@ const DisplayNameAndAboutPerson = ({navigation, data}) => {
       if (r.ok && r.validationErrors === null) {
         stateSetter('saved');
         return true;
+      } else if (r.validationErrors === null) {
+        stateSetter('error');
       } else if (r.validationErrors[0] === 'Too rude') {
         stateSetter('too rude');
       } else if (r.validationErrors[0] === 'Spam') {
