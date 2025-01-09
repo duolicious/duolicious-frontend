@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 
 const DefaultTextInput = (props) => {
-  const {style, innerRef, ...rest} = props;
+  const { style, innerRef, ...rest } = props;
 
   return (
     <TextInput
@@ -24,7 +24,7 @@ const DefaultTextInput = (props) => {
         borderWidth: 1,
         borderRadius: 10,
         height: 50,
-        fontFamily: 'MontserratRegular',
+        fontFamily: 'RobotoRegular',
         ...style,
       }}
       {...rest}

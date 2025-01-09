@@ -96,7 +96,7 @@ const HomeTabs = () => {
   );
 };
 
-const WebSplashScreen = ({loading}) => {
+const WebSplashScreen = ({ loading }) => {
   const [isFaded, setIsFaded] = useState(false);
   const opacity = useRef(new Animated.Value(1)).current;
 
@@ -181,6 +181,18 @@ const App = () => {
       MontserratRegular: require('./assets/fonts/montserrat/static/Montserrat-Regular.ttf'),
       MontserratSemiBold: require('./assets/fonts/montserrat/static/Montserrat-SemiBold.ttf'),
       MontserratThin: require('./assets/fonts/montserrat/static/Montserrat-Thin.ttf'),
+
+      // Added Roboto
+      RobotoBlack: require('./assets/fonts/roboto/Roboto-Black.ttf'),
+      RobotoBold: require('./assets/fonts/roboto/Roboto-Bold.ttf'),
+      RobotoExtraBold: require('./assets/fonts/roboto/Roboto-ExtraBold.ttf'),
+      RobotoLight: require('./assets/fonts/roboto/Roboto-Light.ttf'),
+      RobotoExtraLight: require('./assets/fonts/roboto/Roboto-ExtraLight.ttf'),
+      RobotoMedium: require('./assets/fonts/roboto/Roboto-Medium.ttf'),
+      RobotoRegular: require('./assets/fonts/roboto/Roboto-Regular.ttf'),
+      RobotoSemiBold: require('./assets/fonts/montserrat/static/Roboto-SemiBold.ttf'),
+      RobotoThin: require('./assets/fonts/roboto/Roboto-Thin.ttf'),
+
     });
   }, []);
 
@@ -233,7 +245,7 @@ const App = () => {
       logout();
 
       if (!parsedUrl) {
-        navigationContainerRef.reset({ routes: [ { name: 'Welcome' } ]});
+        navigationContainerRef.reset({ routes: [{ name: 'Welcome' }] });
       }
 
       return;
@@ -255,7 +267,7 @@ const App = () => {
       logout();
 
       if (!parsedUrl) {
-        navigationContainerRef.reset({ routes: [ { name: 'Welcome' } ]});
+        navigationContainerRef.reset({ routes: [{ name: 'Welcome' }] });
       }
 
       return;
@@ -337,8 +349,8 @@ const App = () => {
   const fetchServerStatusState = useCallback(async () => {
     let response: Response | null = null
     try {
-      response = await fetch(STATUS_URL, {cache: 'no-cache'});
-    } catch (e) {};
+      response = await fetch(STATUS_URL, { cache: 'no-cache' });
+    } catch (e) { };
 
     if (response === null || !response.ok) {
       // If even the status server is down, things are *very* not-okay. But odds
@@ -467,7 +479,7 @@ const App = () => {
   useScrollbarStyle();
 
   if (serverStatus !== "ok") {
-    return <UtilityScreen serverStatus={serverStatus}/>
+    return <UtilityScreen serverStatus={serverStatus} />
   }
 
   return (
@@ -478,8 +490,8 @@ const App = () => {
             ref={navigationContainerRef}
             initialState={
               initialState ?
-              { ...initialState, stale: true } :
-              undefined
+                { ...initialState, stale: true } :
+                undefined
             }
             onStateChange={onNavigationStateChange}
             theme={{
@@ -525,15 +537,15 @@ const App = () => {
                 component={TraitsTab} />
             </Stack.Navigator>
           </NavigationContainer>
-          <DonationNagModal/>
-          <ReportModal/>
-          <ImageCropper/>
-          <ColorPickerModal/>
-          <Toast/>
-          <StreamErrorModal/>
+          <DonationNagModal />
+          <ReportModal />
+          <ImageCropper />
+          <ColorPickerModal />
+          <Toast />
+          <StreamErrorModal />
         </>
       }
-      <WebSplashScreen loading={isLoading}/>
+      <WebSplashScreen loading={isLoading} />
     </SafeAreaProvider>
   );
 };

@@ -19,18 +19,32 @@ const DefaultText = (props: TextProps) => {
     '900': 'MontserratBlack',
   }[fontWeight] || 'MontserratRegular';
 
+
+  const robotoFontFamily: string | undefined = {
+    '100': 'RobotoThin',
+    '200': 'RobotoExtraLight',
+    '300': 'RobotoLight',
+    '400': 'RobotoRegular',
+    '500': 'RobotoMedium',
+    '600': 'RobotoSemiBold',
+    '700': 'RobotoBold',
+    '800': 'RobotoExtraBold',
+    '900': 'RobotoBlack',
+  }[fontWeight] || 'RobotoRegular';
+
+
   const props_ = {
     style: [
-      {fontFamily: fontFamily || montserratFontFamily},
+      { fontFamily: fontFamily || `${robotoFontFamily}` },
       props.style,
-      {fontWeight: undefined},
+      { fontWeight: undefined },
     ]
   };
 
   return (
     <Text
       selectable={false}
-      {...{...props, ...props_}}
+      {...{ ...props, ...props_ }}
     >
       {props.children}
     </Text>
