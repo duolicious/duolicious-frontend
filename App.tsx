@@ -172,16 +172,6 @@ const App = () => {
       Trueno: require('./assets/fonts/TruenoRound.otf'),
       TruenoBold: require('./assets/fonts/TruenoRoundBd.otf'),
 
-      MontserratBlack: require('./assets/fonts/montserrat/static/Montserrat-Black.ttf'),
-      MontserratBold: require('./assets/fonts/montserrat/static/Montserrat-Bold.ttf'),
-      MontserratExtraBold: require('./assets/fonts/montserrat/static/Montserrat-ExtraBold.ttf'),
-      MontserratExtraLight: require('./assets/fonts/montserrat/static/Montserrat-ExtraLight.ttf'),
-      MontserratLight: require('./assets/fonts/montserrat/static/Montserrat-Light.ttf'),
-      MontserratMedium: require('./assets/fonts/montserrat/static/Montserrat-Medium.ttf'),
-      MontserratRegular: require('./assets/fonts/montserrat/static/Montserrat-Regular.ttf'),
-      MontserratSemiBold: require('./assets/fonts/montserrat/static/Montserrat-SemiBold.ttf'),
-      MontserratThin: require('./assets/fonts/montserrat/static/Montserrat-Thin.ttf'),
-
       // Added Roboto
       RobotoBlack: require('./assets/fonts/roboto/Roboto-Black.ttf'),
       RobotoBold: require('./assets/fonts/roboto/Roboto-Bold.ttf'),
