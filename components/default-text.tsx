@@ -35,7 +35,7 @@ const DefaultText = (props: TextProps) => {
 
   const props_ = {
     style: [
-      { fontFamily: fontFamily || `${robotoFontFamily}` },
+      { fontFamily: fontFamily || robotoFontFamily },
       props.style,
       { fontWeight: undefined },
     ]
