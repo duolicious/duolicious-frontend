@@ -29,6 +29,7 @@ jobs:
       - run: |
           npm install
           npx patch-package
+          npx eslint .
           npx expo export --platform web
 
           if ! patch -p0 < patches/index.html.patch

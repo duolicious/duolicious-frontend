@@ -19,6 +19,9 @@ jobs:
       run: |
         npm ci
         npx patch-package
+
+     - name: Run ESLint
+      run: npx eslint .
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
     - name: Run Playwright tests

@@ -102,3 +102,18 @@ To generate an ad-hoc ipa file you can run this:
 ## Sending Duolicious to Tim Apple
 
 xcrun altool --upload-app -t ios -u "email@exmaple.com" -p "password" -f /path/to/duolicious-frontend/build-1720942386773.ipa
+
+
+## Extra Information:
+
+### Code Style and Linting
+
+We use ESLint for code linting. You can find the configuration guide [here](https://eslint.org/docs/latest/use/getting-started).
+
+If you are using VS Code, we recommend installing the ESLint extension for a better development experience.
+
+To run the linter manually, use:
+
+```bash
+npm run lint
+```
