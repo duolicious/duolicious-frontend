@@ -33,6 +33,22 @@ import { RenderedHoc } from './rendered-hoc';
 
 // TODO: Image picker is shit and lets you upload any file type on web
 
+type Point2D = {
+  x: number
+  y: number
+};
+
+type ImageLayout = {
+  Image: React.FC,
+  FileNumber: React.FC,
+  fileNumber: number,
+  point: Point2D,
+};
+
+const euclideanDistance = (p1: Point2D, p2: Point2D) => {
+  return ((p1.x - p2.x) ** 2.0 + (p1.y - p2.y) ** 2.0) ** 0.5;
+};
+
 const isSquareish = (width: number, height: number) => {
   if (width === 0) return true;
   if (height === 0) return true;
@@ -74,6 +90,7 @@ const cropImage = async (
 };
 
 const MoveableImage = ({
+  fileNumber,
   addImage,
   imageUri,
   resolution,
@@ -84,6 +101,8 @@ const MoveableImage = ({
   isVerified,
   style,
 }) => {
+  const images = useRef(lastEvent<ImageLayout[]>('layout-image') ?? []);
+
   // Use XY for your Pan, as before
   const pan = useRef(new Animated.ValueXY()).current;
 
@@ -92,6 +111,18 @@ const MoveableImage = ({
 
   // We'll store the long-press timeout handle here
   const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  const nearestImage = (p: Point2D): ImageLayout => {
+    let nearest: ImageLayout | null = null;
+
+    const imagesCopy = images.current.filter(Boolean);
+
+    imagesCopy.sort((a, b) =>
+      euclideanDistance(a.point, p) -
+      euclideanDistance(b.point, p));
+
+    return imagesCopy[0];
+  };
 
   const onPanResponderReleaseOrTerminate = (e, gestureState) => {
     // Always clear the long-press timeout if it exists
@@ -103,7 +134,11 @@ const MoveableImage = ({
     pan.flattenOffset();
 
     // If the user never triggered allowPan and barely moved, treat as tap
-    const barelyMoved = Math.abs(gestureState.dx) < 5 && Math.abs(gestureState.dy) < 5;
+    const barelyMoved = (
+      Math.abs(gestureState.dx) < 5 &&
+      Math.abs(gestureState.dy) < 5
+    );
+
     if (!allowPan && barelyMoved) {
       addImage(); // Tap action
     }
@@ -135,11 +170,21 @@ const MoveableImage = ({
 
       onPanResponderMove: (e, gestureState) => {
         // Only move the image if long-press threshold is met
-        if (!allowPan) return;
+        if (!allowPan) {
+          return;
+        }
 
         Animated.event([null, { dx: pan.x, dy: pan.y }], {
           useNativeDriver: false,
         })(e, gestureState);
+
+        // TODO
+        const { dx, dy } = gestureState;
+        const p: Point2D = {
+          x: images.current[fileNumber].point.x + dx,
+          y: images.current[fileNumber].point.y + dy,
+        };
+        nearestImage(p); // TODO
       },
 
       onPanResponderRelease: onPanResponderReleaseOrTerminate,
@@ -148,6 +193,19 @@ const MoveableImage = ({
     }),
     [allowPan]
   );
+
+  useEffect(() => {
+    return listen<ImageLayout[]>(
+      'layout-image',
+      (x) => {
+        if (!x) {
+          return;
+        }
+
+        images.current = x;
+      },
+    );
+  }, []);
 
   return (
     <Animated.View
@@ -419,7 +477,7 @@ const UserImage = ({
 
   useEffect(() => {
     return listen<number[]>(
-      'image-parent-view-layout',
+      'layout-image-parent-view',
       setParentViewLayout,
       true,
     );
@@ -432,6 +490,7 @@ const UserImage = ({
       const MoveableImage_ = () => {
         if (!isLoading_ && imageUri !== null) {
           return <MoveableImage
+            fileNumber={fileNumber}
             addImage={addImage}
             imageUri={imageUri}
             resolution={resolution}
@@ -488,15 +547,23 @@ const UserImage = ({
         );
       };
 
-      notify(
-        `layout-image`,
-        {
-          [fileNumber]: {
-            image: MoveableImage_,
-            fileNumber: FileNumber_,
-          }
-        }
-      );
+      const point: Point2D = {
+        x: pageX - parentPageX + width / 2,
+        y: pageY - parentPageY + height / 2,
+      };
+
+
+      console.log('oldImages', lastEvent<ImageLayout[]>('layout-image') ?? []);
+      const newImages = [ ...(lastEvent<ImageLayout[]>('layout-image') ?? []) ];
+
+      newImages[fileNumber] = {
+        Image: MoveableImage_,
+        FileNumber: FileNumber_,
+        fileNumber: fileNumber,
+        point: point,
+      };
+
+      notify<ImageLayout[]>('layout-image', newImages);
     });
   }, [
     parentViewLayout,
@@ -682,7 +749,8 @@ const Images = ({
 }) => {
   const [layoutChanged, setLayoutChanged] = useState(0);
   const viewRef = useRef<View>(null);
-  const [images, setImages] = useState({});
+  const [images, setImages] = useState(
+    lastEvent<ImageLayout[]>('layout-image') ?? []);
 
   const isLoading1 = useRef(false);
   const isLoading2 = useRef(false);
@@ -702,15 +770,21 @@ const Images = ({
     x => { isLoading3.current = x; setIsLoading_() }, []);
 
   useEffect(() => {
-    return listen(
+    return listen<ImageLayout[]>(
       'layout-image',
-      (x) => setImages((images) => ({...images, ...x}))
+      (x) => {
+        if (!x) {
+          return;
+        }
+
+        setImages(x);
+      }
     );
   }, []);
 
   useLayoutEffect(() => {
     viewRef.current?.measure(
-      (...args) => notify('image-parent-view-layout', args)
+      (...args) => notify('layout-image-parent-view', args)
     );
   }, [layoutChanged]);
 
@@ -745,12 +819,16 @@ const Images = ({
         setHasImage={setHasImage}
       />
 
-      {Object.keys(images).map((k) =>
-        <RenderedHoc key={k} Hoc={images[k].image} />
+      {images.filter(Boolean).map((image) =>
+        <RenderedHoc key={image.fileNumber} Hoc={image.Image} />
       )}
 
-      {Object.keys(images).map((k) =>
-        <RenderedHoc key={k} Hoc={images[k].fileNumber} />
+      {images.filter(Boolean).map((image) =>
+        <RenderedHoc key={image.fileNumber} Hoc={image.FileNumber} />
+      )}
+
+      {images.filter(Boolean).map((image) =>
+        <View key={image.fileNumber} style={{ position: 'absolute', top: image.point.y, left: image.point.x, backgroundColor: 'red', height: 3, width: 3, }} />
       )}
     </View>
   );
