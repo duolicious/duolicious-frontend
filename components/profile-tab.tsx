@@ -166,14 +166,29 @@ const Images_ = ({data}) => {
     };
   }, [data]);
 
-  return <Images
-    input={input}
-    setIsLoading={setIsLoading}
-    setIsInvalid={setIsInvalid} />
+  return (
+    <>
+      <Images
+        input={input}
+        setIsLoading={setIsLoading}
+        setIsInvalid={setIsInvalid} />
+      <DefaultText
+        style={{
+          color: '#999',
+          textAlign: 'center',
+          marginRight: 10,
+          marginLeft: 10,
+        }}
+      >
+        Hold and drag photos to change their order
+      </DefaultText>
+    </>
+  );
 };
 
 const ProfileTab_ = ({navigation}) => {
   const [data, setData] = useState<any>(null);
+  const [scrollEnabled, setScrollEnabled] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -201,12 +216,17 @@ const ProfileTab_ = ({navigation}) => {
     observeListRef,
   } = useScrollbar('profile');
 
+  useEffect(() => {
+    listen<boolean>('is-moving-profile-image', (x) => setScrollEnabled(!x));
+  }, []);
+
   return (
     <SafeAreaView style={styles.safeAreaView}>
       <DuoliciousTopNavBar/>
       {data &&
         <ScrollView
           ref={observeListRef}
+          scrollEnabled={scrollEnabled}
           contentContainerStyle={{
             paddingLeft: 10,
             paddingRight: 10,

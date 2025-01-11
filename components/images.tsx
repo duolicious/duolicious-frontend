@@ -3,12 +3,16 @@ import {
   Platform,
   Pressable,
   View,
+  PanResponder,
+  Animated,
 } from 'react-native';
 import {
   forwardRef,
   memo,
   useCallback,
   useEffect,
+  useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -65,6 +69,154 @@ const cropImage = async (
   }
 
   return `data:image/jpeg;base64,${result.base64}`;
+};
+
+const MoveableImage = ({
+  addImage,
+  imageUri,
+  resolution,
+  imageBlurhash,
+  round,
+  removeImage,
+  isLoading,
+  isVerified,
+}) => {
+  const viewRef = useRef<View>(null);
+
+  // Use XY for your Pan, as before
+  const pan = useRef(new Animated.ValueXY()).current;
+
+  // This tracks whether we’ve held long enough to allow dragging
+  const [allowPan, setAllowPan] = useState(false);
+
+  // We'll store the long-press timeout handle here
+  const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  const onPanResponderReleaseOrTerminate = (e, gestureState) => {
+    // Always clear the long-press timeout if it exists
+    if (longPressTimeout.current) {
+      clearTimeout(longPressTimeout.current);
+      longPressTimeout.current = null;
+    }
+
+    pan.flattenOffset();
+
+    // If the user never triggered allowPan and barely moved, treat as tap
+    const barelyMoved = Math.abs(gestureState.dx) < 5 && Math.abs(gestureState.dy) < 5;
+    if (!allowPan && barelyMoved) {
+      addImage(); // Tap action
+    }
+
+    // Reset for next time
+    setAllowPan(false);
+    notify<boolean>('is-moving-profile-image', false);
+  };
+
+  const panResponder = useMemo(() =>
+    PanResponder.create({
+      // Let’s allow the responder to start on touch down
+      onStartShouldSetPanResponder: () => true,
+      // but in move events we’ll actually conditionally handle them in `onPanResponderMove`.
+      onMoveShouldSetPanResponder: () => true,
+
+      onPanResponderGrant: (e, gestureState) => {
+        e.preventDefault();
+
+        // We still want to track that something is happening:
+        notify<boolean>('is-moving-profile-image', true);
+        pan.extractOffset();
+
+        // Start the long-press timer:
+        longPressTimeout.current = setTimeout(() => {
+          setAllowPan(true);
+        }, 500); // Adjust as needed (ms before drag is allowed)
+      },
+
+      onPanResponderMove: (e, gestureState) => {
+        // Only move the image if long-press threshold is met
+        if (!allowPan) return;
+
+        Animated.event([null, { dx: pan.x, dy: pan.y }], {
+          useNativeDriver: false,
+        })(e, gestureState);
+      },
+
+      onPanResponderRelease: onPanResponderReleaseOrTerminate,
+
+      onPanResponderTerminate: onPanResponderReleaseOrTerminate,
+    }),
+    [allowPan]
+  );
+
+  useLayoutEffect(() => {
+    viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
+      console.log('|', x, y, width, height, pageX, pageY); // TODO
+    });
+  }, []);
+
+  return (
+    <Animated.View
+      ref={viewRef}
+      {...panResponder.panHandlers}
+      style={{
+        transform: [
+          ...pan.getTranslateTransform(),
+          {
+            scale: allowPan ? 1.1 : 1,
+          }
+        ],
+        width: '100%',
+        height: '100%',
+        userSelect: 'none',
+      }}
+    >
+      <Image
+        source={{
+          uri: imageUri,
+          height: resolution,
+          width: resolution,
+        }}
+        placeholder={imageBlurhash && { blurhash: imageBlurhash }}
+        transition={150}
+        style={{
+          height: '100%',
+          width: '100%',
+          borderRadius: round ? 999 : 5,
+          borderColor: '#eee',
+        }}
+        contentFit="contain"
+      />
+      <Pressable
+        style={{
+          position: 'absolute',
+          top: -10,
+          left: -10,
+          padding: 2,
+          borderRadius: 999,
+          backgroundColor: 'white',
+        }}
+        onPress={
+          imageUri === null || isLoading ? undefined : removeImage
+        }
+      >
+        <FontAwesomeIcon
+          icon={faCircleXmark}
+          size={26}
+          color="#000"
+        />
+      </Pressable>
+      {isVerified && (
+        <VerificationBadge
+          style={{
+            position: 'absolute',
+            top: 8,
+            right: 8,
+          }}
+          size={20}
+        />
+      )}
+    </Animated.View>
+  );
 };
 
 const UserImage = ({
@@ -270,6 +422,7 @@ const UserImage = ({
   return (
     <Pressable
       onPress={addImage}
+      disabled={imageUri !== null}
       style={{
         borderRadius: round ? 999 : 5,
         backgroundColor: '#eee',
@@ -283,55 +436,16 @@ const UserImage = ({
       { isLoading_ && <Loading/>}
       {!isLoading_ && imageUri === null && <AddIcon/>}
       {!isLoading_ && imageUri !== null &&
-        <>
-          <Image
-            source={{
-              uri: imageUri,
-              height: resolution,
-              width: resolution,
-            }}
-            placeholder={imageBlurhash && { blurhash: imageBlurhash }}
-            transition={150}
-            style={{
-              height: '100%',
-              width: '100%',
-              borderRadius: round ? 999 : 5,
-              borderColor: '#eee',
-            }}
-            contentFit="contain"
-          />
-          <Pressable
-            style={{
-              position: 'absolute',
-              top: -10,
-              left: -10,
-              padding: 2,
-              borderRadius: 999,
-              backgroundColor: 'white',
-            }}
-            onPress={
-              (imageUri === null || isLoading_) ?
-              undefined :
-              removeImage
-            }
-          >
-            <FontAwesomeIcon
-              icon={faCircleXmark}
-              size={26}
-              color="#000"
-            />
-          </Pressable>
-          {isVerified &&
-            <VerificationBadge
-              style={{
-                position: 'absolute',
-                top: 8,
-                right: 8,
-              }}
-              size={20}
-            />
-          }
-        </>
+        <MoveableImage
+          addImage={addImage}
+          imageUri={imageUri}
+          resolution={resolution}
+          imageBlurhash={imageBlurhash}
+          round={round}
+          removeImage={removeImage}
+          isLoading={isLoading_}
+          isVerified={isVerified}
+        />
       }
       {fileNumber >= 1 &&
         <DefaultText
