@@ -1,10 +1,11 @@
 import {
   ActivityIndicator,
+  Animated,
+  LayoutChangeEvent,
+  PanResponder,
   Platform,
   Pressable,
   View,
-  PanResponder,
-  Animated,
 } from 'react-native';
 import {
   forwardRef,
@@ -28,6 +29,7 @@ import { Image } from 'expo-image';
 import { VerificationEvent } from '../verification/verification';
 import { VerificationBadge } from './verification-badge';
 import { DefaultText } from './default-text';
+import { RenderedHoc } from './rendered-hoc';
 
 // TODO: Image picker is shit and lets you upload any file type on web
 
@@ -80,9 +82,8 @@ const MoveableImage = ({
   removeImage,
   isLoading,
   isVerified,
+  style,
 }) => {
-  const viewRef = useRef<View>(null);
-
   // Use XY for your Pan, as before
   const pan = useRef(new Animated.ValueXY()).current;
 
@@ -148,15 +149,8 @@ const MoveableImage = ({
     [allowPan]
   );
 
-  useLayoutEffect(() => {
-    viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
-      console.log('|', x, y, width, height, pageX, pageY); // TODO
-    });
-  }, []);
-
   return (
     <Animated.View
-      ref={viewRef}
       {...panResponder.panHandlers}
       style={{
         transform: [
@@ -165,9 +159,11 @@ const MoveableImage = ({
             scale: allowPan ? 1.1 : 1,
           }
         ],
+        zIndex: allowPan ? 2 : undefined,
         width: '100%',
         height: '100%',
         userSelect: 'none',
+        ...style,
       }}
     >
       <Image
@@ -229,10 +225,12 @@ const UserImage = ({
   showProtip = true,
   round = false,
 }) => {
+  const viewRef = useRef<View>(null);
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [imageBlurhash, setImageBlurhash] = useState<string | null>(null);
   const [isLoading_, setIsLoading_] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
+  const [parentViewLayout, setParentViewLayout] = useState<number[]>();
 
   const imageCropperCallback = `image-cropped-${fileNumber}`;
 
@@ -419,8 +417,102 @@ const UserImage = ({
     );
   }, []);
 
+  useEffect(() => {
+    return listen<number[]>(
+      'image-parent-view-layout',
+      setParentViewLayout,
+      true,
+    );
+  }, []);
+
+  useLayoutEffect(() => {
+    viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
+      const [, , , , parentPageX = 0, parentPageY = 0] = parentViewLayout ?? [];
+
+      const MoveableImage_ = () => {
+        if (!isLoading_ && imageUri !== null) {
+          return <MoveableImage
+            addImage={addImage}
+            imageUri={imageUri}
+            resolution={resolution}
+            imageBlurhash={imageBlurhash}
+            round={round}
+            removeImage={removeImage}
+            isLoading={isLoading_}
+            isVerified={isVerified}
+            style={{
+              position: 'absolute',
+              height: height,
+              width: width,
+              left: pageX - parentPageX,
+              top: pageY - parentPageY,
+            }}
+          />
+        } else {
+          return null;
+        }
+      };
+
+      const FileNumber_ = () => {
+        if (fileNumber < 1) {
+          return null;
+        }
+
+        return (
+          <View
+            style={{
+              position: 'absolute',
+              left: pageX + 2 - parentPageX,
+              top: pageY + height - 2 - parentPageY,
+              backgroundColor: 'red',
+              overflow: 'visible',
+            }}
+          >
+            <DefaultText
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                backgroundColor: 'white',
+                borderWidth: 1,
+                borderColor: 'black',
+                paddingHorizontal: 8,
+                paddingVertical: 1,
+                borderRadius: 999,
+                fontSize: 12,
+              }}
+            >
+              {fileNumber === 1 ? 'Main' : fileNumber}
+            </DefaultText>
+          </View>
+        );
+      };
+
+      notify(
+        `layout-image`,
+        {
+          [fileNumber]: {
+            image: MoveableImage_,
+            fileNumber: FileNumber_,
+          }
+        }
+      );
+    });
+  }, [
+    parentViewLayout,
+    isLoading_,
+    imageUri,
+    addImage,
+    resolution,
+    imageBlurhash,
+    round,
+    removeImage,
+    isVerified,
+  ]);
+
   return (
     <Pressable
+      ref={viewRef}
       onPress={addImage}
       disabled={imageUri !== null}
       style={{
@@ -435,36 +527,6 @@ const UserImage = ({
     >
       { isLoading_ && <Loading/>}
       {!isLoading_ && imageUri === null && <AddIcon/>}
-      {!isLoading_ && imageUri !== null &&
-        <MoveableImage
-          addImage={addImage}
-          imageUri={imageUri}
-          resolution={resolution}
-          imageBlurhash={imageBlurhash}
-          round={round}
-          removeImage={removeImage}
-          isLoading={isLoading_}
-          isVerified={isVerified}
-        />
-      }
-      {fileNumber >= 1 &&
-        <DefaultText
-          style={{
-            position: 'absolute',
-            bottom: 2,
-            left: 2,
-            backgroundColor: 'white',
-            borderWidth: 1,
-            borderColor: 'black',
-            paddingHorizontal: 8,
-            paddingVertical: 1,
-            borderRadius: 999,
-            fontSize: 12,
-          }}
-        >
-          {fileNumber === 1 ? 'Main' : fileNumber}
-        </DefaultText>
-      }
     </Pressable>
   );
 };
@@ -618,6 +680,10 @@ const Images = ({
   setIsInvalid,
   setHasImage = (x: boolean) => {},
 }) => {
+  const [layoutChanged, setLayoutChanged] = useState(0);
+  const viewRef = useRef<View>(null);
+  const [images, setImages] = useState({});
+
   const isLoading1 = useRef(false);
   const isLoading2 = useRef(false);
   const isLoading3 = useRef(false);
@@ -635,12 +701,27 @@ const Images = ({
   const setIsLoading3 = useCallback(
     x => { isLoading3.current = x; setIsLoading_() }, []);
 
+  useEffect(() => {
+    return listen(
+      'layout-image',
+      (x) => setImages((images) => ({...images, ...x}))
+    );
+  }, []);
+
+  useLayoutEffect(() => {
+    viewRef.current?.measure(
+      (...args) => notify('image-parent-view-layout', args)
+    );
+  }, [layoutChanged]);
+
   return (
     <View
+      ref={viewRef}
       style={{
         padding: 10,
         gap: 10,
       }}
+      onLayout={() => setLayoutChanged((l) => l + 1)}
     >
       <FirstRow
         input={input}
@@ -663,6 +744,14 @@ const Images = ({
         setIsInvalid={setIsInvalid}
         setHasImage={setHasImage}
       />
+
+      {Object.keys(images).map((k) =>
+        <RenderedHoc key={k} Hoc={images[k].image} />
+      )}
+
+      {Object.keys(images).map((k) =>
+        <RenderedHoc key={k} Hoc={images[k].fileNumber} />
+      )}
     </View>
   );
 };
