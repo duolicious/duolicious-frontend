@@ -45,6 +45,8 @@ import {
 } from 'react-native-gesture-handler';
 
 // TODO: Image picker is shit and lets you upload any file type on web
+// TODO: Border radius needs to be animated for movements involving first image
+// TODO: Reordering needs to happen during drag rather than at the end
 
 type Point2D = {
   x: number
@@ -52,14 +54,85 @@ type Point2D = {
 };
 
 type ImageLayout = {
-  Image: React.FC,
-  FileNumber: React.FC,
-  fileNumber: number,
-  point: Point2D,
+  Image: React.FC
+  FileNumber: React.FC
+  fileNumber: number
+  point: Point2D
+  empty: boolean
 };
 
 const euclideanDistance = (p1: Point2D, p2: Point2D) => {
   return ((p1.x - p2.x) ** 2.0 + (p1.y - p2.y) ** 2.0) ** 0.5;
+};
+
+const vecSub = (p1: Point2D, p2: Point2D): Point2D => {
+  return {
+    x: p1.x - p2.x,
+    y: p1.y - p2.y,
+  }
+};
+
+const remap = <T,>(
+  obj: { [k: number]: T },
+  fromKey: number,
+  toKey: number,
+): { [k: number]: T } => {
+  // Ensure keys are within 1..7
+  if (toKey < 1 || toKey > 7) return obj;
+  if (fromKey < 1 || fromKey > 7) return obj;
+
+  // If fromKey doesn't exist in obj, or there's no actual move, just return
+  if (!obj.hasOwnProperty(fromKey) || fromKey === toKey) {
+    return obj;
+  }
+
+  // Make a shallow copy so we don't mutate the original
+  const newObj = { ...obj };
+
+  // Extract value
+  const value = newObj[fromKey];
+  // Remove the old key
+  delete newObj[fromKey];
+
+  if (!newObj.hasOwnProperty(toKey)) {
+    // toKey is free, so just place the value there
+
+    newObj[toKey] = value;
+  } else if (fromKey < toKey) {
+    // SHIFT LEFT (moving down in key numbers)
+    // Example: fromKey=2, toKey=4
+    // We shift: key=3 moves to key=2, key=4 moves to key=3, then we place our value at key=4
+
+    for (let k = fromKey + 1; k <= toKey; k++) {
+      if (newObj.hasOwnProperty(k)) {
+        // shift that value one slot "down" (k -> k-1)
+        newObj[k - 1] = newObj[k];
+        // remove the old slot
+        delete newObj[k];
+      }
+    }
+
+    // Place the moved value at 'toKey'
+    newObj[toKey] = value;
+
+  } else {
+    // SHIFT RIGHT (moving up in key numbers)
+    // Example: fromKey=5, toKey=3
+    // We shift: key=4 moves to key=5, key=3 moves to key=4, then we place our value at key=3
+
+    for (let k = fromKey - 1; k >= toKey; k--) {
+      if (newObj.hasOwnProperty(k)) {
+        // shift that value one slot "up" (k -> k+1)
+        newObj[k + 1] = newObj[k];
+        delete newObj[k];
+      }
+    }
+
+    // Place the moved value at 'toKey'
+    newObj[toKey] = value;
+  }
+
+  return newObj;
 };
 
 const isSquareish = (width: number, height: number) => {
@@ -119,7 +192,7 @@ const MoveableImage = ({
   // We'll store the long-press timeout handle here
   const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  const nearestImage = (p: Point2D): ImageLayout => {
+  const getNearestImage = (p: Point2D): ImageLayout => {
     let nearest: ImageLayout | null = null;
 
     const imagesCopy = images.current.filter(Boolean);
@@ -147,10 +220,9 @@ const MoveableImage = ({
   const [zIndex, setZIndex] = useState<number>(0);
   const resetZIndex = () => runOnJS(setZIndex)(0);
 
-  const pressed = useSharedValue<boolean>(false);
-
-  const panY = useSharedValue<number>(0);
   const panX = useSharedValue<number>(0);
+  const panY = useSharedValue<number>(0);
+  const scale = useSharedValue<number>(1);
 
   const hapticsSelection = () => {
     if (Platform.OS !== 'web') {
@@ -163,18 +235,56 @@ const MoveableImage = ({
     .Pan()
     .activateAfterLongPress(200)
     .onStart((event) => {
-      pressed.value = true;
+      scale.value = withTiming(1.1);
       runOnJS(setZIndex)(1);
       runOnJS(hapticsSelection)();
     })
     .onChange((event) => {
-      panY.value = event.translationY;
       panX.value = event.translationX;
+      panY.value = event.translationY;
     })
     .onFinalize(() => {
-      panY.value = withTiming(0);
-      panX.value = withTiming(0, undefined, resetZIndex);
-      pressed.value = false;
+      const p: Point2D = {
+        x: images.current[fileNumber].point.x + panX.value,
+        y: images.current[fileNumber].point.y + panY.value,
+      };
+
+      const nearestImage = getNearestImage(p);
+
+      const imagesCopy: ImageLayout[] = [];
+      for (let i = 0; i <= images.current.length; i++) {
+        if (!(images.current[i]?.empty ?? true)) {
+          imagesCopy[i] = images.current[i];
+        }
+      }
+
+      const remappedImages: {
+        [k: number]: ImageLayout
+      } = remap(
+        imagesCopy,
+        fileNumber,
+        nearestImage.fileNumber
+      );
+
+      console.log(remappedImages); // TODO
+
+      const a = Object
+        .keys(remappedImages)
+        .map(Number)
+        .forEach((toFileNumber) => {
+          const fromFileNumber = remappedImages[toFileNumber].fileNumber;
+
+          const fromPoint = images.current[fromFileNumber].point;
+          const toPoint = images.current[toFileNumber].point;
+
+          const updatedPoint = vecSub(toPoint, fromPoint);
+
+          if (fromFileNumber === fileNumber) {
+            panX.value = withTiming(updatedPoint.x);
+            panY.value = withTiming(updatedPoint.y)
+            scale.value = withTiming(1, undefined, resetZIndex);
+          }
+        })
     })
 
   const tap =
@@ -189,9 +299,9 @@ const MoveableImage = ({
 
   const animatedStyles = useAnimatedStyle(() => ({
     transform: [
-      { translateY: panY.value },
       { translateX: panX.value },
-      { scale: withTiming(pressed.value ? 1.1 : 1) },
+      { translateY: panY.value },
+      { scale: scale.value },
     ],
   }));
 
@@ -545,6 +655,7 @@ const UserImage = ({
         FileNumber: FileNumber_,
         fileNumber: fileNumber,
         point: point,
+        empty: imageUri === null,
       };
 
       notify<ImageLayout[]>('layout-image', newImages);
