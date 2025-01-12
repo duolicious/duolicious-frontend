@@ -1,0 +1,23 @@
+name: ESLint
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+    - name: Install dependencies
+      run: npm ci
+    - name: Run ESLint
+      run: npx eslint .
+# Correct I know two routes from here if we use npx eslint --fix 
+# 1. we can push changes to main branch with some github bot will be counted as commit.
+# 2. we can say if there is linter error then we can't push the code to main branch. ( Not Recommended to your project because you have 5000 erros)
