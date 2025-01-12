@@ -188,7 +188,6 @@ const Images_ = ({data}) => {
 
 const ProfileTab_ = ({navigation}) => {
   const [data, setData] = useState<any>(null);
-  const [scrollEnabled, setScrollEnabled] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -216,17 +215,12 @@ const ProfileTab_ = ({navigation}) => {
     observeListRef,
   } = useScrollbar('profile');
 
-  useEffect(() => {
-    listen<boolean>('is-moving-profile-image', (x) => setScrollEnabled(!x));
-  }, []);
-
   return (
     <SafeAreaView style={styles.safeAreaView}>
       <DuoliciousTopNavBar/>
       {data &&
         <ScrollView
           ref={observeListRef}
-          scrollEnabled={scrollEnabled}
           contentContainerStyle={{
             paddingLeft: 10,
             paddingRight: 10,

@@ -1,6 +1,5 @@
 import {
   ActivityIndicator,
-  Animated,
   LayoutChangeEvent,
   PanResponder,
   Platform,
@@ -31,6 +30,19 @@ import { VerificationBadge } from './verification-badge';
 import { DefaultText } from './default-text';
 import { RenderedHoc } from './rendered-hoc';
 import * as Haptics from 'expo-haptics';
+import
+  Animated,
+  {
+    Easing,
+    runOnJS,
+    useAnimatedStyle,
+    useSharedValue,
+    withTiming,
+  } from 'react-native-reanimated';
+import {
+  Gesture,
+  GestureDetector,
+} from 'react-native-gesture-handler';
 
 // TODO: Image picker is shit and lets you upload any file type on web
 
@@ -104,12 +116,6 @@ const MoveableImage = ({
 }) => {
   const images = useRef(lastEvent<ImageLayout[]>('layout-image') ?? []);
 
-  // Use XY for your Pan, as before
-  const pan = useRef(new Animated.ValueXY()).current;
-
-  // This tracks whether we’ve held long enough to allow dragging
-  const [allowPan, setAllowPan] = useState(false);
-
   // We'll store the long-press timeout handle here
   const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
 
@@ -125,79 +131,6 @@ const MoveableImage = ({
     return imagesCopy[0];
   };
 
-  const onPanResponderReleaseOrTerminate = (e, gestureState) => {
-    // Always clear the long-press timeout if it exists
-    if (longPressTimeout.current) {
-      clearTimeout(longPressTimeout.current);
-      longPressTimeout.current = null;
-    }
-
-    pan.flattenOffset();
-
-    // If the user never triggered allowPan and barely moved, treat as tap
-    const barelyMoved = (
-      Math.abs(gestureState.dx) < 5 &&
-      Math.abs(gestureState.dy) < 5
-    );
-
-    if (!allowPan && barelyMoved) {
-      addImage(); // Tap action
-    }
-
-    // Reset for next time
-    setAllowPan(false);
-    notify<boolean>('is-moving-profile-image', false);
-  };
-
-  const panResponder = useMemo(() =>
-    PanResponder.create({
-      // Let’s allow the responder to start on touch down
-      onStartShouldSetPanResponder: () => true,
-      // but in move events we’ll actually conditionally handle them in `onPanResponderMove`.
-      onMoveShouldSetPanResponder: () => true,
-
-      onPanResponderGrant: (e, gestureState) => {
-        e.preventDefault();
-
-        // We still want to track that something is happening:
-        notify<boolean>('is-moving-profile-image', true);
-        pan.extractOffset();
-
-        // Start the long-press timer:
-        longPressTimeout.current = setTimeout(() => {
-          setAllowPan(true);
-          if (Platform.OS !== 'web') {
-            Haptics.selectionAsync();
-          }
-        }, 500); // Adjust as needed (ms before drag is allowed)
-      },
-
-      onPanResponderMove: (e, gestureState) => {
-        // Only move the image if long-press threshold is met
-        if (!allowPan) {
-          return;
-        }
-
-        Animated.event([null, { dx: pan.x, dy: pan.y }], {
-          useNativeDriver: false,
-        })(e, gestureState);
-
-        // TODO
-        const { dx, dy } = gestureState;
-        const p: Point2D = {
-          x: images.current[fileNumber].point.x + dx,
-          y: images.current[fileNumber].point.y + dy,
-        };
-        nearestImage(p); // TODO
-      },
-
-      onPanResponderRelease: onPanResponderReleaseOrTerminate,
-
-      onPanResponderTerminate: onPanResponderReleaseOrTerminate,
-    }),
-    [allowPan]
-  );
-
   useEffect(() => {
     return listen<ImageLayout[]>(
       'layout-image',
@@ -211,69 +144,116 @@ const MoveableImage = ({
     );
   }, []);
 
+  const [zIndex, setZIndex] = useState<number>(0);
+  const resetZIndex = () => runOnJS(setZIndex)(0);
+
+  const pressed = useSharedValue<boolean>(false);
+
+  const panY = useSharedValue<number>(0);
+  const panX = useSharedValue<number>(0);
+
+  const hapticsSelection = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync();
+    }
+  };
+
+  const pan =
+    Gesture
+    .Pan()
+    .activateAfterLongPress(200)
+    .onStart((event) => {
+      pressed.value = true;
+      runOnJS(setZIndex)(1);
+      runOnJS(hapticsSelection)();
+    })
+    .onChange((event) => {
+      panY.value = event.translationY;
+      panX.value = event.translationX;
+    })
+    .onFinalize(() => {
+      panY.value = withTiming(0);
+      panX.value = withTiming(0, undefined, resetZIndex);
+      pressed.value = false;
+    })
+
+  const tap =
+    Gesture
+    .Tap()
+    .requireExternalGestureToFail(pan)
+    .onStart(() => {
+      runOnJS(addImage)();
+    })
+
+  const composed = Gesture.Exclusive(pan, tap);
+
+  const animatedStyles = useAnimatedStyle(() => ({
+    transform: [
+      { translateY: panY.value },
+      { translateX: panX.value },
+      { scale: withTiming(pressed.value ? 1.1 : 1) },
+    ],
+  }));
+
   return (
-    <Animated.View
-      {...panResponder.panHandlers}
-      style={{
-        transform: [
-          ...pan.getTranslateTransform(),
+    <GestureDetector gesture={composed}>
+      <Animated.View
+        style={[
           {
-            scale: allowPan ? 1.1 : 1,
-          }
-        ],
-        zIndex: allowPan ? 2 : undefined,
-        width: '100%',
-        height: '100%',
-        userSelect: 'none',
-        ...style,
-      }}
-    >
-      <Image
-        source={{
-          uri: imageUri,
-          height: resolution,
-          width: resolution,
-        }}
-        placeholder={imageBlurhash && { blurhash: imageBlurhash }}
-        transition={150}
-        style={{
-          height: '100%',
-          width: '100%',
-          borderRadius: round ? 999 : 5,
-          borderColor: '#eee',
-        }}
-        contentFit="contain"
-      />
-      <Pressable
-        style={{
-          position: 'absolute',
-          top: -10,
-          left: -10,
-          padding: 2,
-          borderRadius: 999,
-          backgroundColor: 'white',
-        }}
-        onPress={
-          imageUri === null || isLoading ? undefined : removeImage
-        }
+            zIndex: zIndex,
+            ...style,
+          },
+          animatedStyles,
+        ]}
       >
-        <FontAwesomeIcon
-          icon={faCircleXmark}
-          size={26}
-          color="#000"
+        <Image
+          pointerEvents="none"
+          source={{
+            uri: imageUri,
+            height: resolution,
+            width: resolution,
+          }}
+          placeholder={imageBlurhash && { blurhash: imageBlurhash }}
+          transition={150}
+          style={{
+            height: '100%',
+            width: '100%',
+            borderRadius: round ? 999 : 5,
+            borderColor: '#eee',
+          }}
+          contentFit="contain"
         />
-      </Pressable>
-      {isVerified && (
-        <VerificationBadge
+        <Pressable
           style={{
             position: 'absolute',
-            top: 8,
-            right: 8,
+            top: -10,
+            left: -10,
+            padding: 2,
+            borderRadius: 999,
+            backgroundColor: 'white',
           }}
-          size={20}
-        />
-      )}
-    </Animated.View>
+          onPress={
+            imageUri === null || isLoading ? undefined : removeImage
+          }
+        >
+          <FontAwesomeIcon
+            icon={faCircleXmark}
+            size={26}
+            color="#000"
+          />
+        </Pressable>
+        {isVerified && (
+          <VerificationBadge
+            style={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+            }}
+            size={20}
+          />
+        )}
+      </Animated.View>
+    </GestureDetector>
   );
 };
 

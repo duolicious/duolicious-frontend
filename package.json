@@ -51,7 +51,8 @@
     "react-native-svg": "15.8.0",
     "react-native-web": "~0.19.13",
     "xpath": "^0.0.33",
-    "expo-haptics": "~14.0.1"
+    "expo-haptics": "~14.0.1",
+    "react-native-gesture-handler": "~2.20.2"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",
