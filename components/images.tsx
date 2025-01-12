@@ -30,6 +30,7 @@ import { VerificationEvent } from '../verification/verification';
 import { VerificationBadge } from './verification-badge';
 import { DefaultText } from './default-text';
 import { RenderedHoc } from './rendered-hoc';
+import * as Haptics from 'expo-haptics';
 
 // TODO: Image picker is shit and lets you upload any file type on web
 
@@ -165,6 +166,9 @@ const MoveableImage = ({
         // Start the long-press timer:
         longPressTimeout.current = setTimeout(() => {
           setAllowPan(true);
+          if (Platform.OS !== 'web') {
+            Haptics.selectionAsync();
+          }
         }, 500); // Adjust as needed (ms before drag is allowed)
       },
 
