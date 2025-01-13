@@ -45,8 +45,10 @@ import {
 } from 'react-native-gesture-handler';
 
 // TODO: Image picker is shit and lets you upload any file type on web
-// TODO: Border radius needs to be animated for movements involving first image
 // TODO: Reordering needs to happen during drag rather than at the end
+// TODO: Get this working on mobile (needs runOnJS)
+// TODO: Make images hold their positions between renders
+// TODO: Backend logic
 
 type Point2D = {
   x: number
@@ -60,6 +62,10 @@ type ImageLayout = {
   point: Point2D
   empty: boolean
 };
+
+type ImageLayoutMap = {
+  [k: number]: ImageLayout
+}
 
 const euclideanDistance = (p1: Point2D, p2: Point2D) => {
   return ((p1.x - p2.x) ** 2.0 + (p1.y - p2.y) ** 2.0) ** 0.5;
@@ -75,62 +81,74 @@ const vecSub = (p1: Point2D, p2: Point2D): Point2D => {
 const remap = <T,>(
   obj: { [k: number]: T },
   fromKey: number,
-  toKey: number,
+  toKey: number
 ): { [k: number]: T } => {
-  // Ensure keys are within 1..7
-  if (toKey < 1 || toKey > 7) return obj;
-  if (fromKey < 1 || fromKey > 7) return obj;
-
-  // If fromKey doesn't exist in obj, or there's no actual move, just return
-  if (!obj.hasOwnProperty(fromKey) || fromKey === toKey) {
-    return obj;
+  // If there's nothing to move or no actual move, return a copy
+  if (fromKey === toKey || !(fromKey in obj)) {
+    return { ...obj };
   }
 
-  // Make a shallow copy so we don't mutate the original
-  const newObj = { ...obj };
+  // Make a shallow copy so we never mutate the original
+  const newObj: { [k: number]: T } = { ...obj };
 
-  // Extract value
-  const value = newObj[fromKey];
-  // Remove the old key
+  // Grab the item we're moving, then remove it
+  const movingItem = newObj[fromKey];
   delete newObj[fromKey];
 
-  if (!newObj.hasOwnProperty(toKey)) {
-    // toKey is free, so just place the value there
+  // Decide which direction we'll bubble in:
+  // - If fromKey < toKey, we bubble "backwards" (toKey down to fromKey).
+  // - If fromKey > toKey, we bubble "forwards"  (toKey up   to fromKey).
+  const direction = fromKey < toKey ? -1 : +1;
 
-    newObj[toKey] = value;
-  } else if (fromKey < toKey) {
-    // SHIFT LEFT (moving down in key numbers)
-    // Example: fromKey=2, toKey=4
-    // We shift: key=3 moves to key=2, key=4 moves to key=3, then we place our value at key=4
-
-    for (let k = fromKey + 1; k <= toKey; k++) {
-      if (newObj.hasOwnProperty(k)) {
-        // shift that value one slot "down" (k -> k-1)
-        newObj[k - 1] = newObj[k];
-        // remove the old slot
-        delete newObj[k];
-      }
+  /**
+   * Bubbles the occupant at `pos` in the given direction
+   * until it finds a gap (an unoccupied position) or
+   * the old `fromKey` (which we vacated).
+   *
+   * This "chain reaction" is what allows us to skip
+   * shifting large ranges if we encounter a gap early.
+   */
+  function bubble(pos: number): void {
+    // If there's no occupant at `pos`, we're done; it's already a gap.
+    if (!(pos in newObj)) {
+      return;
     }
 
-    // Place the moved value at 'toKey'
-    newObj[toKey] = value;
+    const occupant = newObj[pos];
+    const nextPos = pos + direction;
 
-  } else {
-    // SHIFT RIGHT (moving up in key numbers)
-    // Example: fromKey=5, toKey=3
-    // We shift: key=4 moves to key=5, key=3 moves to key=4, then we place our value at key=3
-
-    for (let k = fromKey - 1; k >= toKey; k--) {
-      if (newObj.hasOwnProperty(k)) {
-        // shift that value one slot "up" (k -> k+1)
-        newObj[k + 1] = newObj[k];
-        delete newObj[k];
-      }
+    // If `nextPos` is out of range, we can't bubble further—do nothing.
+    if (nextPos < 1 || nextPos > 7) {
+      return;
     }
 
-    // Place the moved value at 'toKey'
-    newObj[toKey] = value;
+    // If `nextPos` is exactly `fromKey`, that position is free now.
+    // So we can move the occupant there and free up `pos`.
+    if (nextPos === fromKey) {
+      newObj[nextPos] = occupant;
+      delete newObj[pos];
+      return;
+    }
+
+    // Otherwise, try to bubble whoever is at `nextPos` first.
+    bubble(nextPos);
+
+    // After attempting to bubble `nextPos`, check if it’s become free.
+    if (!(nextPos in newObj)) {
+      // Move occupant from `pos` → `nextPos`
+      newObj[nextPos] = occupant;
+      delete newObj[pos];
+    }
+    // If it’s still not free, it means we couldn’t bubble it (out of range,
+    // or some other situation). We just leave occupant where it is.
   }
+
+  // First, "bubble away" whatever is currently at `toKey`, if anything,
+  // so that `toKey` eventually becomes free.
+  bubble(toKey);
+
+  // Now we can place our moving item directly in `toKey`.
+  newObj[toKey] = movingItem;
 
   return newObj;
 };
@@ -223,6 +241,7 @@ const MoveableImage = ({
   const panX = useSharedValue<number>(0);
   const panY = useSharedValue<number>(0);
   const scale = useSharedValue<number>(1);
+  const borderRadius = useSharedValue<number>(fileNumber === 1 ? 999 : 5);
 
   const hapticsSelection = () => {
     if (Platform.OS !== 'web') {
@@ -266,9 +285,16 @@ const MoveableImage = ({
         nearestImage.fileNumber
       );
 
-      console.log(remappedImages); // TODO
+      notify<ImageLayoutMap>('remapped-images', remappedImages);
+    })
 
-      const a = Object
+  useEffect(() => {
+    const onRemap = (remappedImages: ImageLayoutMap | undefined) => {
+      if (!remappedImages) {
+        return;
+      }
+
+      Object
         .keys(remappedImages)
         .map(Number)
         .forEach((toFileNumber) => {
@@ -283,9 +309,13 @@ const MoveableImage = ({
             panX.value = withTiming(updatedPoint.x);
             panY.value = withTiming(updatedPoint.y)
             scale.value = withTiming(1, undefined, resetZIndex);
+            borderRadius.value = withTiming(toFileNumber === 1 ? 999 : 5);
           }
-        })
-    })
+        });
+    };
+
+    listen<ImageLayoutMap>('remapped-images', onRemap);
+  }, [fileNumber]);
 
   const tap =
     Gesture
@@ -297,12 +327,16 @@ const MoveableImage = ({
 
   const composed = Gesture.Exclusive(pan, tap);
 
-  const animatedStyles = useAnimatedStyle(() => ({
+  const animatedContainerStyle = useAnimatedStyle(() => ({
     transform: [
       { translateX: panX.value },
       { translateY: panY.value },
       { scale: scale.value },
     ],
+  }));
+
+  const animatedImageContainerStyle = useAnimatedStyle(() => ({
+    borderRadius: borderRadius.value,
   }));
 
   return (
@@ -313,26 +347,36 @@ const MoveableImage = ({
             zIndex: zIndex,
             ...style,
           },
-          animatedStyles,
+          animatedContainerStyle,
         ]}
       >
-        <Image
-          pointerEvents="none"
-          source={{
-            uri: imageUri,
-            height: resolution,
-            width: resolution,
-          }}
-          placeholder={imageBlurhash && { blurhash: imageBlurhash }}
-          transition={150}
-          style={{
-            height: '100%',
-            width: '100%',
-            borderRadius: round ? 999 : 5,
-            borderColor: '#eee',
-          }}
-          contentFit="contain"
-        />
+        <Animated.View
+          style={[
+            {
+              height: '100%',
+              width: '100%',
+              overflow: 'hidden',
+            },
+            animatedImageContainerStyle,
+          ]}
+        >
+          <Image
+            pointerEvents="none"
+            source={{
+              uri: imageUri,
+              height: resolution,
+              width: resolution,
+            }}
+            placeholder={imageBlurhash && { blurhash: imageBlurhash }}
+            transition={150}
+            style={{
+              height: '100%',
+              width: '100%',
+              borderColor: '#eee',
+            }}
+            contentFit="contain"
+          />
+        </Animated.View>
         <Pressable
           style={{
             position: 'absolute',
@@ -617,7 +661,6 @@ const UserImage = ({
               position: 'absolute',
               left: pageX + 2 - parentPageX,
               top: pageY + height - 2 - parentPageY,
-              backgroundColor: 'red',
               overflow: 'visible',
             }}
           >
@@ -920,10 +963,6 @@ const Images = ({
 
       {images.filter(Boolean).map((image) =>
         <RenderedHoc key={image.fileNumber} Hoc={image.FileNumber} />
-      )}
-
-      {images.filter(Boolean).map((image) =>
-        <View key={image.fileNumber} style={{ position: 'absolute', top: image.point.y, left: image.point.x, backgroundColor: 'red', height: 3, width: 3, }} />
       )}
     </View>
   );
