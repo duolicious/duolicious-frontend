@@ -54,6 +54,9 @@ import Reanimated, {
   Easing,
   FadeOut,
   LinearTransition,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 import { ClubItem, joinClub, leaveClub } from '../club/club';
 import _ from 'lodash';
@@ -775,43 +778,48 @@ const Content = (navigationRef) => ({navigation, route, ...props}) => {
 
   const numMorePics = Math.max(0, (imageUuids ?? []).length - 1);
 
+  const animatedStyle = useAnimatedStyle(() => ({
+    backgroundColor: withTiming(data?.theme?.background_color ?? '#ffffff'),
+  }));
+
   return (
     <>
-      <ScrollView
-        style={{
-          backgroundColor: data?.theme?.background_color,
-        }}
-        contentContainerStyle={{
-          width: '100%',
-          maxWidth: 600,
-          alignSelf: 'center',
-          paddingBottom: 100,
-        }}
-      >
-        <EnlargeableImage
-          imageUuid={imageUuid0}
-          imageExtraExts={imageExtraExts0}
-          imageBlurhash={imageBlurhash0}
-          onChangeEmbiggened={goToGallery(navigation, imageUuid0)}
-          isPrimary={true}
-          verified={imageVerification0}
-        />
-        <ProspectUserDetails
-          navigation={navigation}
-          personId={personId}
-          name={data?.name}
-          age={data?.age}
-          verified={verifiedAnything(data)}
-          matchPercentage={data?.match_percentage}
-          userLocation={data?.location}
-          textColor={data?.theme?.title_color}
-        />
-        <Body
-          navigation={navigation}
-          personId={personId}
-          personUuid={personUuid}
-          data={data}
-        />
+      <ScrollView style={{ backgroundColor: data?.theme?.background_color }}>
+        <Reanimated.View style={animatedStyle}>
+          <View
+            style={{
+              width: '100%',
+              maxWidth: 600,
+              alignSelf: 'center',
+              paddingBottom: 100,
+            }}
+          >
+            <EnlargeableImage
+              imageUuid={imageUuid0}
+              imageExtraExts={imageExtraExts0}
+              imageBlurhash={imageBlurhash0}
+              onChangeEmbiggened={goToGallery(navigation, imageUuid0)}
+              isPrimary={true}
+              verified={imageVerification0}
+            />
+            <ProspectUserDetails
+              navigation={navigation}
+              personId={personId}
+              name={data?.name}
+              age={data?.age}
+              verified={verifiedAnything(data)}
+              matchPercentage={data?.match_percentage}
+              userLocation={data?.location}
+              textColor={data?.theme?.title_color}
+            />
+            <Body
+              navigation={navigation}
+              personId={personId}
+              personUuid={personUuid}
+              data={data}
+            />
+          </View>
+        </Reanimated.View>
       </ScrollView>
       {showBottomButtons &&
         <View
