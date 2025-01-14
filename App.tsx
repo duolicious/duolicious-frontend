@@ -173,15 +173,15 @@ const App = () => {
       TruenoBold: require('./assets/fonts/TruenoRoundBd.otf'),
 
       // Added Roboto
-      RobotoBlack: require('./assets/fonts/roboto/Roboto-Black.ttf'),
-      RobotoBold: require('./assets/fonts/roboto/Roboto-Bold.ttf'),
-      RobotoExtraBold: require('./assets/fonts/roboto/Roboto-ExtraBold.ttf'),
-      RobotoLight: require('./assets/fonts/roboto/Roboto-Light.ttf'),
-      RobotoExtraLight: require('./assets/fonts/roboto/Roboto-ExtraLight.ttf'),
-      RobotoMedium: require('./assets/fonts/roboto/Roboto-Medium.ttf'),
-      RobotoRegular: require('./assets/fonts/roboto/Roboto-Regular.ttf'),
-      RobotoSemiBold: require('./assets/fonts/montserrat/static/Roboto-SemiBold.ttf'),
-      RobotoThin: require('./assets/fonts/roboto/Roboto-Thin.ttf'),
+      RobotoBlack: require('./assets/fonts/roboto/static/Roboto-Black.ttf'),
+      RobotoBold: require('./assets/fonts/roboto/static/Roboto-Bold.ttf'),
+      RobotoExtraBold: require('./assets/fonts/roboto/static/Roboto-ExtraBold.ttf'),
+      RobotoLight: require('./assets/fonts/roboto/static/Roboto-Light.ttf'),
+      RobotoExtraLight: require('./assets/fonts/roboto/static/Roboto-ExtraLight.ttf'),
+      RobotoMedium: require('./assets/fonts/roboto/static/Roboto-Medium.ttf'),
+      RobotoRegular: require('./assets/fonts/roboto/static/Roboto-Regular.ttf'),
+      RobotoSemiBold: require('./assets/fonts/roboto/static/Roboto-SemiBold.ttf'),
+      RobotoThin: require('./assets/fonts/roboto/static/Roboto-Thin.ttf'),
 
     });
   }, []);
