@@ -12,7 +12,6 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -48,6 +47,7 @@ import {
 // TODO: Get this working on mobile (needs runOnJS)
 // TODO: Make images hold their positions between renders
 // TODO: Backend logic
+// TODO: Ensure verification badges on images update properly
 
 type Point2D = {
   x: number
@@ -286,6 +286,40 @@ const MoveableImage = ({
     }
   };
 
+  const remapImages = (remapThisImage: boolean) => {
+    const p: Point2D = {
+      x: images.current[fileNumber].center.x + panX.value,
+      y: images.current[fileNumber].center.y + panY.value,
+    };
+
+    const nearestImage = getNearestImage(p);
+
+    const imagesCopy: ImageLayout[] = [];
+    for (let i = 0; i <= images.current.length; i++) {
+      if (images.current[i]?.uri !== null) {
+        imagesCopy[i] = images.current[i];
+      }
+    }
+
+    const remappedImages: {
+      [k: number]: ImageLayout
+    } = remap(
+      imagesCopy,
+      fileNumber,
+      nearestImage.fileNumber
+    );
+
+    if (!remapThisImage) {
+      Object.keys(remappedImages).forEach((k) => {
+        if (remappedImages[k]?.fileNumber === fileNumber) {
+          delete remappedImages[k];
+        }
+      });
+    }
+
+    notify<ImageLayoutMap>('remapped-images', remappedImages);
+  };
+
   const pan =
     Gesture
     .Pan()
@@ -296,33 +330,13 @@ const MoveableImage = ({
       runOnJS(hapticsSelection)();
     })
     .onChange((event) => {
-      panX.value = event.translationX;
-      panY.value = event.translationY;
+      panX.value += event.changeX;
+      panY.value += event.changeY;
+
+      remapImages(false);
     })
     .onFinalize(() => {
-      const p: Point2D = {
-        x: images.current[fileNumber].center.x + panX.value,
-        y: images.current[fileNumber].center.y + panY.value,
-      };
-
-      const nearestImage = getNearestImage(p);
-
-      const imagesCopy: ImageLayout[] = [];
-      for (let i = 0; i <= images.current.length; i++) {
-        if (images.current[i]?.uri !== null) {
-          imagesCopy[i] = images.current[i];
-        }
-      }
-
-      const remappedImages: {
-        [k: number]: ImageLayout
-      } = remap(
-        imagesCopy,
-        fileNumber,
-        nearestImage.fileNumber
-      );
-
-      notify<ImageLayoutMap>('remapped-images', remappedImages);
+      remapImages(true);
     })
 
   useEffect(() => {
@@ -353,7 +367,7 @@ const MoveableImage = ({
         });
     };
 
-    listen<ImageLayoutMap>('remapped-images', onRemap);
+    return listen<ImageLayoutMap>('remapped-images', onRemap);
   }, [fileNumber]);
 
   const tap =
