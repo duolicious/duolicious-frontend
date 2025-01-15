@@ -199,7 +199,6 @@ const MoveableImage = ({
   imageUri,
   resolution,
   imageBlurhash,
-  round,
   removeImage,
   isLoading,
   isVerified,
@@ -633,7 +632,6 @@ const UserImage = ({
             imageUri={imageUri}
             resolution={resolution}
             imageBlurhash={imageBlurhash}
-            round={round}
             removeImage={removeImage}
             isLoading={isLoading_}
             isVerified={isVerified}
@@ -710,7 +708,6 @@ const UserImage = ({
     addImage,
     resolution,
     imageBlurhash,
-    round,
     removeImage,
     isVerified,
   ]);
