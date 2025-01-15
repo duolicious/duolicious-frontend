@@ -28,7 +28,6 @@ import { Image } from 'expo-image';
 import { VerificationEvent } from '../verification/verification';
 import { VerificationBadge } from './verification-badge';
 import { DefaultText } from './default-text';
-import { RenderedHoc } from './rendered-hoc';
 import * as Haptics from 'expo-haptics';
 import
   Animated,
@@ -56,11 +55,21 @@ type Point2D = {
 };
 
 type ImageLayout = {
-  Image: React.FC
-  FileNumber: React.FC
   fileNumber: number
-  point: Point2D
-  empty: boolean
+  addImage: () => void
+  uri: string | null | undefined
+  resolution: number | null | undefined
+  blurhash: string | null | undefined
+  removeImage: () => void
+  isLoading: boolean
+  isVerified: boolean
+
+  center: Point2D
+
+  left: number
+  top: number
+  height: number
+  width: number
 };
 
 type ImageLayoutMap = {
@@ -193,12 +202,46 @@ const cropImage = async (
   return `data:image/jpeg;base64,${result.base64}`;
 };
 
+const FileNumber = ({fileNumber, left, top}) => {
+  if (fileNumber < 1) {
+    return null;
+  }
+
+  return (
+    <View
+      style={{
+        position: 'absolute',
+        left: left,
+        top: top,
+        overflow: 'visible',
+      }}
+    >
+      <DefaultText
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          backgroundColor: 'white',
+          borderWidth: 1,
+          borderColor: 'black',
+          paddingHorizontal: 8,
+          paddingVertical: 1,
+          borderRadius: 999,
+          fontSize: 12,
+        }}
+      >
+        {fileNumber === 1 ? 'Main' : fileNumber}
+      </DefaultText>
+    </View>
+  );
+};
+
 const MoveableImage = ({
   fileNumber,
   addImage,
-  imageUri,
+  uri,
   resolution,
-  imageBlurhash,
+  blurhash,
   removeImage,
   isLoading,
   isVerified,
@@ -206,17 +249,12 @@ const MoveableImage = ({
 }) => {
   const images = useRef(lastEvent<ImageLayout[]>('layout-image') ?? []);
 
-  // We'll store the long-press timeout handle here
-  const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
-
   const getNearestImage = (p: Point2D): ImageLayout => {
-    let nearest: ImageLayout | null = null;
-
     const imagesCopy = images.current.filter(Boolean);
 
     imagesCopy.sort((a, b) =>
-      euclideanDistance(a.point, p) -
-      euclideanDistance(b.point, p));
+      euclideanDistance(a.center, p) -
+      euclideanDistance(b.center, p));
 
     return imagesCopy[0];
   };
@@ -263,15 +301,15 @@ const MoveableImage = ({
     })
     .onFinalize(() => {
       const p: Point2D = {
-        x: images.current[fileNumber].point.x + panX.value,
-        y: images.current[fileNumber].point.y + panY.value,
+        x: images.current[fileNumber].center.x + panX.value,
+        y: images.current[fileNumber].center.y + panY.value,
       };
 
       const nearestImage = getNearestImage(p);
 
       const imagesCopy: ImageLayout[] = [];
       for (let i = 0; i <= images.current.length; i++) {
-        if (!(images.current[i]?.empty ?? true)) {
+        if (images.current[i]?.uri !== null) {
           imagesCopy[i] = images.current[i];
         }
       }
@@ -297,19 +335,21 @@ const MoveableImage = ({
         .keys(remappedImages)
         .map(Number)
         .forEach((toFileNumber) => {
-          const fromFileNumber = remappedImages[toFileNumber].fileNumber;
+          const fromFileNumber = remappedImages[toFileNumber]?.fileNumber;
 
-          const fromPoint = images.current[fromFileNumber].point;
-          const toPoint = images.current[toFileNumber].point;
+          if (fromFileNumber !== fileNumber) {
+            return;
+          }
+
+          const fromPoint = images.current[fromFileNumber].center;
+          const toPoint = images.current[toFileNumber].center;
 
           const updatedPoint = vecSub(toPoint, fromPoint);
 
-          if (fromFileNumber === fileNumber) {
-            panX.value = withTiming(updatedPoint.x);
-            panY.value = withTiming(updatedPoint.y)
-            scale.value = withTiming(1, undefined, resetZIndex);
-            borderRadius.value = withTiming(toFileNumber === 1 ? 999 : 5);
-          }
+          panX.value = withTiming(updatedPoint.x);
+          panY.value = withTiming(updatedPoint.y)
+          scale.value = withTiming(1, undefined, resetZIndex);
+          borderRadius.value = withTiming(toFileNumber === 1 ? 999 : 5);
         });
     };
 
@@ -338,6 +378,10 @@ const MoveableImage = ({
     borderRadius: borderRadius.value,
   }));
 
+  if (isLoading || uri === null) {
+    return null;
+  }
+
   return (
     <GestureDetector gesture={composed}>
       <Animated.View
@@ -362,11 +406,11 @@ const MoveableImage = ({
           <Image
             pointerEvents="none"
             source={{
-              uri: imageUri,
+              uri: uri,
               height: resolution,
               width: resolution,
             }}
-            placeholder={imageBlurhash && { blurhash: imageBlurhash }}
+            placeholder={blurhash && { blurhash: blurhash }}
             transition={150}
             style={{
               height: '100%',
@@ -386,7 +430,7 @@ const MoveableImage = ({
             backgroundColor: 'white',
           }}
           onPress={
-            imageUri === null || isLoading ? undefined : removeImage
+            uri === null || isLoading ? undefined : removeImage
           }
         >
           <FontAwesomeIcon
@@ -421,8 +465,8 @@ const UserImage = ({
   round = false,
 }) => {
   const viewRef = useRef<View>(null);
-  const [imageUri, setImageUri] = useState<string | null>(null);
-  const [imageBlurhash, setImageBlurhash] = useState<string | null>(null);
+  const [uri, setUri] = useState<string | null>(null);
+  const [blurhash, setBlurhash] = useState<string | null>(null);
   const [isLoading_, setIsLoading_] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [parentViewLayout, setParentViewLayout] = useState<number[]>();
@@ -438,8 +482,8 @@ const UserImage = ({
       setIsLoading(true);
       setIsLoading_(true);
 
-      setImageUri(getUri(String(fileNumber), resolution));
-      setImageBlurhash(getBlurhash(String(fileNumber)));
+      setUri(getUri(String(fileNumber), resolution));
+      setBlurhash(getBlurhash(String(fileNumber)));
 
       setIsLoading(false);
       setIsLoading_(false);
@@ -528,7 +572,7 @@ const UserImage = ({
     setIsInvalid(false);
 
     if (await input.photos.delete(fileNumber)) {
-      setImageUri(null);
+      setUri(null);
       setIsLoading(false);
       setIsLoading_(false);
       setIsInvalid(false);
@@ -569,7 +613,7 @@ const UserImage = ({
             data.size,
           );
 
-          setImageUri(base64);
+          setUri(base64);
           setIsLoading(false);
           setIsLoading_(false);
           setIsInvalid(false);
@@ -624,79 +668,31 @@ const UserImage = ({
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
       const [, , , , parentPageX = 0, parentPageY = 0] = parentViewLayout ?? [];
 
-      const MoveableImage_ = () => {
-        if (!isLoading_ && imageUri !== null) {
-          return <MoveableImage
-            fileNumber={fileNumber}
-            addImage={addImage}
-            imageUri={imageUri}
-            resolution={resolution}
-            imageBlurhash={imageBlurhash}
-            removeImage={removeImage}
-            isLoading={isLoading_}
-            isVerified={isVerified}
-            style={{
-              position: 'absolute',
-              height: height,
-              width: width,
-              left: pageX - parentPageX,
-              top: pageY - parentPageY,
-            }}
-          />
-        } else {
-          return null;
-        }
-      };
-
-      const FileNumber_ = () => {
-        if (fileNumber < 1) {
-          return null;
-        }
-
-        return (
-          <View
-            style={{
-              position: 'absolute',
-              left: pageX + 2 - parentPageX,
-              top: pageY + height - 2 - parentPageY,
-              overflow: 'visible',
-            }}
-          >
-            <DefaultText
-              style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                backgroundColor: 'white',
-                borderWidth: 1,
-                borderColor: 'black',
-                paddingHorizontal: 8,
-                paddingVertical: 1,
-                borderRadius: 999,
-                fontSize: 12,
-              }}
-            >
-              {fileNumber === 1 ? 'Main' : fileNumber}
-            </DefaultText>
-          </View>
-        );
-      };
-
-      const point: Point2D = {
+      const center: Point2D = {
         x: pageX - parentPageX + width / 2,
         y: pageY - parentPageY + height / 2,
       };
 
 
-      console.log('oldImages', lastEvent<ImageLayout[]>('layout-image') ?? []);
+      console.log('oldImages', lastEvent<ImageLayout[]>('layout-image') ?? []); // TODO
       const newImages = [ ...(lastEvent<ImageLayout[]>('layout-image') ?? []) ];
 
       newImages[fileNumber] = {
-        Image: MoveableImage_,
-        FileNumber: FileNumber_,
         fileNumber: fileNumber,
-        point: point,
-        empty: imageUri === null,
+        addImage: addImage,
+        uri: uri,
+        resolution: resolution,
+        blurhash: blurhash,
+        removeImage: removeImage,
+        isLoading: isLoading_,
+        isVerified: isVerified,
+
+        center: center,
+
+        left: pageX - parentPageX,
+        top: pageY - parentPageY,
+        height,
+        width,
       };
 
       notify<ImageLayout[]>('layout-image', newImages);
@@ -704,10 +700,10 @@ const UserImage = ({
   }, [
     parentViewLayout,
     isLoading_,
-    imageUri,
+    uri,
     addImage,
     resolution,
-    imageBlurhash,
+    blurhash,
     removeImage,
     isVerified,
   ]);
@@ -716,7 +712,7 @@ const UserImage = ({
     <Pressable
       ref={viewRef}
       onPress={addImage}
-      disabled={imageUri !== null}
+      disabled={uri !== null}
       style={{
         borderRadius: round ? 999 : 5,
         backgroundColor: '#eee',
@@ -728,7 +724,7 @@ const UserImage = ({
       }}
     >
       { isLoading_ && <Loading/>}
-      {!isLoading_ && imageUri === null && <AddIcon/>}
+      {!isLoading_ && uri === null && <AddIcon/>}
     </Pressable>
   );
 };
@@ -954,12 +950,38 @@ const Images = ({
         setHasImage={setHasImage}
       />
 
-      {images.filter(Boolean).map((image) =>
-        <RenderedHoc key={image.fileNumber} Hoc={image.Image} />
-      )}
+      {images
+        .filter(Boolean)
+        .filter((image) => Boolean(image.uri))
+        .map((image) =>
+          <MoveableImage
+            key={image.uri}
+            fileNumber={image.fileNumber}
+            addImage={image.addImage}
+            uri={image.uri}
+            resolution={image.resolution}
+            blurhash={image.blurhash}
+            removeImage={image.removeImage}
+            isLoading={image.isLoading}
+            isVerified={image.isVerified}
+            style={{
+              position: 'absolute',
+              height: image.height,
+              width: image.width,
+              left: image.left,
+              top: image.top,
+            }}
+          />
+        )
+      }
 
       {images.filter(Boolean).map((image) =>
-        <RenderedHoc key={image.fileNumber} Hoc={image.FileNumber} />
+        <FileNumber
+          key={image.fileNumber}
+          fileNumber={image.fileNumber}
+          left={image.left + 2}
+          top={image.top + image.height - 2}
+        />
       )}
     </View>
   );
