@@ -112,8 +112,6 @@ const ProfileTab = ({navigation}) => {
 };
 
 const Images_ = ({data}) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [isInvalid, setIsInvalid] = useState(false);
   const input: OptionGroupPhotos = useMemo(() => {
     return {
       photos: {
@@ -168,10 +166,7 @@ const Images_ = ({data}) => {
 
   return (
     <>
-      <Images
-        input={input}
-        setIsLoading={setIsLoading}
-        setIsInvalid={setIsInvalid} />
+      <Images input={input} />
       <DefaultText
         style={{
           color: '#999',

@@ -41,6 +41,9 @@ import {
   Gesture,
   GestureDetector,
 } from 'react-native-gesture-handler';
+import {
+  OptionGroupPhotos,
+} from '../data/option-groups';
 
 // TODO: Image picker is shit and lets you upload any file type on web
 // TODO: Reordering needs to happen during drag rather than at the end
@@ -526,17 +529,20 @@ const MoveableImage = ({
 const UserImage = ({
   input,
   fileNumber,
-  setIsLoading,
-  setIsInvalid,
   resolution,
-  setHasImage = (x: boolean) => {},
   showProtip = true,
   round = false,
+}: {
+  input: OptionGroupPhotos
+  fileNumber: number
+  resolution: number
+  showProtip?: boolean
+  round?: boolean
 }) => {
   const viewRef = useRef<View>(null);
   const [uri, setUri] = useState<string | null>(null);
   const [blurhash, setBlurhash] = useState<string | null>(null);
-  const [isLoading_, setIsLoading_] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [parentViewLayout, setParentViewLayout] = useState<number[]>();
 
@@ -544,24 +550,20 @@ const UserImage = ({
 
   const fetchImage = useCallback(async () => {
     const getUri = input.photos.getUri;
-    const getExtraExts = input.photos.getExtraExts;;
     const getBlurhash = input.photos.getBlurhash;
 
-    if (getUri) {
+    if (getUri && getBlurhash) {
       setIsLoading(true);
-      setIsLoading_(true);
 
-      setUri(getUri(String(fileNumber), resolution));
+      setUri(getUri(String(fileNumber), String(resolution)));
       setBlurhash(getBlurhash(String(fileNumber)));
 
       setIsLoading(false);
-      setIsLoading_(false);
-      setHasImage(true);
     }
   }, [input]);
 
   const addImage = useCallback(async () => {
-    if (isLoading_) {
+    if (isLoading) {
       return;
     }
     if (isImagePickerOpen.value) {
@@ -570,7 +572,6 @@ const UserImage = ({
 
     if (Platform.OS !== 'web') {
       setIsLoading(true);
-      setIsLoading_(true);
       isImagePickerOpen.value = true;
     }
 
@@ -585,7 +586,6 @@ const UserImage = ({
     if (result.canceled && Platform.OS !== 'web') {
       isImagePickerOpen.value = false;
       setIsLoading(false);
-      setIsLoading_(false);
     }
     if (result.canceled) {
       return;
@@ -606,8 +606,6 @@ const UserImage = ({
     const base64Uri = `data:${mimeType};base64,${base64}`;
 
     setIsLoading(true);
-    setIsLoading_(true);
-    setIsInvalid(false);
 
     if (isGif(mimeType) || isSquareish(width, height)) {
       const size = Math.min(width, height);
@@ -633,19 +631,14 @@ const UserImage = ({
         }
       );
     }
-  }, [isLoading_]);
+  }, [isLoading]);
 
   const removeImage = useCallback(async () => {
     setIsLoading(true);
-    setIsLoading_(true);
-    setIsInvalid(false);
 
-    if (await input.photos.delete(fileNumber)) {
+    if (await input.photos.delete(String(fileNumber))) {
       setUri(null);
       setIsLoading(false);
-      setIsLoading_(false);
-      setIsInvalid(false);
-      setHasImage(false);
 
       notify<VerificationEvent>(
         'updated-verification',
@@ -653,8 +646,6 @@ const UserImage = ({
       );
     } else {
       setIsLoading(false);
-      setIsLoading_(false);
-      setIsInvalid(true);
     }
   }, []);
 
@@ -671,8 +662,6 @@ const UserImage = ({
 
         if (data === null) {
           setIsLoading(false);
-          setIsLoading_(false);
-          setIsInvalid(false);
         } else if (await input.photos.submit(fileNumber, data)) {
           const base64 = await cropImage(
             data.originalBase64,
@@ -684,9 +673,6 @@ const UserImage = ({
 
           setUri(base64);
           setIsLoading(false);
-          setIsLoading_(false);
-          setIsInvalid(false);
-          setHasImage(true);
 
           notify<VerificationEvent>(
             'updated-verification',
@@ -694,8 +680,6 @@ const UserImage = ({
           );
         } else {
           setIsLoading(false);
-          setIsLoading_(false);
-          setIsInvalid(true);
         }
       }
     );
@@ -757,7 +741,7 @@ const UserImage = ({
           resolution: resolution,
           blurhash: blurhash,
           removeImage: removeImage,
-          isLoading: isLoading_,
+          isLoading: isLoading,
           isVerified: isVerified,
         },
 
@@ -772,7 +756,7 @@ const UserImage = ({
     });
   }, [
     parentViewLayout,
-    isLoading_,
+    isLoading,
     uri,
     addImage,
     resolution,
@@ -796,8 +780,8 @@ const UserImage = ({
         aspectRatio: 1,
       }}
     >
-      { isLoading_ && <Loading/>}
-      {!isLoading_ && uri === null && <AddIcon/>}
+      { isLoading && <Loading/>}
+      {!isLoading && uri === null && <AddIcon/>}
     </Pressable>
   );
 };
@@ -807,19 +791,17 @@ const UserImageMemo = memo(UserImage);
 const PrimaryImage = ({
   input,
   fileNumber,
-  setIsLoading,
-  setIsInvalid,
-  setHasImage = (x: boolean) => {},
   showProtip = true
+}: {
+  input: OptionGroupPhotos
+  fileNumber: number
+  showProtip?: boolean
 }) => {
   return <UserImageMemo
     {...{
       input,
       fileNumber,
-      setIsLoading,
-      setIsInvalid,
       showProtip,
-      setHasImage,
       resolution: 900
     }}
   />
@@ -828,20 +810,11 @@ const PrimaryImage = ({
 const FirstRow = ({
   input,
   firstFileNumber,
-  setIsLoading,
-  setIsInvalid,
-  setHasImage = (x: boolean) => {},
+}: {
+  input: OptionGroupPhotos
+  firstFileNumber: number
 }) => {
   const [name, setName] = useState(lastEvent<string>('updated-name'));
-
-  const isLoading1 = useRef(false);
-
-  const setIsLoading_ = useCallback(() => setIsLoading(
-    isLoading1.current
-  ), []);
-
-  const setIsLoading1 = useCallback(
-    x => { isLoading1.current = x; setIsLoading_() }, []);
 
   useEffect(() => {
     return listen<string>('updated-name', setName);
@@ -859,9 +832,6 @@ const FirstRow = ({
       <UserImageMemo
         input={input}
         fileNumber={firstFileNumber + 0}
-        setIsLoading={setIsLoading1}
-        setIsInvalid={setIsInvalid}
-        setHasImage={setHasImage}
         resolution={450}
         round={true}
       />
@@ -888,27 +858,10 @@ const FirstRow = ({
 const Row = ({
   input,
   firstFileNumber,
-  setIsLoading,
-  setIsInvalid,
-  setHasImage = (x: boolean) => {},
+}: {
+  input: OptionGroupPhotos
+  firstFileNumber: number
 }) => {
-  const isLoading1 = useRef(false);
-  const isLoading2 = useRef(false);
-  const isLoading3 = useRef(false);
-
-  const setIsLoading_ = useCallback(() => setIsLoading(
-    isLoading1.current ||
-    isLoading2.current ||
-    isLoading3.current
-  ), []);
-
-  const setIsLoading1 = useCallback(
-    x => { isLoading1.current = x; setIsLoading_() }, []);
-  const setIsLoading2 = useCallback(
-    x => { isLoading2.current = x; setIsLoading_() }, []);
-  const setIsLoading3 = useCallback(
-    x => { isLoading3.current = x; setIsLoading_() }, []);
-
   return (
     <View
       style={{
@@ -920,25 +873,16 @@ const Row = ({
       <UserImageMemo
         input={input}
         fileNumber={firstFileNumber + 0}
-        setIsLoading={setIsLoading1}
-        setIsInvalid={setIsInvalid}
-        setHasImage={setHasImage}
         resolution={450}
       />
       <UserImageMemo
         input={input}
         fileNumber={firstFileNumber + 1}
-        setIsLoading={setIsLoading2}
-        setIsInvalid={setIsInvalid}
-        setHasImage={setHasImage}
         resolution={450}
       />
       <UserImageMemo
         input={input}
         fileNumber={firstFileNumber + 2}
-        setIsLoading={setIsLoading3}
-        setIsInvalid={setIsInvalid}
-        setHasImage={setHasImage}
         resolution={450}
       />
     </View>
@@ -946,32 +890,14 @@ const Row = ({
 };
 
 const Images = ({
-  input,
-  setIsLoading,
-  setIsInvalid,
-  setHasImage = (x: boolean) => {},
+  input
+}: {
+  input: OptionGroupPhotos
 }) => {
   const [layoutChanged, setLayoutChanged] = useState(0);
   const viewRef = useRef<View>(null);
   const [imageLayouts, setImageLayouts] = useState(
     lastEvent<ImageLayout[]>('layout-image') ?? []);
-
-  const isLoading1 = useRef(false);
-  const isLoading2 = useRef(false);
-  const isLoading3 = useRef(false);
-
-  const setIsLoading_ = useCallback(() => setIsLoading(
-    isLoading1.current ||
-    isLoading2.current ||
-    isLoading3.current
-  ), []);
-
-  const setIsLoading1 = useCallback(
-    x => { isLoading1.current = x; setIsLoading_() }, []);
-  const setIsLoading2 = useCallback(
-    x => { isLoading2.current = x; setIsLoading_() }, []);
-  const setIsLoading3 = useCallback(
-    x => { isLoading3.current = x; setIsLoading_() }, []);
 
   useEffect(() => {
     return listen<ImageLayout[]>(
@@ -1001,27 +927,9 @@ const Images = ({
       }}
       onLayout={() => setLayoutChanged((l) => l + 1)}
     >
-      <FirstRow
-        input={input}
-        firstFileNumber={1}
-        setIsLoading={setIsLoading1}
-        setIsInvalid={setIsInvalid}
-        setHasImage={setHasImage}
-      />
-      <Row
-        input={input}
-        firstFileNumber={2}
-        setIsLoading={setIsLoading2}
-        setIsInvalid={setIsInvalid}
-        setHasImage={setHasImage}
-      />
-      <Row
-        input={input}
-        firstFileNumber={5}
-        setIsLoading={setIsLoading3}
-        setIsInvalid={setIsInvalid}
-        setHasImage={setHasImage}
-      />
+      <FirstRow input={input} firstFileNumber={1} />
+      <Row      input={input} firstFileNumber={2} />
+      <Row      input={input} firstFileNumber={5} />
 
       {imageLayouts
         .filter(Boolean)
