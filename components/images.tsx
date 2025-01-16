@@ -541,10 +541,9 @@ const MoveableImage = ({
         return;
       }
 
-      const fromPoint = imageLayouts.value[fromFileNumber].origin;
-      const toPoint = imageLayouts.value[toFileNumber].origin;
-
       if (remappedImages.pressedFileNumber !== fromFileNumber) {
+        const toPoint = imageLayouts.value[toFileNumber].origin;
+
         translateX.value = withTiming(toPoint.x);
         translateY.value = withTiming(toPoint.y);
         scale.value = withTiming(
@@ -553,6 +552,7 @@ const MoveableImage = ({
           resetZIndex,
         );
       }
+
       borderRadius.value = withTiming(getBorderRadius(toFileNumber));
 
       if (remappedImages.pressedFileNumber === null) {
