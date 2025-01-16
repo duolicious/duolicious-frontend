@@ -53,6 +53,9 @@ import {
 // TODO: Ensure verification badges on images update properly
 // TODO: Image placeholders don't regain plus symbols when their image is dragged away
 // TODO: Images don't shift when scaled on web
+// TODO: Loading thing doesn't show
+// TODO: Moving an image then uploading to it in its new position moves it back to its original position
+// TODO: Queue movements and uploads
 
 type Point2D = {
   x: number
@@ -62,12 +65,10 @@ type Point2D = {
 type ImageLayout = {
   image: {
     fileNumber: number
-    addImage: () => void
+    input: OptionGroupPhotos,
     uri: string | null | undefined
     resolution: number | null | undefined
     blurhash: string | null | undefined
-    removeImage: () => void
-    isLoading: boolean
     isVerified: boolean
   }
 
@@ -83,6 +84,24 @@ type RemappedImages = {
   fileNumberMap: { [ k: number ]: number }
   pressedFileNumber: number | null
 }
+
+type ImageLoading = {
+  [k: number]: boolean
+};
+
+const setIsImageLoading = (fileNumber: number, isLoading: boolean) => {
+  const isImageLoading = lastEvent<ImageLoading>('image-loading') ?? {};
+  const updatedIsImageLoading = {
+    ...isImageLoading,
+    [fileNumber]: isLoading,
+  };
+  notify<ImageLoading>('image-loading', updatedIsImageLoading);
+};
+
+const getIsImageLoading = (fileNumber: number): boolean => {
+  const isImageLoading = lastEvent<ImageLoading>('image-loading') ?? {};
+  return isImageLoading[fileNumber] ?? false;
+};
 
 const imageLayoutCopy = (imageLayout: ImageLayout): ImageLayout => {
   return {
@@ -218,6 +237,102 @@ const cropImage = async (
   return `data:image/jpeg;base64,${result.base64}`;
 };
 
+const addImage = async (fileNumber: number, showProtip: boolean) => {
+  console.log('adding image to', fileNumber); // TODO
+  if (getIsImageLoading(fileNumber)) {
+    return;
+  }
+  if (isImagePickerOpen.value) {
+    return;
+  }
+
+  if (Platform.OS !== 'web') {
+    setIsImageLoading(fileNumber, true);
+    isImagePickerOpen.value = true;
+  }
+
+  // No permissions request is necessary for launching the image library
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: 'images',
+    quality: 1,
+    selectionLimit: 1,
+    base64: true,
+  });
+
+  if (result.canceled && Platform.OS !== 'web') {
+    isImagePickerOpen.value = false;
+    setIsImageLoading(fileNumber, false);
+  }
+  if (result.canceled) {
+    return;
+  }
+
+  const width = result.assets[0].width;
+  const height = result.assets[0].height;
+  const mimeType = result.assets[0].mimeType;
+  const base64 = result.assets[0].base64;
+  if (!width) return;
+  if (!height) return;
+  if (!mimeType) return;
+  if (!base64) {
+    console.warn('Unexpected output from launchImageLibraryAsync');
+    return;
+  }
+
+  const base64Uri = `data:${mimeType};base64,${base64}`;
+
+  setIsImageLoading(fileNumber, true);
+
+  const imageCropperCallback = `image-cropped-${fileNumber}`;
+
+  if (isGif(mimeType) || isSquareish(width, height)) {
+    const size = Math.min(width, height);
+
+    notify<ImageCropperOutput>(
+      imageCropperCallback,
+      {
+        originalBase64: base64Uri,
+        top:  Math.round((height - size) / 2),
+        left: Math.round((width  - size) / 2),
+        size,
+      },
+    );
+  } else {
+    notify<ImageCropperInput>(
+      'image-cropper-open',
+      {
+        base64: base64Uri,
+        height,
+        width,
+        callback: imageCropperCallback,
+        showProtip: showProtip,
+      }
+    );
+  }
+};
+
+const removeImage = async (input: OptionGroupPhotos, fileNumber: number) => {
+  setIsImageLoading(fileNumber, true);
+
+  if (await input.photos.delete(String(fileNumber))) {
+    // TODO: Listen for this
+    notify<string | null>(`image-${fileNumber}-uri`, null);
+
+    notify<VerificationEvent>(
+      'updated-verification',
+      { photos: { [`${fileNumber}`]: false } }
+    );
+  }
+
+  setIsImageLoading(fileNumber, false);
+};
+
+const hapticsSelection = () => {
+  if (Platform.OS !== 'web') {
+    Haptics.impactAsync();
+  }
+};
+
 const FileNumber = ({fileNumber, left, top}) => {
   if (fileNumber < 1) {
     return null;
@@ -254,20 +369,30 @@ const FileNumber = ({fileNumber, left, top}) => {
 
 const MoveableImage = ({
   initialFileNumber,
-  addImage,
+  input,
   uri,
   resolution,
   blurhash,
-  removeImage,
-  isLoading,
   isVerified,
   height,
   width,
   left,
   top,
+}: {
+  initialFileNumber: number
+  input: OptionGroupPhotos
+  uri: string | null | undefined
+  resolution: number | null | undefined,
+  blurhash: string | null | undefined,
+  isVerified: boolean,
+  height: number,
+  width: number,
+  left: number,
+  top: number,
 }) => {
   const fileNumber = useRef<number>(initialFileNumber);
   const imageLayouts = useRef(lastEvent<ImageLayout[]>('layout-image') ?? []);
+  const [isLoading, setIsLoading] = useState(false);
 
   const getNearestImage = (p: Point2D): ImageLayout => {
     const imagesCopy = imageLayouts.current.filter(Boolean);
@@ -295,7 +420,6 @@ const MoveableImage = ({
   const getBorderRadius = (fileNumber: number) =>
     fileNumber === 1 ? Math.max(height, width) / 2 : 5;
 
-
   const [zIndex, setZIndex] = useState<number>(0);
   const resetZIndex = () => runOnJS(setZIndex)(0);
 
@@ -304,12 +428,6 @@ const MoveableImage = ({
   const scale = useSharedValue<number>(1);
   const borderRadius = useSharedValue<number>(
     getBorderRadius(fileNumber.current));
-
-  const hapticsSelection = () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync();
-    }
-  };
 
   const remapImages = (pressedFileNumber: number | null) => {
     const p: Point2D = {
@@ -380,6 +498,9 @@ const MoveableImage = ({
 
   const remapImagesonFinalize =
     () => remapImages(null);
+
+  const addImageOnStart =
+    () => addImage(fileNumber.current, true);
 
   const pan =
     Gesture
@@ -458,12 +579,24 @@ const MoveableImage = ({
     return listen<RemappedImages>('remapped-images', onRemap);
   }, []);
 
+  useEffect(() => {
+    return listen<ImageLoading>(
+      'image-loading',
+      (data) => {
+        if (data === undefined) {
+          return;
+        }
+        setIsLoading(data[fileNumber.current]);
+      }
+    );
+  }, []);
+
   const tap =
     Gesture
     .Tap()
     .requireExternalGestureToFail(pan)
     .onStart(() => {
-      runOnJS(addImage)();
+      runOnJS(addImageOnStart)();
     })
 
   const composed = Gesture.Exclusive(pan, tap);
@@ -476,7 +609,7 @@ const MoveableImage = ({
         return;
       }
 
-      removeImage();
+      removeImage(input, fileNumber.current);
     });
 
   const animatedContainerStyle = useAnimatedStyle(() => ({
@@ -598,101 +731,14 @@ const UserImage = ({
     const getBlurhash = input.photos.getBlurhash;
 
     if (getUri && getBlurhash) {
-      setIsLoading(true);
+      setIsImageLoading(fileNumber, true);
 
       setUri(getUri(String(fileNumber), String(resolution)));
       setBlurhash(getBlurhash(String(fileNumber)));
 
-      setIsLoading(false);
+      setIsImageLoading(fileNumber, false);
     }
   }, [input]);
-
-  const addImage = useCallback(async () => {
-    if (isLoading) {
-      return;
-    }
-    if (isImagePickerOpen.value) {
-      return;
-    }
-
-    if (Platform.OS !== 'web') {
-      setIsLoading(true);
-      isImagePickerOpen.value = true;
-    }
-
-    // No permissions request is necessary for launching the image library
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 1,
-      selectionLimit: 1,
-      base64: true,
-    });
-
-    if (result.canceled && Platform.OS !== 'web') {
-      isImagePickerOpen.value = false;
-      setIsLoading(false);
-    }
-    if (result.canceled) {
-      return;
-    }
-
-    const width = result.assets[0].width;
-    const height = result.assets[0].height;
-    const mimeType = result.assets[0].mimeType;
-    const base64 = result.assets[0].base64;
-    if (!width) return;
-    if (!height) return;
-    if (!mimeType) return;
-    if (!base64) {
-      console.warn('Unexpected output from launchImageLibraryAsync');
-      return;
-    }
-
-    const base64Uri = `data:${mimeType};base64,${base64}`;
-
-    setIsLoading(true);
-
-    if (isGif(mimeType) || isSquareish(width, height)) {
-      const size = Math.min(width, height);
-
-      notify<ImageCropperOutput>(
-        imageCropperCallback,
-        {
-          originalBase64: base64Uri,
-          top:  Math.round((height - size) / 2),
-          left: Math.round((width  - size) / 2),
-          size,
-        },
-      );
-    } else {
-      notify<ImageCropperInput>(
-        'image-cropper-open',
-        {
-          base64: base64Uri,
-          height,
-          width,
-          callback: imageCropperCallback,
-          showProtip: showProtip,
-        }
-      );
-    }
-  }, [isLoading]);
-
-  const removeImage = useCallback(async () => {
-    setIsLoading(true);
-
-    if (await input.photos.delete(String(fileNumber))) {
-      setUri(null);
-      setIsLoading(false);
-
-      notify<VerificationEvent>(
-        'updated-verification',
-        { photos: { [`${fileNumber}`]: false } }
-      );
-    } else {
-      setIsLoading(false);
-    }
-  }, []);
 
   useEffect(() => void fetchImage(), [fetchImage]);
   useEffect(() => {
@@ -705,9 +751,7 @@ const UserImage = ({
           return;
         }
 
-        if (data === null) {
-          setIsLoading(false);
-        } else if (await input.photos.submit(fileNumber, data)) {
+        if (data !== null && await input.photos.submit(fileNumber, data)) {
           const base64 = await cropImage(
             data.originalBase64,
             data.size,
@@ -717,15 +761,14 @@ const UserImage = ({
           );
 
           setUri(base64);
-          setIsLoading(false);
 
           notify<VerificationEvent>(
             'updated-verification',
             { photos: { [`${fileNumber}`]: false } }
           );
-        } else {
-          setIsLoading(false);
         }
+
+        setIsImageLoading(fileNumber, false);
       }
     );
   }, []);
@@ -755,6 +798,18 @@ const UserImage = ({
   }, []);
 
   useEffect(() => {
+    return listen<ImageLoading>(
+      'image-loading',
+      (data) => {
+        if (data === undefined) {
+          return;
+        }
+        setIsLoading(data[fileNumber]);
+      }
+    );
+  }, [fileNumber]);
+
+  useEffect(() => {
     return listen<number[]>(
       'layout-image-parent-view',
       setParentViewLayout,
@@ -781,12 +836,10 @@ const UserImage = ({
       newImages[fileNumber] = {
         image: {
           fileNumber: fileNumber,
-          addImage: addImage,
+          input: input,
           uri: uri,
           resolution: resolution,
           blurhash: blurhash,
-          removeImage: removeImage,
-          isLoading: isLoading,
           isVerified: isVerified,
         },
 
@@ -803,7 +856,6 @@ const UserImage = ({
     parentViewLayout,
     isLoading,
     uri,
-    addImage,
     resolution,
     blurhash,
     removeImage,
@@ -813,7 +865,7 @@ const UserImage = ({
   return (
     <Pressable
       ref={viewRef}
-      onPress={addImage}
+      onPress={() => addImage(fileNumber, true)}
       disabled={uri !== null}
       style={{
         borderRadius: round ? 999 : 5,
@@ -983,12 +1035,10 @@ const Images = ({
           <MoveableImage
             key={imageLayout.image.uri}
             initialFileNumber={imageLayout.image.fileNumber}
-            addImage={imageLayout.image.addImage}
+            input={imageLayout.image.input}
             uri={imageLayout.image.uri}
             resolution={imageLayout.image.resolution}
             blurhash={imageLayout.image.blurhash}
-            removeImage={imageLayout.image.removeImage}
-            isLoading={imageLayout.image.isLoading}
             isVerified={imageLayout.image.isVerified}
             height={imageLayout.height}
             width={imageLayout.width}
