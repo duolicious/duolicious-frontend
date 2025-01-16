@@ -48,6 +48,7 @@ import {
 // TODO: Make images hold their positions between renders
 // TODO: Backend logic
 // TODO: Ensure verification badges on images update properly
+// TODO: Image placeholders don't regain plus symbols when their image is dragged away
 
 type Point2D = {
   x: number
@@ -55,36 +56,32 @@ type Point2D = {
 };
 
 type ImageLayout = {
-  fileNumber: number
-  addImage: () => void
-  uri: string | null | undefined
-  resolution: number | null | undefined
-  blurhash: string | null | undefined
-  removeImage: () => void
-  isLoading: boolean
-  isVerified: boolean
+  image: {
+    fileNumber: number
+    addImage: () => void
+    uri: string | null | undefined
+    resolution: number | null | undefined
+    blurhash: string | null | undefined
+    removeImage: () => void
+    isLoading: boolean
+    isVerified: boolean
+  }
 
   center: Point2D
+  origin: Point2D
 
-  left: number
-  top: number
   height: number
   width: number
 };
 
-type ImageLayoutMap = {
-  [k: number]: ImageLayout
+type RemappedImages = {
+  imageLayoutMap: { [k: number]: ImageLayout }
+  fileNumberMap: { [ k: number ]: number }
+  pressedFileNumber: number | null
 }
 
 const euclideanDistance = (p1: Point2D, p2: Point2D) => {
   return ((p1.x - p2.x) ** 2.0 + (p1.y - p2.y) ** 2.0) ** 0.5;
-};
-
-const vecSub = (p1: Point2D, p2: Point2D): Point2D => {
-  return {
-    x: p1.x - p2.x,
-    y: p1.y - p2.y,
-  }
 };
 
 const remap = <T,>(
@@ -237,7 +234,7 @@ const FileNumber = ({fileNumber, left, top}) => {
 };
 
 const MoveableImage = ({
-  fileNumber,
+  initialFileNumber,
   addImage,
   uri,
   resolution,
@@ -245,12 +242,16 @@ const MoveableImage = ({
   removeImage,
   isLoading,
   isVerified,
-  style,
+  height,
+  width,
+  left,
+  top,
 }) => {
-  const images = useRef(lastEvent<ImageLayout[]>('layout-image') ?? []);
+  const fileNumber = useRef<number>(initialFileNumber);
+  const imageLayouts = useRef(lastEvent<ImageLayout[]>('layout-image') ?? []);
 
   const getNearestImage = (p: Point2D): ImageLayout => {
-    const imagesCopy = images.current.filter(Boolean);
+    const imagesCopy = imageLayouts.current.filter(Boolean);
 
     imagesCopy.sort((a, b) =>
       euclideanDistance(a.center, p) -
@@ -267,7 +268,7 @@ const MoveableImage = ({
           return;
         }
 
-        images.current = x;
+        imageLayouts.current = [ ...x ];
       },
     );
   }, []);
@@ -275,10 +276,11 @@ const MoveableImage = ({
   const [zIndex, setZIndex] = useState<number>(0);
   const resetZIndex = () => runOnJS(setZIndex)(0);
 
-  const panX = useSharedValue<number>(0);
-  const panY = useSharedValue<number>(0);
+  const panX = useSharedValue<number>(left);
+  const panY = useSharedValue<number>(top);
   const scale = useSharedValue<number>(1);
-  const borderRadius = useSharedValue<number>(fileNumber === 1 ? 999 : 5);
+  const borderRadius = useSharedValue<number>(
+    fileNumber.current === 1 ? 999 : 5);
 
   const hapticsSelection = () => {
     if (Platform.OS !== 'web') {
@@ -286,18 +288,24 @@ const MoveableImage = ({
     }
   };
 
-  const remapImages = (remapThisImage: boolean) => {
+  const remapImages = (pressedFileNumber: number | null) => {
     const p: Point2D = {
-      x: images.current[fileNumber].center.x + panX.value,
-      y: images.current[fileNumber].center.y + panY.value,
+      x:
+        imageLayouts.current[fileNumber.current].center.x -
+        imageLayouts.current[fileNumber.current].origin.x +
+        panX.value,
+      y:
+        imageLayouts.current[fileNumber.current].center.y -
+        imageLayouts.current[fileNumber.current].origin.y +
+        panY.value,
     };
 
     const nearestImage = getNearestImage(p);
 
     const imagesCopy: ImageLayout[] = [];
-    for (let i = 0; i <= images.current.length; i++) {
-      if (images.current[i]?.uri !== null) {
-        imagesCopy[i] = images.current[i];
+    for (let i = 0; i <= imageLayouts.current.length; i++) {
+      if (imageLayouts.current[i]?.image?.uri) {
+        imagesCopy[i] = imageLayouts.current[i];
       }
     }
 
@@ -305,19 +313,26 @@ const MoveableImage = ({
       [k: number]: ImageLayout
     } = remap(
       imagesCopy,
-      fileNumber,
-      nearestImage.fileNumber
+      fileNumber.current,
+      nearestImage.image.fileNumber
     );
 
-    if (!remapThisImage) {
-      Object.keys(remappedImages).forEach((k) => {
-        if (remappedImages[k]?.fileNumber === fileNumber) {
-          delete remappedImages[k];
-        }
-      });
-    }
+    const fileNumberMap: { [k: number]: number } = { };
+    Object.keys(remappedImages).forEach((toFileNumber) => {
+      const fromFileNumber = remappedImages[toFileNumber].image.fileNumber;
+      if (toFileNumber) {
+        fileNumberMap[fromFileNumber] = Number(toFileNumber);
+      }
+    });
 
-    notify<ImageLayoutMap>('remapped-images', remappedImages);
+    notify<RemappedImages>(
+      'remapped-images',
+      {
+        imageLayoutMap: remappedImages,
+        fileNumberMap: fileNumberMap,
+        pressedFileNumber: pressedFileNumber,
+      }
+    );
   };
 
   const pan =
@@ -333,42 +348,67 @@ const MoveableImage = ({
       panX.value += event.changeX;
       panY.value += event.changeY;
 
-      remapImages(false);
+      remapImages(fileNumber.current);
     })
     .onFinalize(() => {
-      remapImages(true);
+      remapImages(null);
     })
 
   useEffect(() => {
-    const onRemap = (remappedImages: ImageLayoutMap | undefined) => {
+    const onRemap = (remappedImages: RemappedImages | undefined) => {
       if (!remappedImages) {
         return;
       }
 
-      Object
-        .keys(remappedImages)
-        .map(Number)
-        .forEach((toFileNumber) => {
-          const fromFileNumber = remappedImages[toFileNumber]?.fileNumber;
+      const fromFileNumber = fileNumber.current;
+      const toFileNumber = remappedImages.fileNumberMap[fromFileNumber];
 
-          if (fromFileNumber !== fileNumber) {
-            return;
-          }
+      if (!fromFileNumber || !toFileNumber) {
+        return;
+      }
 
-          const fromPoint = images.current[fromFileNumber].center;
-          const toPoint = images.current[toFileNumber].center;
+      const fromPoint = imageLayouts.current[fromFileNumber].origin;
+      const toPoint = imageLayouts.current[toFileNumber].origin;
 
-          const updatedPoint = vecSub(toPoint, fromPoint);
+      if (remappedImages.pressedFileNumber !== fromFileNumber) {
+        panX.value = withTiming(toPoint.x);
+        panY.value = withTiming(toPoint.y);
+        scale.value = withTiming(
+          1,
+          undefined,
+          resetZIndex,
+        );
+      }
+      borderRadius.value = withTiming(toFileNumber === 1 ? 999 : 5);
 
-          panX.value = withTiming(updatedPoint.x);
-          panY.value = withTiming(updatedPoint.y)
-          scale.value = withTiming(1, undefined, resetZIndex);
-          borderRadius.value = withTiming(toFileNumber === 1 ? 999 : 5);
+      if (remappedImages.pressedFileNumber === null) {
+        // Deep-copy `imageLayouts` to `newImageLayouts`
+        const newImageLayouts: ImageLayout[] = [];
+
+        imageLayouts.current.forEach((imageLayout, i) => {
+          newImageLayouts[i] = {
+            ...imageLayout,
+            image: {
+              ...imageLayout?.image,
+            },
+          };
         });
+
+        Object
+          .entries(remappedImages.fileNumberMap)
+          .forEach(([fromFileNumber, toFileNumber]) => {
+            newImageLayouts[toFileNumber].image = {
+              ...imageLayouts.current[fromFileNumber]?.image,
+              fileNumber: toFileNumber,
+            };
+          });
+
+        fileNumber.current = remappedImages.fileNumberMap[fileNumber.current];
+      }
     };
 
-    return listen<ImageLayoutMap>('remapped-images', onRemap);
-  }, [fileNumber]);
+    return listen<RemappedImages>('remapped-images', onRemap);
+  }, []);
 
   const tap =
     Gesture
@@ -402,7 +442,11 @@ const MoveableImage = ({
         style={[
           {
             zIndex: zIndex,
-            ...style,
+            position: 'absolute',
+            height: height,
+            width: width,
+            left: 0,
+            top: 0,
           },
           animatedContainerStyle,
         ]}
@@ -687,24 +731,28 @@ const UserImage = ({
         y: pageY - parentPageY + height / 2,
       };
 
+      const origin: Point2D = {
+        x: pageX - parentPageX,
+        y: pageY - parentPageY,
+      };
 
-      console.log('oldImages', lastEvent<ImageLayout[]>('layout-image') ?? []); // TODO
       const newImages = [ ...(lastEvent<ImageLayout[]>('layout-image') ?? []) ];
 
       newImages[fileNumber] = {
-        fileNumber: fileNumber,
-        addImage: addImage,
-        uri: uri,
-        resolution: resolution,
-        blurhash: blurhash,
-        removeImage: removeImage,
-        isLoading: isLoading_,
-        isVerified: isVerified,
+        image: {
+          fileNumber: fileNumber,
+          addImage: addImage,
+          uri: uri,
+          resolution: resolution,
+          blurhash: blurhash,
+          removeImage: removeImage,
+          isLoading: isLoading_,
+          isVerified: isVerified,
+        },
 
         center: center,
+        origin: origin,
 
-        left: pageX - parentPageX,
-        top: pageY - parentPageY,
         height,
         width,
       };
@@ -894,7 +942,7 @@ const Images = ({
 }) => {
   const [layoutChanged, setLayoutChanged] = useState(0);
   const viewRef = useRef<View>(null);
-  const [images, setImages] = useState(
+  const [imageLayouts, setImageLayouts] = useState(
     lastEvent<ImageLayout[]>('layout-image') ?? []);
 
   const isLoading1 = useRef(false);
@@ -922,7 +970,7 @@ const Images = ({
           return;
         }
 
-        setImages(x);
+        setImageLayouts(x);
       }
     );
   }, []);
@@ -964,37 +1012,34 @@ const Images = ({
         setHasImage={setHasImage}
       />
 
-      {images
+      {imageLayouts
         .filter(Boolean)
-        .filter((image) => Boolean(image.uri))
-        .map((image) =>
+        .filter((imageLayout) => Boolean(imageLayout.image.uri))
+        .map((imageLayout) =>
           <MoveableImage
-            key={image.uri}
-            fileNumber={image.fileNumber}
-            addImage={image.addImage}
-            uri={image.uri}
-            resolution={image.resolution}
-            blurhash={image.blurhash}
-            removeImage={image.removeImage}
-            isLoading={image.isLoading}
-            isVerified={image.isVerified}
-            style={{
-              position: 'absolute',
-              height: image.height,
-              width: image.width,
-              left: image.left,
-              top: image.top,
-            }}
+            key={imageLayout.image.uri}
+            initialFileNumber={imageLayout.image.fileNumber}
+            addImage={imageLayout.image.addImage}
+            uri={imageLayout.image.uri}
+            resolution={imageLayout.image.resolution}
+            blurhash={imageLayout.image.blurhash}
+            removeImage={imageLayout.image.removeImage}
+            isLoading={imageLayout.image.isLoading}
+            isVerified={imageLayout.image.isVerified}
+            height={imageLayout.height}
+            width={imageLayout.width}
+            left={imageLayout.origin.x}
+            top={imageLayout.origin.y}
           />
         )
       }
 
-      {images.filter(Boolean).map((image) =>
+      {imageLayouts.filter(Boolean).map((imageLayout) =>
         <FileNumber
-          key={image.fileNumber}
-          fileNumber={image.fileNumber}
-          left={image.left + 2}
-          top={image.top + image.height - 2}
+          key={imageLayout.image.fileNumber}
+          fileNumber={imageLayout.image.fileNumber}
+          left={imageLayout.origin.x + 2}
+          top={imageLayout.origin.y + imageLayout.height - 2}
         />
       )}
     </View>
