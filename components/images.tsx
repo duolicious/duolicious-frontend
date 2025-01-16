@@ -52,6 +52,8 @@ import {
 // TODO: Backend logic
 // TODO: Ensure verification badges on images update properly
 // TODO: Image placeholders don't regain plus symbols when their image is dragged away
+// TODO: Images don't shift when scaled on web
+// TODO: Clicking the remove button opens the file add dialog
 
 type Point2D = {
   x: number
@@ -82,6 +84,21 @@ type RemappedImages = {
   fileNumberMap: { [ k: number ]: number }
   pressedFileNumber: number | null
 }
+
+const imageLayoutCopy = (imageLayout: ImageLayout): ImageLayout => {
+  return {
+    ...imageLayout,
+    image: {
+      ...imageLayout.image,
+    },
+    center: {
+      ...imageLayout.center,
+    },
+    origin: {
+      ...imageLayout.origin,
+    },
+  };
+};
 
 const euclideanDistance = (p1: Point2D, p2: Point2D) => {
   return ((p1.x - p2.x) ** 2.0 + (p1.y - p2.y) ** 2.0) ** 0.5;
@@ -309,10 +326,16 @@ const MoveableImage = ({
 
     const nearestImage = getNearestImage(p);
 
+    // Partition list into empty and non-empty slots
     const imagesCopy: ImageLayout[] = [];
+    const emptyImagesCopy: ImageLayout[] = [];
     for (let i = 0; i <= imageLayouts.current.length; i++) {
-      if (imageLayouts.current[i]?.image?.uri) {
+      if (!imageLayouts.current[i]) {
+        ;
+      } else if (imageLayouts.current[i].image.uri) {
         imagesCopy[i] = imageLayouts.current[i];
+      } else {
+        emptyImagesCopy[i] = imageLayouts.current[i];
       }
     }
 
@@ -323,6 +346,17 @@ const MoveableImage = ({
       fileNumber.current,
       nearestImage.image.fileNumber
     );
+
+    // Add empty positions back in if necessary
+    const destinations = Object.keys(remappedImages).map(Number);
+    const sources = Object.values(remappedImages).map((i) => i.image.fileNumber);
+
+    const previouslyEmpty = destinations.find((d) => !sources.includes(d));
+    const newlyEmpty = sources.find((s) => !destinations.includes(s));
+
+    if (previouslyEmpty && newlyEmpty) {
+      remappedImages[newlyEmpty] = emptyImagesCopy[previouslyEmpty];
+    }
 
     const fileNumberMap: { [k: number]: number } = { };
     Object.keys(remappedImages).forEach((toFileNumber) => {
@@ -399,14 +433,12 @@ const MoveableImage = ({
         const newImageLayouts: ImageLayout[] = [];
 
         imageLayouts.current.forEach((imageLayout, i) => {
-          newImageLayouts[i] = {
-            ...imageLayout,
-            image: {
-              ...imageLayout?.image,
-            },
-          };
+          if (imageLayout) {
+            newImageLayouts[i] = imageLayoutCopy(imageLayout);
+          }
         });
 
+        // Remap
         Object
           .entries(remappedImages.fileNumberMap)
           .forEach(([fromFileNumber, toFileNumber]) => {
@@ -415,6 +447,10 @@ const MoveableImage = ({
               fileNumber: toFileNumber,
             };
           });
+
+        newImageLayouts.forEach((newImageLayout, i) => {
+          imageLayouts.current[i] = newImageLayout;
+        });
 
         fileNumber.current = remappedImages.fileNumberMap[fileNumber.current];
       }
@@ -781,7 +817,7 @@ const UserImage = ({
       }}
     >
       { isLoading && <Loading/>}
-      {!isLoading && uri === null && <AddIcon/>}
+      {!isLoading && <AddIcon/>}
     </Pressable>
   );
 };
