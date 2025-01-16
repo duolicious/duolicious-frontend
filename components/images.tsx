@@ -56,6 +56,7 @@ import {
 // TODO: Loading thing doesn't show
 // TODO: Moving an image then uploading to it in its new position moves it back to its original position
 // TODO: Queue movements and uploads
+// TODO: Mobile animations are slow
 
 type Point2D = {
   x: number
@@ -390,12 +391,14 @@ const MoveableImage = ({
   left: number,
   top: number,
 }) => {
-  const fileNumber = useRef<number>(initialFileNumber);
-  const imageLayouts = useRef(lastEvent<ImageLayout[]>('layout-image') ?? []);
+  const fileNumber = useSharedValue(initialFileNumber);
+  const imageLayouts = useSharedValue(
+    lastEvent<ImageLayout[]>('layout-image') ?? []
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   const getNearestImage = (p: Point2D): ImageLayout => {
-    const imagesCopy = imageLayouts.current.filter(Boolean);
+    const imagesCopy = imageLayouts.value.filter(Boolean);
 
     imagesCopy.sort((a, b) =>
       euclideanDistance(a.center, p) -
@@ -412,7 +415,7 @@ const MoveableImage = ({
           return;
         }
 
-        imageLayouts.current = [ ...x ];
+        imageLayouts.value = [ ...x ];
       },
     );
   }, []);
@@ -427,17 +430,17 @@ const MoveableImage = ({
   const panY = useSharedValue<number>(top);
   const scale = useSharedValue<number>(1);
   const borderRadius = useSharedValue<number>(
-    getBorderRadius(fileNumber.current));
+    getBorderRadius(fileNumber.value));
 
   const remapImages = (pressedFileNumber: number | null) => {
     const p: Point2D = {
       x:
-        imageLayouts.current[fileNumber.current].center.x -
-        imageLayouts.current[fileNumber.current].origin.x +
+        imageLayouts.value[fileNumber.value].center.x -
+        imageLayouts.value[fileNumber.value].origin.x +
         panX.value,
       y:
-        imageLayouts.current[fileNumber.current].center.y -
-        imageLayouts.current[fileNumber.current].origin.y +
+        imageLayouts.value[fileNumber.value].center.y -
+        imageLayouts.value[fileNumber.value].origin.y +
         panY.value,
     };
 
@@ -446,13 +449,13 @@ const MoveableImage = ({
     // Partition list into empty and non-empty slots
     const imagesCopy: ImageLayout[] = [];
     const emptyImagesCopy: ImageLayout[] = [];
-    for (let i = 0; i <= imageLayouts.current.length; i++) {
-      if (!imageLayouts.current[i]) {
+    for (let i = 0; i <= imageLayouts.value.length; i++) {
+      if (!imageLayouts.value[i]) {
         ;
-      } else if (imageLayouts.current[i].image.uri) {
-        imagesCopy[i] = imageLayouts.current[i];
+      } else if (imageLayouts.value[i].image.uri) {
+        imagesCopy[i] = imageLayouts.value[i];
       } else {
-        emptyImagesCopy[i] = imageLayouts.current[i];
+        emptyImagesCopy[i] = imageLayouts.value[i];
       }
     }
 
@@ -460,7 +463,7 @@ const MoveableImage = ({
       [k: number]: ImageLayout
     } = remap(
       imagesCopy,
-      fileNumber.current,
+      fileNumber.value,
       nearestImage.image.fileNumber
     );
 
@@ -494,13 +497,13 @@ const MoveableImage = ({
   };
 
   const remapImagesOnChange =
-    () => remapImages(fileNumber.current);
+    () => remapImages(fileNumber.value);
 
-  const remapImagesonFinalize =
+  const remapImagesOnFinalize =
     () => remapImages(null);
 
   const addImageOnStart =
-    () => addImage(fileNumber.current, true);
+    () => addImage(fileNumber.value, true);
 
   const pan =
     Gesture
@@ -518,7 +521,7 @@ const MoveableImage = ({
       runOnJS(remapImagesOnChange)();
     })
     .onFinalize(() => {
-      runOnJS(remapImagesonFinalize)();
+      runOnJS(remapImagesOnFinalize)();
     })
 
   useEffect(() => {
@@ -527,15 +530,15 @@ const MoveableImage = ({
         return;
       }
 
-      const fromFileNumber = fileNumber.current;
+      const fromFileNumber = fileNumber.value;
       const toFileNumber = remappedImages.fileNumberMap[fromFileNumber];
 
       if (!fromFileNumber || !toFileNumber) {
         return;
       }
 
-      const fromPoint = imageLayouts.current[fromFileNumber].origin;
-      const toPoint = imageLayouts.current[toFileNumber].origin;
+      const fromPoint = imageLayouts.value[fromFileNumber].origin;
+      const toPoint = imageLayouts.value[toFileNumber].origin;
 
       if (remappedImages.pressedFileNumber !== fromFileNumber) {
         panX.value = withTiming(toPoint.x);
@@ -552,7 +555,7 @@ const MoveableImage = ({
         // Deep-copy `imageLayouts` to `newImageLayouts`
         const newImageLayouts: ImageLayout[] = [];
 
-        imageLayouts.current.forEach((imageLayout, i) => {
+        imageLayouts.value.forEach((imageLayout, i) => {
           if (imageLayout) {
             newImageLayouts[i] = imageLayoutCopy(imageLayout);
           }
@@ -563,16 +566,21 @@ const MoveableImage = ({
           .entries(remappedImages.fileNumberMap)
           .forEach(([fromFileNumber, toFileNumber]) => {
             newImageLayouts[toFileNumber].image = {
-              ...imageLayouts.current[fromFileNumber]?.image,
+              ...imageLayouts.value[fromFileNumber]?.image,
               fileNumber: toFileNumber,
             };
           });
 
-        newImageLayouts.forEach((newImageLayout, i) => {
-          imageLayouts.current[i] = newImageLayout;
+
+        imageLayouts.modify((value) => {
+          'worklet'
+          newImageLayouts.forEach((newImageLayout, i) => {
+            value[i] = newImageLayout;
+          });
+          return value;
         });
 
-        fileNumber.current = remappedImages.fileNumberMap[fileNumber.current];
+        fileNumber.value = remappedImages.fileNumberMap[fileNumber.value];
       }
     };
 
@@ -586,7 +594,7 @@ const MoveableImage = ({
         if (data === undefined) {
           return;
         }
-        setIsLoading(data[fileNumber.current]);
+        setIsLoading(data[fileNumber.value]);
       }
     );
   }, []);
@@ -609,7 +617,7 @@ const MoveableImage = ({
         return;
       }
 
-      removeImage(input, fileNumber.current);
+      runOnJS(removeImage)(input, fileNumber.value);
     });
 
   const animatedContainerStyle = useAnimatedStyle(() => ({
