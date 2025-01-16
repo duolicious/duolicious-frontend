@@ -53,7 +53,6 @@ import {
 // TODO: Ensure verification badges on images update properly
 // TODO: Image placeholders don't regain plus symbols when their image is dragged away
 // TODO: Images don't shift when scaled on web
-// TODO: Clicking the remove button opens the file add dialog
 
 type Point2D = {
   x: number
@@ -469,6 +468,17 @@ const MoveableImage = ({
 
   const composed = Gesture.Exclusive(pan, tap);
 
+  const removeGesture =
+    Gesture
+    .Tap()
+    .onStart(() => {
+      if (uri === null || isLoading) {
+        return;
+      }
+
+      removeImage();
+    });
+
   const animatedContainerStyle = useAnimatedStyle(() => ({
     transform: [
       { translateX: panX.value },
@@ -528,25 +538,24 @@ const MoveableImage = ({
             contentFit="contain"
           />
         </Animated.View>
-        <Pressable
-          style={{
-            position: 'absolute',
-            top: -10,
-            left: -10,
-            padding: 2,
-            borderRadius: 999,
-            backgroundColor: 'white',
-          }}
-          onPress={
-            uri === null || isLoading ? undefined : removeImage
-          }
-        >
-          <FontAwesomeIcon
-            icon={faCircleXmark}
-            size={26}
-            color="#000"
-          />
-        </Pressable>
+        <GestureDetector gesture={removeGesture}>
+          <View
+            style={{
+              position: 'absolute',
+              top: -10,
+              left: -10,
+              padding: 2,
+              borderRadius: 999,
+              backgroundColor: 'white',
+            }}
+          >
+            <FontAwesomeIcon
+              icon={faCircleXmark}
+              size={26}
+              color="#000"
+            />
+          </View>
+        </GestureDetector>
         {isVerified && (
           <VerificationBadge
             style={{
