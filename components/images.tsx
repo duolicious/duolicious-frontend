@@ -273,6 +273,10 @@ const MoveableImage = ({
     );
   }, []);
 
+  const getBorderRadius = (fileNumber: number) =>
+    fileNumber === 1 ? Math.max(height, width) / 2 : 5;
+
+
   const [zIndex, setZIndex] = useState<number>(0);
   const resetZIndex = () => runOnJS(setZIndex)(0);
 
@@ -280,7 +284,7 @@ const MoveableImage = ({
   const panY = useSharedValue<number>(top);
   const scale = useSharedValue<number>(1);
   const borderRadius = useSharedValue<number>(
-    fileNumber.current === 1 ? 999 : 5);
+    getBorderRadius(fileNumber.current));
 
   const hapticsSelection = () => {
     if (Platform.OS !== 'web') {
@@ -335,12 +339,18 @@ const MoveableImage = ({
     );
   };
 
+  const remapImagesOnChange =
+    () => remapImages(fileNumber.current);
+
+  const remapImagesonFinalize =
+    () => remapImages(null);
+
   const pan =
     Gesture
     .Pan()
     .activateAfterLongPress(200)
     .onStart((event) => {
-      scale.value = withTiming(1.1);
+      scale.value = withTiming(1.1, { duration: 50 });
       runOnJS(setZIndex)(1);
       runOnJS(hapticsSelection)();
     })
@@ -348,10 +358,10 @@ const MoveableImage = ({
       panX.value += event.changeX;
       panY.value += event.changeY;
 
-      remapImages(fileNumber.current);
+      runOnJS(remapImagesOnChange)();
     })
     .onFinalize(() => {
-      remapImages(null);
+      runOnJS(remapImagesonFinalize)();
     })
 
   useEffect(() => {
@@ -379,7 +389,7 @@ const MoveableImage = ({
           resetZIndex,
         );
       }
-      borderRadius.value = withTiming(toFileNumber === 1 ? 999 : 5);
+      borderRadius.value = withTiming(getBorderRadius(toFileNumber));
 
       if (remappedImages.pressedFileNumber === null) {
         // Deep-copy `imageLayouts` to `newImageLayouts`
@@ -441,6 +451,7 @@ const MoveableImage = ({
       <Animated.View
         style={[
           {
+            cursor: 'pointer',
             zIndex: zIndex,
             position: 'absolute',
             height: height,
