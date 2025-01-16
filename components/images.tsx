@@ -33,7 +33,6 @@ import
   {
     Easing,
     runOnJS,
-    useAnimatedStyle,
     useSharedValue,
     withTiming,
   } from 'react-native-reanimated';
@@ -44,6 +43,7 @@ import {
 import {
   OptionGroupPhotos,
 } from '../data/option-groups';
+import debounce from 'lodash/debounce';
 
 // TODO: Image picker is shit and lets you upload any file type on web
 // TODO: Reordering needs to happen during drag rather than at the end
@@ -56,7 +56,6 @@ import {
 // TODO: Loading thing doesn't show
 // TODO: Moving an image then uploading to it in its new position moves it back to its original position
 // TODO: Queue movements and uploads
-// TODO: Mobile animations are slow
 
 type Point2D = {
   x: number
@@ -426,22 +425,23 @@ const MoveableImage = ({
   const [zIndex, setZIndex] = useState<number>(0);
   const resetZIndex = () => runOnJS(setZIndex)(0);
 
-  const panX = useSharedValue<number>(left);
-  const panY = useSharedValue<number>(top);
+  const initialBorderRadius = getBorderRadius(initialFileNumber);
+
+  const translateX = useSharedValue<number>(left);
+  const translateY = useSharedValue<number>(top);
   const scale = useSharedValue<number>(1);
-  const borderRadius = useSharedValue<number>(
-    getBorderRadius(fileNumber.value));
+  const borderRadius = useSharedValue<number>(initialBorderRadius);
 
   const remapImages = (pressedFileNumber: number | null) => {
     const p: Point2D = {
       x:
         imageLayouts.value[fileNumber.value].center.x -
         imageLayouts.value[fileNumber.value].origin.x +
-        panX.value,
+        translateX.value,
       y:
         imageLayouts.value[fileNumber.value].center.y -
         imageLayouts.value[fileNumber.value].origin.y +
-        panY.value,
+        translateY.value,
     };
 
     const nearestImage = getNearestImage(p);
@@ -497,7 +497,11 @@ const MoveableImage = ({
   };
 
   const remapImagesOnChange =
-    () => remapImages(fileNumber.value);
+    debounce(
+      () => remapImages(fileNumber.value),
+      500,
+      { maxWait: 500 },
+    );
 
   const remapImagesOnFinalize =
     () => remapImages(null);
@@ -515,8 +519,8 @@ const MoveableImage = ({
       runOnJS(hapticsSelection)();
     })
     .onChange((event) => {
-      panX.value += event.changeX;
-      panY.value += event.changeY;
+      translateX.value += event.changeX;
+      translateY.value += event.changeY;
 
       runOnJS(remapImagesOnChange)();
     })
@@ -541,8 +545,8 @@ const MoveableImage = ({
       const toPoint = imageLayouts.value[toFileNumber].origin;
 
       if (remappedImages.pressedFileNumber !== fromFileNumber) {
-        panX.value = withTiming(toPoint.x);
-        panY.value = withTiming(toPoint.y);
+        translateX.value = withTiming(toPoint.x);
+        translateY.value = withTiming(toPoint.y);
         scale.value = withTiming(
           1,
           undefined,
@@ -620,18 +624,6 @@ const MoveableImage = ({
       runOnJS(removeImage)(input, fileNumber.value);
     });
 
-  const animatedContainerStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: panX.value },
-      { translateY: panY.value },
-      { scale: scale.value },
-    ],
-  }));
-
-  const animatedImageContainerStyle = useAnimatedStyle(() => ({
-    borderRadius: borderRadius.value,
-  }));
-
   if (isLoading || uri === null) {
     return null;
   }
@@ -639,8 +631,7 @@ const MoveableImage = ({
   return (
     <GestureDetector gesture={composed}>
       <Animated.View
-        style={[
-          {
+        style={{
             cursor: 'pointer',
             zIndex: zIndex,
             position: 'absolute',
@@ -648,9 +639,12 @@ const MoveableImage = ({
             width: width,
             left: 0,
             top: 0,
-          },
-          animatedContainerStyle,
-        ]}
+            transform: [
+              { translateX },
+              { translateY },
+              { scale },
+            ],
+        }}
       >
         <Animated.View
           style={[
@@ -658,8 +652,9 @@ const MoveableImage = ({
               height: '100%',
               width: '100%',
               overflow: 'hidden',
+              borderRadius: initialBorderRadius,
             },
-            animatedImageContainerStyle,
+            { borderRadius },
           ]}
         >
           <Image
