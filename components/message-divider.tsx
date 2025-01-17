@@ -1,34 +1,18 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { DefaultText } from './default-text';
+import { friendlyDate } from '../util/util';
 
 type Props = {
   timestamp: Date;
 };
 
 const MessageDivider = ({ timestamp }: Props) => {
-  const formatDate = (date: Date) => {
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (date.toDateString() === today.toDateString()) {
-      return 'Today';
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return 'Yesterday';
-    } else {
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    }
-  };
-
   return (
     <View style={styles.container}>
       <View style={styles.lineContainer}>
         <View style={styles.line} />
-        <Text style={styles.text}>{formatDate(timestamp)}</Text>
+        <DefaultText style={styles.text}>{friendlyDate(timestamp)}</DefaultText>
         <View style={styles.line} />
       </View>
     </View>
