@@ -64,7 +64,7 @@ import {
 } from '../data/option-groups';
 import {
   PrimaryImage,
-} from './images';
+} from './images/images';
 import { DefaultLongTextInput } from './default-long-text-input';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CheckChip as CheckChip_, CheckChips as CheckChips_ } from './check-chip';

@@ -19,14 +19,14 @@ import * as ImagePicker from 'expo-image-picker';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { faCircleXmark } from '@fortawesome/free-solid-svg-icons/faCircleXmark'
-import { notify, listen, lastEvent } from '../events/events';
-import { ImageCropperInput, ImageCropperOutput } from './image-cropper';
+import { notify, listen, lastEvent } from '../../events/events';
+import { ImageCropperInput, ImageCropperOutput } from '../image-cropper';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
-import { isImagePickerOpen } from '../App';
+import { isImagePickerOpen } from '../../App';
 import { Image as ExpoImage } from 'expo-image';
-import { VerificationEvent } from '../verification/verification';
-import { VerificationBadge } from './verification-badge';
-import { DefaultText } from './default-text';
+import { VerificationEvent } from '../../verification/verification';
+import { VerificationBadge } from '../verification-badge';
+import { DefaultText } from '../default-text';
 import * as Haptics from 'expo-haptics';
 import
   Animated,
@@ -42,9 +42,9 @@ import {
 } from 'react-native-gesture-handler';
 import {
   OptionGroupPhotos,
-} from '../data/option-groups';
+} from '../../data/option-groups';
 import debounce from 'lodash/debounce';
-import * as _ from "lodash";
+import { remap } from './logic';
 
 // TODO: Image picker is shit and lets you upload any file type on web
 // TODO: Reordering needs to happen during drag rather than at the end
@@ -111,12 +111,6 @@ type SlotAssignmentStart = {
   to: number
   pressed: number | null
 };
-
-type RemappedImages = {
-  imageLayoutMap: { [k: number]: ImageLayout }
-  fileNumberMap: { [ k: number ]: number }
-  pressedFileNumber: number | null
-}
 
 type ImageLoading = {
   [k: number]: boolean
@@ -190,123 +184,6 @@ const getIsImageLoading = (fileNumber: number): boolean => {
 
 const euclideanDistance = (p1: Point2D, p2: Point2D) => {
   return ((p1.x - p2.x) ** 2.0 + (p1.y - p2.y) ** 2.0) ** 0.5;
-};
-
-const remapInverseMap = (
-  obj: { [k: number]: number },
-  fromKey: number,
-  toKey: number
-): { [k: number]: number } => {
-  // If there's nothing to move or no actual move, return a copy
-  if (fromKey === toKey || !(fromKey in obj)) {
-    return { ...obj };
-  }
-
-  // Make a shallow copy so we never mutate the original
-  const newObj = { ...obj };
-
-  // Grab the item we're moving, then remove it
-  const movingItem = newObj[fromKey];
-  delete newObj[fromKey];
-
-  // Decide which direction we'll bubble in:
-  // - If fromKey < toKey, we bubble "backwards" (toKey down to fromKey).
-  // - If fromKey > toKey, we bubble "forwards"  (toKey up   to fromKey).
-  const direction = fromKey < toKey ? -1 : +1;
-
-  /**
-   * Bubbles the occupant at `pos` in the given direction
-   * until it finds a gap (an unoccupied position) or
-   * the old `fromKey` (which we vacated).
-   *
-   * This "chain reaction" is what allows us to skip
-   * shifting large ranges if we encounter a gap early.
-   */
-  function bubble(pos: number): void {
-    // If there's no occupant at `pos`, we're done; it's already a gap.
-    if (!(pos in newObj)) {
-      return;
-    }
-
-    const occupant = newObj[pos];
-    const nextPos = pos + direction;
-
-    // If `nextPos` is out of range, we can't bubble further—do nothing.
-    if (nextPos < 1 || nextPos > 7) {
-      return;
-    }
-
-    // If `nextPos` is exactly `fromKey`, that position is free now.
-    // So we can move the occupant there and free up `pos`.
-    if (nextPos === fromKey) {
-      newObj[nextPos] = occupant;
-      delete newObj[pos];
-      return;
-    }
-
-    // Otherwise, try to bubble whoever is at `nextPos` first.
-    bubble(nextPos);
-
-    // After attempting to bubble `nextPos`, check if it’s become free.
-    if (!(nextPos in newObj)) {
-      // Move occupant from `pos` → `nextPos`
-      newObj[nextPos] = occupant;
-      delete newObj[pos];
-    }
-    // If it’s still not free, it means we couldn’t bubble it (out of range,
-    // or some other situation). We just leave occupant where it is.
-  }
-
-  // First, "bubble away" whatever is currently at `toKey`, if anything,
-  // so that `toKey` eventually becomes free.
-  bubble(toKey);
-
-  // Now we can place our moving item directly in `toKey`.
-  newObj[toKey] = movingItem;
-
-  return newObj;
-};
-
-const remap = (
-  occupancyMap: { [k: number]: boolean },
-  fromKey: number,
-  toKey: number
-): { [k: number]: number } => {
-  const input: { [k: number]: number } = {};
-
-  Object.entries(occupancyMap).forEach(([k, occupied]) => {
-    if (occupied) {
-      input[k] = Number(k);
-    }
-  });
-
-  const inverseMap = remapInverseMap(input, fromKey, toKey);
-
-  const map: { [k: number]: number } = {};
-
-  Object
-    .entries(inverseMap)
-    .forEach(([k, v]) => {
-      map[Number(v)] = Number(k);
-    });
-
-  // Add empty positions back
-  const allPositions = _.range(1, 8);
-
-  const occupiedAfterMove = Object.values(map).map(Number);
-
-  allPositions
-    .forEach((i) => {
-      if (i in map) {
-        ;
-      } else if (occupiedAfterMove.includes(i)) {
-        map[i] = inverseMap[i];
-      } else {
-        map[i] = i;
-      }
-    });
-
-  return map;
 };
 
 const isSquareish = (width: number, height: number) => {

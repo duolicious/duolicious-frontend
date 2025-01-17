@@ -41,7 +41,7 @@ import {
   themePickerOptionGroups,
   verificationOptionGroups,
 } from '../data/option-groups';
-import { Images } from './images';
+import { Images } from './images/images';
 import { DefaultText } from './default-text';
 import { sessionToken, sessionPersonUuid } from '../kv-storage/session-token';
 import { api, japi, ApiResponse } from '../api/api';
