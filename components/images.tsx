@@ -23,7 +23,7 @@ import { notify, listen, lastEvent } from '../events/events';
 import { ImageCropperInput, ImageCropperOutput } from './image-cropper';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { isImagePickerOpen } from '../App';
-import { Image } from 'expo-image';
+import { Image as ExpoImage } from 'expo-image';
 import { VerificationEvent } from '../verification/verification';
 import { VerificationBadge } from './verification-badge';
 import { DefaultText } from './default-text';
@@ -44,6 +44,7 @@ import {
   OptionGroupPhotos,
 } from '../data/option-groups';
 import debounce from 'lodash/debounce';
+import * as _ from "lodash";
 
 // TODO: Image picker is shit and lets you upload any file type on web
 // TODO: Reordering needs to happen during drag rather than at the end
@@ -79,6 +80,38 @@ type ImageLayout = {
   width: number
 };
 
+type Image = {
+  exists: boolean
+};
+
+type Images = {
+  [k: number]: Image
+};
+
+type Slot = {
+  center: Point2D
+  origin: Point2D
+
+  height: number
+  width: number
+};
+
+type Slots = {
+  [k: number]: Slot
+};
+
+type SlotRequest = {
+  from: number
+  to: number
+  pressed: number | null
+};
+
+type SlotAssignmentStart = {
+  from: number
+  to: number
+  pressed: number | null
+};
+
 type RemappedImages = {
   imageLayoutMap: { [k: number]: ImageLayout }
   fileNumberMap: { [ k: number ]: number }
@@ -87,6 +120,58 @@ type RemappedImages = {
 
 type ImageLoading = {
   [k: number]: boolean
+};
+
+const getOccupancyMap = (images: Images): { [k: number]: boolean } => {
+  return Object
+    .entries(images)
+    .reduce(
+      (acc, [fileNumber, slot]) => {
+        acc[Number(fileNumber)] = slot.exists;
+        return acc;
+      },
+      {} as { [k: number]: boolean }
+    );
+};
+
+const getNearestSlot = (slots: Slots, p: Point2D): number => {
+  let nearestSlot = -1;
+  let nearestDistance = -1;
+
+  Object.entries(slots).map(([fileNumber, slot]) => {
+    const distance = euclideanDistance(slot.center, p);
+
+    if (nearestDistance === -1 || distance < nearestDistance) {
+      nearestSlot = Number(fileNumber);
+      nearestDistance = distance;
+    }
+  });
+
+  return nearestSlot;
+};
+
+const getRelativeSlots = (slots: Slots, pageX: number, pageY: number): Slots => {
+  return Object
+    .entries(slots)
+    .reduce(
+      (acc, [fileNumber, slot]) => {
+        acc[Number(fileNumber)] = {
+          center: {
+            x: slot.center.x - pageX,
+            y: slot.center.y - pageY,
+          },
+          origin: {
+            x: slot.origin.x - pageX,
+            y: slot.origin.y - pageY,
+          },
+          height: slot.height,
+          width: slot.width,
+        }
+
+        return acc
+      },
+      {} as Slots
+    )
 };
 
 const setIsImageLoading = (fileNumber: number, isLoading: boolean) => {
@@ -103,37 +188,22 @@ const getIsImageLoading = (fileNumber: number): boolean => {
   return isImageLoading[fileNumber] ?? false;
 };
 
-const imageLayoutCopy = (imageLayout: ImageLayout): ImageLayout => {
-  return {
-    ...imageLayout,
-    image: {
-      ...imageLayout.image,
-    },
-    center: {
-      ...imageLayout.center,
-    },
-    origin: {
-      ...imageLayout.origin,
-    },
-  };
-};
-
 const euclideanDistance = (p1: Point2D, p2: Point2D) => {
   return ((p1.x - p2.x) ** 2.0 + (p1.y - p2.y) ** 2.0) ** 0.5;
 };
 
-const remap = <T,>(
-  obj: { [k: number]: T },
+const remapInverseMap = (
+  obj: { [k: number]: number },
   fromKey: number,
   toKey: number
-): { [k: number]: T } => {
+): { [k: number]: number } => {
   // If there's nothing to move or no actual move, return a copy
   if (fromKey === toKey || !(fromKey in obj)) {
     return { ...obj };
   }
 
   // Make a shallow copy so we never mutate the original
-  const newObj: { [k: number]: T } = { ...obj };
+  const newObj = { ...obj };
 
   // Grab the item we're moving, then remove it
   const movingItem = newObj[fromKey];
@@ -197,6 +267,48 @@ const remap = <T,>(
   return newObj;
 };
 
+const remap = (
+  occupancyMap: { [k: number]: boolean },
+  fromKey: number,
+  toKey: number
+): { [k: number]: number } => {
+  const input: { [k: number]: number } = {};
+
+  Object.entries(occupancyMap).forEach(([k, occupied]) => {
+    if (occupied) {
+      input[k] = Number(k);
+    }
+  });
+
+  const inverseMap = remapInverseMap(input, fromKey, toKey);
+
+  const map: { [k: number]: number } = {};
+
+  Object
+    .entries(inverseMap)
+    .forEach(([k, v]) => {
+      map[Number(v)] = Number(k);
+    });
+
+  // Add empty positions back
+  const allPositions = _.range(1, 8);
+
+  const occupiedAfterMove = Object.values(map).map(Number);
+
+  allPositions
+    .forEach((i) => {
+      if (i in map) {
+        ;
+      } else if (occupiedAfterMove.includes(i)) {
+        map[i] = inverseMap[i];
+      } else {
+        map[i] = i;
+      }
+    });
+
+  return map;
+};
+
 const isSquareish = (width: number, height: number) => {
   if (width === 0) return true;
   if (height === 0) return true;
@@ -238,7 +350,6 @@ const cropImage = async (
 };
 
 const addImage = async (fileNumber: number, showProtip: boolean) => {
-  console.log('adding image to', fileNumber); // TODO
   if (getIsImageLoading(fileNumber)) {
     return;
   }
@@ -333,7 +444,15 @@ const hapticsSelection = () => {
   }
 };
 
-const FileNumber = ({fileNumber, left, top}) => {
+const FileNumber = ({
+  fileNumber,
+  left,
+  top
+}: {
+  fileNumber: number
+  left: number
+  top: number
+}) => {
   if (fileNumber < 1) {
     return null;
   }
@@ -368,56 +487,39 @@ const FileNumber = ({fileNumber, left, top}) => {
 };
 
 const MoveableImage = ({
-  initialFileNumber,
   input,
-  uri,
-  resolution,
-  blurhash,
-  isVerified,
+  slots,
+  initialFileNumber,
   height,
   width,
   left,
   top,
 }: {
-  initialFileNumber: number
   input: OptionGroupPhotos
-  uri: string | null | undefined
-  resolution: number | null | undefined,
-  blurhash: string | null | undefined,
-  isVerified: boolean,
+  slots: Slots,
+  initialFileNumber: number
   height: number,
   width: number,
   left: number,
   top: number,
 }) => {
+  const initialUri =
+    input.photos.getUri ?
+    input.photos.getUri(String(initialFileNumber), '450') :
+    null;
+
+  const initialBlurhash =
+    input.photos.getBlurhash ?
+    input.photos.getBlurhash(String(initialFileNumber)) :
+    null;
+
   const fileNumber = useSharedValue(initialFileNumber);
-  const imageLayouts = useSharedValue(
-    lastEvent<ImageLayout[]>('layout-image') ?? []
-  );
+  const _slots = useSharedValue(slots);
+  const isSlotAssignmentUnfinished = useSharedValue(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  const getNearestImage = (p: Point2D): ImageLayout => {
-    const imagesCopy = imageLayouts.value.filter(Boolean);
-
-    imagesCopy.sort((a, b) =>
-      euclideanDistance(a.center, p) -
-      euclideanDistance(b.center, p));
-
-    return imagesCopy[0];
-  };
-
-  useEffect(() => {
-    return listen<ImageLayout[]>(
-      'layout-image',
-      (x) => {
-        if (!x) {
-          return;
-        }
-
-        imageLayouts.value = [ ...x ];
-      },
-    );
-  }, []);
+  const [uri, setUri] = useState<string | null>(initialUri);
+  const [blurhash, setBlurhash] = useState<string | null>(initialBlurhash);
+  const [isVerified, setIsVerified] = useState(false);
 
   const getBorderRadius = (fileNumber: number) =>
     fileNumber === 1 ? Math.max(height, width) / 2 : 5;
@@ -432,82 +534,41 @@ const MoveableImage = ({
   const scale = useSharedValue<number>(1);
   const borderRadius = useSharedValue<number>(initialBorderRadius);
 
-  const remapImages = (pressedFileNumber: number | null) => {
+  const requestNearestSlot = (pressed: number | null) => {
     const p: Point2D = {
       x:
-        imageLayouts.value[fileNumber.value].center.x -
-        imageLayouts.value[fileNumber.value].origin.x +
+        _slots.value[fileNumber.value].center.x -
+        _slots.value[fileNumber.value].origin.x +
         translateX.value,
       y:
-        imageLayouts.value[fileNumber.value].center.y -
-        imageLayouts.value[fileNumber.value].origin.y +
+        _slots.value[fileNumber.value].center.y -
+        _slots.value[fileNumber.value].origin.y +
         translateY.value,
     };
 
-    const nearestImage = getNearestImage(p);
+    const nearestSlot = getNearestSlot(_slots.value, p);
 
-    // Partition list into empty and non-empty slots
-    const imagesCopy: ImageLayout[] = [];
-    const emptyImagesCopy: ImageLayout[] = [];
-    for (let i = 0; i <= imageLayouts.value.length; i++) {
-      if (!imageLayouts.value[i]) {
-        ;
-      } else if (imageLayouts.value[i].image.uri) {
-        imagesCopy[i] = imageLayouts.value[i];
-      } else {
-        emptyImagesCopy[i] = imageLayouts.value[i];
-      }
-    }
+    const from = fileNumber.value;
+    const to = nearestSlot;
 
-    const remappedImages: {
-      [k: number]: ImageLayout
-    } = remap(
-      imagesCopy,
-      fileNumber.value,
-      nearestImage.image.fileNumber
-    );
-
-    // Add empty positions back in if necessary
-    const destinations = Object.keys(remappedImages).map(Number);
-    const sources = Object.values(remappedImages).map((i) => i.image.fileNumber);
-
-    const previouslyEmpty = destinations.find((d) => !sources.includes(d));
-    const newlyEmpty = sources.find((s) => !destinations.includes(s));
-
-    if (previouslyEmpty && newlyEmpty) {
-      remappedImages[newlyEmpty] = emptyImagesCopy[previouslyEmpty];
-    }
-
-    const fileNumberMap: { [k: number]: number } = { };
-    Object.keys(remappedImages).forEach((toFileNumber) => {
-      const fromFileNumber = remappedImages[toFileNumber].image.fileNumber;
-      if (toFileNumber) {
-        fileNumberMap[fromFileNumber] = Number(toFileNumber);
-      }
-    });
-
-    notify<RemappedImages>(
-      'remapped-images',
-      {
-        imageLayoutMap: remappedImages,
-        fileNumberMap: fileNumberMap,
-        pressedFileNumber: pressedFileNumber,
-      }
-    );
+    notify<SlotRequest>('slot-request', { from, to, pressed });
   };
 
-  const remapImagesOnChange =
+  const requestNearestSlotOnChange =
     debounce(
-      () => remapImages(fileNumber.value),
+      () => requestNearestSlot(fileNumber.value),
       500,
       { maxWait: 500 },
     );
 
-  const remapImagesOnFinalize =
-    () => remapImages(null);
+  const requestNearestSlotOnFinalize =
+    () => requestNearestSlot(null);
 
   const addImageOnStart =
     () => addImage(fileNumber.value, true);
+
+  const removeImageOnTap =
+    () => removeImage(input, fileNumber.value);
 
   const pan =
     Gesture
@@ -522,86 +583,11 @@ const MoveableImage = ({
       translateX.value += event.changeX;
       translateY.value += event.changeY;
 
-      runOnJS(remapImagesOnChange)();
+      runOnJS(requestNearestSlotOnChange)();
     })
     .onFinalize(() => {
-      runOnJS(remapImagesOnFinalize)();
+      runOnJS(requestNearestSlotOnFinalize)();
     })
-
-  useEffect(() => {
-    const onRemap = (remappedImages: RemappedImages | undefined) => {
-      if (!remappedImages) {
-        return;
-      }
-
-      const fromFileNumber = fileNumber.value;
-      const toFileNumber = remappedImages.fileNumberMap[fromFileNumber];
-
-      if (!fromFileNumber || !toFileNumber) {
-        return;
-      }
-
-      if (remappedImages.pressedFileNumber !== fromFileNumber) {
-        const toPoint = imageLayouts.value[toFileNumber].origin;
-
-        translateX.value = withTiming(toPoint.x);
-        translateY.value = withTiming(toPoint.y);
-        scale.value = withTiming(
-          1,
-          undefined,
-          resetZIndex,
-        );
-      }
-
-      borderRadius.value = withTiming(getBorderRadius(toFileNumber));
-
-      if (remappedImages.pressedFileNumber === null) {
-        // Deep-copy `imageLayouts` to `newImageLayouts`
-        const newImageLayouts: ImageLayout[] = [];
-
-        imageLayouts.value.forEach((imageLayout, i) => {
-          if (imageLayout) {
-            newImageLayouts[i] = imageLayoutCopy(imageLayout);
-          }
-        });
-
-        // Remap
-        Object
-          .entries(remappedImages.fileNumberMap)
-          .forEach(([fromFileNumber, toFileNumber]) => {
-            newImageLayouts[toFileNumber].image = {
-              ...imageLayouts.value[fromFileNumber]?.image,
-              fileNumber: toFileNumber,
-            };
-          });
-
-
-        imageLayouts.modify((value) => {
-          'worklet'
-          newImageLayouts.forEach((newImageLayout, i) => {
-            value[i] = newImageLayout;
-          });
-          return value;
-        });
-
-        fileNumber.value = remappedImages.fileNumberMap[fileNumber.value];
-      }
-    };
-
-    return listen<RemappedImages>('remapped-images', onRemap);
-  }, []);
-
-  useEffect(() => {
-    return listen<ImageLoading>(
-      'image-loading',
-      (data) => {
-        if (data === undefined) {
-          return;
-        }
-        setIsLoading(data[fileNumber.value]);
-      }
-    );
-  }, []);
 
   const tap =
     Gesture
@@ -611,7 +597,7 @@ const MoveableImage = ({
       runOnJS(addImageOnStart)();
     })
 
-  const composed = Gesture.Exclusive(pan, tap);
+  const composed = uri ? Gesture.Exclusive(pan, tap) : tap;
 
   const removeGesture =
     Gesture
@@ -621,12 +607,66 @@ const MoveableImage = ({
         return;
       }
 
-      runOnJS(removeImage)(input, fileNumber.value);
+      runOnJS(removeImageOnTap)();
     });
 
-  if (isLoading || uri === null) {
-    return null;
-  }
+  const onSlotAssignmentStart = useCallback(
+    (data: SlotAssignmentStart | undefined) => {
+      if (!data) {
+        return;
+      }
+      if (fileNumber.value !== data.from) {
+        return;
+      }
+      if (isSlotAssignmentUnfinished.value) {
+        return;
+      }
+
+      if (fileNumber.value !== data.pressed) {
+        translateX.value = withTiming(_slots.value[data.to].origin.x);
+        translateY.value = withTiming(_slots.value[data.to].origin.y);
+        scale.value = withTiming(
+          1,
+          undefined,
+          resetZIndex,
+        );
+      }
+      borderRadius.value = withTiming(getBorderRadius(data.to));
+
+      if (data.pressed === null) {
+        isSlotAssignmentUnfinished.value = true;
+        fileNumber.value = data.to;
+      }
+    },
+    []
+  );
+
+  const onSlotAssignmentFinish = useCallback(() => {
+    notify<Images>('images', { [fileNumber.value]: { exists: Boolean(uri) } });
+    isSlotAssignmentUnfinished.value = false;
+  }, [uri]);
+
+  useEffect(() => { translateX.value = left; }, [left]);
+  useEffect(() => { translateY.value = top; }, [top]);
+  useEffect(() => { _slots.value = slots; }, [slots]);
+
+  useEffect(() => {
+    return listen<SlotAssignmentStart>(
+      'slot-assignment-start',
+      onSlotAssignmentStart
+    );
+  }, [onSlotAssignmentStart]);
+
+  useEffect(() => {
+    return listen(
+      'slot-assignment-finish',
+      onSlotAssignmentFinish
+    );
+  }, [onSlotAssignmentFinish]);
+
+  useEffect(() => {
+    notify<Images>('images', { [fileNumber.value]: { exists: Boolean(uri) } });
+  }, [uri]);
 
   return (
     <GestureDetector gesture={composed}>
@@ -657,12 +697,12 @@ const MoveableImage = ({
             { borderRadius },
           ]}
         >
-          <Image
+          <ExpoImage
             pointerEvents="none"
             source={{
               uri: uri,
-              height: resolution,
-              width: resolution,
+              height: 450,
+              width: 450,
             }}
             placeholder={blurhash && { blurhash: blurhash }}
             transition={150}
@@ -673,25 +713,30 @@ const MoveableImage = ({
             }}
             contentFit="contain"
           />
+          {isLoading &&
+            <Loading/>
+          }
         </Animated.View>
-        <GestureDetector gesture={removeGesture}>
-          <View
-            style={{
-              position: 'absolute',
-              top: -10,
-              left: -10,
-              padding: 2,
-              borderRadius: 999,
-              backgroundColor: 'white',
-            }}
-          >
-            <FontAwesomeIcon
-              icon={faCircleXmark}
-              size={26}
-              color="#000"
-            />
-          </View>
-        </GestureDetector>
+        {uri &&
+          <GestureDetector gesture={removeGesture}>
+            <View
+              style={{
+                position: 'absolute',
+                top: -10,
+                left: -10,
+                padding: 2,
+                borderRadius: 999,
+                backgroundColor: 'white',
+              }}
+            >
+              <FontAwesomeIcon
+                icon={faCircleXmark}
+                size={26}
+                color="#000"
+              />
+            </View>
+          </GestureDetector>
+        }
         {isVerified && (
           <VerificationBadge
             style={{
@@ -707,7 +752,7 @@ const MoveableImage = ({
   );
 };
 
-const UserImage = ({
+const Slot = ({
   input,
   fileNumber,
   resolution,
@@ -721,155 +766,35 @@ const UserImage = ({
   round?: boolean
 }) => {
   const viewRef = useRef<View>(null);
-  const [uri, setUri] = useState<string | null>(null);
-  const [blurhash, setBlurhash] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
-  const [parentViewLayout, setParentViewLayout] = useState<number[]>();
-
-  const imageCropperCallback = `image-cropped-${fileNumber}`;
-
-  const fetchImage = useCallback(async () => {
-    const getUri = input.photos.getUri;
-    const getBlurhash = input.photos.getBlurhash;
-
-    if (getUri && getBlurhash) {
-      setIsImageLoading(fileNumber, true);
-
-      setUri(getUri(String(fileNumber), String(resolution)));
-      setBlurhash(getBlurhash(String(fileNumber)));
-
-      setIsImageLoading(fileNumber, false);
-    }
-  }, [input]);
-
-  useEffect(() => void fetchImage(), [fetchImage]);
-  useEffect(() => {
-    return listen<ImageCropperOutput>(
-      imageCropperCallback,
-      async (data) => {
-        isImagePickerOpen.value = false;
-
-        if (data === undefined) {
-          return;
-        }
-
-        if (data !== null && await input.photos.submit(fileNumber, data)) {
-          const base64 = await cropImage(
-            data.originalBase64,
-            data.size,
-            data.left,
-            data.top,
-            data.size,
-          );
-
-          setUri(base64);
-
-          notify<VerificationEvent>(
-            'updated-verification',
-            { photos: { [`${fileNumber}`]: false } }
-          );
-        }
-
-        setIsImageLoading(fileNumber, false);
-      }
-    );
-  }, []);
-
-  useEffect(() => {
-    return listen<VerificationEvent>(
-      'updated-verification',
-      (data) => {
-        if (!data) {
-          return;
-        }
-
-        if (!data.photos) {
-          return;
-        }
-
-        const photoData: boolean | undefined = data.photos[fileNumber];
-
-        if (photoData === undefined) {
-          return;
-        }
-
-        setIsVerified(photoData);
-      },
-      true
-    );
-  }, []);
-
-  useEffect(() => {
-    return listen<ImageLoading>(
-      'image-loading',
-      (data) => {
-        if (data === undefined) {
-          return;
-        }
-        setIsLoading(data[fileNumber]);
-      }
-    );
-  }, [fileNumber]);
-
-  useEffect(() => {
-    return listen<number[]>(
-      'layout-image-parent-view',
-      setParentViewLayout,
-      true,
-    );
-  }, []);
+  const [layoutChanged, setLayoutChanged] = useState({});
 
   useLayoutEffect(() => {
-    viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
-      const [, , , , parentPageX = 0, parentPageY = 0] = parentViewLayout ?? [];
-
+    viewRef.current?.measureInWindow((x, y, width, height) => {
       const center: Point2D = {
-        x: pageX - parentPageX + width / 2,
-        y: pageY - parentPageY + height / 2,
+        x: x + width / 2,
+        y: y + height / 2,
       };
 
       const origin: Point2D = {
-        x: pageX - parentPageX,
-        y: pageY - parentPageY,
+        x: x,
+        y: y,
       };
 
-      const newImages = [ ...(lastEvent<ImageLayout[]>('layout-image') ?? []) ];
-
-      newImages[fileNumber] = {
-        image: {
-          fileNumber: fileNumber,
-          input: input,
-          uri: uri,
-          resolution: resolution,
-          blurhash: blurhash,
-          isVerified: isVerified,
-        },
-
-        center: center,
-        origin: origin,
-
+      const slot: Slot = {
+        center,
+        origin,
         height,
         width,
       };
 
-      notify<ImageLayout[]>('layout-image', newImages);
+      notify<Slots>('slots', { [fileNumber]: slot });
     });
-  }, [
-    parentViewLayout,
-    isLoading,
-    uri,
-    resolution,
-    blurhash,
-    removeImage,
-    isVerified,
-  ]);
+  }, [layoutChanged]);
 
   return (
-    <Pressable
+    <View
       ref={viewRef}
-      onPress={() => addImage(fileNumber, true)}
-      disabled={uri !== null}
+      onLayout={() => setLayoutChanged({})}
       style={{
         borderRadius: round ? 999 : 5,
         backgroundColor: '#eee',
@@ -880,13 +805,12 @@ const UserImage = ({
         aspectRatio: 1,
       }}
     >
-      { isLoading && <Loading/>}
-      {!isLoading && <AddIcon/>}
-    </Pressable>
+      <AddIcon/>
+    </View>
   );
 };
 
-const UserImageMemo = memo(UserImage);
+const SlotMemo = memo(Slot);
 
 const PrimaryImage = ({
   input,
@@ -897,7 +821,7 @@ const PrimaryImage = ({
   fileNumber: number
   showProtip?: boolean
 }) => {
-  return <UserImageMemo
+  return <SlotMemo
     {...{
       input,
       fileNumber,
@@ -907,7 +831,7 @@ const PrimaryImage = ({
   />
 };
 
-const FirstRow = ({
+const FirstSlotRow = ({
   input,
   firstFileNumber,
 }: {
@@ -929,7 +853,7 @@ const FirstRow = ({
         paddingBottom: 20,
       }}
     >
-      <UserImageMemo
+      <SlotMemo
         input={input}
         fileNumber={firstFileNumber + 0}
         resolution={450}
@@ -955,7 +879,7 @@ const FirstRow = ({
   );
 };
 
-const Row = ({
+const SlotRow = ({
   input,
   firstFileNumber,
 }: {
@@ -970,17 +894,17 @@ const Row = ({
         width: '100%',
       }}
     >
-      <UserImageMemo
+      <SlotMemo
         input={input}
         fileNumber={firstFileNumber + 0}
         resolution={450}
       />
-      <UserImageMemo
+      <SlotMemo
         input={input}
         fileNumber={firstFileNumber + 1}
         resolution={450}
       />
-      <UserImageMemo
+      <SlotMemo
         input={input}
         fileNumber={firstFileNumber + 2}
         resolution={450}
@@ -994,28 +918,71 @@ const Images = ({
 }: {
   input: OptionGroupPhotos
 }) => {
-  const [layoutChanged, setLayoutChanged] = useState(0);
   const viewRef = useRef<View>(null);
-  const [imageLayouts, setImageLayouts] = useState(
-    lastEvent<ImageLayout[]>('layout-image') ?? []);
+  const [layoutChanged, setLayoutChanged] = useState({});
+  const [pageX, setPageX] = useState(0);
+  const [pageY, setPageY] = useState(0);
+  const [images, setImages] = useState(
+    lastEvent<Images>('images') ?? {});
+  const [slots, setSlots] = useState(
+    lastEvent<Slots>('slots') ?? {});
 
-  useEffect(() => {
-    return listen<ImageLayout[]>(
-      'layout-image',
-      (x) => {
-        if (!x) {
-          return;
-        }
+  const relativeSlots = getRelativeSlots(slots, pageX, pageY);
 
-        setImageLayouts(x);
-      }
-    );
-  }, []);
+  const onSlotRequest = (data: SlotRequest | undefined) => {
+    if (!data) {
+      return;
+    }
+
+    const occupancyMap = getOccupancyMap(images);
+    const remappedSlots = remap(occupancyMap, data.from, data.to);
+
+    if (!data.pressed) {
+      console.log('images', JSON.stringify(images)); // TODO
+      console.log('occupancyMap', JSON.stringify(occupancyMap)); // TODO
+      console.log('remappedSlots', JSON.stringify(remappedSlots)); // TODO
+    }
+
+    const pressed = data.pressed;
+
+    Object
+      .entries(remappedSlots)
+      .map(([from, to]) => ([Number(from), Number(to)]))
+      .forEach(([from, to]) => {
+        notify<SlotAssignmentStart>(
+          'slot-assignment-start',
+          { from, to, pressed }
+        );
+      });
+
+    notify('slot-assignment-finish');
+  };
+
+  const onSlots = (data: Slots | undefined) => {
+    setSlots((old) => ({ ...old, ...data }))
+  };
+
+  const onImages = (data: Images | undefined) => {
+    setImages((old) => ({ ...old, ...data }))
+  };
+
+  useEffect(
+    () => listen<SlotRequest>('slot-request', onSlotRequest),
+    [onSlotRequest]);
+
+  useLayoutEffect(
+    () => listen<Slots>('slots', onSlots),
+    []);
+
+  useLayoutEffect(
+    () => listen<Images>('images', onImages),
+    []);
 
   useLayoutEffect(() => {
-    viewRef.current?.measure(
-      (...args) => notify('layout-image-parent-view', args)
-    );
+    viewRef.current?.measureInWindow((x, y) => {
+      setPageX(x);
+      setPageY(y);
+    });
   }, [layoutChanged]);
 
   return (
@@ -1025,40 +992,56 @@ const Images = ({
         padding: 10,
         gap: 10,
       }}
-      onLayout={() => setLayoutChanged((l) => l + 1)}
+      onLayout={() => setLayoutChanged({})}
     >
-      <FirstRow input={input} firstFileNumber={1} />
-      <Row      input={input} firstFileNumber={2} />
-      <Row      input={input} firstFileNumber={5} />
+      <FirstSlotRow input={input} firstFileNumber={1} />
+      <SlotRow      input={input} firstFileNumber={2} />
+      <SlotRow      input={input} firstFileNumber={5} />
 
-      {imageLayouts
-        .filter(Boolean)
-        .filter((imageLayout) => Boolean(imageLayout.image.uri))
-        .map((imageLayout) =>
+      {Object
+        .entries(relativeSlots)
+        .map(([fileNumber, slot]) =>
           <MoveableImage
-            key={imageLayout.image.uri}
-            initialFileNumber={imageLayout.image.fileNumber}
-            input={imageLayout.image.input}
-            uri={imageLayout.image.uri}
-            resolution={imageLayout.image.resolution}
-            blurhash={imageLayout.image.blurhash}
-            isVerified={imageLayout.image.isVerified}
-            height={imageLayout.height}
-            width={imageLayout.width}
-            left={imageLayout.origin.x}
-            top={imageLayout.origin.y}
+            key={fileNumber}
+            slots={relativeSlots}
+            input={input}
+            initialFileNumber={Number(fileNumber)}
+            height={slot.height}
+            width={slot.width}
+            left={slot.origin.x}
+            top={slot.origin.y}
           />
         )
       }
 
-      {imageLayouts.filter(Boolean).map((imageLayout) =>
-        <FileNumber
-          key={imageLayout.image.fileNumber}
-          fileNumber={imageLayout.image.fileNumber}
-          left={imageLayout.origin.x + 2}
-          top={imageLayout.origin.y + imageLayout.height - 2}
-        />
-      )}
+      {Object
+        .entries(relativeSlots)
+        .map(([fileNumber, slot]) =>
+          <FileNumber
+            key={fileNumber}
+            fileNumber={Number(fileNumber)}
+            left={slot.origin.x + 2}
+            top={slot.origin.y + slot.height - 2}
+          />
+        )
+      }
+
+      {Object
+        .entries(relativeSlots)
+        .map(([fileNumber, slot]) =>
+          <View
+            key={fileNumber}
+            style={{
+              position: 'absolute',
+              backgroundColor: 'red',
+              height: 3,
+              width: 3,
+              left: slot.center.x,
+              top: slot.center.y
+            }}
+          />
+        )
+      }
     </View>
   );
 };
@@ -1076,7 +1059,20 @@ const AddIcon = () => {
 
 const Loading = () => {
   return (
-    <ActivityIndicator size="large" color="#70f"/>
+    <View
+      style={{
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      }}
+    >
+      <ActivityIndicator size="large" color="white"/>
+    </View>
   );
 }
 
