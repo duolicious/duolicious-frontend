@@ -697,15 +697,15 @@ const ConversationScreen = ({navigation, route}) => {
           <View key={message.id}>
             {shouldShowDivider() && (
               <MessageDivider timestamp={message.timestamp} />
-          )}
-          <SpeechBubble
-            fromCurrentUser={message.fromCurrentUser}
-            timestamp={message.timestamp}
-            text={message.text}
-            imageUuid={message.fromCurrentUser ? null : imageUuid}
-          />
-        </View>
-      );
+            )}
+            <SpeechBubble
+              fromCurrentUser={message.fromCurrentUser}
+              timestamp={message.timestamp}
+              text={message.text}
+              imageUuid={message.fromCurrentUser ? null : imageUuid}
+            />
+          </View>
+        );
     })}
         </ScrollView>
       }
