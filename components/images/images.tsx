@@ -735,6 +735,7 @@ const MoveableImage = ({
                 padding: 2,
                 borderRadius: 999,
                 backgroundColor: 'white',
+                outline: 'none',
               }}
             >
               <FontAwesomeIcon

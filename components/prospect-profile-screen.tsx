@@ -207,6 +207,9 @@ const FloatingBackButton = (props) => {
         <FontAwesomeIcon
           icon={faArrowLeft}
           size={24}
+          style={{
+            outline: 'none',
+          }}
         />
       </Pressable>
     </RootElement>
@@ -356,7 +359,10 @@ const FloatingSendIntroButton = ({
         <FontAwesomeIcon
           icon={faPaperPlane}
           size={24}
-          style={{color: 'white'}}
+          style={{
+            color: 'white',
+            outline: 'none',
+          }}
         />
       }
     </FloatingProfileInteractionButton>
