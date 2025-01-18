@@ -206,7 +206,7 @@ const getIsImageLoading = (fileNumber: SharedValue<number>): boolean => {
   return isImageLoading[fileNumber.value] ?? false;
 };
 
-const useIsImageLoading = (fileNumber: SharedValue<number>): boolean => {
+const useIsImageLoading = (fileNumber: SharedValue<number> | number): boolean => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -217,7 +217,12 @@ const useIsImageLoading = (fileNumber: SharedValue<number>): boolean => {
           return;
         }
 
-        const isLoading = data[fileNumber.value];
+        const unpackedFileNumber =
+          typeof fileNumber === 'number' ?
+          fileNumber :
+          fileNumber.value;
+
+        const isLoading = data[unpackedFileNumber];
 
         if (isLoading === undefined) {
           return;
@@ -231,7 +236,10 @@ const useIsImageLoading = (fileNumber: SharedValue<number>): boolean => {
   return isLoading;
 };
 
-const useUri = (fileNumber: SharedValue<number>, initialUri: string | null) => {
+const useUri = (
+  fileNumber: SharedValue<number> | number,
+  initialUri: string | null
+) => {
   const [uri, setUri] = useState<string | null>(initialUri);
 
   useEffect(() => {
@@ -242,7 +250,12 @@ const useUri = (fileNumber: SharedValue<number>, initialUri: string | null) => {
           return;
         }
 
-        const uri = data[fileNumber.value];
+        const unpackedFileNumber =
+          typeof fileNumber === 'number' ?
+          fileNumber :
+          fileNumber.value;
+
+        const uri = data[unpackedFileNumber];
 
         if (uri === undefined) {
           return;
@@ -531,20 +544,23 @@ const FileNumber = ({
 
 const MoveableImage = ({
   input,
-  slots,
   initialFileNumber,
-  height,
-  width,
-  left,
-  top,
+  absolutePosition,
+  slots = [],
+  moveable = true,
+  showProtip = true,
 }: {
   input: OptionGroupPhotos
-  slots: Slots,
+  slots?: Slots,
   initialFileNumber: number
-  height: number,
-  width: number,
-  left: number,
-  top: number,
+  absolutePosition?: {
+    height: number,
+    width: number,
+    left: number,
+    top: number,
+  },
+  moveable?: boolean,
+  showProtip?: boolean,
 }) => {
   const initialUri =
     input.photos.getUri ?
@@ -563,18 +579,22 @@ const MoveableImage = ({
   const uri = useUri(fileNumber, initialUri);
   const isVerified = useIsVerified(fileNumber);
 
-  const getBorderRadius = useCallback(
-    (fileNumber: number) => fileNumber === 1 ? Math.max(height, width) / 2 : 5,
-    [height, width]
-  );
+  const getBorderRadius = useCallback((fileNumber: number) => {
+    const {
+      height = 0,
+      width = 0,
+    } = absolutePosition ?? {};
+
+    return fileNumber === 1 ? Math.max(height ?? 0, width ?? 0) / 2 : 5;
+  }, [absolutePosition?.height, absolutePosition?.width]);
 
   const [zIndex, setZIndex] = useState<number>(0);
   const resetZIndex = () => runOnJS(setZIndex)(0);
 
   const initialBorderRadius = getBorderRadius(initialFileNumber);
 
-  const translateX = useSharedValue<number>(left);
-  const translateY = useSharedValue<number>(top);
+  const translateX = useSharedValue<number>(absolutePosition?.left ?? 0);
+  const translateY = useSharedValue<number>(absolutePosition?.top ?? 0);
   const scale = useSharedValue<number>(1);
   const borderRadius = useSharedValue<number>(initialBorderRadius);
 
@@ -609,7 +629,7 @@ const MoveableImage = ({
     () => requestNearestSlot(null);
 
   const addImageOnStart =
-    () => addImage(fileNumber, true);
+    () => addImage(fileNumber, showProtip);
 
   const removeImageOnTap =
     () => removeImage(input, fileNumber);
@@ -641,7 +661,7 @@ const MoveableImage = ({
       runOnJS(addImageOnStart)();
     })
 
-  const composedGesture = uri ? Gesture.Exclusive(pan, tap) : tap;
+  const composedGesture = uri && moveable ? Gesture.Exclusive(pan, tap) : tap;
 
   const removeGesture =
     Gesture
@@ -690,9 +710,17 @@ const MoveableImage = ({
     isSlotAssignmentUnfinished.value = false;
   }, [uri]);
 
-  useEffect(() => { translateX.value = left; }, [left]);
-  useEffect(() => { translateY.value = top; }, [top]);
-  useEffect(() => { _slots.value = slots; }, [slots]);
+  useEffect(
+    () => { translateX.value = absolutePosition?.left ?? 0; },
+    [absolutePosition?.left]);
+
+  useEffect(
+    () => { translateY.value = absolutePosition?.top ?? 0; },
+    [absolutePosition?.top]);
+
+  useEffect(
+    () => { _slots.value = slots; },
+    [slots]);
 
   useImagePickerResult(input, fileNumber);
 
@@ -722,18 +750,18 @@ const MoveableImage = ({
     <GestureDetector gesture={composedGesture}>
       <Animated.View
         style={{
-            cursor: 'pointer',
-            zIndex: zIndex,
-            position: 'absolute',
-            height: height,
-            width: width,
-            left: 0,
-            top: 0,
-            transform: [
-              { translateX },
-              { translateY },
-              { scale },
-            ],
+          cursor: 'pointer',
+          zIndex: zIndex,
+          position: absolutePosition ? 'absolute' : undefined,
+          height: absolutePosition?.height ?? '100%',
+          width: absolutePosition?.width ?? '100%',
+          left: absolutePosition ? 0 : undefined,
+          top: absolutePosition? 0 : undefined,
+          transform: [
+            { translateX },
+            { translateY },
+            { scale },
+          ],
         }}
       >
         <Animated.View
@@ -808,16 +836,10 @@ const MoveableImage = ({
 };
 
 const Slot = ({
-  input,
   fileNumber,
-  resolution,
-  showProtip = true,
   round = false,
 }: {
-  input: OptionGroupPhotos
-  fileNumber: number
-  resolution: number
-  showProtip?: boolean
+  fileNumber?: number
   round?: boolean
 }) => {
   const viewRef = useRef<View>(null);
@@ -825,6 +847,10 @@ const Slot = ({
 
   useLayoutEffect(() => {
     viewRef.current?.measureInWindow((x, y, width, height) => {
+      if (fileNumber === undefined) {
+        return;
+      }
+
       const center: Point2D = {
         x: x + width / 2,
         y: y + height / 2,
@@ -844,7 +870,7 @@ const Slot = ({
 
       notify<Slots>('slots', { [fileNumber]: slot });
     });
-  }, [layoutChanged]);
+  }, [layoutChanged, fileNumber]);
 
   return (
     <View
@@ -866,25 +892,6 @@ const Slot = ({
 };
 
 const SlotMemo = memo(Slot);
-
-const PrimaryImage = ({
-  input,
-  fileNumber,
-  showProtip = true
-}: {
-  input: OptionGroupPhotos
-  fileNumber: number
-  showProtip?: boolean
-}) => {
-  return <SlotMemo
-    {...{
-      input,
-      fileNumber,
-      showProtip,
-      resolution: 900
-    }}
-  />
-};
 
 const FirstSlotRow = ({
   input,
@@ -908,12 +915,7 @@ const FirstSlotRow = ({
         paddingBottom: 20,
       }}
     >
-      <SlotMemo
-        input={input}
-        fileNumber={firstFileNumber + 0}
-        resolution={450}
-        round={true}
-      />
+      <SlotMemo fileNumber={firstFileNumber + 0} round={true} />
       <View
         style={{
           flex: 2,
@@ -949,21 +951,9 @@ const SlotRow = ({
         width: '100%',
       }}
     >
-      <SlotMemo
-        input={input}
-        fileNumber={firstFileNumber + 0}
-        resolution={450}
-      />
-      <SlotMemo
-        input={input}
-        fileNumber={firstFileNumber + 1}
-        resolution={450}
-      />
-      <SlotMemo
-        input={input}
-        fileNumber={firstFileNumber + 2}
-        resolution={450}
-      />
+      <SlotMemo fileNumber={firstFileNumber + 0} />
+      <SlotMemo fileNumber={firstFileNumber + 1} />
+      <SlotMemo fileNumber={firstFileNumber + 2} />
     </View>
   );
 };
@@ -1073,13 +1063,15 @@ const Images = ({
         .map(([fileNumber, slot]) =>
           <MoveableImage
             key={fileNumber}
-            slots={relativeSlots}
             input={input}
             initialFileNumber={Number(fileNumber)}
-            height={slot.height}
-            width={slot.width}
-            left={slot.origin.x}
-            top={slot.origin.y}
+            absolutePosition={{
+              height: slot.height,
+              width: slot.width,
+              left: slot.origin.x,
+              top: slot.origin.y,
+            }}
+            slots={relativeSlots}
           />
         )
       }
@@ -1131,5 +1123,8 @@ const Loading = () => {
 
 export {
   Images,
-  PrimaryImage,
+  MoveableImage,
+  SlotMemo,
+  useIsImageLoading,
+  useUri,
 };
