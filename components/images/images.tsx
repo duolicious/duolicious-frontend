@@ -7,6 +7,8 @@ import {
   View,
 } from 'react-native';
 import {
+  Dispatch,
+  SetStateAction,
   forwardRef,
   memo,
   useCallback,
@@ -33,6 +35,7 @@ import
   {
     Easing,
     runOnJS,
+    SharedValue,
     useSharedValue,
     withTiming,
   } from 'react-native-reanimated';
@@ -52,11 +55,20 @@ import { remap } from './logic';
 // TODO: Make images hold their positions between renders
 // TODO: Backend logic
 // TODO: Ensure verification badges on images update properly
-// TODO: Image placeholders don't regain plus symbols when their image is dragged away
-// TODO: Images don't shift when scaled on web
+// TODO: Images don't resize correctly when their parent window is resized, if those images were moved first
 // TODO: Loading thing doesn't show
 // TODO: Moving an image then uploading to it in its new position moves it back to its original position
 // TODO: Queue movements and uploads
+
+const EV_IMAGES = 'images';
+const EV_IMAGE_LOADING = 'image-loading';
+const EV_IMAGE_URI = 'image-uri';
+const EV_SLOTS = 'slots';
+const EV_SLOT_ASSIGNMENT_FINISH = 'slot-assignment-finish';
+const EV_SLOT_ASSIGNMENT_START = 'slot-assignment-start';
+const EV_SLOT_REQUEST = 'slot-request';
+const EV_UPDATED_NAME = 'updated-name';
+const EV_UPDATED_VERIFICATION = 'updated-verification';
 
 type Point2D = {
   x: number
@@ -116,6 +128,10 @@ type ImageLoading = {
   [k: number]: boolean
 };
 
+type ImageUri = {
+  [k: number]: string | null
+};
+
 const getOccupancyMap = (images: Images): { [k: number]: boolean } => {
   return Object
     .entries(images)
@@ -144,23 +160,27 @@ const getNearestSlot = (slots: Slots, p: Point2D): number => {
   return nearestSlot;
 };
 
+const getRelativeSlot = (slot: Slot, pageX: number, pageY: number): Slot => {
+  return {
+    center: {
+      x: slot.center.x - pageX,
+      y: slot.center.y - pageY,
+    },
+    origin: {
+      x: slot.origin.x - pageX,
+      y: slot.origin.y - pageY,
+    },
+    height: slot.height,
+    width: slot.width,
+  };
+};
+
 const getRelativeSlots = (slots: Slots, pageX: number, pageY: number): Slots => {
   return Object
     .entries(slots)
     .reduce(
       (acc, [fileNumber, slot]) => {
-        acc[Number(fileNumber)] = {
-          center: {
-            x: slot.center.x - pageX,
-            y: slot.center.y - pageY,
-          },
-          origin: {
-            x: slot.origin.x - pageX,
-            y: slot.origin.y - pageY,
-          },
-          height: slot.height,
-          width: slot.width,
-        }
+        acc[Number(fileNumber)] = getRelativeSlot(slot, pageX, pageY);
 
         return acc
       },
@@ -168,18 +188,72 @@ const getRelativeSlots = (slots: Slots, pageX: number, pageY: number): Slots => 
     )
 };
 
-const setIsImageLoading = (fileNumber: number, isLoading: boolean) => {
-  const isImageLoading = lastEvent<ImageLoading>('image-loading') ?? {};
-  const updatedIsImageLoading = {
+const setIsImageLoading = (
+  fileNumber: SharedValue<number>,
+  isLoading: boolean,
+) => {
+  const isImageLoading = lastEvent<ImageLoading>(EV_IMAGE_LOADING) ?? {};
+
+  const updatedIsImageLoading: ImageLoading = {
     ...isImageLoading,
-    [fileNumber]: isLoading,
+    [fileNumber.value]: isLoading,
   };
-  notify<ImageLoading>('image-loading', updatedIsImageLoading);
+
+  notify<ImageLoading>(EV_IMAGE_LOADING, updatedIsImageLoading);
 };
 
-const getIsImageLoading = (fileNumber: number): boolean => {
-  const isImageLoading = lastEvent<ImageLoading>('image-loading') ?? {};
-  return isImageLoading[fileNumber] ?? false;
+const getIsImageLoading = (fileNumber: SharedValue<number>): boolean => {
+  const isImageLoading = lastEvent<ImageLoading>(EV_IMAGE_LOADING) ?? {};
+
+  return isImageLoading[fileNumber.value] ?? false;
+};
+
+const useIsImageLoading = (
+  fileNumber: SharedValue<number>,
+  callback: (isLoading: boolean) => void
+) => {
+  useEffect(() => {
+    return listen<ImageLoading>(
+      EV_IMAGE_LOADING,
+      (data) => {
+        if (!data) {
+          return;
+        }
+
+        const isLoading = data[fileNumber.value];
+
+        if (isLoading === undefined) {
+          return;
+        }
+
+        callback(isLoading);
+      }
+    );
+  }, []);
+};
+
+const useIsImageUri = (
+  fileNumber: SharedValue<number>,
+  callback: (uri: string | null) => void
+) => {
+  useEffect(() => {
+    return listen<ImageUri>(
+      EV_IMAGE_URI,
+      (data) => {
+        if (!data) {
+          return;
+        }
+
+        const imageUri = data[fileNumber.value];
+
+        if (imageUri === undefined) {
+          return;
+        }
+
+        callback(imageUri);
+      }
+    );
+  }, []);
 };
 
 const euclideanDistance = (p1: Point2D, p2: Point2D) => {
@@ -226,7 +300,13 @@ const cropImage = async (
   return `data:image/jpeg;base64,${result.base64}`;
 };
 
-const addImage = async (fileNumber: number, showProtip: boolean) => {
+const getImageCropperCallback = (fileNumber: number) =>
+  `image-cropped-${fileNumber}`;
+
+const addImage = async (
+  fileNumber: SharedValue<number>,
+  showProtip: boolean,
+) => {
   if (getIsImageLoading(fileNumber)) {
     return;
   }
@@ -271,7 +351,7 @@ const addImage = async (fileNumber: number, showProtip: boolean) => {
 
   setIsImageLoading(fileNumber, true);
 
-  const imageCropperCallback = `image-cropped-${fileNumber}`;
+  const imageCropperCallback = getImageCropperCallback(fileNumber.value);
 
   if (isGif(mimeType) || isSquareish(width, height)) {
     const size = Math.min(width, height);
@@ -299,16 +379,59 @@ const addImage = async (fileNumber: number, showProtip: boolean) => {
   }
 };
 
-const removeImage = async (input: OptionGroupPhotos, fileNumber: number) => {
+const useImagePickerResult = (
+  input: OptionGroupPhotos,
+  fileNumber: SharedValue<number>
+): void => {
+  useEffect(() => {
+    const imageCropperCallback = getImageCropperCallback(fileNumber.value);
+
+    return listen<ImageCropperOutput>(
+      imageCropperCallback,
+      async (data) => {
+        isImagePickerOpen.value = false;
+
+        if (data === undefined) {
+          return;
+        }
+
+        if (data === null) {
+          ;
+        } else if (await input.photos.submit(fileNumber.value, data)) {
+          const base64 = await cropImage(
+            data.originalBase64,
+            data.size,
+            data.left,
+            data.top,
+            data.size,
+          );
+
+          notify<ImageUri>(EV_IMAGE_URI, { [fileNumber.value]: base64 });
+
+          notify<VerificationEvent>(
+            EV_UPDATED_VERIFICATION,
+            { photos: { [`${fileNumber.value}`]: false } }
+          );
+        }
+
+        setIsImageLoading(fileNumber, false);
+      }
+    );
+  }, []);
+};
+
+const removeImage = async (
+  input: OptionGroupPhotos,
+  fileNumber: SharedValue<number>,
+) => {
   setIsImageLoading(fileNumber, true);
 
-  if (await input.photos.delete(String(fileNumber))) {
-    // TODO: Listen for this
-    notify<string | null>(`image-${fileNumber}-uri`, null);
+  if (await input.photos.delete(String(fileNumber.value))) {
+    notify<ImageUri>(EV_IMAGE_URI, { [fileNumber.value]: null });
 
     notify<VerificationEvent>(
-      'updated-verification',
-      { photos: { [`${fileNumber}`]: false } }
+      EV_UPDATED_VERIFICATION,
+      { photos: { [`${fileNumber.value}`]: false } }
     );
   }
 
@@ -398,8 +521,10 @@ const MoveableImage = ({
   const [blurhash, setBlurhash] = useState<string | null>(initialBlurhash);
   const [isVerified, setIsVerified] = useState(false);
 
-  const getBorderRadius = (fileNumber: number) =>
-    fileNumber === 1 ? Math.max(height, width) / 2 : 5;
+  const getBorderRadius = useCallback(
+    (fileNumber: number) => fileNumber === 1 ? Math.max(height, width) / 2 : 5,
+    [height, width]
+  );
 
   const [zIndex, setZIndex] = useState<number>(0);
   const resetZIndex = () => runOnJS(setZIndex)(0);
@@ -442,10 +567,10 @@ const MoveableImage = ({
     () => requestNearestSlot(null);
 
   const addImageOnStart =
-    () => addImage(fileNumber.value, true);
+    () => addImage(fileNumber, true);
 
   const removeImageOnTap =
-    () => removeImage(input, fileNumber.value);
+    () => removeImage(input, fileNumber);
 
   const pan =
     Gesture
@@ -474,7 +599,7 @@ const MoveableImage = ({
       runOnJS(addImageOnStart)();
     })
 
-  const composed = uri ? Gesture.Exclusive(pan, tap) : tap;
+  const composedGesture = uri ? Gesture.Exclusive(pan, tap) : tap;
 
   const removeGesture =
     Gesture
@@ -515,7 +640,7 @@ const MoveableImage = ({
         fileNumber.value = data.to;
       }
     },
-    []
+    [getBorderRadius]
   );
 
   const onSlotAssignmentFinish = useCallback(() => {
@@ -527,26 +652,30 @@ const MoveableImage = ({
   useEffect(() => { translateY.value = top; }, [top]);
   useEffect(() => { _slots.value = slots; }, [slots]);
 
+  useImagePickerResult(input, fileNumber);
+  useIsImageLoading(fileNumber, setIsLoading);
+  useIsImageUri(fileNumber, setUri);
+
   useEffect(() => {
     return listen<SlotAssignmentStart>(
-      'slot-assignment-start',
+      EV_SLOT_ASSIGNMENT_START,
       onSlotAssignmentStart
     );
   }, [onSlotAssignmentStart]);
 
   useEffect(() => {
     return listen(
-      'slot-assignment-finish',
+      EV_SLOT_ASSIGNMENT_FINISH,
       onSlotAssignmentFinish
     );
   }, [onSlotAssignmentFinish]);
 
   useEffect(() => {
-    notify<Images>('images', { [fileNumber.value]: { exists: Boolean(uri) } });
+    notify<Images>(EV_IMAGES, { [fileNumber.value]: { exists: Boolean(uri) } });
   }, [uri]);
 
   return (
-    <GestureDetector gesture={composed}>
+    <GestureDetector gesture={composedGesture}>
       <Animated.View
         style={{
             cursor: 'pointer',
@@ -574,22 +703,24 @@ const MoveableImage = ({
             { borderRadius },
           ]}
         >
-          <ExpoImage
-            pointerEvents="none"
-            source={{
-              uri: uri,
-              height: 450,
-              width: 450,
-            }}
-            placeholder={blurhash && { blurhash: blurhash }}
-            transition={150}
-            style={{
-              height: '100%',
-              width: '100%',
-              borderColor: '#eee',
-            }}
-            contentFit="contain"
-          />
+          {uri &&
+            <ExpoImage
+              pointerEvents="none"
+              source={{
+                uri: uri,
+                height: 450,
+                width: 450,
+              }}
+              placeholder={blurhash && { blurhash: blurhash }}
+              transition={150}
+              style={{
+                height: '100%',
+                width: '100%',
+                borderColor: '#eee',
+              }}
+              contentFit="contain"
+            />
+          }
           {isLoading &&
             <Loading/>
           }
@@ -718,7 +849,7 @@ const FirstSlotRow = ({
   const [name, setName] = useState(lastEvent<string>('updated-name'));
 
   useEffect(() => {
-    return listen<string>('updated-name', setName);
+    return listen<string>(EV_UPDATED_NAME, setName);
   }, []);
 
   return (
@@ -800,9 +931,9 @@ const Images = ({
   const [pageX, setPageX] = useState(0);
   const [pageY, setPageY] = useState(0);
   const [images, setImages] = useState(
-    lastEvent<Images>('images') ?? {});
+    lastEvent<Images>(EV_IMAGES) ?? {});
   const [slots, setSlots] = useState(
-    lastEvent<Slots>('slots') ?? {});
+    lastEvent<Slots>(EV_SLOTS) ?? {});
 
   const relativeSlots = getRelativeSlots(slots, pageX, pageY);
 
@@ -812,13 +943,8 @@ const Images = ({
     }
 
     const occupancyMap = getOccupancyMap(images);
-    const remappedSlots = remap(occupancyMap, data.from, data.to);
 
-    if (!data.pressed) {
-      console.log('images', JSON.stringify(images)); // TODO
-      console.log('occupancyMap', JSON.stringify(occupancyMap)); // TODO
-      console.log('remappedSlots', JSON.stringify(remappedSlots)); // TODO
-    }
+    const remappedSlots = remap(occupancyMap, data.from, data.to);
 
     const pressed = data.pressed;
 
@@ -827,12 +953,12 @@ const Images = ({
       .map(([from, to]) => ([Number(from), Number(to)]))
       .forEach(([from, to]) => {
         notify<SlotAssignmentStart>(
-          'slot-assignment-start',
+          EV_SLOT_ASSIGNMENT_START,
           { from, to, pressed }
         );
       });
 
-    notify('slot-assignment-finish');
+    notify(EV_SLOT_ASSIGNMENT_FINISH);
   };
 
   const onSlots = (data: Slots | undefined) => {
@@ -844,15 +970,15 @@ const Images = ({
   };
 
   useEffect(
-    () => listen<SlotRequest>('slot-request', onSlotRequest),
+    () => listen<SlotRequest>(EV_SLOT_REQUEST, onSlotRequest),
     [onSlotRequest]);
 
   useLayoutEffect(
-    () => listen<Slots>('slots', onSlots),
+    () => listen<Slots>(EV_SLOTS, onSlots),
     []);
 
   useLayoutEffect(
-    () => listen<Images>('images', onImages),
+    () => listen<Images>(EV_IMAGES, onImages),
     []);
 
   useLayoutEffect(() => {
@@ -899,23 +1025,6 @@ const Images = ({
             fileNumber={Number(fileNumber)}
             left={slot.origin.x + 2}
             top={slot.origin.y + slot.height - 2}
-          />
-        )
-      }
-
-      {Object
-        .entries(relativeSlots)
-        .map(([fileNumber, slot]) =>
-          <View
-            key={fileNumber}
-            style={{
-              position: 'absolute',
-              backgroundColor: 'red',
-              height: 3,
-              width: 3,
-              left: slot.center.x,
-              top: slot.center.y
-            }}
           />
         )
       }
