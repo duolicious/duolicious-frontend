@@ -50,8 +50,6 @@ import { japi } from '../../api/api';
 import * as _ from "lodash";
 
 // TODO: Image picker is shit and lets you upload any file type on web
-// TODO: Verification flow still works
-// TODO: Verification badges show and hide appropriately
 
 const EV_IMAGES = 'images';
 const EV_IMAGE_CROPPER_OUTPUT = 'image-cropper-output';
