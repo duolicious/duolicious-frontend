@@ -68,6 +68,7 @@ import { InvitePicker } from './invite';
 import { AudioBio } from './audio-bio';
 import { useScrollbar } from './navigation/scroll-bar-hooks';
 import { WEB_VERSION } from '../env/env';
+import { photoQueue } from '../api/queue';
 
 const formatHeight = (og: OptionGroup<OptionGroupInputs>): string | undefined => {
   if (!isOptionGroupSlider(og.input)) return '';
@@ -115,21 +116,27 @@ const Images_ = ({data}) => {
   const input: OptionGroupPhotos = useMemo(() => {
     return {
       photos: {
-        submit: async (position, cropperOutput) => (await japi(
-          'patch',
-          '/profile-info',
-          {
-            base64_file: {
-              position,
-              base64: cropperOutput.originalBase64,
-              top: cropperOutput.top,
-              left: cropperOutput.left,
+        submit: async (position, cropperOutput) => {
+          const requester = async () => await japi(
+            'patch',
+            '/profile-info',
+            {
+              base64_file: {
+                position,
+                base64: cropperOutput.originalBase64,
+                top: cropperOutput.top,
+                left: cropperOutput.left,
+              },
             },
-          },
-          2 * 60 * 1000, // 2 minutes
-          undefined,
-          true,
-        )).ok,
+            2 * 60 * 1000, // 2 minutes
+            undefined,
+            true,
+          );
+
+          const response = await photoQueue.addTask(requester);
+
+          return response.ok;
+        },
         delete: async (filename) => (await japi(
           'delete',
           '/profile-info',

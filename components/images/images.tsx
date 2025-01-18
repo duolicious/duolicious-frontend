@@ -45,9 +45,11 @@ import {
 } from '../../data/option-groups';
 import debounce from 'lodash/debounce';
 import { remap } from './logic';
+import { photoQueue } from '../../api/queue';
+import { japi } from '../../api/api';
+import * as _ from "lodash";
 
 // TODO: Image picker is shit and lets you upload any file type on web
-// TODO: Backend logic: Queue movements and uploads
 // TODO: Verification flow still works
 // TODO: Verification badges show and hide appropriately
 
@@ -122,6 +124,10 @@ type ImageLoading = {
 
 type ImageUri = {
   [k: number]: string | null
+};
+
+type HttpPostAssignments = {
+  [k: number]: number
 };
 
 const getOccupancyMap = (images: Images): { [k: number]: boolean } => {
@@ -322,6 +328,16 @@ const cropImage = async (
   }
 
   return `data:image/jpeg;base64,${result.base64}`;
+};
+
+const postAssignments = (photoAssignments: HttpPostAssignments) => {
+  photoQueue.addTask(async () => {
+    await japi(
+      'PATCH',
+      '/profile-info',
+      { photo_assignments: photoAssignments }
+    );
+  });
 };
 
 const addImage = async (
@@ -979,6 +995,8 @@ const Images = ({
 
     const pressed = data.pressed;
 
+    const httpPostAssignments: HttpPostAssignments = {};
+
     Object
       .entries(remappedSlots)
       .map(([from, to]) => ([Number(from), Number(to)]))
@@ -987,9 +1005,17 @@ const Images = ({
           EV_SLOT_ASSIGNMENT_START,
           { from, to, pressed }
         );
+
+        if (from !== to) {
+          httpPostAssignments[from] = to;
+        }
       });
 
     notify(EV_SLOT_ASSIGNMENT_FINISH);
+
+    if (!_.isEmpty(httpPostAssignments) && pressed === null) {
+      postAssignments(httpPostAssignments);
+    }
   }, [images]);
 
   const onSlots = useCallback((data: Slots | undefined) => {

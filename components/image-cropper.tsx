@@ -39,7 +39,7 @@ type ImageCropperOutput = {
   } | null
 };
 
-type NonNullImageCropperOutput = Exclude<ImageCropperOutput, null>;
+type NonNullImageCropperOutput = Exclude<ImageCropperOutput[number], null>;
 
 const ImageCropper = () => {
   const [data, setData] = useState<ImageCropperInput>();
