@@ -852,6 +852,11 @@ const Slot = ({
 
   useLayoutEffect(() => {
     viewRef.current?.measureInWindow((x, y, width, height) => {
+      if (width === 0 && height === 0) {
+        // Measurement is inaccurate because the element is occluded
+        return;
+      }
+
       if (fileNumber === undefined) {
         return;
       }
@@ -1034,7 +1039,12 @@ const Images = ({
     [onImages]);
 
   useLayoutEffect(() => {
-    viewRef.current?.measureInWindow((x, y) => {
+    viewRef.current?.measureInWindow((x, y, width, height) => {
+      if (height === 0 && width === 0) {
+        // Measurement is inaccurate because the element is occluded
+        return;
+      }
+
       setPageX(x);
       setPageY(y);
     });
