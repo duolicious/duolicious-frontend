@@ -1,15 +1,9 @@
 import {
   ActivityIndicator,
-  LayoutChangeEvent,
-  PanResponder,
   Platform,
-  Pressable,
   View,
 } from 'react-native';
 import {
-  Dispatch,
-  SetStateAction,
-  forwardRef,
   memo,
   useCallback,
   useEffect,
@@ -22,7 +16,10 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { faCircleXmark } from '@fortawesome/free-solid-svg-icons/faCircleXmark'
 import { notify, listen, lastEvent } from '../../events/events';
-import { ImageCropperInput, ImageCropperOutput } from '../image-cropper';
+import {
+  ImageCropperInput,
+  ImageCropperOutput,
+} from '../image-cropper';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { isImagePickerOpen } from '../../App';
 import { Image as ExpoImage } from 'expo-image';
@@ -61,6 +58,7 @@ import { remap } from './logic';
 // TODO: Queue movements and uploads
 
 const EV_IMAGES = 'images';
+const EV_IMAGE_CROPPER_OUTPUT = 'image-cropper-output';
 const EV_IMAGE_LOADING = 'image-loading';
 const EV_IMAGE_URI = 'image-uri';
 const EV_SLOTS = 'slots';
@@ -300,9 +298,6 @@ const cropImage = async (
   return `data:image/jpeg;base64,${result.base64}`;
 };
 
-const getImageCropperCallback = (fileNumber: number) =>
-  `image-cropped-${fileNumber}`;
-
 const addImage = async (
   fileNumber: SharedValue<number>,
   showProtip: boolean,
@@ -351,19 +346,19 @@ const addImage = async (
 
   setIsImageLoading(fileNumber, true);
 
-  const imageCropperCallback = getImageCropperCallback(fileNumber.value);
-
   if (isGif(mimeType) || isSquareish(width, height)) {
     const size = Math.min(width, height);
 
     notify<ImageCropperOutput>(
-      imageCropperCallback,
+      EV_IMAGE_CROPPER_OUTPUT,
       {
-        originalBase64: base64Uri,
-        top:  Math.round((height - size) / 2),
-        left: Math.round((width  - size) / 2),
-        size,
-      },
+        [fileNumber.value]: {
+          originalBase64: base64Uri,
+          top:  Math.round((height - size) / 2),
+          left: Math.round((width  - size) / 2),
+          size,
+        }
+      }
     );
   } else {
     notify<ImageCropperInput>(
@@ -372,7 +367,8 @@ const addImage = async (
         base64: base64Uri,
         height,
         width,
-        callback: imageCropperCallback,
+        outputEventName: EV_IMAGE_CROPPER_OUTPUT,
+        fileNumber: fileNumber.value,
         showProtip: showProtip,
       }
     );
@@ -384,10 +380,8 @@ const useImagePickerResult = (
   fileNumber: SharedValue<number>
 ): void => {
   useEffect(() => {
-    const imageCropperCallback = getImageCropperCallback(fileNumber.value);
-
     return listen<ImageCropperOutput>(
-      imageCropperCallback,
+      EV_IMAGE_CROPPER_OUTPUT,
       async (data) => {
         isImagePickerOpen.value = false;
 
@@ -395,15 +389,21 @@ const useImagePickerResult = (
           return;
         }
 
-        if (data === null) {
+        const singleData = data[fileNumber.value];
+
+        if (singleData === undefined) {
+          return;
+        }
+
+        if (singleData === null) {
           ;
-        } else if (await input.photos.submit(fileNumber.value, data)) {
+        } else if (await input.photos.submit(fileNumber.value, singleData)) {
           const base64 = await cropImage(
-            data.originalBase64,
-            data.size,
-            data.left,
-            data.top,
-            data.size,
+            singleData.originalBase64,
+            singleData.size,
+            singleData.left,
+            singleData.top,
+            singleData.size,
           );
 
           notify<ImageUri>(EV_IMAGE_URI, { [fileNumber.value]: base64 });
@@ -735,13 +735,15 @@ const MoveableImage = ({
                 padding: 2,
                 borderRadius: 999,
                 backgroundColor: 'white',
-                outline: 'none',
               }}
             >
               <FontAwesomeIcon
                 icon={faCircleXmark}
                 size={26}
                 color="#000"
+                style={{
+                  outline: 'none'
+                }}
               />
             </View>
           </GestureDetector>
