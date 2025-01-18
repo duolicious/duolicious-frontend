@@ -615,7 +615,7 @@ const MoveableImage = ({
     const from = fileNumber.value;
     const to = nearestSlot;
 
-    notify<SlotRequest>('slot-request', { from, to, pressed });
+    notify<SlotRequest>(EV_SLOT_REQUEST, { from, to, pressed });
   };
 
   const requestNearestSlotOnChange =
@@ -706,9 +706,16 @@ const MoveableImage = ({
   );
 
   const onSlotAssignmentFinish = useCallback(() => {
-    notify<Images>('images', { [fileNumber.value]: { exists: Boolean(uri) } });
+    notify<Images>(
+      EV_IMAGES,
+      { [fileNumber.value]: { exists: Boolean(uri) } });
+
+    notify<VerificationEvent>(
+      EV_UPDATED_VERIFICATION,
+      { photos: { [`${fileNumber.value}`]: isVerified } });
+
     isSlotAssignmentUnfinished.value = false;
-  }, [uri]);
+  }, [uri, isVerified]);
 
   useEffect(
     () => { translateX.value = absolutePosition?.left ?? 0; },
