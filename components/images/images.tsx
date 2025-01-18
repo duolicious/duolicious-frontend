@@ -47,15 +47,9 @@ import debounce from 'lodash/debounce';
 import { remap } from './logic';
 
 // TODO: Image picker is shit and lets you upload any file type on web
-// TODO: Reordering needs to happen during drag rather than at the end
-// TODO: Get this working on mobile (needs runOnJS)
-// TODO: Make images hold their positions between renders
-// TODO: Backend logic
-// TODO: Ensure verification badges on images update properly
-// TODO: Images don't resize correctly when their parent window is resized, if those images were moved first
-// TODO: Loading thing doesn't show
-// TODO: Moving an image then uploading to it in its new position moves it back to its original position
-// TODO: Queue movements and uploads
+// TODO: Backend logic: Queue movements and uploads
+// TODO: Verification flow still works
+// TODO: Verification badges show and hide appropriately
 
 const EV_IMAGES = 'images';
 const EV_IMAGE_CROPPER_OUTPUT = 'image-cropper-output';
@@ -206,10 +200,9 @@ const getIsImageLoading = (fileNumber: SharedValue<number>): boolean => {
   return isImageLoading[fileNumber.value] ?? false;
 };
 
-const useIsImageLoading = (
-  fileNumber: SharedValue<number>,
-  callback: (isLoading: boolean) => void
-) => {
+const useIsImageLoading = (fileNumber: SharedValue<number>): boolean => {
+  const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
     return listen<ImageLoading>(
       EV_IMAGE_LOADING,
@@ -224,16 +217,17 @@ const useIsImageLoading = (
           return;
         }
 
-        callback(isLoading);
+        setIsLoading(isLoading);
       }
     );
   }, []);
+
+  return isLoading;
 };
 
-const useIsImageUri = (
-  fileNumber: SharedValue<number>,
-  callback: (uri: string | null) => void
-) => {
+const useUri = (fileNumber: SharedValue<number>, initialUri: string | null) => {
+  const [uri, setUri] = useState<string | null>(initialUri);
+
   useEffect(() => {
     return listen<ImageUri>(
       EV_IMAGE_URI,
@@ -242,16 +236,48 @@ const useIsImageUri = (
           return;
         }
 
-        const imageUri = data[fileNumber.value];
+        const uri = data[fileNumber.value];
 
-        if (imageUri === undefined) {
+        if (uri === undefined) {
           return;
         }
 
-        callback(imageUri);
+        setUri(uri);
       }
     );
   }, []);
+
+  return uri;
+};
+
+const useIsVerified = (fileNumber: SharedValue<number>) => {
+  const [isVerified, setIsVerified] = useState(false);
+
+  useEffect(() => {
+    return listen<VerificationEvent>(
+      EV_UPDATED_VERIFICATION,
+      (data) => {
+        if (!data) {
+          return;
+        }
+
+        if (!data.photos) {
+          return;
+        }
+
+        const photoData: boolean | undefined = data.photos[fileNumber.value];
+
+        if (photoData === undefined) {
+          return;
+        }
+
+        setIsVerified(photoData);
+      },
+      true
+    );
+  }, []);
+
+  return isVerified;
 };
 
 const euclideanDistance = (p1: Point2D, p2: Point2D) => {
@@ -389,7 +415,8 @@ const useImagePickerResult = (
           return;
         }
 
-        const singleData = data[fileNumber.value];
+        const singleData: ImageCropperOutput[number] | undefined =
+          data[fileNumber.value];
 
         if (singleData === undefined) {
           return;
@@ -516,10 +543,9 @@ const MoveableImage = ({
   const fileNumber = useSharedValue(initialFileNumber);
   const _slots = useSharedValue(slots);
   const isSlotAssignmentUnfinished = useSharedValue(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [uri, setUri] = useState<string | null>(initialUri);
-  const [blurhash, setBlurhash] = useState<string | null>(initialBlurhash);
-  const [isVerified, setIsVerified] = useState(false);
+  const isLoading = useIsImageLoading(fileNumber);
+  const uri = useUri(fileNumber, initialUri);
+  const isVerified = useIsVerified(fileNumber);
 
   const getBorderRadius = useCallback(
     (fileNumber: number) => fileNumber === 1 ? Math.max(height, width) / 2 : 5,
@@ -653,8 +679,6 @@ const MoveableImage = ({
   useEffect(() => { _slots.value = slots; }, [slots]);
 
   useImagePickerResult(input, fileNumber);
-  useIsImageLoading(fileNumber, setIsLoading);
-  useIsImageUri(fileNumber, setUri);
 
   useEffect(() => {
     return listen<SlotAssignmentStart>(
@@ -673,6 +697,10 @@ const MoveableImage = ({
   useEffect(() => {
     notify<Images>(EV_IMAGES, { [fileNumber.value]: { exists: Boolean(uri) } });
   }, [uri]);
+
+  useLayoutEffect(() => {
+    borderRadius.value = getBorderRadius(fileNumber.value);
+  }, [getBorderRadius]);
 
   return (
     <GestureDetector gesture={composedGesture}>
@@ -698,7 +726,7 @@ const MoveableImage = ({
               height: '100%',
               width: '100%',
               overflow: 'hidden',
-              borderRadius: initialBorderRadius,
+              borderRadius: borderRadius.value,
             },
             { borderRadius },
           ]}
@@ -711,7 +739,7 @@ const MoveableImage = ({
                 height: 450,
                 width: 450,
               }}
-              placeholder={blurhash && { blurhash: blurhash }}
+              placeholder={initialBlurhash && { blurhash: initialBlurhash }}
               transition={150}
               style={{
                 height: '100%',
@@ -940,7 +968,7 @@ const Images = ({
 
   const relativeSlots = getRelativeSlots(slots, pageX, pageY);
 
-  const onSlotRequest = (data: SlotRequest | undefined) => {
+  const onSlotRequest = useCallback((data: SlotRequest | undefined) => {
     if (!data) {
       return;
     }
@@ -962,15 +990,15 @@ const Images = ({
       });
 
     notify(EV_SLOT_ASSIGNMENT_FINISH);
-  };
+  }, [images]);
 
-  const onSlots = (data: Slots | undefined) => {
+  const onSlots = useCallback((data: Slots | undefined) => {
     setSlots((old) => ({ ...old, ...data }))
-  };
+  }, []);
 
-  const onImages = (data: Images | undefined) => {
+  const onImages = useCallback((data: Images | undefined) => {
     setImages((old) => ({ ...old, ...data }))
-  };
+  }, []);
 
   useEffect(
     () => listen<SlotRequest>(EV_SLOT_REQUEST, onSlotRequest),
@@ -978,17 +1006,27 @@ const Images = ({
 
   useLayoutEffect(
     () => listen<Slots>(EV_SLOTS, onSlots),
-    []);
+    [onSlots]);
 
   useLayoutEffect(
     () => listen<Images>(EV_IMAGES, onImages),
-    []);
+    [onImages]);
 
   useLayoutEffect(() => {
     viewRef.current?.measureInWindow((x, y) => {
       setPageX(x);
       setPageY(y);
     });
+
+
+    for (let i = 1; i <= 7; i++) {
+      notify<SlotAssignmentStart>(
+        EV_SLOT_ASSIGNMENT_START,
+        { from: i, to: i, pressed: null }
+      );
+    }
+
+    notify(EV_SLOT_ASSIGNMENT_FINISH);
   }, [layoutChanged]);
 
   return (
