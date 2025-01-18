@@ -499,13 +499,14 @@ const Photos = forwardRef((props: InputProps<OptionGroupPhotos>, ref) => {
         paddingRight: 20,
         width: '100%',
         alignSelf: 'center',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
     >
       <View
         style={{
-          width: '100%',
+          width: '50%',
           aspectRatio: 1,
-          maxWidth: '50%',
           alignSelf: 'center',
         }}
       >
