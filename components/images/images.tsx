@@ -480,7 +480,11 @@ const removeImage = async (
 ) => {
   setIsImageLoading(fileNumber, true);
 
-  if (await input.photos.delete(String(fileNumber.value))) {
+  const result = await photoQueue.addTask(
+    async () => await input.photos.delete(String(fileNumber.value))
+  );
+
+  if (result) {
     notify<ImageUri>(EV_IMAGE_URI, { [fileNumber.value]: null });
 
     notify<VerificationEvent>(
