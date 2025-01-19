@@ -9,38 +9,23 @@ type Props = {
 
 const MessageDivider = ({ timestamp }: Props) => {
   return (
-    <View style={styles.container}>
-      <View style={styles.lineContainer}>
-        <View style={styles.line} />
-        <DefaultText style={styles.text}>{friendlyDate(timestamp)}</DefaultText>
-        <View style={styles.line} />
-      </View>
-    </View>
+    <DefaultText style={styles.text}>{friendlyDate(timestamp)}</DefaultText>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    paddingVertical: 20,
-    width: '100%',
-  },
-  lineContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-  },
-  line: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#4f545c',
-  },
   text: {
+    alignSelf: 'center',
+    paddingTop: 58,
+    paddingBottom: 12,
     fontSize: 12,
-    color: 'black',
-    fontWeight: '600',
+    color: '#999',
+    fontWeight: '700',
     marginHorizontal: 8,
     textTransform: 'uppercase',
   },
 });
 
-export MessageDivider;
+export {
+  MessageDivider,
+}
