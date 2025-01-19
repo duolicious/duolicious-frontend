@@ -51,7 +51,7 @@ import { Image, ImageBackground } from 'expo-image';
 import * as StoreReview from 'expo-store-review';
 import { askedForReviewBefore } from '../kv-storage/asked-for-review-before';
 import { DefaultLongTextInput } from './default-long-text-input';
-
+import MessageDivider  from './message-divider';
 
 const propAt = (messages: Message[] | null | undefined, index: number, prop: string): string => {
   if (!messages) return '';
@@ -677,15 +677,36 @@ const ConversationScreen = ({navigation, route}) => {
               </DefaultText>
             </>
           }
-          {messages.length > 0 && messages.map((x) =>
+          {messages.length > 0 && messages.map((message, index) => {
+            const shouldShowDivider = () => {
+              if (index === 0) return false;
+
+    
+            const currentDate = new Date(message.timestamp);
+            const previousDate = new Date(messages[index - 1].timestamp);
+
+    
+          return (
+            currentDate.getDate() !== previousDate.getDate() ||
+            currentDate.getMonth() !== previousDate.getMonth() ||
+            currentDate.getFullYear() !== previousDate.getFullYear()
+          );
+        };
+
+        return (
+          <View key={message.id}>
+            {shouldShowDivider() && (
+              <MessageDivider timestamp={message.timestamp} />
+            )}
             <SpeechBubble
-              key={x.id}
-              fromCurrentUser={x.fromCurrentUser}
-              timestamp={x.timestamp}
-              text={x.text}
-              imageUuid={x.fromCurrentUser ? null : imageUuid}
+              fromCurrentUser={message.fromCurrentUser}
+              timestamp={message.timestamp}
+              text={message.text}
+              imageUuid={message.fromCurrentUser ? null : imageUuid}
             />
-          )}
+          </View>
+        );
+    })}
         </ScrollView>
       }
       <DefaultText
