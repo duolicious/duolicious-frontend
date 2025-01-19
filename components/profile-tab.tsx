@@ -38,6 +38,7 @@ import {
   isOptionGroupVerificationChecker,
   notificationSettingsOptionGroups,
   privacySettingsOptionGroups,
+  profileInfoEventName,
   themePickerOptionGroups,
   verificationOptionGroups,
 } from '../data/option-groups';
@@ -46,7 +47,7 @@ import { DefaultText } from './default-text';
 import { sessionToken, sessionPersonUuid } from '../kv-storage/session-token';
 import { api, japi, ApiResponse } from '../api/api';
 import { signedInUser, setSignedInUser } from '../App';
-import { cmToFeetInchesStr } from '../units/units';
+import { cmToLocaleWithUnitsStr } from '../units/units';
 import {
   IMAGES_URL,
 } from '../env/env';
@@ -55,7 +56,7 @@ import debounce from 'lodash/debounce';
 import { aboutQueue, nameQueue } from '../api/queue';
 import { ClubSelector } from './club-selector';
 import { ClubItem } from '../club/club';
-import { listen, notify } from '../events/events';
+import { listen, notify, lastEvent } from '../events/events';
 import { ButtonWithCenteredText } from './button/centered-text';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { logout } from '../xmpp/xmpp';
@@ -70,17 +71,14 @@ import { useScrollbar } from './navigation/scroll-bar-hooks';
 import { WEB_VERSION } from '../env/env';
 import { photoQueue } from '../api/queue';
 
-const formatHeight = (og: OptionGroup<OptionGroupInputs>): string | undefined => {
-  if (!isOptionGroupSlider(og.input)) return '';
-
-  const currentValue = getCurrentValue(og.input);
-
-  if (_.isNumber(currentValue)) {
-    return signedInUser?.units === 'Imperial' ?
-      cmToFeetInchesStr(currentValue) :
-      `${currentValue} cm`;
-  }
-};
+// TODO: Check that verification status is fetched when the page is refreshed
+// TODO: Check that verification status is updated in the UI without refreshing when the user gets verified
+// TODO: Check that verification status is updated in the UI without refreshing when the user get unverified
+// TODO: When units change, the following must also change:
+//       * Height slider on profile
+//       * Distance slider on search filters
+//       * Height slider on search filters
+// TODO: Option screens aren't seeing the values that their corresponding buttons do
 
 const enqueueAbout = async (about: string, cb: (response: ApiResponse) => void) => {
   aboutQueue.addTask(
@@ -109,6 +107,120 @@ const ProfileTab = ({navigation}) => {
       <Stack.Screen name="Club Selector" component={ClubSelector} />
       <Stack.Screen name="Invite Picker" component={InvitePicker} />
     </Stack.Navigator>
+  );
+};
+
+const Button_ = (
+  props: {
+    navigation: any
+    formatter?: any
+    settingEventName?: string,
+    onPress?: any
+    label?: string
+    loading?: boolean
+    optionGroups?: any
+    showSkipButton?: boolean
+    theme?: 'light' | 'dark'
+  }
+) => {
+  const initialSetting =
+    props.settingEventName ?
+    lastEvent(props.settingEventName) :
+    '';
+
+  const [setting, setSetting] = useState(initialSetting);
+
+  useEffect(() => {
+    if (props.settingEventName) {
+      return listen(props.settingEventName, setSetting);
+    }
+  }, [props.settingEventName, setSetting]);
+
+  return <ButtonForOption
+    navigation={props.navigation}
+    navigationScreen="Profile Option Screen"
+    setting={
+      props.formatter ?
+      props.formatter(setting) :
+      setting
+    }
+    onPress={props.onPress}
+    label={props.label}
+    loading={props.loading}
+    optionGroups={props.optionGroups}
+    showSkipButton={props.showSkipButton}
+    theme={props.theme}
+  />;
+};
+
+const Verification = ({navigation, initialData}) => {
+  const initialDataDeepCopy = JSON.parse(JSON.stringify(initialData));
+
+  const [data, setData] = useState(initialDataDeepCopy);
+
+  useEffect(() => {
+    return listen<VerificationEvent>(
+      'updated-verification',
+      (v) => {
+        if (!v)
+          return;
+
+        if (v.photos !== undefined)
+          data.photo_verification = {
+            ...data.photo_verification,
+            ...v.photos,
+          };
+
+        if (v.gender !== undefined)
+          data.verified_gender = v.gender;
+
+        if (v.age !== undefined)
+          data.verified_age = v.age;
+
+        if (v.ethnicity !== undefined)
+          data.verified_ethnicity = v.ethnicity;
+
+        setData(data);
+      }
+    );
+  }, [data]);
+
+  const isCompletelyVerified = (
+    Object.values(data?.photo_verification ?? {}).every(Boolean) &&
+    (data?.verified_gender ?? false) &&
+    (data?.verified_age ?? false) &&
+    (data?.verified_ethnicity ?? false)
+  );
+
+  return (
+    <>
+      <DetailedVerificationBadges
+        photos={Object.values(data?.photo_verification ?? {}).some(Boolean)}
+        gender={data?.verified_gender ?? false}
+        age={data?.verified_age ?? false}
+        ethnicity={data?.verified_ethnicity ?? false}
+        style={{ marginBottom: 10 }}
+      />
+      {!isCompletelyVerified && <>
+        <Button_
+          navigation={navigation}
+          optionGroups={verificationOptionGroups}
+          showSkipButton={false}
+          theme="light"
+        />
+        <DefaultText
+          style={{
+            color: '#999',
+            textAlign: 'center',
+            marginRight: 10,
+            marginLeft: 10,
+          }}
+        >
+          Pro tip: If you want to verify your photos, make sure they show your
+          face before starting
+        </DefaultText>
+      </>}
+    </>
   );
 };
 
@@ -199,6 +311,10 @@ const ProfileTab_ = ({navigation}) => {
       }
 
       setData(response.json);
+
+      for (const [k, v] of Object.entries(response.json)) {
+        notify(profileInfoEventName(k), v);
+      }
 
       notify<VerificationEvent>(
         'updated-verification',
@@ -402,86 +518,6 @@ const Options = ({ navigation, data }) => {
     'error' | 'loading' | 'ok'
   >('ok');
 
-  const addCurrentValue = (optionGroups: OptionGroup<OptionGroupInputs>[]) =>
-    optionGroups.map(
-      (
-        og: OptionGroup<OptionGroupInputs>,
-        i: number
-      ): OptionGroup<OptionGroupInputs> =>
-        _.merge(
-          {},
-          og,
-          isOptionGroupTextShort(og.input) ? {
-            input: {
-              textShort: {
-                currentValue: (data ?? {})[optionGroups[i].title.toLowerCase()]
-              }
-            }
-          } : {},
-          isOptionGroupButtons(og.input) ? {
-            input: {
-              buttons: {
-                currentValue: (data ?? {})[optionGroups[i].title.toLowerCase()]
-              }
-            }
-          } : {},
-          isOptionGroupLocationSelector(og.input) ? {
-            input: {
-              locationSelector: {
-                currentValue: (data ?? {})[optionGroups[i].title.toLowerCase()]
-              }
-            }
-          } : {},
-          isOptionGroupSlider(og.input) && og.title === 'Height' ? {
-            input: {
-              slider: {
-                currentValue: (data ?? {})[optionGroups[i].title.toLowerCase()]
-              }
-            }
-          } : {},
-          isOptionGroupThemePicker(og.input) ? {
-            input: {
-              themePicker: {
-                currentTitleColor: data?.theme?.title_color,
-                currentBodyColor: data?.theme?.body_color,
-                currentBackgroundColor: data?.theme?.background_color,
-              }
-            }
-          } : {},
-        )
-    );
-
-  const [
-    _basicsOptionGroups,
-    _generalSettingsOptionGroups,
-    _notificationSettingsOptionGroups,
-    _privacySettingsOptionGroups,
-    _themePickerOptionGroups,
-  ] = useMemo(
-    () => [
-      addCurrentValue(basicsOptionGroups),
-      addCurrentValue(generalSettingsOptionGroups),
-      addCurrentValue(notificationSettingsOptionGroups),
-      addCurrentValue(privacySettingsOptionGroups),
-      addCurrentValue(themePickerOptionGroups),
-    ],
-    [data]
-  );
-
-  useEffect(() => {
-    _basicsOptionGroups.forEach((og: OptionGroup<OptionGroupInputs>) => {
-      if (isOptionGroupSlider(og.input) && og.title === 'Height') {
-        og.input.slider.unitsLabel = (
-          signedInUser?.units === 'Imperial' ?
-          "ft'in\"" : 'cm');
-
-        og.input.slider.valueRewriter = (
-          signedInUser?.units === 'Imperial' ?
-          cmToFeetInchesStr : undefined);
-      }
-    });
-  }, [_basicsOptionGroups, signedInUser?.units]);
-
   useEffect(() => {
     return listen(
       'updated-clubs',
@@ -493,46 +529,6 @@ const Options = ({ navigation, data }) => {
       },
     );
   }, [data]);
-
-  const onSubmitSuccess = useCallback(() => {
-    triggerRender({});
-  }, [triggerRender]);
-
-  useEffect(() => {
-    return listen<VerificationEvent>(
-      'updated-verification',
-      (v) => {
-        if (!v)
-          return;
-
-        if (v.photos !== undefined)
-          data.photo_verification = {
-            ...data.photo_verification,
-            ...v.photos,
-          };
-
-        if (v.gender !== undefined)
-          data.verified_gender = v.gender;
-
-        if (v.age !== undefined)
-          data.verified_age = v.age;
-
-        if (v.ethnicity !== undefined)
-          data.verified_ethnicity = v.ethnicity;
-
-        triggerRender({});
-      }
-    );
-  }, [triggerRender, data]);
-
-  const Button_ = useCallback((props) => {
-    return <ButtonForOption
-      navigation={navigation}
-      navigationScreen="Profile Option Screen"
-      onSubmitSuccess={onSubmitSuccess}
-      {...props}
-    />;
-  }, [navigation]);
 
   const signOut = useCallback(async () => {
     setIsLoadingSignOut(true);
@@ -582,43 +578,10 @@ const Options = ({ navigation, data }) => {
     );
   }, [navigation]);
 
-  const isCompletelyVerified = (
-    Object.values(data?.photo_verification ?? {}).every(Boolean) &&
-    (data?.verified_gender ?? false) &&
-    (data?.verified_age ?? false) &&
-    (data?.verified_ethnicity ?? false)
-  );
-
   return (
     <View>
       <Title>Verification</Title>
-      <DetailedVerificationBadges
-        photos={Object.values(data?.photo_verification ?? {}).some(Boolean)}
-        gender={data?.verified_gender ?? false}
-        age={data?.verified_age ?? false}
-        ethnicity={data?.verified_ethnicity ?? false}
-        style={{ marginBottom: 10 }}
-      />
-      {!isCompletelyVerified && <>
-          <Button_
-            setting=""
-            optionGroups={verificationOptionGroups}
-            showSkipButton={false}
-            theme="light"
-          />
-          <DefaultText
-            style={{
-              color: '#999',
-              textAlign: 'center',
-              marginRight: 10,
-              marginLeft: 10,
-            }}
-          >
-            Pro tip: If you want to verify your photos, make sure they show your
-            face before starting
-          </DefaultText>
-        </>
-      }
+      <Verification navigation={navigation} initialData={data} />
 
       <DisplayNameAndAboutPerson navigation={navigation} data={data}/>
 
@@ -630,20 +593,23 @@ const Options = ({ navigation, data }) => {
 
       <Title>Basics</Title>
       {
-        _basicsOptionGroups.map((og, i) =>
+        basicsOptionGroups.map((og, i) =>
           <Button_
             key={i}
-            setting={
+            navigation={navigation}
+            formatter={
               og.title === 'Height' ?
-                formatHeight(og) :
-                getCurrentValue(_basicsOptionGroups[i].input)
+                cmToLocaleWithUnitsStr :
+                undefined
             }
-            optionGroups={_basicsOptionGroups.slice(i)}
+            settingEventName={profileInfoEventName(og.title)}
+            optionGroups={basicsOptionGroups.slice(i)}
           />
         )
       }
 
       <Title>Clubs</Title>
+      { /* TODO */ }
       <ButtonForOption
         onPress={goToClubSelector}
         label="Clubs"
@@ -653,12 +619,17 @@ const Options = ({ navigation, data }) => {
       <InviteEntrypoint navigation={navigation}/>
 
       <Title>Theme</Title>
-      <Button_
-        setting=""
-        optionGroups={_themePickerOptionGroups}
-        showSkipButton={false}
-        theme="light"
-      />
+      {
+        themePickerOptionGroups.map((og, i) =>
+          <Button_
+            key={i}
+            navigation={navigation}
+            optionGroups={themePickerOptionGroups.slice(i)}
+            showSkipButton={false}
+            theme="light"
+          />
+        )
+      }
 
       <ButtonWithCenteredText
         onPress={() => navigation.navigate(
@@ -695,31 +666,34 @@ const Options = ({ navigation, data }) => {
 
       <Title style={{ marginTop: 70 }}>Notification Settings</Title>
       {
-        _notificationSettingsOptionGroups.map((og, i) =>
+        notificationSettingsOptionGroups.map((og, i) =>
           <Button_
             key={i}
-            setting={getCurrentValue(og.input)}
-            optionGroups={_notificationSettingsOptionGroups.slice(i)}
+            navigation={navigation}
+            settingEventName={profileInfoEventName(og.title)}
+            optionGroups={notificationSettingsOptionGroups.slice(i)}
           />
         )
       }
       <Title>Privacy Settings</Title>
       {
-        _privacySettingsOptionGroups.map((og, i) =>
+        privacySettingsOptionGroups.map((og, i) =>
           <Button_
             key={i}
-            setting={getCurrentValue(og.input)}
-            optionGroups={_privacySettingsOptionGroups.slice(i)}
+            navigation={navigation}
+            settingEventName={profileInfoEventName(og.title)}
+            optionGroups={privacySettingsOptionGroups.slice(i)}
           />
         )
       }
       <Title>General Settings</Title>
       {
-        _generalSettingsOptionGroups.map((og, i) =>
+        generalSettingsOptionGroups.map((og, i) =>
           <Button_
             key={i}
-            setting={getCurrentValue(og.input)}
-            optionGroups={_generalSettingsOptionGroups.slice(i)}
+            navigation={navigation}
+            settingEventName={profileInfoEventName(og.title)}
+            optionGroups={generalSettingsOptionGroups.slice(i)}
           />
         )
       }
@@ -735,10 +709,17 @@ const Options = ({ navigation, data }) => {
       />
 
       <Title style={{ marginTop: 70 }}>Deactivate My Account</Title>
-      <Button_ optionGroups={deactivationOptionGroups} setting="" showSkipButton={false}/>
+      <Button_
+        navigation={navigation}
+        optionGroups={deactivationOptionGroups}
+        showSkipButton={false}
+      />
 
       <Title>Delete My Account</Title>
-      <Button_ optionGroups={deletionOptionGroups} setting=""/>
+      <Button_
+        navigation={navigation}
+        optionGroups={deletionOptionGroups}
+      />
 
       <Title style={{ marginTop: 70 }}>Export My Data</Title>
       <ButtonForOption

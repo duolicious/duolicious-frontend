@@ -22,7 +22,7 @@ import { login, logout } from '../xmpp/xmpp';
 import { LOGARITHMIC_SCALE, Scale } from "../scales/scales";
 import { VerificationBadge } from '../components/verification-badge';
 import { VerificationEvent } from '../verification/verification';
-import { notify } from '../events/events';
+import { notify, lastEvent } from '../events/events';
 import { ClubItem } from '../club/club';
 import { DefaultText } from '../components/default-text';
 import {
@@ -33,6 +33,12 @@ import {
 } from 'react-native';
 import { FC } from 'react';
 import { onboardingQueue } from '../api/queue';
+import {
+  cmToLocaleUnitsStr,
+  cmToLocaleStr,
+  kmToLocaleUnitsStr,
+  kmToLocaleStr,
+} from '../units/units';
 
 const noneFontSize = 16;
 
@@ -150,7 +156,7 @@ type OptionGroupSlider = {
     sliderMin: number,
     sliderMax: number,
     step: number,
-    unitsLabel: string,
+    unitsLabel: () => string,
     submit: (input: number | null) => Promise<boolean>,
     addPlusAtMax?: boolean,
     defaultValue: number,
@@ -164,7 +170,7 @@ type OptionGroupRangeSlider = {
   rangeSlider: {
     sliderMin: number,
     sliderMax: number,
-    unitsLabel: string,
+    unitsLabel: () => string,
     submit: (sliderMin: number | null, sliderMax: number | null) => Promise<boolean>,
     valueRewriter?: (v: number) => string,
     currentMin?: number,
@@ -267,6 +273,7 @@ const isOptionGroupCheckChips = (x: any): x is OptionGroupCheckChips => {
   return hasExactKeys(x, ['checkChips']);
 }
 
+// TODO: Check where this is called and use events instead
 const getCurrentValue = (x: OptionGroupInputs | undefined) => {
   if (isOptionGroupButtons(x))
     return x.buttons.currentValue;
@@ -290,6 +297,55 @@ const getCurrentValue = (x: OptionGroupInputs | undefined) => {
     return x.checkChips.values.flatMap((v) => v.checked ? [v.label] : []);
 }
 
+const eventName = (
+  endpoint: '/profile-info' | '/search-filter',
+  titleOrKey: string,
+) => {
+  return endpoint + ' ' + titleOrKey.replaceAll(' ', '_').toLowerCase();
+};
+
+const submit = async (
+  that: any,
+  endpoint: '/profile-info' | '/search-filter',
+  data: { [k: string]: any },
+): Promise<boolean> => {
+  for (const [k, v] of Object.entries(data)) {
+    const _eventName = eventName(endpoint, k);
+
+    const currentValue = lastEvent(_eventName);
+    if (currentValue === v) {
+      return true;
+    }
+
+    const method = endpoint === '/profile-info' ? 'patch' : 'post';
+
+    const ok = (await japi(method, '/profile-info', { [k]: v })).ok;
+
+    if (ok) {
+      notify(_eventName, v);
+    }
+
+    return ok;
+  }
+
+  return false;
+};
+
+const profileInfoEventName = (titleOrKey: string) =>
+  eventName('/profile-info', titleOrKey);
+
+const searchFilterEventName = (titleOrKey: string) =>
+  eventName('/search-filter', titleOrKey);
+
+const submitProfileInfo = (that: any, data: { [k: string]: any }) =>
+  submit(that, '/profile-info', data);
+
+const submitSearchFilter = (that, data: { [k: string]: any }) =>
+  submit(that, '/search-filter', data);
+
+// TODO: Ensure search filters get values
+// TODO: Ensure search filters set values
+// TODO: Need to call in search filters to get current value
 const newCheckChipValues = (
   currentValues: { label: string, checked: boolean }[],
   newValues: string[],
@@ -565,15 +621,12 @@ const genderOptionGroup: OptionGroup<OptionGroupButtons> = {
     buttons: {
       values: genders,
       submit: async function(gender: string) {
-        if (this.currentValue === gender) {
-          return true;
-        }
+        const ok = await submitProfileInfo(this, { gender });
 
-        const ok = (await japi('patch', '/profile-info', { gender })).ok;
         if (ok) {
-          this.currentValue = gender;
           notify<VerificationEvent>('updated-verification', { gender: false });
         }
+
         return ok;
       },
     }
@@ -599,15 +652,12 @@ const ethnicityOptionGroup: OptionGroup<OptionGroupButtons> = {
     buttons: {
       values: ethnicities,
       submit: async function(ethnicity: string) {
-        if (this.currentValue === ethnicity) {
-          return true;
-        }
+        const ok = await submitProfileInfo({ ethnicity });
 
-        const ok = (await japi('patch', '/profile-info', { ethnicity })).ok;
         if (ok) {
-          this.currentValue = ethnicity;
           notify<VerificationEvent>('updated-verification', { ethnicity: false });
         }
+
         return ok;
       },
     }
@@ -627,9 +677,7 @@ const locationOptionGroup: OptionGroup<OptionGroupLocationSelector> = {
   input: {
     locationSelector: {
       submit: async function(location: string) {
-        const ok = (await japi('patch', '/profile-info', { location })).ok;
-        if (ok) this.currentValue = location;
-        return ok;
+        return await submitProfileInfo({ location });
       },
     }
   },
@@ -644,9 +692,7 @@ const orientationOptionGroup: OptionGroup<OptionGroupButtons> = {
     buttons: {
       values: orientations,
       submit: async function(orientation: string) {
-        const ok = (await japi('patch', '/profile-info', { orientation })).ok;
-        if (ok) this.currentValue = orientation;
-        return ok;
+        return await submitProfileInfo({ orientation });
       },
     }
   },
@@ -659,10 +705,8 @@ const lookingForOptionGroup: OptionGroup<OptionGroupButtons> = {
   input: {
     buttons: {
       values: lookingFor,
-      submit: async function(lookingFor: string) {
-        const ok = (await japi('patch', '/profile-info', { looking_for: lookingFor })).ok;
-        if (ok) this.currentValue = lookingFor;
-        return ok;
+      submit: async function(looking_for: string) {
+        return await submitProfileInfo({ looking_for });
       },
     }
   }
@@ -680,9 +724,7 @@ const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
     input: {
       textShort: {
         submit: async function(occupation: string) {
-          const ok = (await japi('patch', '/profile-info', { occupation })).ok;
-          if (ok) this.currentValue = occupation;
-          return ok;
+          return await submitProfileInfo({ occupation });
         },
         invalidMsg: 'Try again',
       }
@@ -695,9 +737,7 @@ const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
     input: {
       textShort: {
         submit: async function(education: string) {
-          const ok = (await japi('patch', '/profile-info', { education })).ok;
-          if (ok) this.currentValue = education;
-          return ok;
+          return await submitProfileInfo({ education });
         },
         invalidMsg: 'Try again',
       }
@@ -719,11 +759,10 @@ const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
         sliderMax: 220,
         defaultValue: 170,
         step: 1,
-        unitsLabel: 'cm',
+        unitsLabel: cmToLocaleUnitsStr,
+        valueRewriter: cmToLocaleStr,
         submit: async function(height: number) {
-          const ok = (await japi('patch', '/profile-info', { height })).ok;
-          if (ok) this.currentValue = height;
-          return ok;
+          return await submitProfileInfo({ height });
         },
       },
     },
@@ -743,9 +782,7 @@ const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
       buttons: {
         values: yesNo,
         submit: async function(smoking: string) {
-          const ok = (await japi('patch', '/profile-info', { smoking })).ok;
-          if (ok) this.currentValue = smoking;
-          return ok;
+          return await submitProfileInfo({ smoking });
         },
       }
     },
@@ -758,9 +795,7 @@ const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
       buttons: {
         values: frequency,
         submit: async function(drinking: string) {
-          const ok = (await japi('patch', '/profile-info', { drinking })).ok;
-          if (ok) this.currentValue = drinking;
-          return ok;
+          return await submitProfileInfo({ drinking });
         },
       }
     },
@@ -779,9 +814,7 @@ const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
       buttons: {
         values: yesNo,
         submit: async function(drugs: string) {
-          const ok = (await japi('patch', '/profile-info', { drugs })).ok;
-          if (ok) this.currentValue = drugs;
-          return ok;
+          return await submitProfileInfo({ drugs });
         },
       }
     },
@@ -793,10 +826,8 @@ const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
     input: {
       buttons: {
         values: yesNo,
-        submit: async function(longDistance: string) {
-          const ok = (await japi('patch', '/profile-info', { long_distance: longDistance })).ok;
-          if (ok) this.currentValue = longDistance;
-          return ok;
+        submit: async function(long_distance: string) {
+          return await submitProfileInfo({ long_distance });
         },
       }
     },
@@ -808,12 +839,8 @@ const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
     input: {
       buttons: {
         values: relationshipStatus,
-        submit: async function(relationshipStatus: string) {
-          const ok = (
-            await japi('patch', '/profile-info', { relationship_status: relationshipStatus })
-          ).ok;
-          if (ok) this.currentValue = relationshipStatus;
-          return ok;
+        submit: async function(relationship_status: string) {
+          return await submitProfileInfo({ relationship_status });
         },
       }
     }
@@ -825,10 +852,8 @@ const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
     input: {
       buttons: {
         values: yesNo,
-        submit: async function(hasKids: string) {
-          const ok = (await japi('patch', '/profile-info', { has_kids: hasKids })).ok;
-          if (ok) this.currentValue = hasKids;
-          return ok;
+        submit: async function(has_kids: string) {
+          return await submitProfileInfo({ has_kids });
         },
       }
     },
@@ -840,10 +865,8 @@ const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
     input: {
       buttons: {
         values: yesNoMaybe,
-        submit: async function(wantsKids: string) {
-          const ok = (await japi('patch', '/profile-info', { wants_kids: wantsKids })).ok;
-          if (ok) this.currentValue = wantsKids;
-          return ok;
+        submit: async function(wants_kids: string) {
+          return await submitProfileInfo({ wants_kids });
         },
       }
     },
@@ -856,9 +879,7 @@ const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
       buttons: {
         values: frequency,
         submit: async function(exercise: string) {
-          const ok = (await japi('patch', '/profile-info', { exercise })).ok;
-          if (ok) this.currentValue = exercise;
-          return ok;
+          return await submitProfileInfo({ exercise });
         },
       }
     },
@@ -877,9 +898,7 @@ const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
       buttons: {
         values: religions,
         submit: async function(religion: string) {
-          const ok = (await japi('patch', '/profile-info', { religion })).ok;
-          if (ok) this.currentValue = religion;
-          return ok;
+          return await submitProfileInfo({ religion });
         },
       }
     },
@@ -891,10 +910,8 @@ const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
     input: {
       buttons: {
         values: starSigns,
-        submit: async function(starSign: string) {
-          const ok = (await japi('patch', '/profile-info', { star_sign: starSign })).ok;
-          if (ok) this.currentValue = starSign;
-          return ok;
+        submit: async function(star_sign: string) {
+          return await submitProfileInfo({ star_sign });
         },
       }
     },
@@ -921,13 +938,7 @@ const themePickerOptionGroups: OptionGroup<OptionGroupThemePicker>[] = [
             background_color: backgroundColor,
           };
 
-          const ok = (await japi('patch', '/profile-info', { theme })).ok;
-          if (ok) {
-            this.currentTitleColor = titleColor;
-            this.currentBodyColor = bodyColor;
-            this.currentBackgroundColor = backgroundColor;
-          }
-          return ok;
+          return await submitProfileInfo({ theme });
         },
       },
     },
@@ -949,9 +960,9 @@ const generalSettingsOptionGroups: OptionGroup<OptionGroupButtons>[] = [
       buttons: {
         values: ['Metric', 'Imperial'],
         submit: async function(units: 'Imperial' | 'Metric') {
-          const ok = (await japi('patch', '/profile-info', { units })).ok;
+          const ok = await submitProfileInfo({ units });
+
           if (ok) {
-            this.currentValue = units;
             setSignedInUser((signedInUser) => {
               if (signedInUser) {
                 return { ...signedInUser, units }
@@ -960,6 +971,7 @@ const generalSettingsOptionGroups: OptionGroup<OptionGroupButtons>[] = [
               }
             });
           }
+
           return ok;
         },
       }
@@ -976,9 +988,7 @@ const notificationSettingsOptionGroups: OptionGroup<OptionGroupButtons>[] = [
       buttons: {
         values: immediacy,
         submit: async function(chats: string) {
-          const ok = (await japi('patch', '/profile-info', { chats })).ok;
-          if (ok) this.currentValue = chats;
-          return ok;
+          return await submitProfileInfo({ chats });
         },
       }
     }
@@ -991,9 +1001,7 @@ const notificationSettingsOptionGroups: OptionGroup<OptionGroupButtons>[] = [
       buttons: {
         values: immediacy,
         submit: async function(intros: string) {
-          const ok = (await japi('patch', '/profile-info', { intros })).ok;
-          if (ok) this.currentValue = intros;
-          return ok;
+          return await submitProfileInfo({ intros });
         },
       }
     }
@@ -1288,11 +1296,7 @@ const searchTwoWayBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
           ...yourPartnersGenderOptionGroup.input.checkChips.values,
         ],
         submit: async function(gender: string[]) {
-          const ok = (await japi('post', '/search-filter', { gender })).ok;
-          if (ok) {
-            this.values = newCheckChipValues(this.values, gender);
-          }
-          return ok;
+          return submitSearchFilter({ gender });
         }
       }
     },
@@ -1313,19 +1317,12 @@ const searchTwoWayBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
         sliderMax: 10000,
         defaultValue: 10000,
         step: 1,
-        unitsLabel: 'km',
+        unitsLabel: kmToLocaleUnitsStr,
+        valueRewriter: kmToLocaleStr,
         addPlusAtMax: true,
         scale: LOGARITHMIC_SCALE,
-        submit: async function(furthestDistance: number | null) {
-          const ok = (
-            await japi(
-              'post',
-              '/search-filter',
-              { furthest_distance: furthestDistance }
-            )
-          ).ok;
-          if (ok) this.currentValue = furthestDistance;
-          return ok;
+        submit: async function(furthest_distance: number | null) {
+          return submitSearchFilter({ furthest_distance });
         },
       },
     },
@@ -1344,25 +1341,9 @@ const searchTwoWayBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
       rangeSlider: {
         sliderMin: 18,
         sliderMax: 99,
-        unitsLabel: 'years',
-        submit: async function(sliderMin: number | null, sliderMax: number | null) {
-          const ok = (
-            await japi(
-              'post',
-              '/search-filter',
-              {
-                age: {
-                  min_age: sliderMin,
-                  max_age: sliderMax,
-                }
-              }
-            )
-          ).ok;
-          if (ok) {
-            this.currentMin = sliderMin;
-            this.currentMax = sliderMax;
-          }
-          return ok;
+        unitsLabel: () => 'years',
+        submit: async function(min_age: number | null, max_age: number | null) {
+          return submitSearchFilter({ age: { min_age, max_age } });
         },
       }
     },
@@ -1378,14 +1359,10 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
       checkChips: {
         values: [
           ...orientations.map((x) => ({checked: true, label: x})),
-          {checked: true, label: 'Unanswered'},
+          { checked: true, label: 'Unanswered' },
         ],
         submit: async function(orientation: string[]) {
-          const ok = (await japi('post', '/search-filter', { orientation })).ok;
-          if (ok) {
-            this.values = newCheckChipValues(this.values, orientation);
-          }
-          return ok;
+          return submitSearchFilter({ orientation });
         }
       }
     },
@@ -1401,11 +1378,7 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
           {checked: true, label: 'Unanswered'},
         ],
         submit: async function(ethnicity: string[]) {
-          const ok = (await japi('post', '/search-filter', { ethnicity })).ok;
-          if (ok) {
-            this.values = newCheckChipValues(this.values, ethnicity);
-          }
-          return ok;
+          return submitSearchFilter({ ethnicity });
         }
       }
     },
@@ -1424,25 +1397,10 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
       rangeSlider: {
         sliderMin: 50,
         sliderMax: 220,
-        unitsLabel: 'cm',
-        submit: async function(sliderMin: number | null, sliderMax: number | null) {
-          const ok = (
-            await japi(
-              'post',
-              '/search-filter',
-              {
-                height: {
-                  min_height_cm: sliderMin,
-                  max_height_cm: sliderMax,
-                }
-              }
-            )
-          ).ok;
-          if (ok) {
-            this.currentMin = sliderMin;
-            this.currentMax = sliderMax;
-          }
-          return ok;
+        unitsLabel: cmToLocaleUnitsStr,
+        valueRewriter: cmToLocaleStr,
+        submit: async function(min_height_cm: number | null, max_height_cm: number | null) {
+          return submitSearchFilter({ height: { min_height_cm, max_height_cm } });
         },
       },
     },
@@ -1462,16 +1420,8 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
         values: [
           ...yesNo.map((x) => ({checked: true, label: x})),
         ],
-        submit: async function(hasAProfilePicture: string[]) {
-          const ok = (await japi(
-            'post',
-            '/search-filter',
-            { has_a_profile_picture: hasAProfilePicture }
-          )).ok;
-          if (ok) {
-            this.values = newCheckChipValues(this.values, hasAProfilePicture);
-          }
-          return ok;
+        submit: async function(has_a_profile_picture: string[]) {
+          return submitSearchFilter({ has_a_profile_picture });
         }
       }
     },
@@ -1486,16 +1436,8 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
           ...lookingFor.map((x) => ({checked: true, label: x})),
           {checked: true, label: 'Unanswered'},
         ],
-        submit: async function(lookingFor: string[]) {
-          const ok = (await japi(
-            'post',
-            '/search-filter',
-            { looking_for: lookingFor }
-          )).ok;
-          if (ok) {
-            this.values = newCheckChipValues(this.values, lookingFor);
-          }
-          return ok;
+        submit: async function(looking_for: string[]) {
+          return submitSearchFilter({ looking_for });
         }
       }
     },
@@ -1517,15 +1459,7 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
           {checked: true, label: 'Unanswered'}
         ],
         submit: async function(smoking: string[]) {
-          const ok = (await japi(
-            'post',
-            '/search-filter',
-            { smoking }
-          )).ok;
-          if (ok) {
-            this.values = newCheckChipValues(this.values, smoking);
-          }
-          return ok;
+          return submitSearchFilter({ smoking });
         }
       }
     },
@@ -1541,15 +1475,7 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
           {checked: true, label: 'Unanswered'}
         ],
         submit: async function(drinking: string[]) {
-          const ok = (await japi(
-            'post',
-            '/search-filter',
-            { drinking }
-          )).ok;
-          if (ok) {
-            this.values = newCheckChipValues(this.values, drinking);
-          }
-          return ok;
+          return submitSearchFilter({ drinking });
         }
       }
     },
@@ -1571,15 +1497,7 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
           {checked: true, label: 'Unanswered'}
         ],
         submit: async function(drugs: string[]) {
-          const ok = (await japi(
-            'post',
-            '/search-filter',
-            { drugs }
-          )).ok;
-          if (ok) {
-            this.values = newCheckChipValues(this.values, drugs);
-          }
-          return ok;
+          return submitSearchFilter({ drugs });
         }
       }
     },
@@ -1594,16 +1512,8 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
           ...yesNo.map((x) => ({checked: true, label: x})),
           {checked: true, label: 'Unanswered'}
         ],
-        submit: async function(longDistance: string[]) {
-          const ok = (await japi(
-            'post',
-            '/search-filter',
-            { long_distance: longDistance }
-          )).ok;
-          if (ok) {
-            this.values = newCheckChipValues(this.values, longDistance);
-          }
-          return ok;
+        submit: async function(long_distance: string[]) {
+          return submitSearchFilter({ long_distance });
         }
       }
     },
@@ -1618,16 +1528,8 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
           ...relationshipStatus.map((x) => ({checked: true, label: x})),
           {checked: true, label: 'Unanswered'},
         ],
-        submit: async function(relationshipStatus: string[]) {
-          const ok = (await japi(
-            'post',
-            '/search-filter',
-            { relationship_status: relationshipStatus }
-          )).ok;
-          if (ok) {
-            this.values = newCheckChipValues(this.values, relationshipStatus);
-          }
-          return ok;
+        submit: async function(relationship_status: string[]) {
+          return submitSearchFilter({ relationship_status });
         }
       }
     },
@@ -1642,16 +1544,8 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
           ...yesNo.map((x) => ({checked: true, label: x})),
           {checked: true, label: 'Unanswered'}
         ],
-        submit: async function(hasKids: string[]) {
-          const ok = (await japi(
-            'post',
-            '/search-filter',
-            { has_kids: hasKids }
-          )).ok;
-          if (ok) {
-            this.values = newCheckChipValues(this.values, hasKids);
-          }
-          return ok;
+        submit: async function(has_kids: string[]) {
+          return submitSearchFilter({ has_kids });
         }
       }
     },
@@ -1666,16 +1560,8 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
           ...yesNoMaybe.map((x) => ({checked: true, label: x})),
           {checked: true, label: 'Unanswered'}
         ],
-        submit: async function(wantsKids: string[]) {
-          const ok = (await japi(
-            'post',
-            '/search-filter',
-            { wants_kids: wantsKids }
-          )).ok;
-          if (ok) {
-            this.values = newCheckChipValues(this.values, wantsKids);
-          }
-          return ok;
+        submit: async function(wants_kids: string[]) {
+          return submitSearchFilter({ wants_kids });
         }
       }
     },
@@ -1691,15 +1577,7 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
           {checked: true, label: 'Unanswered'},
         ],
         submit: async function(exercise: string[]) {
-          const ok = (await japi(
-            'post',
-            '/search-filter',
-            { exercise }
-          )).ok;
-          if (ok) {
-            this.values = newCheckChipValues(this.values, exercise);
-          }
-          return ok;
+          return submitSearchFilter({ exercise });
         }
       }
     },
@@ -1721,15 +1599,7 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
           {checked: true, label: 'Unanswered'},
         ],
         submit: async function(religion: string[]) {
-          const ok = (await japi(
-            'post',
-            '/search-filter',
-            { religion }
-          )).ok;
-          if (ok) {
-            this.values = newCheckChipValues(this.values, religion);
-          }
-          return ok;
+          return submitSearchFilter({ religion });
         }
       }
     },
@@ -1744,16 +1614,8 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
           ...starSigns.map((x) => ({checked: true, label: x})),
           {checked: true, label: 'Unanswered'},
         ],
-        submit: async function(starSign: string[]) {
-          const ok = (await japi(
-            'post',
-            '/search-filter',
-            { star_sign: starSign }
-          )).ok;
-          if (ok) {
-            this.values = newCheckChipValues(this.values, starSign);
-          }
-          return ok;
+        submit: async function(star_sign: string[]) {
+          return submitSearchFilter({ star_sign });
         }
       }
     },
@@ -1774,14 +1636,8 @@ const searchInteractionsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
     input: {
       buttons: {
         values: yesNo,
-        submit: async function(peopleMessaged: string) {
-          const ok = (await japi(
-            'post',
-            '/search-filter',
-            { people_you_messaged: peopleMessaged }
-          )).ok;
-          if (ok) this.currentValue = peopleMessaged;
-          return ok;
+        submit: async function(people_messaged: string) {
+          return submitSearchFilter({ people_messaged });
         }
       }
     },
@@ -1800,14 +1656,8 @@ const searchInteractionsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
     input: {
       buttons: {
         values: yesNo,
-        submit: async function(peopleSkipped: string) {
-          const ok = (await japi(
-            'post',
-            '/search-filter',
-            { people_you_skipped: peopleSkipped }
-          )).ok;
-          if (ok) this.currentValue = peopleSkipped;
-          return ok;
+        submit: async function(people_skipped: string) {
+          return submitSearchFilter({ people_skipped });
         }
       }
     },
@@ -1822,16 +1672,8 @@ const privacySettingsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
     input: {
       buttons: {
         values: verificationLevel,
-        submit: async function(verificationLevel: string) {
-          const ok = (
-            await japi(
-              'patch',
-              '/profile-info',
-              { verification_level: verificationLevel }
-            )
-          ).ok;
-          if (ok) this.currentValue = verificationLevel;
-          return ok;
+        submit: async function(verification_level: string) {
+          return await submitProfileInfo({ verification_level });
         },
       }
     },
@@ -1849,16 +1691,8 @@ const privacySettingsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
     input: {
       buttons: {
         values: yesNo,
-        submit: async function(showMyLocation: string) {
-          const ok = (
-            await japi(
-              'patch',
-              '/profile-info',
-              { show_my_location: showMyLocation }
-            )
-          ).ok;
-          if (ok) this.currentValue = showMyLocation;
-          return ok;
+        submit: async function(show_my_location: string) {
+          return await submitProfileInfo({ show_my_location });
         },
       }
     },
@@ -1876,16 +1710,8 @@ const privacySettingsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
     input: {
       buttons: {
         values: yesNo,
-        submit: async function(showMyAge: string) {
-          const ok = (
-            await japi(
-              'patch',
-              '/profile-info',
-              { show_my_age: showMyAge }
-            )
-          ).ok;
-          if (ok) this.currentValue = showMyAge;
-          return ok;
+        submit: async function(show_my_age: string) {
+          return await submitProfileInfo({ show_my_age });
         },
       }
     },
@@ -1905,16 +1731,8 @@ const privacySettingsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
     input: {
       buttons: {
         values: yesNo,
-        submit: async function(hideMeFromStrangers: string) {
-          const ok = (
-            await japi(
-              'patch',
-              '/profile-info',
-              { hide_me_from_strangers: hideMeFromStrangers }
-            )
-          ).ok;
-          if (ok) this.currentValue = hideMeFromStrangers;
-          return ok;
+        submit: async function(hide_me_from_strangers: string) {
+          return await submitProfileInfo({ hide_me_from_strangers });
         },
       }
     },
@@ -2017,6 +1835,7 @@ export {
   noneFontSize,
   notificationSettingsOptionGroups,
   privacySettingsOptionGroups,
+  profileInfoEventName,
   searchInteractionsOptionGroups,
   searchOtherBasicsOptionGroups,
   searchTwoWayBasicsOptionGroups,
