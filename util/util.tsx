@@ -75,7 +75,7 @@ const friendlyDate = (date: Date): string => {
     return 'Yesterday';
   }
   
-  return format(date, 'PPP');; // Makes it use the default locale
+  return format(date, 'PPP'); // Makes it use the default locale
 };
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
