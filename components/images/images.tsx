@@ -44,13 +44,14 @@ import {
 import {
   OptionGroupPhotos,
 } from '../../data/option-groups';
-import debounce from 'lodash/debounce';
 import { remap } from './logic';
 import { photoQueue } from '../../api/queue';
 import { japi } from '../../api/api';
 import * as _ from "lodash";
+import { dynamicDebounce } from '../../util/util';
 
 // TODO: Image picker is shit and lets you upload any file type on web
+// TODO: Would removing `maxWait` make it work with lodash's debounce fn
 
 const EV_IMAGES = 'images';
 const EV_IMAGE_CROPPER_OUTPUT = 'image-cropper-output';
@@ -62,6 +63,20 @@ const EV_SLOT_ASSIGNMENT_START = 'slot-assignment-start';
 const EV_SLOT_REQUEST = 'slot-request';
 const EV_UPDATED_NAME = 'updated-name';
 const EV_UPDATED_VERIFICATION = 'updated-verification';
+
+var assignmentDurationMs = 300;
+
+const updateAssignmentDurationMovingAverage = (ms: number) => {
+  const alpha = 0.5;
+  assignmentDurationMs = alpha * ms + assignmentDurationMs * (1 - alpha)
+};
+
+const slotAssignmentDebounceWaitMs = () => {
+  return 500; // TODO
+  const durationMs = assignmentDurationMs * 1.1 + 100;
+  console.log(durationMs); // TODO
+  return durationMs;
+};
 
 type Point2D = {
   x: number
@@ -129,6 +144,15 @@ type HttpPostAssignments = {
   [k: number]: number
 };
 
+const merge = (old, extra) => {
+  const updated = { ...old, ...extra };
+  if (_.isEqual(old, updated)) {
+    return old;
+  } else {
+    return updated;
+  }
+};
+
 const getOccupancyMap = (images: Images): { [k: number]: boolean } => {
   return Object
     .entries(images)
@@ -142,17 +166,25 @@ const getOccupancyMap = (images: Images): { [k: number]: boolean } => {
 };
 
 const getNearestSlot = (slots: Slots, p: Point2D): number => {
+  'worklet';
+
   let nearestSlot = -1;
   let nearestDistance = -1;
 
-  Object.entries(slots).map(([fileNumber, slot]) => {
-    const distance = euclideanDistance(slot.center, p);
+  for (const [fileNumber, slot] of Object.entries(slots)) {
+    const p1 = p;
+    const p2 = slot.center;
+
+    const distance = (
+      (p1.x - p2.x) ** 2.0 +
+      (p1.y - p2.y) ** 2.0
+    ) ** 0.5;
 
     if (nearestDistance === -1 || distance < nearestDistance) {
       nearestSlot = Number(fileNumber);
       nearestDistance = distance;
     }
-  });
+  }
 
   return nearestSlot;
 };
@@ -183,6 +215,64 @@ const getRelativeSlots = (slots: Slots, pageX: number, pageY: number): Slots => 
       },
       {} as Slots
     )
+};
+
+const assignmentNotify = (
+  images: Images | null,
+  data: SlotRequest | null | undefined
+) => {
+  const assignmentStartTime = performance.now();
+
+  const [remappedSlots, pressed] = (() => {
+    if (images && data) {
+      const occupancyMap = getOccupancyMap(images);
+
+      const remappedSlots = remap(occupancyMap, data.from, data.to);
+
+      const pressed = data.pressed;
+
+      return [remappedSlots, pressed]
+    } else {
+      const remappedSlots = {};
+
+      for (let i = 1; i <= 7; i++) {
+        remappedSlots[i] = i;
+      }
+
+      const pressed = null;
+
+      return [remappedSlots, pressed]
+    }
+  })();
+
+  const httpPostAssignments: HttpPostAssignments = {};
+
+  const fromTo =
+    Object
+      .entries(remappedSlots)
+      .map(([from, to]) => ([Number(from), Number(to)]));
+
+  for (const [from, to] of fromTo) {
+    const data: SlotAssignmentStart = { from, to, pressed };
+
+    notify<SlotAssignmentStart>(EV_SLOT_ASSIGNMENT_START, data);
+
+    if (from !== to) {
+      httpPostAssignments[from] = to;
+    }
+  }
+
+  notify(EV_SLOT_ASSIGNMENT_FINISH);
+
+  if (!_.isEmpty(httpPostAssignments) && pressed === null) {
+    postAssignments(httpPostAssignments);
+  }
+
+  const assignmentEndTime = performance.now();
+
+  const assignmentDuration = assignmentEndTime - assignmentStartTime;
+
+  updateAssignmentDurationMovingAverage(assignmentDuration);
 };
 
 const setIsImageLoading = (
@@ -296,10 +386,6 @@ const useIsVerified = (fileNumber: SharedValue<number>) => {
   }, []);
 
   return isVerified;
-};
-
-const euclideanDistance = (p1: Point2D, p2: Point2D) => {
-  return ((p1.x - p2.x) ** 2.0 + (p1.y - p2.y) ** 2.0) ** 0.5;
 };
 
 const isSquareish = (width: number, height: number) => {
@@ -602,6 +688,8 @@ const MoveableImage = ({
   const borderRadius = useSharedValue<number>(initialBorderRadius);
 
   const requestNearestSlot = (pressed: number | null) => {
+    'worklet';
+
     const p: Point2D = {
       x:
         _slots.value[fileNumber.value].center.x -
@@ -618,18 +706,8 @@ const MoveableImage = ({
     const from = fileNumber.value;
     const to = nearestSlot;
 
-    notify<SlotRequest>(EV_SLOT_REQUEST, { from, to, pressed });
+    runOnJS(notify<SlotRequest>)(EV_SLOT_REQUEST, { from, to, pressed });
   };
-
-  const requestNearestSlotOnChange =
-    debounce(
-      () => requestNearestSlot(fileNumber.value),
-      500,
-      { maxWait: 500 },
-    );
-
-  const requestNearestSlotOnFinalize =
-    () => requestNearestSlot(null);
 
   const addImageOnStart =
     () => addImage(fileNumber, showProtip);
@@ -650,10 +728,10 @@ const MoveableImage = ({
       translateX.value += event.changeX;
       translateY.value += event.changeY;
 
-      runOnJS(requestNearestSlotOnChange)();
+      requestNearestSlot(fileNumber.value);
     })
     .onFinalize(() => {
-      runOnJS(requestNearestSlotOnFinalize)();
+      requestNearestSlot(null);
     })
 
   const tap =
@@ -679,6 +757,8 @@ const MoveableImage = ({
 
   const onSlotAssignmentStart = useCallback(
     (data: SlotAssignmentStart | undefined) => {
+      'worklet';
+
       if (!data) {
         return;
       }
@@ -1010,63 +1090,29 @@ const Images = ({
   const relativeSlots = getRelativeSlots(slots, x, y);
 
   const identityAssignment = useCallback(
-    debounce(
-      () => {
-        for (let i = 1; i <= 7; i++) {
-          notify<SlotAssignmentStart>(
-            EV_SLOT_ASSIGNMENT_START,
-            { from: i, to: i, pressed: null }
-          );
-        }
-
-        notify(EV_SLOT_ASSIGNMENT_FINISH);
-      },
-      500,
-      { maxWait: 500 },
+    dynamicDebounce(
+      () =>
+        { console.log ('deb1'); assignmentNotify(images, null); },
+      slotAssignmentDebounceWaitMs,
     ),
     []
   );
 
-  const onSlotRequest = useCallback((data: SlotRequest | undefined) => {
-    if (!data) {
-      return;
-    }
-
-    const occupancyMap = getOccupancyMap(images);
-
-    const remappedSlots = remap(occupancyMap, data.from, data.to);
-
-    const pressed = data.pressed;
-
-    const httpPostAssignments: HttpPostAssignments = {};
-
-    Object
-      .entries(remappedSlots)
-      .map(([from, to]) => ([Number(from), Number(to)]))
-      .forEach(([from, to]) => {
-        notify<SlotAssignmentStart>(
-          EV_SLOT_ASSIGNMENT_START,
-          { from, to, pressed }
-        );
-
-        if (from !== to) {
-          httpPostAssignments[from] = to;
-        }
-      });
-
-    notify(EV_SLOT_ASSIGNMENT_FINISH);
-
-    if (!_.isEmpty(httpPostAssignments) && pressed === null) {
-      postAssignments(httpPostAssignments);
-    }
-  }, [images]);
+  const onSlotRequest = useCallback(
+    dynamicDebounce(
+      (data: SlotRequest | undefined) =>
+        { console.log('deb2'); assignmentNotify(images, data); },
+      slotAssignmentDebounceWaitMs,
+    ),
+    [images]
+  );
 
   const onSlots = useCallback((data: Slots | undefined) => {
-    setSlots((old) => ({ ...old, ...data }))
+    setSlots((old) => merge(old, data));
   }, []);
 
   const onImages = useCallback((data: Images | undefined) => {
-    setImages((old) => ({ ...old, ...data }))
+    setImages((old) => merge(old, data));
   }, []);
 
   useEffect(

@@ -145,18 +145,76 @@ const getRandomElement = <T,>(list: T[]): T | undefined =>
     undefined :
     list[Math.floor(Math.random() * list.length)];
 
+
+/**
+ * Creates a debounced function that delays invoking `func` until after
+ * `dynamicWaitFn()` milliseconds have elapsed since the last time the
+ * debounced function was called. Also, if `dynamicMaxWaitFn()` milliseconds 
+ * have passed since the last invocation, `func` is invoked immediately 
+ * instead of waiting.
+ *
+ * @param func             The function to debounce.
+ * @param dynamicWaitFn    A function returning the current wait time (ms).
+ * @param dynamicMaxWaitFn A function returning the current maxWait time (ms).
+ * @returns                A new debounced function.
+ */
+const dynamicDebounce = <T extends (...args: any[]) => any>(
+  func: T,
+  dynamicWaitFn: () => number,
+): ((...args: Parameters<T>) => void) => {
+  let timerId: ReturnType<typeof setTimeout> | null = null;
+  let lastInvokeTime = 0;
+  let lastArgs: Parameters<T> | undefined;
+
+  // Helper to actually invoke the original function
+  const invoke = (): void => {
+    if (lastArgs) {
+      console.log('invoke'); // TODO
+      func(...lastArgs);
+      lastInvokeTime = performance.now();
+      lastArgs = undefined;
+    }
+  };
+
+  // The debounced function (arrow function)
+  const debounced = (...args: Parameters<T>): void => {
+    const now = performance.now();
+    const wait = dynamicWaitFn();
+
+    lastArgs = args;
+    const timeSinceLastInvoke = now - lastInvokeTime;
+    const shouldInvokeNow = timeSinceLastInvoke >= wait;
+
+    if (timerId) {
+      clearTimeout(timerId);
+      timerId = null;
+    }
+
+    if (shouldInvokeNow) {
+      // Invoke immediately if `wait` has elapsed
+      invoke();
+    } else {
+      // Otherwise, schedule for trailing invocation after `wait`
+      timerId = setTimeout(invoke, wait);
+    }
+  };
+
+  return debounced;
+};
+
 export {
   compareArrays,
   delay,
   deleteFromArray,
-  friendlyTimeAgo,
+  dynamicDebounce,
   friendlyDate,
+  friendlyTimeAgo,
   friendlyTimestamp,
+  getRandomElement,
   isMobile,
   longFriendlyTimestamp,
   parseUrl,
   possessive,
   secToMinSec,
   withTimeout,
-  getRandomElement,
 };
