@@ -51,6 +51,12 @@ const unlisten = (key: string, listener: Listener) => {
 };
 
 const notify = <T = any>(key: string, data?: T) => {
+  // TODO
+  try {
+    console.log(key, JSON.stringify(data));
+  } catch {
+    console.log(key);
+  }
   // Ensure `listeners[key]` is set
   listeners[key] = listeners[key] ?? {
     listeners: new Set<Listener<T>>,

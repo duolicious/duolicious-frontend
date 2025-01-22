@@ -150,17 +150,25 @@ const getOccupancyMap = (images: Images): { [k: number]: boolean } => {
 };
 
 const getNearestSlot = (slots: Slots, p: Point2D): number => {
+  'worklet';
+
   let nearestSlot = -1;
   let nearestDistance = -1;
 
-  Object.entries(slots).map(([fileNumber, slot]) => {
-    const distance = euclideanDistance(slot.center, p);
+  for (const [fileNumber, slot] of Object.entries(slots)) {
+    const p1 = p;
+    const p2 = slot.center;
+
+    const distance = (
+      (p1.x - p2.x) ** 2.0 +
+      (p1.y - p2.y) ** 2.0
+    ) ** 0.5;
 
     if (nearestDistance === -1 || distance < nearestDistance) {
       nearestSlot = Number(fileNumber);
       nearestDistance = distance;
     }
-  });
+  }
 
   return nearestSlot;
 };
@@ -304,10 +312,6 @@ const useIsVerified = (fileNumber: SharedValue<number>) => {
   }, []);
 
   return isVerified;
-};
-
-const euclideanDistance = (p1: Point2D, p2: Point2D) => {
-  return ((p1.x - p2.x) ** 2.0 + (p1.y - p2.y) ** 2.0) ** 0.5;
 };
 
 const isSquareish = (width: number, height: number) => {
@@ -609,7 +613,18 @@ const MoveableImage = ({
   const scale = useSharedValue<number>(1);
   const borderRadius = useSharedValue<number>(initialBorderRadius);
 
+  const debouncedSlotRequest =
+    _.debounce(
+      (data: SlotRequest) => notify<SlotRequest>(EV_SLOT_REQUEST, data),
+      2000,
+      { maxWait: 2000 },
+    );
+
   const requestNearestSlot = (pressed: number | null) => {
+    'worklet';
+
+    const start = performance.now();
+
     const p: Point2D = {
       x:
         _slots.value[fileNumber.value].center.x -
@@ -626,18 +641,12 @@ const MoveableImage = ({
     const from = fileNumber.value;
     const to = nearestSlot;
 
-    notify<SlotRequest>(EV_SLOT_REQUEST, { from, to, pressed });
+    runOnJS(debouncedSlotRequest)({ from, to, pressed });
+
+    const end = performance.now();
+
+    console.log('request nearest slot', end - start); // TODO
   };
-
-  const requestNearestSlotOnChange =
-    _.debounce(
-      () => requestNearestSlot(fileNumber.value),
-      500,
-      { maxWait: 500 },
-    );
-
-  const requestNearestSlotOnFinalize =
-    () => requestNearestSlot(null);
 
   const addImageOnStart =
     () => addImage(fileNumber, showProtip);
@@ -658,10 +667,10 @@ const MoveableImage = ({
       translateX.value += event.changeX;
       translateY.value += event.changeY;
 
-      runOnJS(requestNearestSlotOnChange)();
+      requestNearestSlot(fileNumber.value)
     })
     .onFinalize(() => {
-      runOnJS(requestNearestSlotOnFinalize)();
+      requestNearestSlot(null);
     })
 
   const tap =
@@ -1039,6 +1048,7 @@ const Images = ({
     if (!data) {
       return;
     }
+    const assignmentStartTime = performance.now();
 
     const occupancyMap = getOccupancyMap(images);
 
@@ -1067,6 +1077,12 @@ const Images = ({
     if (!_.isEmpty(httpPostAssignments) && pressed === null) {
       postAssignments(httpPostAssignments);
     }
+
+    const assignmentEndTime = performance.now();
+
+    const assignmentDuration = assignmentEndTime - assignmentStartTime;
+
+    console.log(assignmentDuration); // TODO
   }, [images]);
 
   const onSlots = useCallback((data: Slots | undefined) => {
