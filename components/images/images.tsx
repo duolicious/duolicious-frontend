@@ -626,8 +626,6 @@ const MoveableImage = ({
   const requestNearestSlot = (pressed: number | null) => {
     'worklet';
 
-    const start = performance.now();
-
     const p: Point2D = {
       x:
         _slots.value[fileNumber.value].center.x -
@@ -645,10 +643,6 @@ const MoveableImage = ({
     const to = nearestSlot;
 
     runOnJS(debouncedSlotRequest)({ from, to, pressed });
-
-    const end = performance.now();
-
-    console.log('request nearest slot', end - start); // TODO
   };
 
   const addImageOnStart =
@@ -1053,7 +1047,6 @@ const Images = ({
     if (!data) {
       return;
     }
-    const assignmentStartTime = performance.now();
 
     const occupancyMap = getOccupancyMap(images);
 
@@ -1082,12 +1075,6 @@ const Images = ({
     if (!_.isEmpty(httpPostAssignments) && pressed === null) {
       postAssignments(httpPostAssignments);
     }
-
-    const assignmentEndTime = performance.now();
-
-    const assignmentDuration = assignmentEndTime - assignmentStartTime;
-
-    console.log(assignmentDuration); // TODO
   }, [images]);
 
   const onSlots = useCallback((data: Slots | undefined) => {
