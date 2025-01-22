@@ -33,6 +33,7 @@ import
     Easing,
     SharedValue,
     runOnJS,
+    runOnUI,
     useAnimatedStyle,
     useSharedValue,
     withTiming,
@@ -595,6 +596,8 @@ const MoveableImage = ({
   const isVerified = useIsVerified(fileNumber);
 
   const getBorderRadius = useCallback((fileNumber: number) => {
+    'worklet';
+
     const {
       height = 0,
       width = 0,
@@ -616,8 +619,8 @@ const MoveableImage = ({
   const debouncedSlotRequest =
     _.debounce(
       (data: SlotRequest) => notify<SlotRequest>(EV_SLOT_REQUEST, data),
-      2000,
-      { maxWait: 2000 },
+      500,
+      { maxWait: 500 },
     );
 
   const requestNearestSlot = (pressed: number | null) => {
@@ -695,7 +698,9 @@ const MoveableImage = ({
     });
 
   const onSlotAssignmentStart = useCallback(
-    (data: SlotAssignmentStart | undefined) => {
+    runOnUI((data: SlotAssignmentStart | undefined) => {
+      'worklet';
+
       if (!data) {
         return;
       }
@@ -721,7 +726,7 @@ const MoveableImage = ({
         isSlotAssignmentUnfinished.value = true;
         fileNumber.value = data.to;
       }
-    },
+    }),
     [getBorderRadius]
   );
 
