@@ -203,7 +203,7 @@ function createSpringStarter(
 async function animateOut(
   gesture: { x: number; y: number },
   setSpringTarget: React.MutableRefObject<
-    { start: (args: any) => void }[]
+    { start: (args: any) => void }
   >,
   dir?: Direction
 ) {
@@ -221,7 +221,7 @@ async function animateOut(
 
   // We use timing for "animateOut" with a computed duration
   return new Promise((resolve) => {
-    setSpringTarget.current[0].start({
+    setSpringTarget.current.start({
       ...finalXyrot(normalizedGesture),
       config: { duration },
       onResolve: () => {
@@ -236,11 +236,11 @@ async function animateOut(
  */
 function animateBack(
   setSpringTarget: React.MutableRefObject<
-    { start: (args: any) => void }[]
+    { start: (args: any) => void }
   >
 ) {
   return new Promise((resolve) => {
-    setSpringTarget.current[0].start({
+    setSpringTarget.current.start({
       x: 0,
       y: 0,
       rot: 0,
@@ -285,9 +285,13 @@ const BaseQuizCard = forwardRef(
     const rot = useSharedValue(startPosition.rot);
 
     // We'll store an array with a single object that has .start(...) to match your usage
-    const setSpringTarget = useRef([{ start: () => {} }]);
+    const setSpringTarget = useRef({
+      start: (
+        props: { x: number, y: number, rot: number, immediate: boolean }
+      ) => {}
+    });
     // Create the function that actually updates x, y, rot
-    setSpringTarget.current[0].start = createSpringStarter(x, y, rot);
+    setSpringTarget.current.start = createSpringStarter(x, y, rot);
 
     // Update threshold in settings for continuity
     settings.swipeThreshold = swipeThreshold;
@@ -328,7 +332,7 @@ const BaseQuizCard = forwardRef(
     const handleSwipeReleased = useCallback(
       async (
         setSpring: React.MutableRefObject<
-          { start: (args: any) => void }[]
+          { start: (args: any) => void }
         >,
         gesture
       ) => {
@@ -370,7 +374,7 @@ const BaseQuizCard = forwardRef(
           if (Platform.OS === 'web') {
             evt.preventDefault?.();
           }
-          setSpringTarget.current[0].start({
+          setSpringTarget.current.start({
             x: gestureState.dx,
             y: gestureState.dy,
             rot: 0,
@@ -381,7 +385,7 @@ const BaseQuizCard = forwardRef(
           if (Platform.OS === 'web') {
             evt.preventDefault?.();
           }
-          setSpringTarget.current[0].start({
+          setSpringTarget.current.start({
             x: gestureState.dx,
             y: gestureState.dy,
             rot: rotateByDx(gestureState.dx),
@@ -413,7 +417,6 @@ const BaseQuizCard = forwardRef(
         position: 'absolute',
         width: '100%',
         height: '100%',
-        zIndex: Math.round(Math.abs(x.value)),
         opacity:
           dir === 'left'
             ? Math.max(0.0, -x.value * 0.01 - 0.5)
@@ -429,7 +432,6 @@ const BaseQuizCard = forwardRef(
         position: 'absolute',
         width: '100%',
         height: '100%',
-        zIndex: Math.round(Math.abs(x.value)),
         opacity:
           dir === 'right'
             ? Math.max(0.0, x.value * 0.01 - 0.5)
@@ -445,7 +447,6 @@ const BaseQuizCard = forwardRef(
         position: 'absolute',
         width: '100%',
         height: '100%',
-        zIndex: Math.round(Math.abs(y.value)),
         opacity:
           dir === 'down'
             ? Math.max(0.0, y.value * 0.01 - 0.5)
@@ -459,6 +460,9 @@ const BaseQuizCard = forwardRef(
         {...panResponder.panHandlers}
         style={[cardStyle, containerStyle]}
       >
+        {/* Actual card content */}
+        {children}
+
         {/* Left indicator */}
         <Animated.View style={leftComponentStyle}>{leftComponent}</Animated.View>
 
@@ -467,9 +471,6 @@ const BaseQuizCard = forwardRef(
 
         {/* Down indicator */}
         <Animated.View style={downComponentStyle}>{downComponent}</Animated.View>
-
-        {/* Actual card content */}
-        {children}
       </ReanimatedView>
     );
   }
