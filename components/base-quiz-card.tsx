@@ -464,13 +464,19 @@ const BaseQuizCard = forwardRef(
         {children}
 
         {/* Left indicator */}
-        <Animated.View style={leftComponentStyle}>{leftComponent}</Animated.View>
+        <Animated.View pointerEvents="none" style={leftComponentStyle}>
+          {leftComponent}
+        </Animated.View>
 
         {/* Right indicator */}
-        <Animated.View style={rightComponentStyle}>{rightComponent}</Animated.View>
+        <Animated.View pointerEvents="none" style={rightComponentStyle}>
+          {rightComponent}
+        </Animated.View>
 
         {/* Down indicator */}
-        <Animated.View style={downComponentStyle}>{downComponent}</Animated.View>
+        <Animated.View pointerEvents="none" style={downComponentStyle}>
+          {downComponent}
+        </Animated.View>
       </ReanimatedView>
     );
   }
