@@ -288,23 +288,23 @@ const FloatingSkipButton = ({navigation, personId, personUuid, isSkipped}) => {
   }, [isSkipped]);
 
   useEffect(() => {
-    return listen(`unskip-profile-${personId}`, () => setIsSkippedState(false));
-  }, [personId]);
+    return listen(`unskip-profile-${personUuid}`, () => setIsSkippedState(false));
+  }, [personUuid]);
 
   useEffect(() => {
-    return listen(`skip-profile-${personId}`, () => setIsSkippedState(true));
-  }, [personId]);
+    return listen(`skip-profile-${personUuid}`, () => setIsSkippedState(true));
+  }, [personUuid]);
 
   const onPress = useCallback(async () => {
-    if (personId === undefined) return;
+    if (personUuid === undefined) return;
 
     const nextIsSkippedState = !isSkippedState;
 
     setIsLoading(true);
-    if (await setSkipped(personId, personUuid, nextIsSkippedState)) {
+    if (await setSkipped(personUuid, nextIsSkippedState)) {
       setIsLoading(false);
     }
-  }, [isLoading, isSkippedState, personId, personUuid]);
+  }, [isLoading, isSkippedState, personUuid]);
 
   return (
     <FloatingProfileInteractionButton
@@ -415,7 +415,7 @@ const SeeQAndAButton = ({navigation, personId, name}) => {
   );
 };
 
-const BlockButton = ({navigation, name, personId, personUuid, isSkipped}) => {
+const BlockButton = ({navigation, name, personUuid, isSkipped}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSkippedState, setIsSkippedState] = useState(false);
 
@@ -424,25 +424,24 @@ const BlockButton = ({navigation, name, personId, personUuid, isSkipped}) => {
   }, [isSkipped]);
 
   useEffect(() => {
-    return listen(`unskip-profile-${personId}`, () => setIsSkippedState(false));
-  }, []);
+    return listen(`unskip-profile-${personUuid}`, () => setIsSkippedState(false));
+  }, [personUuid]);
 
   const onPress = useCallback(async () => {
     if (isSkippedState) {
       setIsLoading(true);
-      if (await setSkipped(personId, personUuid, false)) {
+      if (await setSkipped(personUuid, false)) {
         setIsLoading(false);
       }
     } else {
       const data: ReportModalInitialData = {
         name,
-        personId,
         personUuid,
         context: 'Prospect Profile Screen',
       };
       notify('open-report-modal', data);
     }
-  }, [notify, name, personId, isSkippedState]);
+  }, [notify, name, personUuid, isSkippedState]);
 
   const text = isSkippedState ?
     `You have skipped ${name}. Press to unskip.` :
@@ -729,8 +728,8 @@ const Content = (navigationRef) => ({navigation, route, ...props}) => {
   }, [personUuid]);
 
   useEffect(() =>
-    listen(`skip-profile-${personId}`, () => navigation.popToTop()),
-    [personId, navigation]
+    listen(`skip-profile-${personUuid}`, () => navigation.popToTop()),
+    [personUuid, navigation]
   );
 
   const imageUuid = data === undefined ?
@@ -1453,7 +1452,6 @@ const Body = ({
           <BlockButton
             navigation={navigation}
             name={data?.name}
-            personId={personId}
             personUuid={personUuid}
             isSkipped={data?.is_skipped}
           />}
