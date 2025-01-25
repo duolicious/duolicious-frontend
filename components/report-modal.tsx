@@ -180,6 +180,8 @@ const ReportModal = () => {
               onChangeText={onChangeReportText}
               numberOfLines={6}
               style={{
+                backgroundColor: '#eee',
+                borderWidth: 0,
                 height: 200,
               }}
             />
