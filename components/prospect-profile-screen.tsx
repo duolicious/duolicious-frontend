@@ -117,7 +117,7 @@ const EnlargeableImage = ({
   style,
   innerStyle,
   isPrimary,
-  verified = false,
+  isVerified = false,
 }: {
   imageUuid: string | undefined | null,
   imageExtraExts?: string[] | undefined | null,
@@ -126,7 +126,7 @@ const EnlargeableImage = ({
   style?: any,
   innerStyle?: any,
   isPrimary: boolean,
-  verified?: boolean,
+  isVerified?: boolean,
 }) => {
   if (imageUuid === undefined && !isPrimary) {
     return <></>;
@@ -152,7 +152,7 @@ const EnlargeableImage = ({
         showGradient={false}
         style={innerStyle}
       />
-      {verified &&
+      {isVerified &&
         <VerificationBadge
           style={{
             position: 'absolute',
@@ -677,6 +677,27 @@ type UserData = {
   gives_reply_percentage: number | null,
 };
 
+const verificationLevelId = (data: UserData | null | undefined): 1 | 2 | 3 => {
+  // This should be provided by the backend instead
+
+  if (!data) {
+    return 1;
+  }
+
+  const hasVerifiedBasics = data.verified_gender && data.verified_age;
+  const hasVerififiedPhotos = data.photo_verifications.some(Boolean);
+
+  if (hasVerifiedBasics && hasVerififiedPhotos) {
+    return 3;
+  }
+
+  if (hasVerifiedBasics) {
+    return 2;
+  }
+
+  return 1;
+};
+
 const verifiedAnything = (data: UserData | null | undefined): boolean => {
   if (!data) {
     return false;
@@ -805,14 +826,14 @@ const Content = (navigationRef) => ({navigation, route, ...props}) => {
               imageBlurhash={imageBlurhash0}
               onChangeEmbiggened={goToGallery(navigation, imageUuid0)}
               isPrimary={true}
-              verified={imageVerification0}
+              isVerified={imageVerification0}
             />
             <ProspectUserDetails
               navigation={navigation}
               personId={personId}
               name={data?.name}
               age={data?.age}
-              verified={verifiedAnything(data)}
+              verified={verificationLevelId(data) > 1}
               matchPercentage={data?.match_percentage}
               userLocation={data?.location}
               textColor={data?.theme?.title_color}
@@ -1298,7 +1319,7 @@ const Body = ({
           style={styles.secondaryEnlargeableImage}
           innerStyle={styles.secondaryEnlargeableImageInner}
           isPrimary={false}
-          verified={imageVerification1}
+          isVerified={imageVerification1}
         />
 
         {!data?.name &&
@@ -1321,7 +1342,7 @@ const Body = ({
           style={styles.secondaryEnlargeableImage}
           innerStyle={styles.secondaryEnlargeableImageInner}
           isPrimary={false}
-          verified={imageVerification2}
+          isVerified={imageVerification2}
         />
 
         <EnlargeableImage
@@ -1332,7 +1353,7 @@ const Body = ({
           style={styles.secondaryEnlargeableImage}
           innerStyle={styles.secondaryEnlargeableImageInner}
           isPrimary={false}
-          verified={imageVerification3}
+          isVerified={imageVerification3}
         />
 
         <AllClubs
@@ -1351,7 +1372,7 @@ const Body = ({
           style={styles.secondaryEnlargeableImage}
           innerStyle={styles.secondaryEnlargeableImageInner}
           isPrimary={false}
-          verified={imageVerification4}
+          isVerified={imageVerification4}
         />
 
         <EnlargeableImage
@@ -1362,7 +1383,7 @@ const Body = ({
           style={styles.secondaryEnlargeableImage}
           innerStyle={styles.secondaryEnlargeableImageInner}
           isPrimary={false}
-          verified={imageVerification5}
+          isVerified={imageVerification5}
         />
 
         <EnlargeableImage
@@ -1373,7 +1394,7 @@ const Body = ({
           style={styles.secondaryEnlargeableImage}
           innerStyle={styles.secondaryEnlargeableImageInner}
           isPrimary={false}
-          verified={imageVerification6}
+          isVerified={imageVerification6}
         />
 
         {hasAnyStats(data) && <>
