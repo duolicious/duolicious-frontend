@@ -27,9 +27,11 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 
-type Direction = 'left' | 'right' | 'up' | 'down' | 'none';
-type SwipeHandler = (direction: Direction) => void;
-type CardLeftScreenHandler = (direction: Direction) => void;
+type Direction = 'left' | 'right' | 'up' | 'down' | 'none'
+type SwipeHandler = (direction: Direction) => void
+type CardLeftScreenHandler = (direction: Direction) => void
+type SwipeRequirementFufillUpdate = (direction: Direction) => void
+type SwipeRequirementUnfufillUpdate = () => void
 
 interface API {
   /**
@@ -42,21 +44,53 @@ interface API {
   /**
    * Restore swiped-card state. Use this function if you want to undo a swiped-card (e.g. you have a back button that shows last swiped card or you have a reset button. The promise is resolved once the card is returned
    */
-  restoreCard(): Promise<void>
+  restoreCard (): Promise<void>
 }
 
 interface Props {
-  ref?: Ref<API>;
-  onSwipe?: SwipeHandler;
-  onCardLeftScreen?: CardLeftScreenHandler;
-  preventSwipe?: string[];
-  swipeThreshold?: number;
-  containerStyle?: RegisteredStyle<ViewStyle>;
-  children?: ReactNode;
-  initialPosition?: Direction;
-  leftComponent?: JSX.Element;
-  rightComponent?: JSX.Element;
-  downComponent?: JSX.Element;
+  ref?: Ref<API>
+
+  /**
+   * Callback that will be executed when a swipe has been completed. It will be called with a single string denoting which direction the swipe was in: `'left'`, `'right'`, `'up'` or `'down'`.
+   */
+  onSwipe?: SwipeHandler
+
+  /**
+   * Callback that will be executed when a `BaseQuizCard` has left the screen. It will be called with a single string denoting which direction the swipe was in: `'left'`, `'right'`, `'up'` or `'down'`.
+   */
+  onCardLeftScreen?: CardLeftScreenHandler
+
+  /**
+   * An array of directions for which to prevent swiping out of screen. Valid arguments are `'left'`, `'right'`, `'up'` and `'down'`.
+   *
+   * @default []
+   */
+  preventSwipe?: string[]
+
+   /**
+   * The threshold of which to accept swipes. If swipeRequirementType is set to velocity it is the velocity threshold and if set to position it is the position threshold.
+   * On native the default value is 1 as the physics works differently there.
+   * If swipeRequirementType is set to position it is recommended to set this based on the screen width so cards can be swiped on all screen sizes.
+   *
+   * @default 300
+   */
+  swipeThreshold?: number
+
+  /**
+   * Style to add to the container.
+   */
+  containerStyle?: RegisteredStyle<ViewStyle>
+
+  /**
+   * The children passed in is what will be rendered as the actual card.
+   */
+  children?: ReactNode
+
+  initialPosition?: Direction
+
+  leftComponent?: JSX.Element
+  rightComponent?: JSX.Element
+  downComponent?: JSX.Element
 }
 
 const { height, width } = Dimensions.get('window');
@@ -64,66 +98,113 @@ const { height, width } = Dimensions.get('window');
 const settings = {
   maxTilt: 20, // in deg
   rotationPower: 50,
-  swipeThreshold: 0.5, // default threshold
-};
+  swipeThreshold: 0.5 // need to update this threshold for RN (1.5 seems reasonable...?)
+}
 
+// physical properties of the spring
 const physics = {
   animateOut: {
-    // We'll approximate with a timing-based approach or a spring
     friction: 30,
-    tension: 400,
+    tension: 400
   },
   animateBack: {
     friction: 20,
-    tension: 200,
-  },
-};
-
-function pythagoras(x: number, y: number) {
-  return Math.sqrt(x * x + y * y);
+    tension: 200
+  }
 }
 
-function normalize(vector: { x: number; y: number }) {
-  const length = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
-  return { x: vector.x / length, y: vector.y / length };
+const pythagoras = (x, y) => {
+  return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2))
 }
 
-function rotateByDx(dx: number) {
-  return Math.max(Math.min(dx * 0.05, settings.maxTilt), -settings.maxTilt);
+const normalize = (vector) => {
+  const length = Math.sqrt(Math.pow(vector.x, 2) + Math.pow(vector.y, 2))
+  return { x: vector.x / length, y: vector.y / length }
 }
 
-function diagonal() {
-  return pythagoras(height, width);
+const rotateByDx = (dx) => {
+  return Math.max(Math.min(dx * 0.05, settings.maxTilt), -settings.maxTilt)
 }
 
-function finalXyrot(gesture: { x: number; y: number }) {
-  const finalX = diagonal() * normalize(gesture).x;
-  const finalY = diagonal() * normalize(gesture).y;
-  const finalRotation = rotateByDx(finalX);
+const finalXyrot = (gesture) => {
+  const finalX = diagonal() * normalize(gesture).x
+  const finalY = diagonal() * normalize(gesture).y
+  const finalRotation = rotateByDx(finalX)
 
-  return { x: finalX, y: finalY, rot: finalRotation };
+  return {x: finalX, y: finalY, rot: finalRotation};
 }
 
-function getSwipeDirection(
-  property: { x: number; y: number },
+const diagonal = () => pythagoras(height, width)
+
+const animateOut = async (
+  gesture: { x: number; y: number },
+  setSpringTarget: React.MutableRefObject<{ start: (args: any) => void }>,
+  dir?: Direction
+) => {
+  const normalizedGesture = (() => {
+    if (dir === 'right')
+      return { x: Math.max( 2, gesture.x), y: gesture.y }
+    if (dir === 'left')
+      return { x: Math.min(-2, gesture.x), y: gesture.y }
+    if (dir === 'up')
+      return { x: gesture.x              , y: Math.min(-2, gesture.y) }
+    if (dir === 'down')
+      return { x: gesture.x              , y: Math.max( 2, gesture.y) }
+
+    return gesture
+  })();
+
+  const velocity = pythagoras(normalizedGesture.x, normalizedGesture.y)
+  const duration = diagonal() / velocity
+
+  // We use timing for "animateOut" with a computed duration
+  return new Promise((resolve) => {
+    setSpringTarget.current.start({
+      ...finalXyrot(normalizedGesture),
+      config: { duration },
+      onResolve: () => {
+        resolve(undefined);
+      },
+    });
+  });
+}
+
+const animateBack = (
+  setSpringTarget: React.MutableRefObject<
+    { start: (args: any) => void }
+  >
+) => {
+  return new Promise((resolve) => {
+    setSpringTarget.current.start({
+      x: 0,
+      y: 0,
+      rot: 0,
+      config: physics.animateBack,
+      onResolve: resolve,
+    });
+  });
+}
+
+const getSwipeDirection = (
+  property,
   swipeThreshold = settings.swipeThreshold
-): Direction {
+): Direction => {
   'worklet';
 
   if (Math.abs(property.x) > Math.abs(property.y)) {
     if (property.x > swipeThreshold) {
-      return 'right';
+      return 'right'
     } else if (property.x < -swipeThreshold) {
-      return 'left';
+      return 'left'
     }
   } else {
     if (property.y > swipeThreshold) {
-      return 'down';
+      return 'down'
     } else if (property.y < -swipeThreshold) {
-      return 'up';
+      return 'up'
     }
   }
-  return 'none';
+  return 'none'
 }
 
 /**
@@ -196,62 +277,6 @@ function createSpringStarter(
   };
 }
 
-/**
- * Animate the card out of the screen. We'll call our internal setSpringTarget
- * with Reanimated logic instead of react-spring.
- */
-async function animateOut(
-  gesture: { x: number; y: number },
-  setSpringTarget: React.MutableRefObject<
-    { start: (args: any) => void }
-  >,
-  dir?: Direction
-) {
-  // Ensure we move at least 2 units if direction is forced
-  const normalizedGesture = (() => {
-    if (dir === 'right') return { x: Math.max(2, gesture.x), y: gesture.y };
-    if (dir === 'left') return { x: Math.min(-2, gesture.x), y: gesture.y };
-    if (dir === 'up') return { x: gesture.x, y: Math.min(-2, gesture.y) };
-    if (dir === 'down') return { x: gesture.x, y: Math.max(2, gesture.y) };
-    return gesture;
-  })();
-
-  const velocity = pythagoras(normalizedGesture.x, normalizedGesture.y);
-  const duration = diagonal() / velocity;
-
-  // We use timing for "animateOut" with a computed duration
-  return new Promise((resolve) => {
-    setSpringTarget.current.start({
-      ...finalXyrot(normalizedGesture),
-      config: { duration },
-      onResolve: () => {
-        resolve(undefined);
-      },
-    });
-  });
-}
-
-/**
- * Animate the card back to the starting position using a spring.
- */
-function animateBack(
-  setSpringTarget: React.MutableRefObject<
-    { start: (args: any) => void }
-  >
-) {
-  return new Promise((resolve) => {
-    setSpringTarget.current.start({
-      x: 0,
-      y: 0,
-      rot: 0,
-      config: physics.animateBack,
-      onResolve: resolve,
-    });
-  });
-}
-
-const ReanimatedView = Animated.createAnimatedComponent(View);
-
 const BaseQuizCard = forwardRef(
   (
     {
@@ -264,7 +289,7 @@ const BaseQuizCard = forwardRef(
       initialPosition,
       leftComponent,
       rightComponent,
-      downComponent,
+      downComponent
     }: Props,
     ref: React.Ref<API>
   ) => {
@@ -272,66 +297,56 @@ const BaseQuizCard = forwardRef(
 
     // Compute initial x, y, rot
     const startPosition = (() => {
-      if (initialPosition === 'left') return finalXyrot({ x: -1, y: 0 });
-      if (initialPosition === 'right') return finalXyrot({ x: 1, y: 0 });
-      if (initialPosition === 'up') return finalXyrot({ x: 0, y: -1 });
-      if (initialPosition === 'down') return finalXyrot({ x: 0, y: 1 });
-      return { x: 0, y: 0, rot: 0 };
+      if (initialPosition === 'left')  return finalXyrot({x: -1, y:  0})
+      if (initialPosition === 'right') return finalXyrot({x:  1, y:  0})
+      if (initialPosition === 'up')    return finalXyrot({x:  0, y: -1})
+      if (initialPosition === 'down')  return finalXyrot({x:  0, y:  1})
+      return {x: 0, y: 0, rot: 0};
     })();
 
-    // Reanimated shared values in place of react-spring
     const x = useSharedValue(startPosition.x);
     const y = useSharedValue(startPosition.y);
     const rot = useSharedValue(startPosition.rot);
 
     // We'll store an array with a single object that has .start(...) to match your usage
-    const setSpringTarget = useRef({
-      start: (
-        props: { x: number, y: number, rot: number, immediate: boolean }
-      ) => {}
-    });
-    // Create the function that actually updates x, y, rot
-    setSpringTarget.current.start = createSpringStarter(x, y, rot);
+    const setSpringTarget = useRef({ start: createSpringStarter(x, y, rot) });
 
-    // Update threshold in settings for continuity
     settings.swipeThreshold = swipeThreshold;
 
-    // Expose the swipe, restoreCard APIs
     useImperativeHandle(ref, () => ({
-      async swipe(dir: Direction = 'right') {
+      async swipe (dir: Direction = 'right') {
         if (isAnimating.current) return;
         isAnimating.current = true;
 
-        if (onSwipe) onSwipe(dir);
-
-        const power = 2.0;
-        const disturbance = (Math.random() - 0.5) / 2;
+        if (onSwipe) onSwipe(dir)
+        const power = 2.0
+        const disturbance = (Math.random() - 0.5) / 2
         if (dir === 'right') {
-          await animateOut({ x: power, y: disturbance }, setSpringTarget, dir);
+          await animateOut({ x:  power, y: disturbance }, setSpringTarget)
         } else if (dir === 'left') {
-          await animateOut({ x: -power, y: disturbance }, setSpringTarget, dir);
+          await animateOut({ x: -power, y: disturbance }, setSpringTarget)
         } else if (dir === 'up') {
-          await animateOut({ x: disturbance, y: -power }, setSpringTarget, dir);
+          await animateOut({ x: disturbance, y: -power }, setSpringTarget)
         } else if (dir === 'down') {
-          await animateOut({ x: disturbance, y: power }, setSpringTarget, dir);
+          await animateOut({ x: disturbance, y:  power }, setSpringTarget)
         }
-        if (onCardLeftScreen) onCardLeftScreen(dir);
+        if (onCardLeftScreen) onCardLeftScreen(dir)
 
         isAnimating.current = false;
       },
-      async restoreCard() {
+      async restoreCard () {
         if (isAnimating.current) return;
         isAnimating.current = true;
 
-        await animateBack(setSpringTarget);
+        await animateBack(setSpringTarget)
 
         isAnimating.current = false;
-      },
+      }
     }));
 
     const handleSwipeReleased = useCallback(
       async (
-        setSpring: React.MutableRefObject<
+        setSpringTarget: React.MutableRefObject<
           { start: (args: any) => void }
         >,
         gesture
@@ -339,63 +354,80 @@ const BaseQuizCard = forwardRef(
         if (isAnimating.current) return;
         isAnimating.current = true;
 
-        // Check if it is a swipe
-        const dir = getSwipeDirection(
-          {
-            x: gesture.dx,
-            y: gesture.dy,
-          },
-          swipeThreshold
-        );
+        // Check if this is a swipe
+        const dir = getSwipeDirection({
+          x: gesture.dx,
+          y: gesture.dy,
+        });
 
         if (dir === 'none' || preventSwipe.includes(dir)) {
-          // Animate back to start
-          await animateBack(setSpring);
+          // Card was not flicked away, animate back to start
+          await animateBack(setSpringTarget)
         } else {
-          if (onSwipe) onSwipe(dir);
+          if (onSwipe) onSwipe(dir)
 
-          await animateOut({ x: gesture.vx, y: gesture.vy }, setSpring, dir);
+          await animateOut(
+            {x: gesture.vx, y: gesture.vy},
+            setSpringTarget,
+            dir,
+          )
 
-          if (onCardLeftScreen) onCardLeftScreen(dir);
+          if (onCardLeftScreen) onCardLeftScreen(dir)
         }
 
         isAnimating.current = false;
       },
-      [onSwipe, onCardLeftScreen, preventSwipe, swipeThreshold]
+      [onSwipe, onCardLeftScreen, preventSwipe]
     );
 
     const panResponder = useRef(
       PanResponder.create({
-        onStartShouldSetPanResponder: () => false,
-        onStartShouldSetPanResponderCapture: () => false,
-        onMoveShouldSetPanResponder: () => !isAnimating.current,
-        onMoveShouldSetPanResponderCapture: () => !isAnimating.current,
+        // Ask to be the responder:
+        onStartShouldSetPanResponder:
+          (evt, gestureState) => false,
+        onStartShouldSetPanResponderCapture:
+          (evt, gestureState) => false,
+        onMoveShouldSetPanResponder:
+          (evt, gestureState) => !isAnimating.current,
+        onMoveShouldSetPanResponderCapture:
+          (evt, gestureState) => !isAnimating.current,
         onPanResponderGrant: (evt, gestureState) => {
           if (Platform.OS === 'web') {
             evt.preventDefault?.();
           }
+
+          // The gesture has started.
+          // Probably wont need this anymore as position relative to swipe!
           setSpringTarget.current.start({
             x: gestureState.dx,
             y: gestureState.dy,
             rot: 0,
             immediate: true,
-          });
+          })
         },
         onPanResponderMove: (evt, gestureState) => {
           if (Platform.OS === 'web') {
             evt.preventDefault?.();
           }
+
+          // use guestureState.vx / guestureState.vy for velocity calculations
+          // translate element
           setSpringTarget.current.start({
             x: gestureState.dx,
             y: gestureState.dy,
             rot: rotateByDx(gestureState.dx),
             immediate: true,
-          });
+          })
         },
-        onPanResponderTerminationRequest: () => true,
+        onPanResponderTerminationRequest: (evt, gestureState) => {
+          return true;
+        },
         onPanResponderRelease: (evt, gestureState) => {
-          handleSwipeReleased(setSpringTarget, gestureState);
-        },
+          // The user has released all touches while this view is the
+          // responder. This typically means a gesture has succeeded
+          // enable
+          handleSwipeReleased(setSpringTarget, gestureState)
+        }
       })
     ).current;
 
@@ -456,7 +488,7 @@ const BaseQuizCard = forwardRef(
     });
 
     return (
-      <ReanimatedView
+      <Animated.View
         {...panResponder.panHandlers}
         style={[cardStyle, containerStyle]}
       >
@@ -477,9 +509,12 @@ const BaseQuizCard = forwardRef(
         <Animated.View pointerEvents="none" style={downComponentStyle}>
           {downComponent}
         </Animated.View>
-      </ReanimatedView>
-    );
+      </Animated.View>
+    )
   }
-);
+)
 
-export { BaseQuizCard, Direction };
+export {
+  BaseQuizCard,
+  Direction,
+}
