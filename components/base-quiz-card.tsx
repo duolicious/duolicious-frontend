@@ -33,8 +33,6 @@ type CardLeftScreenHandler = (direction: Direction) => void
 type SwipeRequirementFufillUpdate = (direction: Direction) => void
 type SwipeRequirementUnfufillUpdate = () => void
 
-// TODO: Tried to modify key `swipeThreshold` of an object which has been already passed to a worklet. See
-
 interface API {
   /**
    * Programmatically trigger a swipe of the card in one of the valid directions `'left'`, `'right'`, `'up'` and `'down'`. This function, `swipe`, can be called on a reference of the BaseQuizCard instance.
