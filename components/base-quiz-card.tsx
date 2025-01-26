@@ -188,8 +188,8 @@ const animateBack = (
 }
 
 const getSwipeDirection = (
-  property,
-  swipeThreshold = settings.swipeThreshold
+  property: { x: number, y: number },
+  swipeThreshold: number,
 ): Direction => {
   'worklet';
 
@@ -313,8 +313,6 @@ const BaseQuizCard = forwardRef(
     // We'll store an array with a single object that has .start(...) to match your usage
     const setSpringTarget = useRef({ start: createSpringStarter(x, y, rot) });
 
-    settings.swipeThreshold = swipeThreshold;
-
     useImperativeHandle(ref, () => ({
       async swipe (dir: Direction = 'right') {
         if (!isAtStartPosition.current) return;
@@ -348,10 +346,10 @@ const BaseQuizCard = forwardRef(
         gesture
       ) => {
         // Check if this is a swipe
-        const dir = getSwipeDirection({
-          x: gesture.dx,
-          y: gesture.dy,
-        });
+        const dir = getSwipeDirection(
+          { x: gesture.dx, y: gesture.dy },
+          swipeThreshold
+        );
 
         if (dir === 'none' || preventSwipe.includes(dir)) {
           // Card was not flicked away, animate back to start
