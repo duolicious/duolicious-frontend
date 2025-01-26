@@ -122,6 +122,7 @@ const japi = async (
   maxRetries?: number,
   showValidationToast?: boolean,
 ): Promise<ApiResponse> => {
+  console.log(method, endpoint, body); // TODO
   const init = body === undefined ? {} : {
     headers: {
       Accept: 'application/json',
