@@ -1,4 +1,4 @@
-name: Type Checking
+name: Type Checks
 on:
   push:
     branches:
@@ -19,6 +19,6 @@ jobs:
       run: |
         npm ci
         npx patch-package
-    - name: Run Jest tests
+    - name: Run type checks
       run: |
         npm run typecheck
