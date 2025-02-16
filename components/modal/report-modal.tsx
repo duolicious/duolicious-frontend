@@ -16,6 +16,9 @@ import { listen } from '../../events/events';
 import { setSkipped } from '../../hide-and-block/hide-and-block';
 import { KeyboardDismissingView } from '../keyboard-dismissing-view';
 import { DefaultModal } from './deafult-modal';
+import {
+  backgroundColors,
+} from './background-colors';
 
 type ReportModalInitialData = {
   name: string
@@ -116,10 +119,10 @@ const ReportModal = () => {
         style={{
           width: '100%',
           height: '100%',
-          backgroundColor: 'rgba(0, 0, 0, 0.3)',
           justifyContent: 'center',
           alignItems: 'center',
           flexDirection: 'row',
+          ...backgroundColors.light,
         }}
       >
         <View

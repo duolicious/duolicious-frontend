@@ -39,6 +39,7 @@ import { STATUS_URL } from './env/env';
 import { delay, parseUrl } from './util/util';
 import { ColorPickerModal } from './components/modal/color-picker-modal/color-picker-modal';
 import { DonationNagModal } from './components/modal/donation-nag-modal';
+import { GifPickerModal } from './components/modal/gif-picker-modal';
 import { ReportModal } from './components/modal/report-modal';
 import { StreamErrorModal } from './components/modal/stream-error-modal';
 import { ImageCropper } from './components/image-cropper';
@@ -528,6 +529,7 @@ const App = () => {
           <ReportModal/>
           <ImageCropper/>
           <ColorPickerModal/>
+          <GifPickerModal/>
           <Toast/>
           <StreamErrorModal/>
         </GestureHandlerRootView>

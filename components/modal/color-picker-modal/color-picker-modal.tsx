@@ -1,4 +1,4 @@
-import React, {
+import {
   useCallback,
   useEffect,
   useRef,
@@ -24,6 +24,9 @@ import {
 import {
   DefaultText,
 } from '../../default-text';
+import {
+  backgroundColors,
+} from '../background-colors';
 
 type ColorPickedEvent = string;
 type ShowColorPickerEvent = string;
@@ -35,9 +38,9 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
     justifyContent: 'center',
     alignItems: 'center',
+    ...backgroundColors.dark,
   },
   container: {
     borderColor: '#555',

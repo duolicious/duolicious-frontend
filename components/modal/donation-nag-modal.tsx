@@ -15,6 +15,9 @@ import { signedInUser } from '../../App';
 import { api } from '../../api/api';
 import * as _ from "lodash";
 import { DefaultModal } from './deafult-modal';
+import {
+  backgroundColors,
+} from './background-colors';
 
 const gagLocations = _.shuffle([
   '/a/',
@@ -155,10 +158,10 @@ const MonetaryDonationNagModalWeb = ({
         style={{
           width: '100%',
           height: '100%',
-          backgroundColor: 'rgba(0, 0, 0, 0.3)',
           justifyContent: 'center',
           alignItems: 'center',
           flexDirection: 'row',
+          ...backgroundColors.light,
         }}
       >
         <View
@@ -299,10 +302,10 @@ const MarketingDonationNagModalWeb = () => {
         style={{
           width: '100%',
           height: '100%',
-          backgroundColor: 'rgba(0, 0, 0, 0.3)',
           justifyContent: 'center',
           alignItems: 'center',
           flexDirection: 'row',
+          ...backgroundColors.light,
         }}
       >
         <View

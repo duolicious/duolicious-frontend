@@ -57,6 +57,9 @@ import Reanimated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import {
+  GifPickedEvent,
+} from './modal/gif-picker-modal';
 
 
 // TODO: Make the gif button disappear when someone starts typing
@@ -770,16 +773,11 @@ const TextInputWithButton = ({
       50 :
       Math.min(maxHeight, Math.max(80, Math.round(text.length / 40) * 15));
 
-  const opacity = useSharedValue(1);
   const [isLoading, setIsLoading] = useState(false);
 
-  const fadeIn = useCallback(() => {
-    opacity.value = 0.5;
-  }, []);
-
-  const fadeOut = useCallback(() => {
-    opacity.value = withTiming(1);
-  }, []);
+  const opacity = useSharedValue(1);
+  const fadeIn = useCallback(() => { opacity.value = 0.5; }, []);
+  const fadeOut = useCallback(() => { opacity.value = withTiming(1); }, []);
 
   const maybeSetText = useCallback((t: string) => {
     if (!isLoading) {
@@ -787,8 +785,8 @@ const TextInputWithButton = ({
     }
   }, [isLoading]);
 
-  const sendMessage = useCallback(async () => {
-    const trimmed = text.trim();
+  const sendMessage = useCallback(async (textArg?: string) => {
+    const trimmed = (textArg ?? text).trim();
     if (trimmed) {
       setIsLoading(true);
       const messageStatus = await onPress(trimmed);
@@ -798,6 +796,14 @@ const TextInputWithButton = ({
       setIsLoading(false);
     }
   }, [text]);
+
+  const showGifPicker = useCallback(() => {
+    notify('show-gif-picker');
+  }, []);
+
+  useEffect(() => {
+    return listen<GifPickedEvent>('gif-picked', sendMessage);
+  }, []);
 
   const onKeyPress = useCallback((e) => {
     if (
@@ -862,7 +868,7 @@ const TextInputWithButton = ({
             }}
             onPressIn={fadeIn}
             onPressOut={fadeOut}
-            onPress={sendMessage}
+            onPress={() => sendMessage()}
           >
             {isLoading &&
               <ActivityIndicator size="small" color="#70f" />
@@ -905,7 +911,7 @@ const TextInputWithButton = ({
             hitSlop={10}
             onPressIn={fadeIn}
             onPressOut={fadeOut}
-            onPress={sendMessage}
+            onPress={showGifPicker}
           >
             {isLoading &&
               <ActivityIndicator size="small" color="#70f" />
