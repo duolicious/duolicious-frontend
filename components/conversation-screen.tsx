@@ -897,31 +897,31 @@ const TextInputWithButton = ({
           entering={FadeIn.duration(200)}
           exiting={FadeOut.duration(200)}
         >
-          <Pressable
-            style={{
-              aspectRatio: 16/9,
-              width: '100%',
-              justifyContent: 'center',
-              alignItems: 'center',
-              backgroundColor: 'white',
-              borderRadius: 5,
-              borderWidth: 3,
-              borderColor: 'black',
-            }}
-            hitSlop={10}
-            onPressIn={fadeIn}
-            onPressOut={fadeOut}
-            onPress={showGifPicker}
-          >
-            {isLoading &&
-              <ActivityIndicator size="small" color="#70f" />
-            }
-            {!isLoading &&
-              <DefaultText style={{ fontWeight: 900 }} >
-                GIF
-              </DefaultText>
-            }
-          </Pressable>
+          {isLoading &&
+            <ActivityIndicator size="small" color="#70f" />
+          }
+          {!isLoading &&
+            <Pressable
+              style={{
+                aspectRatio: 16/9,
+                width: '100%',
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: 'white',
+                borderRadius: 5,
+                borderWidth: 3,
+                borderColor: 'black',
+              }}
+              hitSlop={10}
+              onPressIn={fadeIn}
+              onPressOut={fadeOut}
+              onPress={showGifPicker}
+            >
+                <DefaultText style={{ fontWeight: 900 }} >
+                  GIF
+                </DefaultText>
+            </Pressable>
+          }
         </Reanimated.View>
       }
     </KeyboardAvoidingView>
