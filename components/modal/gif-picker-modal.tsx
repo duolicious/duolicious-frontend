@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   StyleSheet,
   View,
-  FlatList,
+  ScrollView,
   Pressable,
   ActivityIndicator,
 } from 'react-native';
@@ -16,7 +16,7 @@ import { AutoResizingGif } from '../auto-resizing-gif';
 
 type GifPickedEvent = string;
 
-// TODO: Masonry list
+// TODO: Image can't reappear after being cancelled on iOS
 
 const TENOR_API_KEY = 'LIVDSRZULELA'; // TODO: Define via env vars
 const TENOR_SEARCH_URL = 'https://g.tenor.com/v1/search';
@@ -45,10 +45,10 @@ const GifPickerModal: React.FC = () => {
     try {
       const response = await fetch(
         `${TENOR_SEARCH_URL}` +
-        `?q=${encodeURIComponent(query)}` +
-        `&key=${TENOR_API_KEY}` +
-        `&media_filter=gif,nanogif` +
-        `&limit=50`
+          `?q=${encodeURIComponent(query)}` +
+          `&key=${TENOR_API_KEY}` +
+          `&media_filter=gif,nanogif` +
+          `&limit=50`
       );
       const json = await response.json();
       // The Tenor API returns an array of results – adjust according to your needs
@@ -60,9 +60,12 @@ const GifPickerModal: React.FC = () => {
   }, []);
 
   // Use lodash debounce to delay search requests
-  const debouncedFetchGifs = useCallback(_.debounce((query: string) => {
-    fetchGifs(query);
-  }, 500), [fetchGifs]);
+  const debouncedFetchGifs = useCallback(
+    _.debounce((query: string) => {
+      fetchGifs(query);
+    }, 500),
+    [fetchGifs]
+  );
 
   useEffect(() => {
     debouncedFetchGifs(searchQuery);
@@ -82,12 +85,20 @@ const GifPickerModal: React.FC = () => {
     return null;
   }
 
-  const renderGifItem = ({ item }: { item: any }) => {
+  // Divide gifResults equally between three columns
+  const columns = [[], [], []] as any[][];
+  gifResults.forEach((item, index) => {
+    columns[index % 3].push(item);
+  });
+
+  // Helper to render a single gif item
+  const renderGifItem = (item: any, key: string | number) => {
     const previewUrl = item.media[0]?.nanogif?.url;
     const gifUrl = item.media[0]?.gif?.url;
 
     return (
       <Reanimated.View
+        key={key}
         entering={FadeIn.duration(200)}
         exiting={FadeOut.duration(200)}
         style={styles.gifItemContainer}
@@ -126,13 +137,23 @@ const GifPickerModal: React.FC = () => {
               style={styles.loadingIndicator}
             />
           ) : (
-            <FlatList
-              data={gifResults}
-              keyExtractor={(item, index) => item.id || index.toString()}
-              numColumns={3}
-              renderItem={renderGifItem}
-              contentContainerStyle={styles.gifList}
-            />
+            <ScrollView contentContainerStyle={styles.masonryContainer}>
+              <View style={styles.column}>
+                {columns[0].map((item, index) =>
+                  renderGifItem(item, item.id || index)
+                )}
+              </View>
+              <View style={styles.column}>
+                {columns[1].map((item, index) =>
+                  renderGifItem(item, item.id || index)
+                )}
+              </View>
+              <View style={styles.column}>
+                {columns[2].map((item, index) =>
+                  renderGifItem(item, item.id || index)
+                )}
+              </View>
+            </ScrollView>
           )}
         </View>
         <View style={styles.buttonContainer}>
@@ -176,6 +197,7 @@ const styles = StyleSheet.create({
   },
   gifGalleryContainer: {
     width: '100%',
+    gap: 10,
     flex: 1,
     padding: 10,
   },
@@ -185,12 +207,16 @@ const styles = StyleSheet.create({
     marginLeft: 0,
     marginRight: 0,
   },
-  gifList: {
-    justifyContent: 'center',
+  masonryContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  column: {
+    flex: 1,
+    gap: 10,
   },
   gifItemContainer: {
-    flex: 1,
-    margin: 5,
     justifyContent: 'center',
   },
   gifImage: {
