@@ -13,10 +13,12 @@ import { listen, notify } from '../../events/events';
 import { backgroundColors } from './background-colors';
 import { DefaultTextInput } from '../default-text-input';
 import { AutoResizingGif } from '../auto-resizing-gif';
+import {
+  TENOR_API_KEY,
+} from '../../env/env';
 
 type GifPickedEvent = string;
 
-const TENOR_API_KEY = 'LIVDSRZULELA'; // TODO: Define via env vars
 const TENOR_SEARCH_URL = 'https://g.tenor.com/v1/search';
 
 const fadeIn = FadeIn.duration(200);
