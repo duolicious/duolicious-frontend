@@ -16,14 +16,42 @@ import { AutoResizingGif } from '../auto-resizing-gif';
 
 type GifPickedEvent = string;
 
-// TODO: Image can't reappear after being cancelled on iOS
-
 const TENOR_API_KEY = 'LIVDSRZULELA'; // TODO: Define via env vars
 const TENOR_SEARCH_URL = 'https://g.tenor.com/v1/search';
 
+const fadeIn = FadeIn.duration(200);
+const fadeOut = FadeOut.duration(200);
+
+// Helper to render a single gif item
+const RenderGifItem = ({
+  gifUrl,
+  previewUrl,
+  onPress,
+  isSelected,
+}: {
+  gifUrl: string,
+  previewUrl: string,
+  onPress: (url: string) => void
+  isSelected: boolean
+}) => {
+  return (
+    <View style={styles.gifItemContainer}>
+      <Pressable onPress={() => onPress(gifUrl)}>
+        <AutoResizingGif
+          uri={previewUrl}
+          style={[
+            styles.gifImage,
+            isSelected ? styles.selectedGif : styles.unselectedGif,
+          ]}
+        />
+      </Pressable>
+    </View>
+  );
+};
+
 const GifPickerModal: React.FC = () => {
   const [isShowing, setIsShowing] = useState(false);
-  const [pickedGif, setPickedGif] = useState<null | string>(null);
+  const [selectedGif, setSelectedGif] = useState<null | string>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [gifResults, setGifResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -33,11 +61,11 @@ const GifPickerModal: React.FC = () => {
   }, []);
 
   const pickGif = useCallback(() => {
-    if (pickedGif) {
-      notify<GifPickedEvent>('gif-picked', pickedGif);
+    if (selectedGif) {
+      notify<GifPickedEvent>('gif-picked', selectedGif);
       setIsShowing(false);
     }
-  }, [pickedGif]);
+  }, [selectedGif]);
 
   // Fetch gifs from Tenor when a search query is provided
   const fetchGifs = useCallback(async (query: string) => {
@@ -74,7 +102,7 @@ const GifPickerModal: React.FC = () => {
   useEffect(() => {
     return listen('show-gif-picker', () => {
       setIsShowing(true);
-      setPickedGif(null);
+      setSelectedGif(null);
       setSearchQuery('');
       setGifResults([]);
       debouncedFetchGifs("");
@@ -91,36 +119,11 @@ const GifPickerModal: React.FC = () => {
     columns[index % 3].push(item);
   });
 
-  // Helper to render a single gif item
-  const renderGifItem = (item: any, key: string | number) => {
-    const previewUrl = item.media[0]?.nanogif?.url;
-    const gifUrl = item.media[0]?.gif?.url;
-
-    return (
-      <Reanimated.View
-        key={key}
-        entering={FadeIn.duration(200)}
-        exiting={FadeOut.duration(200)}
-        style={styles.gifItemContainer}
-      >
-        <Pressable onPress={() => setPickedGif(gifUrl)}>
-          <AutoResizingGif
-            uri={previewUrl}
-            style={[
-              styles.gifImage,
-              pickedGif === gifUrl ? styles.selectedGif : styles.unselectedGif,
-            ]}
-          />
-        </Pressable>
-      </Reanimated.View>
-    );
-  };
-
   return (
     <Reanimated.View
       style={styles.modal}
-      entering={FadeIn.duration(200)}
-      exiting={FadeOut.duration(200)}
+      entering={fadeIn}
+      exiting={fadeOut}
     >
       <View style={styles.container}>
         <View style={styles.gifGalleryContainer}>
@@ -140,17 +143,35 @@ const GifPickerModal: React.FC = () => {
             <ScrollView contentContainerStyle={styles.masonryContainer}>
               <View style={styles.column}>
                 {columns[0].map((item, index) =>
-                  renderGifItem(item, item.id || index)
+                  <RenderGifItem
+                    key={index}
+                    gifUrl={item.media[0]?.gif?.url}
+                    previewUrl={item.media[0]?.nanogif?.url}
+                    isSelected={item.media[0]?.gif?.url === selectedGif}
+                    onPress={setSelectedGif}
+                  />
                 )}
               </View>
               <View style={styles.column}>
                 {columns[1].map((item, index) =>
-                  renderGifItem(item, item.id || index)
+                  <RenderGifItem
+                    key={index}
+                    gifUrl={item.media[0]?.gif?.url}
+                    previewUrl={item.media[0]?.nanogif?.url}
+                    isSelected={item.media[0]?.gif?.url === selectedGif}
+                    onPress={setSelectedGif}
+                  />
                 )}
               </View>
               <View style={styles.column}>
                 {columns[2].map((item, index) =>
-                  renderGifItem(item, item.id || index)
+                  <RenderGifItem
+                    key={index}
+                    gifUrl={item.media[0]?.gif?.url}
+                    previewUrl={item.media[0]?.nanogif?.url}
+                    isSelected={item.media[0]?.gif?.url === selectedGif}
+                    onPress={setSelectedGif}
+                  />
                 )}
               </View>
             </ScrollView>
