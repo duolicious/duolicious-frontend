@@ -7,14 +7,14 @@ import {
   useEffect,
   useState,
 } from 'react';
-import { DefaultText } from './default-text';
-import { Title } from './title';
-import { DefaultLongTextInput } from './default-long-text-input';
-import { ButtonWithCenteredText } from './button/centered-text';
+import { DefaultText } from './../default-text';
+import { Title } from './../title';
+import { DefaultLongTextInput } from './../default-long-text-input';
+import { ButtonWithCenteredText } from './../button/centered-text';
 import { X } from "react-native-feather";
-import { listen } from '../events/events';
-import { setSkipped } from '../hide-and-block/hide-and-block';
-import { KeyboardDismissingView } from './keyboard-dismissing-view';
+import { listen } from '../../events/events';
+import { setSkipped } from '../../hide-and-block/hide-and-block';
+import { KeyboardDismissingView } from '../keyboard-dismissing-view';
 import { DefaultModal } from './deafult-modal';
 
 type ReportModalInitialData = {

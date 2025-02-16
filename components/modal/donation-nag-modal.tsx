@@ -9,10 +9,10 @@ import {
   useRef,
   useState,
 } from 'react';
-import { DefaultText } from './default-text';
-import { ButtonWithCenteredText } from './button/centered-text';
-import { signedInUser } from '../App';
-import { api } from '../api/api';
+import { DefaultText } from '../default-text';
+import { ButtonWithCenteredText } from '../button/centered-text';
+import { signedInUser } from '../../App';
+import { api } from '../../api/api';
 import * as _ from "lodash";
 import { DefaultModal } from './deafult-modal';
 

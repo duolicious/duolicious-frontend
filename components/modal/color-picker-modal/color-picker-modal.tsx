@@ -13,17 +13,17 @@ import {
 import {
   listen,
   notify,
-} from '../../events/events';
+} from '../../../events/events';
 import {
   Title,
-} from '../../components/title';
+} from '../../../components/title';
 import {
   HsvColorPicker,
   HsvColorPickerRef,
 } from './hsv-color-picker';
 import {
   DefaultText,
-} from './../default-text';
+} from '../../default-text';
 
 type ColorPickedEvent = string;
 type ShowColorPickerEvent = string;

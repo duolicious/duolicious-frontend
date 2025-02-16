@@ -44,7 +44,7 @@ import { TopNavBarButton } from './top-nav-bar-button';
 import { RotateCcw, Flag, X } from "react-native-feather";
 import { setSkipped } from '../hide-and-block/hide-and-block';
 import { delay, isMobile } from '../util/util';
-import { ReportModalInitialData } from './report-modal';
+import { ReportModalInitialData } from './modal/report-modal';
 import { listen, notify, lastEvent } from '../events/events';
 import { Image, ImageBackground } from 'expo-image';
 import * as StoreReview from 'expo-store-review';
