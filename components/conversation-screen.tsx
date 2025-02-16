@@ -61,10 +61,6 @@ import {
   GifPickedEvent,
 } from './modal/gif-picker-modal';
 
-
-// TODO: Make the gif button disappear when someone starts typing
-// TODO: Gif button shoudln't be pressable when loading
-
 const propAt = (messages: Message[] | null | undefined, index: number, prop: string): string => {
   if (!messages) return '';
 
