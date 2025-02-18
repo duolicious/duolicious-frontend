@@ -61,8 +61,6 @@ import { Logo16 } from './components/logo';
 import { useScrollbarStyle } from './components/navigation/scroll-bar-hooks';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-// TODO: Onboarding works
-
 setNofications();
 verificationWatcher();
 
@@ -325,6 +323,13 @@ const App = () => {
               ]
             }
           }
+        ]
+      });
+    } else if (existingSessionToken && !isMobile()) {
+      setInitialState({
+        index: 0,
+        routes: [
+          { name: "Home" },
         ]
       });
     } else if (existingNavigationState) {
