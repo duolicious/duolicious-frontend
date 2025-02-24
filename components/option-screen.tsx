@@ -5,7 +5,6 @@ import {
   SafeAreaView,
   ScrollView,
   View,
-  Text,
 } from 'react-native';
 import {
   forwardRef,
@@ -82,7 +81,7 @@ import { listen, notify } from '../events/events';
 import { Title } from './title';
 import { ShowColorPickerEvent } from './color-picker-modal/color-picker-modal';
 import { isMobile } from '../util/util';
-import { useTheme, themes } from "../theme/ThemeContext";
+import { themes } from "../theme/Themes";
 
 type InputProps<T extends OptionGroupInputs> = {
   input: T,
@@ -1138,102 +1137,125 @@ const ColorPickerButton = ({
 };
 
 const ThemePicker = forwardRef((props: InputProps<OptionGroupThemePicker>, ref) => {
-  const { theme = themes.Light , setTheme } = useTheme(); 
+  
   const [titleColor, setTitleColor] = useState(
-    props.input.themePicker?.currentTitleColor
-     ?? themes.Light.titleColor ?? "#000000"
-  );
+    props.input.themePicker?.currentTitleColor 
+    ?? themes.Light.titleColor ?? "#000000");
   const [bodyColor, setBodyColor] = useState(
     props.input.themePicker?.currentBodyColor 
-    ?? themes.Light.bodyColor ?? "#333333"
-  );
+    ?? themes.Light.bodyColor ?? "#333333");
   const [backgroundColor, setBackgroundColor] = useState(
     props.input.themePicker?.currentBackgroundColor 
-    ?? themes.Light.backgroundColor ?? "#ffffff"
-  );
-  
+    ?? themes.Light.backgroundColor ?? "#ffffff");
+
   const lastSetter = useRef(setTitleColor);
+  const scrollViewRef = useRef<ScrollView>(null); 
+  const scrollX = useRef(0); 
 
   const submit = useCallback(async () => {
     props.setIsLoading(true);
-
     const ok = await props.input.themePicker.submit(
       titleColor, bodyColor, backgroundColor
     );
     ok && props.onSubmitSuccess();
-
     props.setIsLoading(false);
   }, [titleColor, bodyColor, backgroundColor]);
 
   useImperativeHandle(ref, () => ({ submit }), [submit]);
 
   useEffect(() => {
-    return listen('color-picked', (c: string) => lastSetter.current(c));
+    return listen("color-picked", (c: string) => lastSetter.current(c));
   }, [lastSetter]);
 
   const handleThemeChange = (selectedTheme: keyof typeof themes) => {
     const newTheme = themes[selectedTheme];
-    setTheme(newTheme);
     setTitleColor(newTheme.titleColor);
     setBodyColor(newTheme.bodyColor);
     setBackgroundColor(newTheme.backgroundColor);
   };
 
+  const scrollThemes = (direction: "left" | "right") => {
+    if (scrollViewRef.current) {
+      let newScrollX = direction === "left" 
+      ? scrollX.current - 200 : scrollX.current + 200;
+
+      scrollViewRef.current.scrollTo({ x: newScrollX, animated: true });
+      scrollX.current = newScrollX; 
+    }
+  };
+
   return (
-    <View
-      style={{
-        marginLeft: 10,
-        marginRight: 10,
-        padding: 10,
-        backgroundColor: backgroundColor,
-        borderRadius: 10,
-        shadowOffset: { 
-          width: 0, 
-          height: 2 
-        },
-        shadowOpacity: 0.4,
-        shadowRadius: 4,
-        elevation: 4,
-      }}
-    >
-
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} 
-      style={{ marginBottom: 10 }}>
-        {Object.keys(themes).map((themeKey) => (
-          <Pressable
-            key={themeKey}
-            onPress={() => handleThemeChange(themeKey as keyof typeof themes)}
-            style={{
-              backgroundColor: themes[themeKey].backgroundColor,
-              padding: 8,
-              borderRadius: 8,
-              marginHorizontal: 5,
-              borderWidth: backgroundColor === themes[themeKey]?.backgroundColor ? 2 : 0,
-              borderColor: "#000",
-            }}
-          >
-            <Text style={{ color: themes[themeKey].titleColor }}>{themeKey}</Text>
-          </Pressable>
-        ))}
-      </ScrollView>
-
+    <View style={{ 
+      marginLeft: 10, 
+      marginRight: 10, 
+      padding: 10, 
+      backgroundColor: backgroundColor, 
+      borderRadius: 10, 
+      shadowOffset: { width: 0, height: 2 }, 
+      shadowOpacity: 0.4, 
+      shadowRadius: 4, 
+      elevation: 4 
+      }}>
+      
       <View style={{ 
-        flexDirection: "row", gap: 10, alignItems: "center", marginBottom: 10 }}>
-        <Text style={{ color: titleColor, fontSize: 18 }}>Example Heading</Text>
-        <View style={{ width: 30, height: 30, backgroundColor: titleColor, borderRadius: 4, borderColor: "#000", borderWidth: 2 }} />
+        flexDirection: "row", 
+        alignItems: "center", 
+        marginBottom: 10 }}>
+        <Pressable onPress={
+          () => scrollThemes("left")} style={{ padding: 5 }}>
+          <Ionicons 
+          name="chevron-back-outline" 
+          size={24} color="black" />
+        </Pressable>
+
+        <ScrollView
+          ref={scrollViewRef}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={{ flex: 1 }}
+        >
+          {Object.keys(themes).map((themeKey) => (
+            <Pressable
+              key={themeKey}
+              onPress={() => handleThemeChange(themeKey as keyof typeof themes)}
+              style={{
+                backgroundColor: themes[themeKey].backgroundColor,
+                padding: 8,
+                borderRadius: 8,
+                marginHorizontal: 5,
+                borderWidth: backgroundColor === themes[themeKey]?.backgroundColor ? 2 : 0,
+                borderColor: "#000",
+              }}
+            >
+              <DefaultText style={{ color: themes[themeKey].titleColor }}>{themeKey}</DefaultText>
+            </Pressable>
+          ))}
+        </ScrollView>
+
+        <Pressable onPress={() => scrollThemes("right")} style={{ padding: 5 }}>
+          <Ionicons name="chevron-forward-outline" size={24} color="black" />
+        </Pressable>
+      </View>
+
+      <View style={{ flexDirection: "row", gap: 10, alignItems: "center", marginBottom: 10 }}>
+        <DefaultText style={{ color: titleColor, fontSize: 18 }}>Example Heading</DefaultText>
+        <ColorPickerButton lastSetter={lastSetter} currentColor={titleColor} setColor={setTitleColor} />
+      </View>
+
+      <View style={{ flexDirection: "row", gap: 10, alignItems: "center", marginBottom: 10 }}>
+        <DefaultText style={{ color: bodyColor, fontSize: 16 }}>Your profile will look like this.</DefaultText>
+        <ColorPickerButton lastSetter={lastSetter} currentColor={bodyColor} setColor={setBodyColor} />
       </View>
 
       <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
-        <Text style={{ color: bodyColor, fontSize: 16 }}>Your profile will look like this.</Text>
-        <View style={{ width: 30, height: 30, backgroundColor: bodyColor, borderRadius: 4, borderColor: "#000", borderWidth: 2 }} />
+        <DefaultText style={{ color: "#000", fontSize: 16 }}>Background</DefaultText>
+        <ColorPickerButton lastSetter={lastSetter} currentColor={backgroundColor} setColor={setBackgroundColor} />
       </View>
 
-       <View style={{ marginTop: 10, marginLeft: "auto" }}>
-          <View style={{ width: 30, height: 30, backgroundColor: backgroundColor, borderRadius: 4, borderColor: "#000", borderWidth: 2 }} />
-        </View>
     </View>
   );
 });
+
 
 const None = forwardRef((props: InputProps<OptionGroupNone>, ref) => {
   const submit = useCallback(async () => {
