@@ -4,6 +4,7 @@ import {
   Pressable,
   SafeAreaView,
   ScrollView,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import {
@@ -195,9 +196,9 @@ const Slider = forwardRef((props: InputProps<OptionGroupSlider>, ref) => {
     props.setIsLoading(true);
 
     const value = (
-        inputValueRef?.current === props.input.slider.sliderMax &&
-        props.input.slider.addPlusAtMax
-      ) ?
+      inputValueRef?.current === props.input.slider.sliderMax &&
+      props.input.slider.addPlusAtMax
+    ) ?
       null :
       inputValueRef?.current;
 
@@ -959,79 +960,79 @@ const VerificationChecker = forwardRef((props: InputProps<OptionGroupVerificatio
           }}
         >
           {status === 'success' && <>
-              <View
+            <View
+              style={{
+                alignItems: 'center',
+                gap: 10,
+                flex: 1,
+                justifyContent: 'center',
+              }}
+            >
+              <VerificationBadge size={40}/>
+              <DefaultText
                 style={{
-                  alignItems: 'center',
-                  gap: 10,
-                  flex: 1,
-                  justifyContent: 'center',
+                  color: '#333',
+                  fontWeight: 700,
+                  fontSize: 22,
                 }}
               >
-                <VerificationBadge size={40}/>
-                <DefaultText
-                  style={{
-                    color: '#333',
-                    fontWeight: 700,
-                    fontSize: 22,
-                  }}
-                >
-                  You’re Verified!
-                </DefaultText>
-              </View>
-              <VerificationText
-                verified={verifiedThings}
-                unverified={unverifiedThings}
-              />
-            </>
+                You’re Verified!
+              </DefaultText>
+            </View>
+            <VerificationText
+              verified={verifiedThings}
+              unverified={unverifiedThings}
+            />
+          </>
           }
           {status === 'failure' && <>
-              <View
+            <View
+              style={{
+                alignItems: 'center',
+                gap: 10,
+                flex: 1,
+                justifyContent: 'center',
+              }}
+            >
+              <Ionicons
                 style={{
-                  alignItems: 'center',
-                  gap: 10,
-                  flex: 1,
-                  justifyContent: 'center',
+                  fontSize: 55,
+                  color: "#d10909",
+                }}
+                name="close-circle"
+              />
+              <DefaultText
+                style={{
+                  color: '#333',
+                  fontWeight: 700,
+                  fontSize: 22,
                 }}
               >
-                <Ionicons
-                  style={{
-                    fontSize: 55,
-                    color: "#d10909",
-                  }}
-                  name="close-circle"
-                />
-                <DefaultText
-                  style={{
-                    color: '#333',
-                    fontWeight: 700,
-                    fontSize: 22,
-                  }}
-                >
-                  We Couldn’t Verify You
-                </DefaultText>
-              </View>
-              <View style={{ gap: 15, flex: 1, width: '100%' }}>
-                <DefaultText
-                  style={{
-                    color: '#333',
-                    fontSize: 16,
-                    width: '100%',
-                  }}
-                >
-                  {message}
-                </DefaultText>
+                We Couldn’t Verify You
+              </DefaultText>
+            </View>
+            <View style={{ gap: 15, flex: 1, width: '100%' }}>
+              <DefaultText
+                style={{
+                  color: '#333',
+                  fontSize: 16,
+                  width: '100%',
+                }}
+              >
+                {message}
+              </DefaultText>
 
-                <DefaultText
-                  style={{
-                    color: '#333',
-                    fontSize: 16,
-                    width: '100%',
-                  }}
-                >
-                  Not to worry! You can try up to {maxDailySelfies} times per day.
-                </DefaultText>
-              </View>
-            </>
+              <DefaultText
+                style={{
+                  color: '#333',
+                  fontSize: 16,
+                  width: '100%',
+                }}
+              >
+                Not to worry! You can try up to {maxDailySelfies} times per day.
+              </DefaultText>
+            </View>
+          </>
           }
         </View>
       }
@@ -1137,20 +1138,24 @@ const ColorPickerButton = ({
 };
 
 const ThemePicker = forwardRef((props: InputProps<OptionGroupThemePicker>, ref) => {
-  
+
   const [titleColor, setTitleColor] = useState(
-    props.input.themePicker?.currentTitleColor 
+    props.input.themePicker?.currentTitleColor
     ?? themes.Light.titleColor ?? "#000000");
   const [bodyColor, setBodyColor] = useState(
-    props.input.themePicker?.currentBodyColor 
+    props.input.themePicker?.currentBodyColor
     ?? themes.Light.bodyColor ?? "#333333");
   const [backgroundColor, setBackgroundColor] = useState(
-    props.input.themePicker?.currentBackgroundColor 
+    props.input.themePicker?.currentBackgroundColor
     ?? themes.Light.backgroundColor ?? "#ffffff");
 
   const lastSetter = useRef(setTitleColor);
-  const scrollViewRef = useRef<ScrollView>(null); 
-  const scrollX = useRef(0); 
+  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollX = useRef(0);
+  const [showLeftShadow, setShowLeftShadow] = useState(false);
+  const [showRightShadow, setShowRightShadow] = useState(true);
+  const { width } = useWindowDimensions();
+  const isMobile = width < 768;
 
   const submit = useCallback(async () => {
     props.setIsLoading(true);
@@ -1176,43 +1181,74 @@ const ThemePicker = forwardRef((props: InputProps<OptionGroupThemePicker>, ref) 
 
   const scrollThemes = (direction: "left" | "right") => {
     if (scrollViewRef.current) {
-      let newScrollX = direction === "left" 
-      ? scrollX.current - 200 : scrollX.current + 200;
+      let newScrollX = direction === "left"
+        ? scrollX.current - 200 : scrollX.current + 200;
 
       scrollViewRef.current.scrollTo({ x: newScrollX, animated: true });
-      scrollX.current = newScrollX; 
+      scrollX.current = newScrollX;
     }
   };
 
+  const handleScroll = (event) => {
+    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+    setShowLeftShadow(contentOffset.x > 10);
+    setShowRightShadow(contentOffset.x + layoutMeasurement.width < contentSize.width - 10);
+  };
+
   return (
-    <View style={{ 
-      marginLeft: 10, 
-      marginRight: 10, 
-      padding: 10, 
-      backgroundColor: backgroundColor, 
-      borderRadius: 10, 
-      shadowOffset: { width: 0, height: 2 }, 
-      shadowOpacity: 0.4, 
-      shadowRadius: 4, 
-      elevation: 4 
+    <View style={{
+      marginLeft: 10,
+      marginRight: 10,
+      padding: 10,
+      backgroundColor: backgroundColor,
+      borderRadius: 10,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.4,
+      shadowRadius: 4,
+      elevation: 4
+    }}>
+
+      <View style={{
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 10,
+        borderRadius: 8,
       }}>
-      
-      <View style={{ 
-        flexDirection: "row", 
-        alignItems: "center", 
-        marginBottom: 10 }}>
-        <Pressable onPress={
-          () => scrollThemes("left")} style={{ padding: 5 }}>
-          <Ionicons 
-          name="chevron-back-outline" 
-          size={24} color="black" />
-        </Pressable>
+        {isMobile && showLeftShadow && (
+          <LinearGradient
+          colors={["rgba(0, 0, 0, 0.3)", 
+            "rgba(0, 0, 0, 0.2)",
+            "rgba(0, 0, 0, 0)"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: 20,
+            zIndex: 1,
+            borderBottomLeftRadius: 4,
+            borderTopLeftRadius: 4,
+            }}
+          />
+        )}
+
+
+        {!isMobile && (
+          <Pressable onPress={() => scrollThemes("left")} 
+          style={{ padding: 5 }}>
+            <Ionicons name="chevron-back-outline" size={24} color="black" />
+          </Pressable>
+        )}
 
         <ScrollView
           ref={scrollViewRef}
           horizontal
           showsHorizontalScrollIndicator={false}
           style={{ flex: 1 }}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
         >
           {Object.keys(themes).map((themeKey) => (
             <Pressable
@@ -1225,16 +1261,44 @@ const ThemePicker = forwardRef((props: InputProps<OptionGroupThemePicker>, ref) 
                 marginHorizontal: 5,
                 borderWidth: backgroundColor === themes[themeKey]?.backgroundColor ? 2 : 0,
                 borderColor: "#000",
+                justifyContent: 'center',
+                alignItems: 'center'
               }}
             >
-              <DefaultText style={{ color: themes[themeKey].titleColor }}>{themeKey}</DefaultText>
+              <DefaultText style={{
+                color: themes[themeKey].titleColor,
+                textAlign: 'center'
+              }}>{themeKey}</DefaultText>
             </Pressable>
           ))}
         </ScrollView>
 
-        <Pressable onPress={() => scrollThemes("right")} style={{ padding: 5 }}>
-          <Ionicons name="chevron-forward-outline" size={24} color="black" />
-        </Pressable>
+        {!isMobile && (
+          <Pressable onPress={() => scrollThemes("right")} style={{ padding: 5 }}>
+            <Ionicons name="chevron-forward-outline" size={24} color="black" />
+          </Pressable>
+        )}
+
+        {isMobile && showRightShadow && (
+          <LinearGradient
+          colors={["rgba(0, 0, 0, 0.3)", 
+            "rgba(0, 0, 0, 0.2)",
+            "rgba(0, 0, 0, 0)"]}
+          start={{ x: 1, y: 0 }}
+          end={{ x: 0, y: 0 }}
+          style={{
+            position: "absolute",
+            right: 0,
+            top: 0,
+            bottom: 0,
+            width: 20,
+            zIndex: 1,
+            borderTopRightRadius: 4,
+            borderBottomRightRadius: 4,
+            }}
+          />
+        )}
+
       </View>
 
       <View style={{ flexDirection: "row", gap: 10, alignItems: "center", marginBottom: 10 }}>
@@ -1523,56 +1587,56 @@ const OptionScreen = ({navigation, route}) => {
             />
           }
           {scrollView !== false && <>
-              <ScrollView
-                onScroll={onScroll}
-                onContentSizeChange={onContentSizeChange}
-                onLayout={onLayout}
-                contentContainerStyle={{
-                  flexGrow: 1,
-                  justifyContent: 'center',
-                }}
-                bounces={false}
-                overScrollMode="never"
-              >
+            <ScrollView
+              onScroll={onScroll}
+              onContentSizeChange={onContentSizeChange}
+              onLayout={onLayout}
+              contentContainerStyle={{
+                flexGrow: 1,
+                justifyContent: 'center',
+              }}
+              bounces={false}
+              overScrollMode="never"
+            >
                 <View style={{height: 20}}/>
-                <InputElement
-                  ref={inputRef}
-                  input={input}
-                  isLoading={isLoading}
-                  setIsLoading={setIsLoading}
-                  onSubmitSuccess={_onSubmitSuccess}
-                  title={title}
-                  showSkipButton={showSkipButton}
-                  theme={theme}
-                />
+              <InputElement
+                ref={inputRef}
+                input={input}
+                isLoading={isLoading}
+                setIsLoading={setIsLoading}
+                onSubmitSuccess={_onSubmitSuccess}
+                title={title}
+                showSkipButton={showSkipButton}
+                theme={theme}
+              />
                 <View style={{height: 20}}/>
-              </ScrollView>
-              <LinearGradient
-                colors={[backgroundColor, transparentBackgroundColor]}
-                style={{
-                  position: 'absolute',
-                  height: 20,
-                  top: 0,
-                  left: 10,
-                  right: 10,
-                }}
-              />
-              <LinearGradient
-                colors={[
-                  transparentBackgroundColor,
-                  isBottom ? backgroundColor : '#00000033'
-                ]}
-                style={{
-                  position: 'absolute',
-                  height: 10,
-                  bottom: 0,
-                  left: 10,
-                  right: 10,
-                  borderBottomLeftRadius: 5,
-                  borderBottomRightRadius: 5,
-                }}
-              />
-            </>
+            </ScrollView>
+            <LinearGradient
+              colors={[backgroundColor, transparentBackgroundColor]}
+              style={{
+                position: 'absolute',
+                height: 20,
+                top: 0,
+                left: 10,
+                right: 10,
+              }}
+            />
+            <LinearGradient
+              colors={[
+                transparentBackgroundColor,
+                isBottom ? backgroundColor : '#00000033'
+              ]}
+              style={{
+                position: 'absolute',
+                height: 10,
+                bottom: 0,
+                left: 10,
+                right: 10,
+                borderBottomLeftRadius: 5,
+                borderBottomRightRadius: 5,
+              }}
+            />
+          </>
           }
         </View>
         <View
