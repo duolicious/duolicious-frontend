@@ -1,8 +1,4 @@
-import {
-  CHAT_URL,
-} from '../env/env';
-import { Client, client, xml } from '@xmpp/client';
-import { Element } from '@xmpp/xml';
+import { xml } from '@xmpp/client';
 import { parse } from 'ltx';
 
 import { DOMParser } from '@xmldom/xmldom';
@@ -11,34 +7,29 @@ import xpath from 'xpath';
 import { signedInUser } from '../App';
 import { getRandomString } from '../random/string';
 
-import { deviceId } from '../kv-storage/device-id';
 import { japi } from '../api/api';
-import { deleteFromArray, withTimeout, delay } from '../util/util';
+import { deleteFromArray } from '../util/util';
 
 import { listen, notify, lastEvent } from '../events/events';
 
 import { registerForPushNotificationsAsync } from '../notifications/notifications';
 
-import { AppState, AppStateStatus } from 'react-native';
+// TODO: Handle coming back from background
+// import { AppState, AppStateStatus } from 'react-native';
 
 import * as _ from 'lodash';
+
+import {
+  EV_CHAT_WS_CLOSE,
+  EV_CHAT_WS_OPEN,
+  EV_CHAT_WS_RECEIVE,
+  EV_CHAT_WS_SEND,
+  EV_CHAT_WS_SEND_CLOSE,
+} from './websocket-layer';
 
 const messageTimeout = 10000;
 const fetchConversationTimeout = 15000;
 const fetchInboxTimeout = 30000;
-const pingTimeout = 5000;
-
-const _xmpp: {
-  current: {
-    client: Client
-    username: string
-    password: string
-  } | null,
-  reconnecting: boolean
-} = {
-  current: null,
-  reconnecting: false,
-};
 
 notify('inbox', null);
 
@@ -83,17 +74,6 @@ const parseUuidOrEmtpy = (uuid: string) => {
   return isValidUuid(uuid) ? uuid : '';
 }
 
-const safeSend = async (element: Element) => {
-  if (!_xmpp.current) {
-    return;
-  }
-
-  if (_xmpp.current.client.status !== 'online') {
-    return;
-  }
-
-  await _xmpp.current.client.send(element).catch(console.error);
-};
 
 // TODO: Catch more exceptions. If a network request fails, that shouldn't crash the app.
 // TODO: Update match percentages when user answers some questions
@@ -118,11 +98,6 @@ type Message = {
   id: string
   mamId?: string | undefined
   timestamp: Date
-};
-
-type Pong = {
-  preferredInterval: number
-  preferredTimeout: number
 };
 
 type Conversation = {
@@ -451,89 +426,31 @@ const login = async (
   username: string,
   password: string,
 ) => {
-  if (_xmpp.current) {
-    return; // Already logged in
-  }
+  const authBody = btoa(`\0${username}\0${password}`);
 
-  try {
-    const options = {
-      service: CHAT_URL,
-      domain: "duolicious.app",
-      username: username,
-      password: password,
-      resource: await deviceId(),
-    };
+  const auth = (
+    '<auth xmlns="urn:ietf:params:xml:ns:xmpp-sasl" mechanism="PLAIN">' +
+    authBody +
+    '</auth>');
 
-    _xmpp.current = {
-      client: client(options),
-      username,
-      password,
-    };
-
-    // The default is 1 second. We set it to 3 seconds here, but it's a shame
-    // xmpp.js doesn't support exponential backoff
-    _xmpp.current.client.reconnect.delay = 3 * 1000;
-
-    _xmpp.current.client.on("error", async (err) => {
-      console.error(err);
-      if (err.message === "conflict - Replaced by new connection") {
-        notify('stream-error');
-        await logout();
-      }
-    });
-
-    _xmpp.current.client.on("offline",       () => notify('xmpp-is-online', false));
-    _xmpp.current.client.on("connecting",    () => notify('xmpp-is-online', false));
-    _xmpp.current.client.on("opening",       () => notify('xmpp-is-online', false));
-    _xmpp.current.client.on("closing",       () => notify('xmpp-is-online', false));
-    _xmpp.current.client.on("close",         () => notify('xmpp-is-online', false));
-    _xmpp.current.client.on("disconnecting", () => notify('xmpp-is-online', false));
-    _xmpp.current.client.on("disconnect",    () => notify('xmpp-is-online', false));
-
-    _xmpp.current.client.on("online", async () => {
-      if (!_xmpp.current) {
-        return;
-      }
-
-      _xmpp.reconnecting = false;
-
-      notify('xmpp-is-online', true);
-
-      refreshInbox();
-
-      await registerForPushNotificationsAsync();
-    });
-
-    _xmpp.current.client.on("input", async (input: Element) => {
-      notify('xmpp-input', input);
-    });
-
-    _xmpp.current.client.on("stanza", async (stanza: Element) => {
-      notify('xmpp-stanza', stanza)
-    });
-
-    await _xmpp.current.client.start();
-  } catch (e) {
-    console.error(e);
-
-    await logout();
-  }
+  notify<string>(EV_CHAT_WS_SEND, auth);
+  await registerForPushNotificationsAsync();
+  await refreshInbox();
 };
 
 const markDisplayed = async (message: Message) => {
-  if (!_xmpp.current) return;
   if (message.fromCurrentUser) return;
 
   if (!isValidUuid(jidToBareJid(message.from))) return;
   if (!isValidUuid(jidToBareJid(message.to))) return;
 
-  const stanza = parse(`
+  const stanza = `
     <message to='${message.from}' from='${message.to}'>
       <displayed xmlns='urn:xmpp:chat-markers:0' id='${message.id}'/>
     </message>
-  `);
+  `;
 
-  await safeSend(stanza).catch(console.warn);
+  notify<string>(EV_CHAT_WS_SEND, stanza);
   setInboxDisplayed(jidToBareJid(message.from));
 };
 
@@ -550,7 +467,6 @@ const _sendMessage = (
   );
   const toJid = personUuidToJid(recipientPersonUuid);
 
-  if (!_xmpp.current) return;
   if (!fromJid) return;
 
   const messageXml = xml(
@@ -565,10 +481,10 @@ const _sendMessage = (
     xml("request", { xmlns: 'urn:xmpp:receipts' }),
   );
 
-  const messageStatusListener = (input: Element) => {
+  const messageStatusListener = (input: string) => {
     const doc = (() => {
       try {
-        return new DOMParser().parseFromString(input.toString(), 'text/xml');
+        return new DOMParser().parseFromString(input, 'text/xml');
       } catch {}
     })();
 
@@ -652,11 +568,11 @@ const _sendMessage = (
     removeListener();
   };
 
-  const removeListener = listen<Element>('xmpp-input', messageStatusListener);
+  const removeListener = listen<string>(EV_CHAT_WS_RECEIVE, messageStatusListener);
 
   setTimeout(removeListener, messageTimeout);
 
-  safeSend(messageXml).catch(console.warn);
+  notify<string>(EV_CHAT_WS_SEND, messageXml.toString());
 };
 
 const sendMessage = async (
@@ -668,7 +584,7 @@ const sendMessage = async (
       _sendMessage(recipientPersonUuid, message, resolve)
   );
 
-  return await withReconnectOnTimeout(messageTimeout, __sendMessage);
+  return await __sendMessage;
 };
 
 const conversationsToInbox = (conversations: Conversation[]): Inbox => {
@@ -736,8 +652,8 @@ const onReceiveMessage = (
   otherPersonUuid?: string,
   doMarkDisplayed?: boolean,
 ): (() => void) | undefined => {
-  const _onReceiveMessage = async (stanza: Element) => {
-    const doc = new DOMParser().parseFromString(stanza.toString(), 'text/xml');
+  const _onReceiveMessage = async (stanza: string) => {
+    const doc = new DOMParser().parseFromString(stanza, 'text/xml');
 
     const node = xpath.select1(
       `/*[name()='message'][@type='chat']/*[name()='body']`,
@@ -795,7 +711,7 @@ const onReceiveMessage = (
     }
   };
 
-  return listen<Element>('xmpp-stanza', _onReceiveMessage);
+  return listen<string>(EV_CHAT_WS_RECEIVE, _onReceiveMessage);
 };
 
 const _fetchConversation = async (
@@ -803,9 +719,6 @@ const _fetchConversation = async (
   callback: (messages: Message[] | 'timeout') => void,
   beforeId: string = '',
 ) => {
-  if (!_xmpp.current)
-    return callback('timeout');
-
   const queryId = getRandomString(10);
 
   const queryStanza = parse(`
@@ -829,8 +742,8 @@ const _fetchConversation = async (
 
   const collected: Message[] = [];
 
-  const maybeCollect = (stanza: Element) => {
-    const doc = new DOMParser().parseFromString(stanza.toString(), 'text/xml');
+  const maybeCollect = (stanza: string) => {
+    const doc = new DOMParser().parseFromString(stanza, 'text/xml');
 
     const node = xpath.select1(
       `/*[name()='message']` +
@@ -875,8 +788,8 @@ const _fetchConversation = async (
     });
   };
 
-  const maybeFin = async (stanza: Element) => {
-    const doc = new DOMParser().parseFromString(stanza.toString(), 'text/xml');
+  const maybeFin = async (stanza: string) => {
+    const doc = new DOMParser().parseFromString(stanza, 'text/xml');
 
     const node = xpath.select1(
       `/*[name()='iq'][@type='result'][@id='${queryId}']` +
@@ -897,13 +810,13 @@ const _fetchConversation = async (
     removeListener2();
   };
 
-  const removeListener1 = listen<Element>('xmpp-stanza', maybeCollect);
-  const removeListener2 = listen<Element>('xmpp-stanza', maybeFin);
+  const removeListener1 = listen<string>(EV_CHAT_WS_RECEIVE, maybeCollect);
+  const removeListener2 = listen<string>(EV_CHAT_WS_RECEIVE, maybeFin);
 
   setTimeout(removeListener1, fetchConversationTimeout);
   setTimeout(removeListener2, fetchConversationTimeout);
 
-  await safeSend(queryStanza).catch(console.warn);
+  notify<string>(EV_CHAT_WS_SEND, queryStanza.toString());
 };
 
 const fetchConversation = async (
@@ -915,7 +828,7 @@ const fetchConversation = async (
       _fetchConversation(withPersonUuid, resolve, beforeId)
     );
 
-  return await withReconnectOnTimeout(fetchConversationTimeout, __fetchConversation);
+  return await __fetchConversation;
 };
 
 const _fetchInboxPage = async (
@@ -923,10 +836,6 @@ const _fetchInboxPage = async (
   endTimestamp: Date | null,
   pageSize: number | null,
 ) => {
-  if (!_xmpp.current) {
-    return callback(undefined);
-  }
-
   const apiDataPromise = japi('post', '/inbox-info', {person_uuids: []});
 
   const queryId = getRandomString(10);
@@ -956,8 +865,8 @@ const _fetchInboxPage = async (
 
   const conversationList: Conversation[] = [];
 
-  const maybeCollect = (stanza: Element) => {
-    const doc = new DOMParser().parseFromString(stanza.toString(), 'text/xml');
+  const maybeCollect = (stanza: string) => {
+    const doc = new DOMParser().parseFromString(stanza, 'text/xml');
 
     const node = xpath.select1(
       `/*[name()='message']` +
@@ -1020,8 +929,8 @@ const _fetchInboxPage = async (
     conversationList.push(conversation);
   };
 
-  const maybeFin = async (stanza: Element) => {
-    const doc = new DOMParser().parseFromString(stanza.toString(), 'text/xml');
+  const maybeFin = async (stanza: string) => {
+    const doc = new DOMParser().parseFromString(stanza, 'text/xml');
 
     const node = xpath.select1(
       `/*[name()='iq'][@type='result'][@id='${queryId}']` +
@@ -1047,13 +956,13 @@ const _fetchInboxPage = async (
     removeListener2();
   };
 
-  const removeListener1 = listen<Element>('xmpp-stanza', maybeCollect);
-  const removeListener2 = listen<Element>('xmpp-stanza', maybeFin);
+  const removeListener1 = listen<string>(EV_CHAT_WS_RECEIVE, maybeCollect);
+  const removeListener2 = listen<string>(EV_CHAT_WS_RECEIVE, maybeFin);
 
   setTimeout(removeListener1, fetchInboxTimeout);
   setTimeout(removeListener2, fetchInboxTimeout);
 
-  await safeSend(queryStanza).catch(console.warn);
+  notify<string>(EV_CHAT_WS_SEND, queryStanza.toString());
 };
 
 const fetchInboxPage = async (
@@ -1065,7 +974,7 @@ const fetchInboxPage = async (
       _fetchInboxPage(resolve, endTimestamp, pageSize)
   );
 
-  return await withReconnectOnTimeout(fetchInboxTimeout, __fetchInboxPage);
+  return await __fetchInboxPage;
 };
 
 const refreshInbox = async (): Promise<void> => {
@@ -1101,174 +1010,24 @@ const refreshInbox = async (): Promise<void> => {
 };
 
 const logout = async () => {
-  if (!_xmpp.current) {
-    return;
-  }
-
   await registerPushToken(null);
-
-  _xmpp.current.client.reconnect.stop();
-  await _xmpp.current.client.stop().catch(console.warn);
-
-  notify('xmpp-is-online', false);
-  notify('inbox', null);
-
-  _xmpp.current =  null;
+  notify(EV_CHAT_WS_SEND_CLOSE);
+  notify<Inbox | null>('inbox', null);
 };
 
 const registerPushToken = async (token: string | null) => {
-  if (!_xmpp.current) return;
-
   const xmlStr = token ?
     `<duo_register_push_token token='${token}' />` :
     `<duo_register_push_token />`;
 
-  const stanza = parse(xmlStr);
-
-  await safeSend(stanza).catch(console.warn);
+  notify<string>(EV_CHAT_WS_SEND, xmlStr);
 };
-
-const _pingServer = (resolve: (result: Pong | null | 'timeout') => void) => {
-  if (!_xmpp.current) {
-    resolve(null);
-    return;
-  }
-
-  if (_xmpp.current.client.status !== 'online') {
-    resolve(null);
-    return;
-  }
-
-  if (_xmpp.reconnecting) {
-    resolve(null);
-    return;
-  }
-
-  const listenerRemovers: (() => void)[] = [];
-
-  const removeListeners = () => listenerRemovers.forEach(lr => lr());
-
-  const stanza = parse('<duo_ping />');
-
-  const resolveTimeout = () => {
-    resolve('timeout');
-    removeListeners();
-  };
-
-  const timeout = setTimeout(resolveTimeout, pingTimeout);
-
-  const maybeClearPingTimeout = (input: string) => {
-    let stanza: Element | null = null;
-
-    try {
-      stanza = parse(input);
-    } catch (_) {
-      return;
-    }
-
-    if (stanza.name !== 'duo_pong') {
-      return;
-    }
-
-    const duo_pong: Pong = {
-      preferredInterval: parseInt(stanza.getAttr('preferred_interval')),
-      preferredTimeout: parseInt(stanza.getAttr('preferred_timeout')),
-    };
-
-    clearTimeout(timeout);
-    resolve(duo_pong);
-    removeListeners();
-  };
-
-  listenerRemovers.push(listen<string>('xmpp-input', maybeClearPingTimeout));
-
-  safeSend(stanza).catch(console.warn);
-};
-
-const pingServer = async (timeout?: number): Promise<Pong | null | 'timeout'> => {
-  const __pingServer = new Promise(
-    (resolve: (result: Pong | null | 'timeout') => void) =>
-      _pingServer(resolve)
-  );
-
-  return await withReconnectOnTimeout(timeout ?? pingTimeout, __pingServer);
-};
-
-
-const pingServerForever = async () => {
-  let pong: Pong = {
-    preferredInterval: 10000,
-    preferredTimeout: pingTimeout,
-  };
-
-  while (true) {
-    const maybePong = await pingServer(pong.preferredTimeout);
-
-    if (maybePong !== 'timeout' && maybePong !== null) {
-      pong = maybePong;
-    }
-
-    await delay(pong.preferredInterval);
-  };
-};
-
-const recreateChatClient = async () => {
-  if (!_xmpp.current) {
-    return; // No current session to recreate
-  };
-
-  if (_xmpp.reconnecting) {
-    // If we're already attempting to reconnect, we don't want to interrupt that
-    // attempt, otherwise we risk creating two streams at once and triggering
-    // the exception "conflict - Replaced by new connection"
-    return;
-  }
-
-  _xmpp.reconnecting = true;
-
-  const { username, password } = _xmpp.current;
-
-  await logout();
-  await login(username, password);
-};
-
-const withReconnectOnTimeout = async <T,>(ms: number, promise: Promise<T>): Promise<T | 'timeout'> => {
-  // If we received other traffic during the time this promise timed-out, we're
-  // still connected, we we'd rather not call `recreateChatClient`.
-  var recievedAnyInput = false;
-
-  const removeInputListener = listen<string>(
-    'xmpp-input',
-    () => recievedAnyInput = true,
-  );
-
-  const result = await withTimeout(ms, promise);
-
-  removeInputListener();
-
-  if (result === 'timeout' && !recievedAnyInput) {
-    recreateChatClient();
-  }
-
-  return result;
-};
-
-const onChangeAppState = (state: AppStateStatus) => {
-  if (state === 'active') {
-    pingServer();
-  }
-};
-
-// Update the inbox when resuming from an inactive state
-AppState.addEventListener('change', onChangeAppState);
 
 // Update the inbox upon receiving a message
 onReceiveMessage();
 
-// Triggers reconnection if the server goes away. This should be handled by
-// xmpp.js, though I think we're affected by this bug:
-// https://github.com/xmppjs/xmpp.js/issues/902
-pingServerForever();
+listen(EV_CHAT_WS_OPEN,  () => notify('xmpp-is-online', true), true);
+listen(EV_CHAT_WS_CLOSE, () => notify('xmpp-is-online', false), true);
 
 export {
   Conversation,

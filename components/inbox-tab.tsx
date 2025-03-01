@@ -18,7 +18,7 @@ import { IntrosItem, ChatsItem } from './inbox-item';
 import { DefaultText } from './default-text';
 import { ButtonGroup } from './button-group';
 import { DefaultFlatList } from './default-flat-list';
-import { Inbox, Conversation, inboxStats } from '../xmpp/xmpp';
+import { Inbox, Conversation, inboxStats } from '../chat/application-layer';
 import { compareArrays } from '../util/util';
 import { TopNavBarButton } from './top-nav-bar-button';
 import { inboxOrder, inboxSection } from '../kv-storage/inbox';
