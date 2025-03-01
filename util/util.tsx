@@ -40,6 +40,8 @@ const compareArrays = (arrA: any[], arrB: any[]): number => {
   return arrA.length - arrB.length;
 }
 
+const assert = (x: boolean) => { if (!x) throw new Error('Assertion failed')};
+
 const friendlyTimestamp = (date: Date): string => {
   if (isToday(date)) {
     // Format as 'hh:mm'
@@ -158,17 +160,18 @@ const getRandomElement = <T,>(list: T[]): T | undefined =>
     list[Math.floor(Math.random() * list.length)];
 
 export {
+  assert,
   compareArrays,
   delay,
   deleteFromArray,
-  friendlyTimeAgo,
   friendlyDate,
+  friendlyTimeAgo,
   friendlyTimestamp,
+  getRandomElement,
   isMobile,
   longFriendlyTimestamp,
   parseUrl,
   possessive,
   secToMinSec,
   withTimeout,
-  getRandomElement,
 };
