@@ -34,7 +34,7 @@ import { ProspectProfileScreen } from './components/prospect-profile-screen';
 import { InviteScreen, WelcomeScreen } from './components/welcome-screen';
 import { sessionToken, sessionPersonUuid } from './kv-storage/session-token';
 import { japi, SUPPORTED_API_VERSIONS } from './api/api';
-import { login, logout, Inbox, inboxStats } from './xmpp/xmpp';
+import { login, logout, Inbox, inboxStats } from './chat/application-layer';
 import { STATUS_URL } from './env/env';
 import { delay, parseUrl } from './util/util';
 import { ColorPickerModal } from './components/modal/color-picker-modal/color-picker-modal';
@@ -60,11 +60,13 @@ import { isMobile } from './util/util';
 import { Logo16 } from './components/logo';
 import { useScrollbarStyle } from './components/navigation/scroll-bar-hooks';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { connectChatWebSocket } from './chat/websocket-layer';
 
 // TODO: Onboarding works
 
 setNofications();
 verificationWatcher();
+connectChatWebSocket();
 
 SplashScreen.preventAutoHideAsync();
 

@@ -34,7 +34,7 @@ import {
   markDisplayed,
   onReceiveMessage,
   sendMessage,
-} from '../xmpp/xmpp';
+} from '../chat/application-layer';
 import {
   IMAGES_URL,
 } from '../env/env';
