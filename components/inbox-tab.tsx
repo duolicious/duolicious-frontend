@@ -272,7 +272,6 @@ const InboxTab = () => {
       return <IntrosItemMemo
         wasRead={x.item.lastMessageRead}
         name={x.item.name}
-        personId={x.item.personId}
         personUuid={x.item.personUuid}
         imageUuid={x.item.imageUuid}
         imageBlurhash={x.item.imageBlurhash}
@@ -286,7 +285,6 @@ const InboxTab = () => {
       return <ChatsItemMemo
         wasRead={x.item.lastMessageRead}
         name={x.item.name}
-        personId={x.item.personId}
         personUuid={x.item.personUuid}
         imageUuid={x.item.imageUuid}
         imageBlurhash={x.item.imageBlurhash}

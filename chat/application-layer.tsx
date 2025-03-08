@@ -1,4 +1,3 @@
-import { signedInUser } from '../App';
 import { getRandomString } from '../random/string';
 import { japi } from '../api/api';
 import { deleteFromArray, assert } from '../util/util';
@@ -38,19 +37,7 @@ let credentials: null | {
 notify('inbox', null);
 
 const jidMatchesSignedInUser = (jid: string) => {
-  const fromCurrentUserByUuid = jidToBareJid(jid) === signedInUser?.personUuid;
-  const fromCurrentUserById = jidToBareJid(jid) === String(signedInUser?.personId);
-
-  return fromCurrentUserByUuid || fromCurrentUserById;
-}
-
-const parseIntOrZero = (input: string) => {
-  if (/^\d+$/.test(input)) {
-    const parsed = parseInt(input, 10);
-    return isNaN(parsed) ? 0 : parsed;
-  } else {
-    return 0;
-  }
+  return jidToBareJid(jid) === credentials?.username;
 }
 
 const findEarliestDate = (dates: Date[]): Date | null => {
@@ -74,8 +61,8 @@ const isValidUuid = (uuid: string): boolean => {
   return regex.test(uuid);
 }
 
-const parseUuidOrEmtpy = (uuid: string) => {
-  return isValidUuid(uuid) ? uuid : '';
+const parseUuidOrNull = (uuid: string): string | null => {
+  return isValidUuid(uuid) ? uuid : null;
 }
 
 
@@ -105,7 +92,6 @@ type Message = {
 };
 
 type Conversation = {
-  personId: number
   personUuid: string
   name: string
   matchPercentage: number
@@ -191,27 +177,18 @@ const conversationListToMap = (
   );
 };
 
-const populateConversationList = async (
+const populateConversationList = (
   conversationList: Conversation[],
   apiData: any,
-): Promise<void> => {
-  const personIdToInfo = apiData.reduce((obj, item) => {
-    obj[item.person_id] = item;
-    return obj;
-  }, {});
-
+): void => {
   const personUuidToInfo = apiData.reduce((obj, item) => {
     obj[item.person_uuid] = item;
     return obj;
   }, {});
 
-  conversationList.forEach((c: Conversation) => {
-    const personUuid = c.personUuid;
-    const personId = c.personId;
 
-    const personInfo = (
-      personUuidToInfo[personUuid] ?? personIdToInfo[personId]
-    );
+  conversationList.forEach((c: Conversation) => {
+    const personInfo = personUuidToInfo[c.personUuid];
 
     // Update conversation information
     c.name = personInfo?.name ?? 'Unavailable Person';
@@ -221,7 +198,6 @@ const populateConversationList = async (
     c.isAvailableUser = !!personInfo?.name;
     c.isVerified = !!personInfo?.verified;
     c.location = personInfo?.conversation_location ?? 'archive';
-    c.personId = personInfo?.person_id ?? c.personId ?? 0;
     c.personUuid = personInfo?.person_uuid ?? c.personUuid ?? '';
   });
 };
@@ -251,7 +227,6 @@ const setInboxSent = (recipientPersonUuid: string, message: string) => {
     i.intros.conversationsMap[recipientPersonUuid] as Conversation | undefined;
 
   const updatedConversation: Conversation = {
-    personId: 0,
     personUuid: recipientPersonUuid,
     name: '',
     matchPercentage: 0,
@@ -308,7 +283,6 @@ const setInboxRecieved = async (
     inbox.intros.conversationsMap[fromPersonUuid] as Conversation | undefined;
 
   const updatedConversation: Conversation = {
-    personId: 0,
     personUuid: fromPersonUuid,
     name: '',
     matchPercentage: 0,
@@ -447,19 +421,15 @@ const sendMessage = async (
     return 'timeout';
   }
 
-  const id = getRandomString(40);
-
-  const fromJid = (
-      signedInUser?.personId !== undefined ?
-      personUuidToJid(signedInUser.personUuid) :
-      undefined
-  );
-
-  const toJid = personUuidToJid(recipientPersonUuid);
-
-  if (!fromJid) {
+  if (!credentials) {
     return 'blocked';
   }
+
+  const id = getRandomString(40);
+
+  const fromJid = personUuidToJid(credentials.username);
+
+  const toJid = personUuidToJid(recipientPersonUuid);
 
   const data = {
     message: {
@@ -806,11 +776,15 @@ const fetchConversation = async (
   };
 
   const sentinelDetector = (doc: any) => {
+    if (!credentials) {
+      return false;
+    }
+
     const expectedDoc = {
       iq: {
         "@xmlns": "jabber:client",
-        "@from": `${signedInUser?.personUuid}@duolicious.app`,
-        "@to": `${signedInUser?.personUuid}@duolicious.app`,
+        "@from": `${credentials.username}@duolicious.app`,
+        "@to": `${credentials.username}@duolicious.app`,
         "@id": queryId,
         "@type": "result",
         fin: {
@@ -908,12 +882,16 @@ const refreshInbox = async (
       const bareTo = jidToBareJid(to);
       const bareFrom = jidToBareJid(from);
       const bareJid = fromCurrentUser ? bareTo : bareFrom;
+      const personUuid = parseUuidOrNull(bareJid);
+
+      if (!personUuid) {
+        return null;
+      }
 
       // Some of these need to be fetched from the REST API instead of the XMPP
       // server
       return {
-        personId: parseIntOrZero(bareJid),
-        personUuid: parseUuidOrEmtpy(bareJid),
+        personUuid,
         name: '',
         matchPercentage: 0,
         imageUuid: null,
@@ -959,11 +937,11 @@ const refreshInbox = async (
   };
 
   const apiData = (await apiDataPromise).json;
-  await populateConversationList(conversations.conversations, apiData);
+  populateConversationList(conversations.conversations, apiData);
 
   const inbox = conversationsToInbox(conversations.conversations);
 
-  notify<Inbox>('inbox', inbox);
+  notify<Inbox>('inbox', {...inbox});
 };
 
 const registerPushToken = async (token: string | null) => {
