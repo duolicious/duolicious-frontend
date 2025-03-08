@@ -51,9 +51,6 @@ const unlisten = (key: string, listener: Listener) => {
 };
 
 const notify = <T = any>(key: string, data?: T) => {
-  if (key === 'xmpp-is-online') {
-    console.log(key, data); // TODO
-  }
   // Ensure `listeners[key]` is set
   listeners[key] = listeners[key] ?? {
     listeners: new Set<Listener<T>>,

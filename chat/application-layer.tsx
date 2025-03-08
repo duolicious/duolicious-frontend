@@ -1,25 +1,10 @@
 import { signedInUser } from '../App';
 import { getRandomString } from '../random/string';
-
 import { japi } from '../api/api';
 import { deleteFromArray, assert } from '../util/util';
-
 import { listen, notify, lastEvent } from '../events/events';
-
 import { registerForPushNotificationsAsync } from '../notifications/notifications';
-
-// TODO: Handle coming back from background
-// import { AppState, AppStateStatus } from 'react-native';
-// TODO: Handle authentication failure
-
-// TODO: Ensure connection robustness by sending gibberish and checking if future messages are ignored
-
-// TODO: Make sure devices are registered
-
-// TODO: Handle message responses
-
 import * as _ from 'lodash';
-
 import {
   EV_CHAT_WS_CLOSE,
   EV_CHAT_WS_OPEN,
@@ -28,9 +13,27 @@ import {
   send,
 } from './websocket-layer';
 
+// TODO: Handle coming back from background
+// import { AppState, AppStateStatus } from 'react-native';
+
+// TODO: Handle authentication failure
+
+// TODO: Ensure connection robustness by sending gibberish and checking if future messages are ignored
+
+// TODO: Make sure devices are registered
+
+// TODO: Handle message responses
+
+// TODO: Archived messages sometimes appear in chats tab for some reason
+
 const messageTimeout = 10000;
 const fetchConversationTimeout = 15000;
 const fetchInboxTimeout = 30000;
+
+let credentials: null | {
+  username: string
+  password: string
+} = null;
 
 notify('inbox', null);
 
@@ -381,17 +384,36 @@ const login = async (
   username: string,
   password: string,
 ) => {
+  credentials = { username, password };
+
+  authenticate();
+};
+
+const logout = async () => {
+  credentials = null;
+  await registerPushToken(null);
+  notify(EV_CHAT_WS_SEND_CLOSE);
+  notify<Inbox | null>('inbox', null);
+};
+
+const authenticate = async () => {
+  if (!credentials) {
+    return;
+  }
+
   const data = {
     auth: {
       "@xmlns": "urn:ietf:params:xml:ns:xmpp-sasl",
       "@mechanism": "PLAIN",
-      "#text": btoa(`\0${username}\0${password}`),
+      "#text": btoa(`\0${credentials.username}\0${credentials.password}`),
     }
   };
 
   await send({ data });
-  await refreshInbox();
-  await registerForPushNotificationsAsync();
+  await Promise.all([
+    refreshInbox(),
+    registerForPushNotificationsAsync(),
+  ]);
 };
 
 const markDisplayed = async (message: Message) => {
@@ -924,25 +946,17 @@ const refreshInbox = async (
   notify<Inbox>('inbox', inbox);
 };
 
-const logout = async () => {
-  await registerPushToken(null);
-  notify(EV_CHAT_WS_SEND_CLOSE);
-  notify<Inbox | null>('inbox', null);
-};
-
 const registerPushToken = async (token: string | null) => {
   const data = token ?
     { duo_register_push_token: token } :
     { duo_register_push_token: null };
 
   const responseDetector = (doc: any): true | null => {
-    const expectedDoc = { duo_registration_successful: null };
-
-    if (_.isEqual(doc, expectedDoc)) {
+    if (_.isEqual(doc, { duo_registration_successful: null })) {
       return true;
+    } else {
+      return null;
     }
-
-    return null;
   };
 
   // Retry once then give up
@@ -957,6 +971,7 @@ onReceiveMessage();
 
 listen(EV_CHAT_WS_OPEN,  () => notify('xmpp-is-online', true), true);
 listen(EV_CHAT_WS_CLOSE, () => notify('xmpp-is-online', false), true);
+listen(EV_CHAT_WS_OPEN, authenticate, true);
 
 export {
   Conversation,

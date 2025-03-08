@@ -14,50 +14,16 @@ const maxReconnectDelay = 30000;
 let reconnectDelay = initialReconnectDelay;
 let ws: WebSocket | null = null;
 
-type Command =
-  | { type: 'send'; data: string }
-  | { type: 'close' };
-
-const commandQueue: Command[] = [];
-
-const processCommandQueue = (): void => {
-  while (true) {
-    if (ws?.readyState !== WebSocket.OPEN) {
-      break;
-    }
-
-    const command = commandQueue.shift();
-
-    if (!command) {
-      break;
-    }
-
-    try {
-      if (command.type === 'send') {
-        ws.send(command.data);
-      } else if (command.type === 'close') {
-        ws.close();
-      }
-    } catch {
-      commandQueue.unshift(command);
-    }
-  }
-};
-
 listen<string>(EV_CHAT_WS_SEND, (data) => {
   if (typeof data !== 'string') {
     return;
   }
 
-  commandQueue.push({ type: 'send', data });
-
-  processCommandQueue();
+  ws?.send(data);
 });
 
 listen(EV_CHAT_WS_SEND_CLOSE, () => {
-  commandQueue.push({ type: 'close' });
-
-  processCommandQueue();
+  ws?.close();
 });
 
 const connectChatWebSocket = (): void => {
@@ -66,7 +32,6 @@ const connectChatWebSocket = (): void => {
   ws.onopen = () => {
     reconnectDelay = initialReconnectDelay;
     notify(EV_CHAT_WS_OPEN);
-    processCommandQueue();
   };
 
   ws.onmessage = (event: MessageEvent) =>
@@ -113,9 +78,6 @@ type Send = {
   }): Promise<void>;
 }
 
-// TODO: When the connection is down, the command queue will put commands on
-// hold and try them later. However, this function will inform callers that the
-// requests timed out, even if they'll later be retried.
 const send: Send = <T,>({
   data,
   responseDetector,
