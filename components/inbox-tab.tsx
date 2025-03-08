@@ -349,7 +349,7 @@ const InboxTabNavBar = ({
   const [isOnline, setIsOnline] = useState(lastEvent('xmpp-is-online') ?? false);
 
   useEffect(() => {
-    return listen('xmpp-is-online', setIsOnline);
+    return listen('xmpp-is-online', (data) => setIsOnline(data ?? false));
   }, []);
 
   return (

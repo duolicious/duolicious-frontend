@@ -522,7 +522,7 @@ const ConversationScreen = ({navigation, route}) => {
   }, []);
 
   useEffect(() => {
-    return listen('xmpp-is-online', setIsOnline);
+    return listen('xmpp-is-online', (data) => setIsOnline(data ?? false));
   }, []);
 
   useEffect(() => {

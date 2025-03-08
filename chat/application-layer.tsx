@@ -967,9 +967,9 @@ const registerPushToken = async (token: string | null) => {
 // Update the inbox upon receiving a message
 onReceiveMessage();
 
-listen(EV_CHAT_WS_OPEN,  authenticate,                          false);
-listen(EV_CHAT_WS_OPEN,  () => notify('xmpp-is-online', true),  true);
-listen(EV_CHAT_WS_CLOSE, () => notify('xmpp-is-online', false), true);
+listen(EV_CHAT_WS_OPEN,  authenticate);
+listen(EV_CHAT_WS_OPEN,  () => notify('xmpp-is-online', true));
+listen(EV_CHAT_WS_CLOSE, () => notify('xmpp-is-online', false));
 
 export {
   Conversation,
