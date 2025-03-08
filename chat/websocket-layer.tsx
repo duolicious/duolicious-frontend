@@ -1,6 +1,12 @@
 import { CHAT_URL } from '../env/env';
 import { listen, notify } from '../events/events';
-import { jsonParseSilently } from '../util/util';
+import { delay, jsonParseSilently } from '../util/util';
+import { AppState, AppStateStatus } from 'react-native';
+
+type Pong = {
+  preferredInterval: number
+  preferredTimeout: number
+};
 
 const EV_CHAT_WS_CLOSE = 'chat-ws-close';
 const EV_CHAT_WS_ERROR = 'chat-ws-error';
@@ -12,6 +18,10 @@ const EV_CHAT_WS_SEND_CLOSE = 'chat-ws-send-close';
 const initialReconnectDelay = 1000;
 const maxReconnectDelay = 30000;
 let reconnectDelay = initialReconnectDelay;
+const pong: Pong = {
+  preferredInterval: 10000,
+  preferredTimeout: 5000,
+};
 let ws: WebSocket | null = null;
 
 listen<string>(EV_CHAT_WS_SEND, (data) => {
@@ -78,7 +88,7 @@ type Send = {
   }): Promise<void>;
 }
 
-const send: Send = <T,>({
+const send: Send = async <T,>({
   data,
   responseDetector,
   sentinelDetector,
@@ -89,6 +99,10 @@ const send: Send = <T,>({
   sentinelDetector?: (input: any) => boolean,
   timeoutMs?: number
 }) => {
+  if (ws?.readyState !== WebSocket.OPEN) {
+    return responseDetector ? 'timeout' : (void {});
+  }
+
   return new Promise<T[] | T | 'timeout' | void>((resolve) => {
     const responses: T[] = [];
 
@@ -160,6 +174,57 @@ const send: Send = <T,>({
     }
   });
 };
+
+const pingServer = async (timeoutMs?: number) => {
+  const data = { duo_ping: null };
+
+  const responseDetector = (doc: any): Pong | null => {
+    try {
+      const {
+        duo_pong: {
+          '@preferred_interval': preferredInterval,
+          '@preferred_timeout': preferredTimeout,
+        }
+      } = doc;
+
+      return { preferredInterval, preferredTimeout };
+    } catch {
+      return null;
+    }
+  };
+
+  const response = await send({
+    data,
+    responseDetector,
+    timeoutMs: timeoutMs ?? pong.preferredTimeout,
+  });
+
+  if (response !== 'timeout') {
+    Object.assign(pong, response);
+  } else if (ws?.readyState === WebSocket.OPEN) {
+    ws?.close();
+  }
+};
+
+const pingServerForever = async () => {
+  while (true) {
+    await delay(pong.preferredInterval);
+    await pingServer();
+  };
+};
+
+const onChangeAppState = (state: AppStateStatus) => {
+  if (state === 'active') {
+    pingServer(3000);
+  }
+};
+
+// Update the inbox when resuming from an inactive state
+AppState.addEventListener('change', onChangeAppState);
+
+// TODO: Check if this runs on Android and iOS. If so, you might be able to move
+// connectChatWebSocket out of App.tsx
+pingServerForever();
 
 export {
   EV_CHAT_WS_CLOSE,

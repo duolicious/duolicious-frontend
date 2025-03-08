@@ -22,9 +22,9 @@ import {
 
 // TODO: Make sure devices are registered
 
-// TODO: Handle message responses
+// TODO: Make sure message responses are properly handled
 
-// TODO: Archived messages sometimes appear in chats tab for some reason
+// TODO: Archived messages sometimes appear in chats tab on mobile for some reason
 
 const messageTimeout = 10000;
 const fetchConversationTimeout = 15000;
@@ -718,7 +718,6 @@ const onReceiveMessage = (
 
 const fetchConversation = async (
   withPersonUuid: string,
-  callback: (messages: Message[] | 'timeout') => void,
   beforeId: string = '',
 ): Promise<Message[] | 'timeout'> => {
   const queryId = getRandomString(10);
@@ -969,9 +968,9 @@ const registerPushToken = async (token: string | null) => {
 // Update the inbox upon receiving a message
 onReceiveMessage();
 
-listen(EV_CHAT_WS_OPEN,  () => notify('xmpp-is-online', true), true);
+listen(EV_CHAT_WS_OPEN,  authenticate,                          false);
+listen(EV_CHAT_WS_OPEN,  () => notify('xmpp-is-online', true),  true);
 listen(EV_CHAT_WS_CLOSE, () => notify('xmpp-is-online', false), true);
-listen(EV_CHAT_WS_OPEN, authenticate, true);
 
 export {
   Conversation,
