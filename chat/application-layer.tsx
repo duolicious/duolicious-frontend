@@ -441,13 +441,20 @@ const markDisplayed = async (message: Message) => {
 const sendMessage = async (
   recipientPersonUuid: string,
   messageBody: string,
+  numTries: number = 3,
 ): Promise<MessageStatus> => {
+  if (numTries <= 0) {
+    return 'timeout';
+  }
+
   const id = getRandomString(40);
+
   const fromJid = (
       signedInUser?.personId !== undefined ?
       personUuidToJid(signedInUser.personUuid) :
       undefined
   );
+
   const toJid = personUuidToJid(recipientPersonUuid);
 
   if (!fromJid) {
@@ -593,7 +600,25 @@ const sendMessage = async (
     notify(`message-to-${recipientPersonUuid}`);
   }
 
-  return response;
+  if (response !== 'timeout') {
+    return response;
+  }
+
+  // Deal with timeouts. To stop ourselves from sending the same message
+  // multiple times, we fetch the conversation history and see if the message
+  // we're trying to send is already there. If not, we try to send it again.
+  const conversation = await fetchConversation(recipientPersonUuid);
+
+  if (
+    conversation === 'timeout' ||
+    conversation[conversation.length - 1]?.id !== id
+  ) {
+    return sendMessage(recipientPersonUuid, messageBody, numTries - 1);
+  } else {
+    setInboxSent(recipientPersonUuid, messageBody);
+    notify(`message-to-${recipientPersonUuid}`);
+    return 'sent';
+  }
 };
 
 const conversationsToInbox = (conversations: Conversation[]): Inbox => {
@@ -946,9 +971,7 @@ const refreshInbox = async (
 };
 
 const registerPushToken = async (token: string | null) => {
-  const data = token ?
-    { duo_register_push_token: token } :
-    { duo_register_push_token: null };
+  const data = { duo_register_push_token: token };
 
   const responseDetector = (doc: any): true | null => {
     if (_.isEqual(doc, { duo_registration_successful: null })) {
