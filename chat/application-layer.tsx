@@ -475,12 +475,8 @@ const sendMessage = async (
   const responseDetector = (doc: any): MessageStatus | null => {
     // Check duo_message_too_long
     try {
-      const {
-        duo_message_too_long: {
-          '@id': receivedQueryId,
-        },
-      } = doc;
-      assert(receivedQueryId === id);
+      const { duo_message_too_long: v } = doc;
+      assert(v !== undefined);
       return 'too long';
     } catch { }
 
