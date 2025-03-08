@@ -16,14 +16,16 @@ import { registerForPushNotificationsAsync } from '../notifications/notification
 
 // TODO: Make sure devices are registered
 
+// TODO: Handle message responses
+
 import * as _ from 'lodash';
 
 import {
   EV_CHAT_WS_CLOSE,
   EV_CHAT_WS_OPEN,
   EV_CHAT_WS_RECEIVE,
-  EV_CHAT_WS_SEND,
   EV_CHAT_WS_SEND_CLOSE,
+  send,
 } from './websocket-layer';
 
 const messageTimeout = 10000;
@@ -176,52 +178,6 @@ const emptyInbox = (): Inbox => ({
   archive: { conversations: [], conversationsMap: {} },
   endTimestamp: null
 });
-
-const mergeInbox = (i1: Inbox, i2: Inbox) => {
-  const merged: Inbox = {
-    chats: {
-      conversations: [
-        ...i1.chats.conversations,
-        ...i2.chats.conversations,
-      ],
-      conversationsMap: {
-        ...i1.chats.conversationsMap,
-        ...i2.chats.conversationsMap,
-      }
-    },
-    intros: {
-      conversations: [
-        ...i1.intros.conversations,
-        ...i2.intros.conversations,
-      ],
-      conversationsMap: {
-        ...i1.intros.conversationsMap,
-        ...i2.intros.conversationsMap,
-      }
-    },
-    archive: {
-      conversations: [
-        ...i1.archive.conversations,
-        ...i2.archive.conversations,
-      ],
-      conversationsMap: {
-        ...i1.archive.conversationsMap,
-        ...i2.archive.conversationsMap,
-      }
-    },
-    endTimestamp: null
-  };
-
-  const conversations = [
-    ...merged.chats.conversations,
-    ...merged.intros.conversations,
-    ...merged.archive.conversations,
-  ];
-
-  merged.endTimestamp = findEarliestDateInConversations(conversations);
-
-  return merged;
-};
 
 const conversationListToMap = (
   conversationList: Conversation[]
@@ -425,19 +381,17 @@ const login = async (
   username: string,
   password: string,
 ) => {
-  const authBody = btoa(`\0${username}\0${password}`);
-
-  const auth = JSON.stringify({
+  const data = {
     auth: {
       "@xmlns": "urn:ietf:params:xml:ns:xmpp-sasl",
       "@mechanism": "PLAIN",
-      "#text": authBody,
+      "#text": btoa(`\0${username}\0${password}`),
     }
-  });
+  };
 
-  notify<string>(EV_CHAT_WS_SEND, auth);
-  await registerForPushNotificationsAsync();
+  await send({ data });
   await refreshInbox();
+  await registerForPushNotificationsAsync();
 };
 
 const markDisplayed = async (message: Message) => {
@@ -446,7 +400,7 @@ const markDisplayed = async (message: Message) => {
   if (!isValidUuid(jidToBareJid(message.from))) return;
   if (!isValidUuid(jidToBareJid(message.to))) return;
 
-  const stanza = JSON.stringify({
+  const data = {
     message: {
       '@to': message.from,
       '@from': message.to,
@@ -455,17 +409,17 @@ const markDisplayed = async (message: Message) => {
         '@id': message.id,
       },
     }
-  });
+  };
 
-  notify<string>(EV_CHAT_WS_SEND, stanza);
+  await send({ data });
+
   setInboxDisplayed(jidToBareJid(message.from));
 };
 
-const _sendMessage = (
+const sendMessage = async (
   recipientPersonUuid: string,
   messageBody: string,
-  callback: (messageStatus: MessageStatus) => void,
-): void => {
+): Promise<MessageStatus> => {
   const id = getRandomString(40);
   const fromJid = (
       signedInUser?.personId !== undefined ?
@@ -474,9 +428,11 @@ const _sendMessage = (
   );
   const toJid = personUuidToJid(recipientPersonUuid);
 
-  if (!fromJid) return;
+  if (!fromJid) {
+    return 'blocked';
+  }
 
-  const message = JSON.stringify({
+  const data = {
     message: {
       '@xmlns': 'jabber:client',
       '@type': "chat",
@@ -485,21 +441,9 @@ const _sendMessage = (
       '@id': id,
       body: messageBody,
     },
-  });
+  };
 
-  const messageStatusListener = (input: string) => {
-    const doc = (() => {
-      try {
-        return JSON.parse(input);
-      } catch {
-        return null;
-      }
-    })();
-
-    if (!doc) {
-      return;
-    }
-
+  const responseDetector = (doc: any): MessageStatus | null => {
     // Check duo_message_too_long
     try {
       const {
@@ -508,9 +452,7 @@ const _sendMessage = (
         },
       } = doc;
       assert(receivedQueryId === id);
-      callback('too long');
-      removeListener();
-      return;
+      return 'too long';
     } catch { }
 
     // Check duo_message_not_unique
@@ -521,9 +463,7 @@ const _sendMessage = (
         },
       } = doc;
       assert(receivedQueryId === id);
-      callback('not unique');
-      removeListener();
-      return;
+      return 'not unique';
     } catch { }
 
     // Check duo_message_blocked for rate-limited unverified basics
@@ -538,9 +478,7 @@ const _sendMessage = (
       assert(receivedQueryId === id);
       assert(reason === 'rate-limited-1day');
       assert(subreason === 'unverified-basics');
-      callback('rate-limited-1day-unverified-basics');
-      removeListener();
-      return;
+      return 'rate-limited-1day-unverified-basics';
     } catch { }
 
     // Check duo_message_blocked for rate-limited unverified photos
@@ -555,9 +493,7 @@ const _sendMessage = (
       assert(receivedQueryId === id);
       assert(reason === 'rate-limited-1day');
       assert(subreason === 'unverified-photos');
-      callback('rate-limited-1day-unverified-photos');
-      removeListener();
-      return;
+      return 'rate-limited-1day-unverified-photos';
     } catch { }
 
     // Check duo_message_blocked for generic rate-limited (no specific subreason)
@@ -570,9 +506,7 @@ const _sendMessage = (
       } = doc;
       assert(receivedQueryId === id);
       assert(reason === 'rate-limited-1day');
-      callback('rate-limited-1day');
-      removeListener();
-      return;
+      return 'rate-limited-1day';
     } catch { }
 
     // Check duo_message_blocked for spam
@@ -585,9 +519,7 @@ const _sendMessage = (
       } = doc;
       assert(receivedQueryId === id);
       assert(reason === 'spam');
-      callback('spam');
-      removeListener();
-      return;
+      return 'spam';
     } catch { }
 
     // Check duo_message_blocked for offensive
@@ -600,9 +532,7 @@ const _sendMessage = (
       } = doc;
       assert(receivedQueryId === id);
       assert(reason === 'offensive');
-      callback('offensive');
-      removeListener();
-      return;
+      return 'offensive';
     } catch { }
 
     // Fallback for any duo_message_blocked case
@@ -613,9 +543,7 @@ const _sendMessage = (
         },
       } = doc;
       assert(receivedQueryId === id);
-      callback('blocked');
-      removeListener();
-      return;
+      return 'blocked';
     } catch { }
 
     // Check duo_message_delivered
@@ -626,33 +554,24 @@ const _sendMessage = (
         },
       } = doc;
       assert(receivedQueryId === id);
-      setInboxSent(recipientPersonUuid, message);
-      notify(`message-to-${recipientPersonUuid}`);
-      callback('sent');
-      removeListener();
-      return;
+      return 'sent';
     } catch { }
 
-    removeListener();
+    return null;
   };
 
-  const removeListener = listen<string>(EV_CHAT_WS_RECEIVE, messageStatusListener);
+  const response = await send<MessageStatus>({
+    data,
+    responseDetector,
+    timeoutMs: messageTimeout,
+  });
 
-  setTimeout(removeListener, messageTimeout);
+  if (response === 'sent') {
+    setInboxSent(recipientPersonUuid, messageBody);
+    notify(`message-to-${recipientPersonUuid}`);
+  }
 
-  notify<string>(EV_CHAT_WS_SEND, message);
-};
-
-const sendMessage = async (
-  recipientPersonUuid: string,
-  message: string,
-): Promise<MessageStatus> => {
-  const __sendMessage = new Promise(
-    (resolve: (messageStatus: MessageStatus) => void) =>
-      _sendMessage(recipientPersonUuid, message, resolve)
-  );
-
-  return await __sendMessage;
+  return response;
 };
 
 const conversationsToInbox = (conversations: Conversation[]): Inbox => {
@@ -775,14 +694,14 @@ const onReceiveMessage = (
   return listen<string>(EV_CHAT_WS_RECEIVE, _onReceiveMessage);
 };
 
-const _fetchConversation = async (
+const fetchConversation = async (
   withPersonUuid: string,
   callback: (messages: Message[] | 'timeout') => void,
   beforeId: string = '',
-) => {
+): Promise<Message[] | 'timeout'> => {
   const queryId = getRandomString(10);
 
-  const queryStanza = JSON.stringify({
+  const data = {
     iq: {
       '@type': 'set',
       '@id': queryId,
@@ -804,14 +723,10 @@ const _fetchConversation = async (
         }
       }
     }
-  });
+  };
 
-  const collected: Message[] = [];
-
-  const maybeCollect = (stanza: string) => {
+  const responseDetector = (doc: any): Message | null => {
     try {
-      const doc = JSON.parse(stanza);
-
       const {
         message: {
           result: {
@@ -834,7 +749,7 @@ const _fetchConversation = async (
 
       assert(receivedQueryId === queryId);
 
-      collected.push({
+      return {
         text: bodyText,
         from: from,
         to: to,
@@ -842,13 +757,13 @@ const _fetchConversation = async (
         mamId: mamId ? mamId : undefined,
         timestamp: new Date(timestamp),
         fromCurrentUser: jidMatchesSignedInUser(from),
-      });
-    } catch { }
+      };
+    } catch {
+      return null;
+    }
   };
 
-  const maybeFin = async (stanza: string) => {
-    const doc = JSON.parse(stanza);
-
+  const sentinelDetector = (doc: any) => {
     const expectedDoc = {
       iq: {
         "@xmlns": "jabber:client",
@@ -862,47 +777,28 @@ const _fetchConversation = async (
       }
     }
 
-    if (!_.isEqual(doc, expectedDoc)) {
-      return;
-    }
-
-    callback(collected);
-
-    const lastMessage = collected[collected.length - 1];
-    if (lastMessage) {
-      await markDisplayed(lastMessage);
-    }
-
-    removeListener1();
-    removeListener2();
+    return _.isEqual(doc, expectedDoc);
   };
 
-  const removeListener1 = listen<string>(EV_CHAT_WS_RECEIVE, maybeCollect);
-  const removeListener2 = listen<string>(EV_CHAT_WS_RECEIVE, maybeFin);
+  const response = await send<Message>({
+    data,
+    responseDetector,
+    sentinelDetector,
+    timeoutMs: fetchConversationTimeout,
+  });
 
-  setTimeout(removeListener1, fetchConversationTimeout);
-  setTimeout(removeListener2, fetchConversationTimeout);
+  if (response !== 'timeout' && response.length > 0) {
+    const lastMessage = response[response.length - 1];
+    await markDisplayed(lastMessage);
+  }
 
-  notify<string>(EV_CHAT_WS_SEND, queryStanza);
+  return response;
 };
 
-const fetchConversation = async (
-  withPersonUuid: string,
-  beforeId: string = '',
-): Promise<Message[] | undefined | 'timeout'> => {
-  const __fetchConversation = new Promise(
-    (resolve: (messages: Message[] | undefined | 'timeout') => void) =>
-      _fetchConversation(withPersonUuid, resolve, beforeId)
-    );
-
-  return await __fetchConversation;
-};
-
-const _fetchInboxPage = async (
-  callback: (conversations: Inbox | undefined) => void,
-  endTimestamp: Date | null,
-  pageSize: number | null,
-) => {
+const refreshInbox = async (
+  endTimestamp?: Date,
+  pageSize?: number,
+): Promise<void> => {
   const apiDataPromise = japi('post', '/inbox-info', {person_uuids: []});
 
   const queryId = getRandomString(10);
@@ -930,7 +826,7 @@ const _fetchInboxPage = async (
     }
   };
 
-  const queryStanza = JSON.stringify({
+  const data = {
     iq: {
       '@type': 'set',
       '@id': queryId,
@@ -941,14 +837,10 @@ const _fetchInboxPage = async (
         ...maxPageSizeFragment,
       }
     }
-  });
+  };
 
-  const conversationList: Conversation[] = [];
-
-  const maybeCollect = (stanza: string) => {
+  const responseDetector = (doc: any): Conversation | null => {
     try {
-      const doc = JSON.parse(stanza);
-
       const {
         message: {
           result: {
@@ -977,7 +869,7 @@ const _fetchInboxPage = async (
 
       // Some of these need to be fetched from the REST API instead of the XMPP
       // server
-      const conversation: Conversation = {
+      return {
         personId: parseIntOrZero(bareJid),
         personUuid: parseUuidOrEmtpy(bareJid),
         name: '',
@@ -991,14 +883,12 @@ const _fetchInboxPage = async (
         imageBlurhash: '',
         isVerified: false,
       };
-
-      conversationList.push(conversation);
-    } catch { }
+    } catch {
+      return null;
+    }
   };
 
-  const maybeFin = async (stanza: string) => {
-    const doc = JSON.parse(stanza);
-
+  const sentinelDetector = (doc: any): boolean => {
     const expectedDoc = {
       iq: {
         '@id': queryId,
@@ -1007,77 +897,31 @@ const _fetchInboxPage = async (
       }
     };
 
-    if (!_.isEqual(doc, expectedDoc)) {
-      return;
-    }
-
-    const conversations: Conversations = {
-      conversations: conversationList,
-      conversationsMap: conversationListToMap(conversationList),
-    };
-
-    const apiData = (await apiDataPromise).json;
-    await populateConversationList(conversations.conversations, apiData);
-
-    const inbox = conversationsToInbox(conversations.conversations);
-
-    callback(inbox);
-
-    removeListener1();
-    removeListener2();
+    return _.isEqual(doc, expectedDoc);
   };
 
-  const removeListener1 = listen<string>(EV_CHAT_WS_RECEIVE, maybeCollect);
-  const removeListener2 = listen<string>(EV_CHAT_WS_RECEIVE, maybeFin);
+  const response = await send<Conversation>({
+    data,
+    responseDetector,
+    sentinelDetector,
+    timeoutMs: fetchInboxTimeout,
+  });
 
-  setTimeout(removeListener1, fetchInboxTimeout);
-  setTimeout(removeListener2, fetchInboxTimeout);
-
-  notify<string>(EV_CHAT_WS_SEND, queryStanza);
-};
-
-const fetchInboxPage = async (
-  endTimestamp: Date | null = null,
-  pageSize: number | null = null,
-): Promise<Inbox | undefined | 'timeout'> => {
-  const __fetchInboxPage = new Promise(
-    (resolve: (inbox: Inbox | undefined) => void) =>
-      _fetchInboxPage(resolve, endTimestamp, pageSize)
-  );
-
-  return await __fetchInboxPage;
-};
-
-const refreshInbox = async (): Promise<void> => {
-  let inbox = emptyInbox();
-
-  while (true) {
-    const page = await fetchInboxPage(inbox.endTimestamp);
-
-    if (page === 'timeout') {
-      continue;
-    }
-
-    const isEmptyPage = (
-      !page ||
-      !page.archive.conversations.length &&
-      !page.chats.conversations.length &&
-      !page.intros.conversations.length
-    );
-
-    if (isEmptyPage) {
-      notify<Inbox>('inbox', inbox);
-      break;
-    } else {
-      inbox = mergeInbox(inbox, page);
-      notify<Inbox>('inbox', inbox);
-    }
-
-    // This code was originally intended to speed up fetching the inbox in the
-    // hope this would be faster, though it's actually slower, so we can stop at
-    // the first (very big) page.
-    break;
+  if (response === 'timeout') {
+    return;
   }
+
+  const conversations: Conversations = {
+    conversations: response,
+    conversationsMap: conversationListToMap(response),
+  };
+
+  const apiData = (await apiDataPromise).json;
+  await populateConversationList(conversations.conversations, apiData);
+
+  const inbox = conversationsToInbox(conversations.conversations);
+
+  notify<Inbox>('inbox', inbox);
 };
 
 const logout = async () => {
@@ -1087,11 +931,25 @@ const logout = async () => {
 };
 
 const registerPushToken = async (token: string | null) => {
-  const data = JSON.stringify(token ?
+  const data = token ?
     { duo_register_push_token: token } :
-    { duo_register_push_token: null });
+    { duo_register_push_token: null };
 
-  notify<string>(EV_CHAT_WS_SEND, data);
+  const responseDetector = (doc: any): true | null => {
+    const expectedDoc = { duo_registration_successful: null };
+
+    if (_.isEqual(doc, expectedDoc)) {
+      return true;
+    }
+
+    return null;
+  };
+
+  // Retry once then give up
+  const doTry = async () => send({ data, responseDetector });
+  if (await doTry() === 'timeout') {
+    await doTry();
+  }
 };
 
 // Update the inbox upon receiving a message

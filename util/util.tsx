@@ -42,6 +42,14 @@ const compareArrays = (arrA: any[], arrB: any[]): number => {
 
 const assert = (x: boolean) => { if (!x) throw new Error('Assertion failed')};
 
+const jsonParseSilently = (text: string): any => {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
 const friendlyTimestamp = (date: Date): string => {
   if (isToday(date)) {
     // Format as 'hh:mm'
@@ -169,6 +177,7 @@ export {
   friendlyTimestamp,
   getRandomElement,
   isMobile,
+  jsonParseSilently,
   longFriendlyTimestamp,
   parseUrl,
   possessive,
