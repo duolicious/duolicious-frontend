@@ -12,19 +12,6 @@ import {
   send,
 } from './websocket-layer';
 
-// TODO: Handle coming back from background
-// import { AppState, AppStateStatus } from 'react-native';
-
-// TODO: Handle authentication failure
-
-// TODO: Ensure connection robustness by sending gibberish and checking if future messages are ignored
-
-// TODO: Make sure devices are registered
-
-// TODO: Make sure message responses are properly handled
-
-// TODO: Archived messages sometimes appear in chats tab on mobile for some reason
-
 const messageTimeout = 10000;
 const fetchConversationTimeout = 15000;
 const fetchInboxTimeout = 30000;
