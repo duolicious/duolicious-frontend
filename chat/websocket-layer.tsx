@@ -219,11 +219,12 @@ const onChangeAppState = (state: AppStateStatus) => {
   }
 };
 
-// Update the inbox when resuming from an inactive state
+// In effect, updates the inbox when resuming from an inactive state by
+// detecting if the app went offline
 AppState.addEventListener('change', onChangeAppState);
 
-// TODO: Check if this runs on Android and iOS. If so, you might be able to move
-// connectChatWebSocket out of App.tsx
+connectChatWebSocket();
+
 pingServerForever();
 
 export {
@@ -233,6 +234,5 @@ export {
   EV_CHAT_WS_RECEIVE,
   EV_CHAT_WS_SEND,
   EV_CHAT_WS_SEND_CLOSE,
-  connectChatWebSocket,
   send,
 };

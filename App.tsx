@@ -60,13 +60,11 @@ import { isMobile } from './util/util';
 import { Logo16 } from './components/logo';
 import { useScrollbarStyle } from './components/navigation/scroll-bar-hooks';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { connectChatWebSocket } from './chat/websocket-layer';
 
 // TODO: Onboarding works
 
 setNofications();
 verificationWatcher();
-connectChatWebSocket();
 
 SplashScreen.preventAutoHideAsync();
 
