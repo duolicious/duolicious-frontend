@@ -945,7 +945,9 @@ const refreshInbox = async (
 };
 
 const registerPushToken = async (token: string | null) => {
-  const data = { duo_register_push_token: token };
+  const data = token ?
+    { duo_register_push_token: { '@token': token } } :
+    { duo_register_push_token: null };
 
   const responseDetector = (doc: any): true | null => {
     if (_.isEqual(doc, { duo_registration_successful: null })) {
