@@ -16,7 +16,7 @@ import { DefaultText } from './default-text';
 import {
   IMAGES_URL,
 } from '../env/env';
-import { useLinkProps } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { listen } from '../events/events';
 import { X } from "react-native-feather";
@@ -187,22 +187,25 @@ const ProfileCard = ({
     setProspectMessagedPersonState,
   ] = useState(prospectMessagedPerson);
 
-  const linkProps = useLinkProps((() => {
+  const navigation = useNavigation<any>();
+
+  const itemOnPress = useCallback(() => {
+    if (!navigation) {
+      return;
+    }
+
     if (verificationRequired) {
-      return { screen: 'Profile' };
+      return navigation.navigate('Profile');
     } else if (personUuid) {
-      return {
-        screen: 'Prospect Profile Screen',
-        href: `/profile/${personUuid}`,
-        params: {
+      return navigation.navigate(
+        'Prospect Profile Screen',
+        {
           screen: 'Prospect Profile',
           params: { personUuid, imageBlurhash },
         }
-      };
+      );
     }
-
-    return { screen: ''};
-  })());
+  }, [navigation, personUuid, verificationRequired]);
 
   const onHide = useCallback(() => setIsSkipped(true), [setIsSkipped]);
   const onUnhide = useCallback(() => setIsSkipped(false), [setIsSkipped]);
@@ -245,8 +248,8 @@ const ProfileCard = ({
 
   return (
     <Pressable
+      onPress={itemOnPress}
       style={{ flex: 0.5, aspectRatio: 1, overflow: 'hidden', borderRadius: 5 }}
-      {...linkProps}
     >
       <View
         style={{
