@@ -29,7 +29,9 @@ const Avatar = ({percentage, ...props}) => {
 
   const Element = navigation ? Pressable : View;
 
-  const onPress = useCallback(() => {
+  const onPress = useCallback((e) => {
+    e.preventDefault();
+
     if (!navigation) {
       return;
     }
@@ -50,6 +52,7 @@ const Avatar = ({percentage, ...props}) => {
   return (
     <Element
       onPress={onPress}
+      href={navigation && !verificationRequired && personUuid ? `/profile/${personUuid}` : undefined}
       style={styles.elementStyle}
     >
       {!Boolean(imageUuid || imageBlurhash) &&
