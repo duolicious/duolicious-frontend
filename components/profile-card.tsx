@@ -19,6 +19,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { listen } from '../events/events';
+import { makeLinkProps } from '../util/navigation'
 import { X } from "react-native-feather";
 import { PageItem } from './search-tab';
 import { ImageBackground as ExpoImageBackground } from 'expo-image';
@@ -189,7 +190,9 @@ const ProfileCard = ({
 
   const navigation = useNavigation<any>();
 
-  const itemOnPress = useCallback(() => {
+  const itemOnPress = useCallback((e) => {
+    e.preventDefault();
+
     if (!navigation) {
       return;
     }
@@ -246,10 +249,14 @@ const ProfileCard = ({
     [personUuid, onMessageTo]
   );
 
+  const link = navigation && !verificationRequired && personUuid ? makeLinkProps(`/profile/${personUuid}`)
+                                                                 : {};
+
   return (
     <Pressable
       onPress={itemOnPress}
       style={{ flex: 0.5, aspectRatio: 1, overflow: 'hidden', borderRadius: 5 }}
+      {...link}
     >
       <View
         style={{
