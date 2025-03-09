@@ -189,7 +189,9 @@ const ProfileCard = ({
 
   const navigation = useNavigation<any>();
 
-  const itemOnPress = useCallback(() => {
+  const itemOnPress = useCallback((e) => {
+    e.preventDefault();
+
     if (!navigation) {
       return;
     }
@@ -249,6 +251,7 @@ const ProfileCard = ({
   return (
     <Pressable
       onPress={itemOnPress}
+      href={navigation && !verificationRequired && personUuid ? `/profile/${personUuid}` : undefined}
       style={{ flex: 0.5, aspectRatio: 1, overflow: 'hidden', borderRadius: 5 }}
     >
       <View
