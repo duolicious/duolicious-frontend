@@ -25,6 +25,8 @@ import { ImageBackground as ExpoImageBackground } from 'expo-image';
 import { VerificationBadge } from './verification-badge';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { faLock } from '@fortawesome/free-solid-svg-icons/faLock'
+import { ONLINE_COLOR } from '../constants/constants';
+import { useOnline } from '../chat/application-layer/hooks/online';
 
 // This component wouldn't need to exist if expo-image (and expo itself (and the
 // JS eco system generally)) wasn't buggy trash. This fixes an issue on
@@ -178,6 +180,8 @@ const ProfileCard = ({
 
   const [isSkipped, setIsSkipped] = useState(false);
 
+  const isOnline = useOnline(personUuid);
+
   const [
     personMessagedProspectState,
     setPersonMessagedProspectState,
@@ -245,13 +249,19 @@ const ProfileCard = ({
 
   return (
     <Pressable
-      style={{ flex: 0.5, aspectRatio: 1, overflow: 'hidden', borderRadius: 5 }}
+      style={{
+        flex: 0.5,
+        aspectRatio: 1,
+        borderRadius: 5,
+        overflow: 'hidden',
+      }}
       {...linkProps}
     >
       <View
         style={{
           width: '100%',
           height: '100%',
+          borderBottomRightRadius: isOnline ? 20 : undefined,
           overflow: 'hidden',
         }}
       >
@@ -266,7 +276,7 @@ const ProfileCard = ({
           matchPercentage={matchPercentage}
           verified={verified}
         />
-        {prospectMessagedPersonState &&
+        {!isOnline && prospectMessagedPersonState &&
           <View
             style={{
               position: 'absolute',
@@ -282,7 +292,7 @@ const ProfileCard = ({
             />
           </View>
         }
-        {personMessagedProspectState &&
+        {!isOnline && personMessagedProspectState &&
           <View
             style={{
               transform: [ { scaleX: -1 } ],
@@ -300,6 +310,34 @@ const ProfileCard = ({
           </View>
         }
       </View>
+      {isOnline && <>
+        <View
+          style={{
+            position: 'absolute',
+            bottom: -4,
+            right: -4,
+
+            borderRadius: 999,
+
+            backgroundColor: 'white',
+            justifyContent: 'center',
+            alignItems: 'center',
+            width: 20,
+            height: 20,
+          }}
+        />
+        <View
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            right: 0,
+            backgroundColor: ONLINE_COLOR,
+            borderRadius: 999,
+            width: 12,
+            height: 12,
+          }}
+        />
+      </>}
       {isSkipped &&
         <View
           style={{
