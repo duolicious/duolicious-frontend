@@ -267,31 +267,37 @@ const ProfileCard = ({
           verified={verified}
         />
         {prospectMessagedPersonState &&
-          <Ionicons
+          <View
             style={{
-              fontSize: 18,
-              color: 'white',
               position: 'absolute',
-              bottom: 0,
-              right: 18,
-              padding: 5,
+              bottom: 6,
+              right: 26,
+              width: 18,
+              height: 18,
             }}
-            name="chatbubble"
-          />
+          >
+            <Ionicons
+              style={{ fontSize: 18, color: 'white' }}
+              name="chatbubble"
+            />
+          </View>
         }
         {personMessagedProspectState &&
-          <Ionicons
+          <View
             style={{
               transform: [ { scaleX: -1 } ],
-              fontSize: 18,
-              color: 'white',
               position: 'absolute',
-              bottom: 0,
-              right: 0,
-              padding: 5,
+              bottom: 6,
+              right: 6,
+              width: 18,
+              height: 18,
             }}
-            name="chatbubble"
-          />
+          >
+            <Ionicons
+              style={{ fontSize: 18, color: 'white' }}
+              name="chatbubble"
+            />
+          </View>
         }
       </View>
       {isSkipped &&
