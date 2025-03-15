@@ -10,6 +10,7 @@ import { DefaultText } from './default-text';
 import {
   IMAGES_URL,
 } from '../env/env';
+import { makeLinkProps } from '../util/navigation'
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { X } from "react-native-feather";
 import { ImageBackground } from "expo-image";
@@ -33,7 +34,9 @@ const Avatar = ({percentage, ...props}) => {
 
   const Element = navigation ? Pressable : View;
 
-  const onPress = useCallback(() => {
+  const onPress = useCallback((e) => {
+    e.preventDefault();
+
     if (!navigation) {
       return;
     }
@@ -51,10 +54,14 @@ const Avatar = ({percentage, ...props}) => {
     }
   }, [navigation, personId, verificationRequired]);
 
+  const link = navigation && !verificationRequired && personUuid ? makeLinkProps(`/profile/${personUuid}`)
+                                                                 : {};
+
   return (
     <Element
       onPress={onPress}
       style={styles.elementStyle}
+      {...link}
     >
       {!Boolean(imageUuid || imageBlurhash) &&
         <View style={styles.imageStyle}>
