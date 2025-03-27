@@ -6,19 +6,31 @@ import {
   Pressable,
   View,
 } from 'react-native';
-import { DefaultText } from './default-text';
-import { longFriendlyTimestamp } from '../util/util';
+import { DefaultText } from '../default-text';
+import { longFriendlyTimestamp } from '../../util/util';
 import { Image } from 'expo-image';
-import { IMAGES_URL } from '../env/env';
-import { AutoResizingGif } from './auto-resizing-gif';
-import { isMobile } from '../util/util';
+import { IMAGES_URL } from '../../env/env';
+import { AutoResizingGif } from '../auto-resizing-gif';
+import { isMobile } from '../../util/util';
+import { AudioPlayer } from '../audio-player';
 
-type Props = {
+type BaseProps = {
   fromCurrentUser: boolean,
   timestamp: Date,
-  text: string,
   imageUuid: string | null | undefined,
 };
+
+type AudioProps = BaseProps & {
+  type: 'audio',
+  audioUuid: string | null | undefined,
+};
+
+type TextProps = BaseProps & {
+  type: 'text',
+  text: string,
+};
+
+type Props = AudioProps | TextProps;
 
 type MarkdownBlock = QuoteBlock | TextBlock;
 
@@ -115,6 +127,7 @@ const SpeechBubble = (props: Props) => {
   }, [setShowTimestamp]);
 
   const doRenderUrlAsImage = (
+    props.type === 'text' &&
     isSafeImageUrl(props.text) &&
     !speechBubbleImageError
   );
@@ -122,7 +135,7 @@ const SpeechBubble = (props: Props) => {
   const backgroundColor = (() => {
     if (doRenderUrlAsImage) {
       return 'transparent';
-    } else if (isEmojiOnly(props.text)) {
+    } else if (props.type === 'text' && isEmojiOnly(props.text)) {
       return 'transparent';
     } else if (props.fromCurrentUser) {
       return '#70f';
@@ -165,6 +178,7 @@ const SpeechBubble = (props: Props) => {
             }}
           />
         }
+        {props.type === 'text' &&
         <Pressable
           onPress={onPress}
           style={{
@@ -194,6 +208,13 @@ const SpeechBubble = (props: Props) => {
             />
           }
         </Pressable>
+        }
+        {props.type === 'audio' &&
+          <AudioPlayer
+            uuid={props.audioUuid}
+            presentation="conversation"
+          />
+        }
       </View>
       {showTimestamp &&
         <DefaultText
