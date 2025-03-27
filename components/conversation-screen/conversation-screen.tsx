@@ -2,7 +2,6 @@ import {
   ActivityIndicator,
   AppState,
   AppStateStatus,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
   SafeAreaView,
@@ -12,7 +11,6 @@ import {
   TextStyle,
   View,
   ViewStyle,
-  useWindowDimensions,
 } from 'react-native';
 import {
   Fragment,
@@ -23,11 +21,9 @@ import {
   useState,
 } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { TopNavBar } from './top-nav-bar';
+import { TopNavBar } from '../top-nav-bar';
 import { SpeechBubble } from './speech-bubble';
-import { DefaultText } from './default-text';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
-import { faPaperPlane } from '@fortawesome/free-solid-svg-icons/faPaperPlane'
+import { DefaultText } from '../default-text';
 import {
   Message,
   ChatMessage,
@@ -36,34 +32,25 @@ import {
   markDisplayed,
   onReceiveMessage,
   sendMessage,
-} from '../chat/application-layer';
+} from '../../chat/application-layer';
 import {
   IMAGES_URL,
-} from '../env/env';
-import { api } from '../api/api';
-import { TopNavBarButton } from './top-nav-bar-button';
+} from '../../env/env';
+import { api } from '../../api/api';
+import { TopNavBarButton } from '../top-nav-bar-button';
 import { RotateCcw, Flag, X } from "react-native-feather";
-import { setSkipped } from '../hide-and-block/hide-and-block';
-import { delay, isMobile, useAutoResetBoolean } from '../util/util';
-import { ReportModalInitialData } from './modal/report-modal';
-import { listen, notify } from '../events/events';
+import { setSkipped } from '../../hide-and-block/hide-and-block';
+import { delay, useAutoResetBoolean } from '../../util/util';
+import { ReportModalInitialData } from '../modal/report-modal';
+import { listen, notify } from '../../events/events';
 import { ImageBackground } from 'expo-image';
 import * as StoreReview from 'expo-store-review';
-import { askedForReviewBefore } from '../kv-storage/asked-for-review-before';
-import { DefaultLongTextInput } from './default-long-text-input';
-import { MessageDivider }  from './message-divider';
-import Reanimated, {
-  FadeIn,
-  FadeOut,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
-import {
-  GifPickedEvent,
-} from './modal/gif-picker-modal';
-import { ONLINE_COLOR } from '../constants/constants';
-import { useOnline } from '../chat/application-layer/hooks/online';
-import * as _ from "lodash";
+import { askedForReviewBefore } from '../../kv-storage/asked-for-review-before';
+import { MessageDivider }  from '../message-divider';
+import { ONLINE_COLOR } from '../../constants/constants';
+import { useOnline } from '../../chat/application-layer/hooks/online';
+import * as _ from 'lodash';
+import { Input } from './input';
 
 const propAt = (messages: ChatMessage[] | null | undefined, index: number, prop: string): string => {
   if (!messages) return '';
@@ -444,9 +431,12 @@ const ConversationScreen = ({navigation, route}) => {
     const {
       message,
       status,
-    } = await sendMessage(personUuid, messageBody);
+    } = await sendMessage(
+      personUuid,
+      { type: 'chat-text', text: messageBody }
+    );
 
-    if (status === 'sent' && message.type === 'chat') {
+    if (status === 'sent' && message.type === 'chat-text') {
       hasScrolled.current = false;
       setMessages(messages => [...(messages ?? []), message]);
     }
@@ -494,11 +484,11 @@ const ConversationScreen = ({navigation, route}) => {
   }, [messages]);
 
   const _onReceiveMessage = useCallback((msg: Message) => {
-    if (msg.type === 'chat') {
+    if (msg.type === 'chat-text' || msg.type === 'chat-audio') {
       hasScrolled.current = false;
       setMessages(msgs => [...(msgs ?? []), msg]);
       setIsTyping(false);
-    } else {
+    } else if (msg.type === 'typing') {
       setIsTyping(true);
     }
   }, []);
@@ -754,12 +744,24 @@ const ConversationScreen = ({navigation, route}) => {
                 {shouldShowDivider() &&
                   <MessageDivider timestamp={message.timestamp} />
                 }
-                <SpeechBubble
-                  fromCurrentUser={message.fromCurrentUser}
-                  timestamp={message.timestamp}
-                  text={message.text}
-                  imageUuid={message.fromCurrentUser ? null : imageUuid}
-                />
+                {message.type === 'chat-text' &&
+                  <SpeechBubble
+                    type="text"
+                    fromCurrentUser={message.fromCurrentUser}
+                    timestamp={message.timestamp}
+                    text={message.text}
+                    imageUuid={message.fromCurrentUser ? null : imageUuid}
+                  />
+                }
+                {message.type === 'chat-audio' &&
+                  <SpeechBubble
+                    type="audio"
+                    fromCurrentUser={message.fromCurrentUser}
+                    timestamp={message.timestamp}
+                    audioUuid={message.audioUuid}
+                    imageUuid={message.fromCurrentUser ? null : imageUuid}
+                  />
+                }
               </Fragment>
             );
           })}
@@ -790,7 +792,7 @@ const ConversationScreen = ({navigation, route}) => {
         {lastMessageStatus === 'too long' ? 'That message is too big! 😩' : '' }
       </DefaultText>
       {isAvailableUser &&
-        <TextInputWithButton
+        <Input
           onPress={onPressSend}
           recipientPersonUuid={personUuid}
         />
@@ -817,239 +819,10 @@ const ConversationScreen = ({navigation, route}) => {
   );
 };
 
-const TextInputWithButton = ({
-  onPress,
-  recipientPersonUuid
-}: {
-  onPress: (text: string) => Promise<MessageStatus>,
-  recipientPersonUuid: string,
-}) => {
-  const { height } = useWindowDimensions();
-  const [text, setText] = useState("");
-
-  const maxHeight = height * 0.4;
-  const minHeight = Platform.OS !== 'web' ?
-      50 :
-      Math.min(maxHeight, Math.max(80, Math.round(text.length / 40) * 15));
-
-  const [isLoading, setIsLoading] = useState(false);
-
-  const opacity = useSharedValue(1);
-  const fadeIn = useCallback(() => { opacity.value = 0.5; }, []);
-  const fadeOut = useCallback(() => { opacity.value = withTiming(1); }, []);
-
-  const debouncedSendMessage = useCallback(
-    _.debounce(
-      () => sendMessage(recipientPersonUuid),
-      1000,
-      {
-        leading: true,
-        trailing: false,
-        maxWait: 1000,
-      },
-    ),
-    [recipientPersonUuid]
-  );
-
-  const maybeSetText = useCallback((t: string) => {
-    if (!isLoading) {
-      setText(t);
-      debouncedSendMessage();
-    }
-  }, [isLoading, debouncedSendMessage]);
-
-  const sendMessage_ = useCallback(async (textArg?: string) => {
-    const trimmed = (textArg ?? text).trim();
-    if (trimmed) {
-      setIsLoading(true);
-      const messageStatus = await onPress(trimmed);
-      if (messageStatus === 'sent') {
-        setText("");
-      }
-      setIsLoading(false);
-    }
-  }, [text]);
-
-  const showGifPicker = useCallback(() => {
-    notify('show-gif-picker');
-  }, []);
-
-  useEffect(() => {
-    return listen<GifPickedEvent>('gif-picked', sendMessage_);
-  }, []);
-
-  const onKeyPress = useCallback((e) => {
-    if (
-      !isMobile() &&
-      e.key === 'Enter' &&
-      (e.ctrlKey || e.altKey)
-    ) {
-      e.preventDefault();
-      setText((text) => text + "\n");
-    } else if (
-      !isMobile() &&
-      e.key === 'Enter' &&
-      !e.shiftKey &&
-      !e.ctrlKey &&
-      !e.altKey
-    ) {
-      e.preventDefault();
-      sendMessage_();
-    }
-  }, [sendMessage_]);
-
-  return (
-    <KeyboardAvoidingView
-      behavior="padding"
-      style={styles.keyboardAvoidingView}
-      enabled={Platform.OS === 'ios'}
-    >
-      <DefaultLongTextInput
-        style={{
-          ...styles.textInput,
-          ...{
-            minHeight: minHeight,
-            maxHeight: maxHeight,
-          },
-        }}
-        value={text}
-        onChangeText={maybeSetText}
-        onKeyPress={onKeyPress}
-        placeholder="Type a message..."
-        placeholderTextColor="#888888"
-        multiline={true}
-      />
-      <View style={styles.sendButton}>
-        <Reanimated.View
-          style={{
-            opacity,
-            height: '100%',
-            width: '100%',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        >
-          <Pressable
-            style={{
-              height: '100%',
-              width: '100%',
-              justifyContent: 'center',
-              alignItems: 'center',
-              backgroundColor: 'rgb(228, 204, 255)',
-              borderRadius: 999,
-              borderWidth: 1,
-              borderColor: '#70f',
-            }}
-            onPressIn={fadeIn}
-            onPressOut={fadeOut}
-            onPress={() => sendMessage_()}
-          >
-            {isLoading &&
-              <ActivityIndicator size="small" color="#70f" />
-            }
-            {!isLoading &&
-              <FontAwesomeIcon
-                icon={faPaperPlane}
-                size={20}
-                color="#70f"
-                style={{
-                  marginRight: 5,
-                  marginBottom: 5,
-                  outline: 'none',
-                }}
-              />
-            }
-          </Pressable>
-        </Reanimated.View>
-        {text === "" &&
-          <Reanimated.View
-            style={styles.gifButton}
-            entering={FadeIn}
-            exiting={FadeOut}
-          >
-            <Reanimated.View
-              style={{
-                opacity,
-                height: '100%',
-                width: '100%',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
-            >
-              {isLoading &&
-                <ActivityIndicator size="small" color="#70f" />
-              }
-              {!isLoading &&
-                <Pressable
-                  style={{
-                    aspectRatio: 16/9,
-                    width: '100%',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    backgroundColor: 'white',
-                    borderRadius: 5,
-                    borderWidth: 3,
-                    borderColor: 'black',
-                  }}
-                  hitSlop={10}
-                  onPressIn={fadeIn}
-                  onPressOut={fadeOut}
-                  onPress={showGifPicker}
-                >
-                    <DefaultText style={{ fontWeight: 900 }} >
-                      GIF
-                    </DefaultText>
-                </Pressable>
-              }
-            </Reanimated.View>
-          </Reanimated.View>
-        }
-      </View>
-    </KeyboardAvoidingView>
-  );
-};
-
 const styles = StyleSheet.create({
   safeAreaView: {
     flex: 1
   },
-  keyboardAvoidingView: {
-    flexDirection: 'row',
-    maxWidth: 600,
-    width: '100%',
-    paddingHorizontal: 10,
-    marginTop: 10,
-    alignSelf: 'center',
-    alignItems: 'flex-end',
-    gap: 10,
-  },
-  textInput: {
-    backgroundColor: '#eee',
-    borderRadius: 10,
-    borderWidth: 0,
-    padding: 10,
-    marginBottom: 10,
-    fontSize: 16,
-    flex: 1,
-    flexGrow: 1,
-  },
-  gifButton: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'white',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sendButton: {
-    height: 50,
-    width: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 10,
-  }
 });
 
 export {
