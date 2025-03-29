@@ -793,8 +793,10 @@ const ConversationScreen = ({navigation, route}) => {
       </DefaultText>
       {isAvailableUser &&
         <Input
-          onPress={onPressSend}
-          recipientPersonUuid={personUuid}
+          onPressGif={() => {}}
+          onAudioComplete={() => {}}
+          onPressSend={() => {}}
+          onChange={() => {}}
         />
       }
       {!isAvailableUser &&
