@@ -1,270 +1,195 @@
-import {
-  ActivityIndicator,
-  Platform,
-  Pressable,
-  View,
-  KeyboardAvoidingView,
-  useWindowDimensions,
-  StyleSheet,
-} from 'react-native';
-import { faPaperPlane } from '@fortawesome/free-solid-svg-icons/faPaperPlane'
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
-import { isMobile } from '../../util/util';
-import { DefaultLongTextInput } from '../default-long-text-input';
-import Reanimated, {
-  FadeIn,
-  FadeOut,
+import { useState, useEffect, useCallback } from 'react';
+import { View, TextInput, Text, StyleSheet } from 'react-native';
+import Animated, {
   useSharedValue,
+  useAnimatedStyle,
   withTiming,
+  runOnJS,
 } from 'react-native-reanimated';
-import {
-  GifPickedEvent,
-} from '../modal/gif-picker-modal';
-import {
-  MessageStatus,
-  sendMessage,
-} from '../../chat/application-layer';
-import {
-  useCallback,
-  useEffect,
-  useState,
-} from 'react';
-import * as _ from 'lodash';
-import { listen, notify } from '../../events/events';
-import { DefaultText } from '../default-text';
+import { Gesture, GestureDetector, RectButton } from 'react-native-gesture-handler';
+import { LayoutChangeEvent } from 'react-native';
 
-const Input = ({
-  onPress,
-  recipientPersonUuid
-}: {
-  onPress: (text: string) => Promise<MessageStatus>,
-  recipientPersonUuid: string,
-}) => {
-  const { height } = useWindowDimensions();
-  const [text, setText] = useState("");
+const useComponentWidth = () => {
+  const [width, setWidth] = useState(0);
 
-  const maxHeight = height * 0.4;
-  const minHeight = Platform.OS !== 'web' ?
-      50 :
-      Math.min(maxHeight, Math.max(80, Math.round(text.length / 40) * 15));
-
-  const [isLoading, setIsLoading] = useState(false);
-
-  const opacity = useSharedValue(1);
-  const fadeIn = useCallback(() => { opacity.value = 0.5; }, []);
-  const fadeOut = useCallback(() => { opacity.value = withTiming(1); }, []);
-
-  const debouncedSendMessage = useCallback(
-    _.debounce(
-      () => sendMessage(recipientPersonUuid, { type: 'typing' }),
-      1000,
-      {
-        leading: true,
-        trailing: false,
-        maxWait: 1000,
-      },
-    ),
-    [recipientPersonUuid]
-  );
-
-  const maybeSetText = useCallback((t: string) => {
-    if (!isLoading) {
-      setText(t);
-      debouncedSendMessage();
-    }
-  }, [isLoading, debouncedSendMessage]);
-
-  const sendMessage_ = useCallback(async (textArg?: string) => {
-    const trimmed = (textArg ?? text).trim();
-    if (trimmed) {
-      setIsLoading(true);
-      const messageStatus = await onPress(trimmed);
-      if (messageStatus === 'sent') {
-        setText("");
-      }
-      setIsLoading(false);
-    }
-  }, [text]);
-
-  const showGifPicker = useCallback(() => {
-    notify('show-gif-picker');
+  const onLayout = useCallback((event: LayoutChangeEvent) => {
+    const { width } = event.nativeEvent.layout;
+    setWidth(width);
   }, []);
 
+  return { width, onLayout };
+};
+
+const Input = ({ onPressGif, onAudioComplete, onPressSend, onChange }) => {
+  const [text, setText] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+
+  const { width, onLayout } = useComponentWidth();
+
+  // Shared value for GIF container width.
+  const gifWidth = useSharedValue(40);
+  // Shared value for horizontal translation of the mic during pan.
+  const recordTranslateX = useSharedValue(0);
+  // Shared values for animating the input area and cancel text.
+  const inputTranslateX = useSharedValue(0);
+  const cancelTextTranslateX = useSharedValue(width); // initial offset (assumed width)
+
+  // Animate the GIF container based on text input.
   useEffect(() => {
-    return listen<GifPickedEvent>('gif-picked', sendMessage_);
-  }, []);
-
-  const onKeyPress = useCallback((e) => {
-    if (
-      !isMobile() &&
-      e.key === 'Enter' &&
-      (e.ctrlKey || e.altKey)
-    ) {
-      e.preventDefault();
-      setText((text) => text + "\n");
-    } else if (
-      !isMobile() &&
-      e.key === 'Enter' &&
-      !e.shiftKey &&
-      !e.ctrlKey &&
-      !e.altKey
-    ) {
-      e.preventDefault();
-      sendMessage_();
+    if (text.length > 0) {
+      gifWidth.value = withTiming(0, { duration: 200 });
+    } else {
+      gifWidth.value = withTiming(40, { duration: 200 });
     }
-  }, [sendMessage_]);
+  }, [text, gifWidth]);
+
+  // Animate the input area and cancel text when recording starts/ends.
+  useEffect(() => {
+    if (isRecording) {
+      // Slide the input area out left and bring cancel text in.
+      inputTranslateX.value = withTiming(-width, { duration: 200 });
+      cancelTextTranslateX.value = withTiming(0, { duration: 200 });
+    } else {
+      // Restore the input area and slide the cancel text out.
+      inputTranslateX.value = withTiming(0, { duration: 200 });
+      cancelTextTranslateX.value = withTiming(width, { duration: 200 });
+    }
+  }, [isRecording, inputTranslateX, cancelTextTranslateX]);
+
+  const animatedGifStyle = useAnimatedStyle(() => ({
+    width: gifWidth.value,
+    opacity: gifWidth.value / 40,
+  }));
+
+  const animatedInputStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: inputTranslateX.value }],
+  }));
+
+  const animatedCancelTextStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: cancelTextTranslateX.value }],
+  }));
+
+  const animatedRecordingStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: recordTranslateX.value }],
+  }));
+
+  // Define functions before they're used in gestures.
+  const handleFinishRecording = () => {
+    onAudioComplete();
+    setIsRecording(false);
+  };
+
+  const handleCancelRecording = () => {
+    setIsRecording(false);
+  };
+
+  const handleSendPress = () => {
+    if (text.trim().length > 0) {
+      onPressSend(text.trim());
+      setText('');
+    }
+  };
+
+  const handleTextChange = (newText) => {
+    setText(newText);
+    onChange();
+  };
+
+  // Create a long press gesture to trigger recording.
+  const longPressGesture = Gesture.LongPress()
+    .minDuration(300)
+    .onStart(() => {
+      runOnJS(setIsRecording)(true);
+    });
+
+  // Create a pan gesture to let the user slide the mic leftwards.
+  const panGesture = Gesture.Pan()
+    .onUpdate((event) => {
+      recordTranslateX.value = event.translationX;
+    })
+    .onEnd(() => {
+      if (recordTranslateX.value < -50) {
+        runOnJS(handleCancelRecording)();
+      } else {
+        runOnJS(handleFinishRecording)();
+      }
+      recordTranslateX.value = 0;
+    });
+
+  // Combine the long press and pan gestures so they work on the same element.
+  const combinedGesture = Gesture.Simultaneous(longPressGesture, panGesture);
 
   return (
-    <KeyboardAvoidingView
-      behavior="padding"
-      style={styles.keyboardAvoidingView}
-      enabled={Platform.OS === 'ios'}
-    >
-      <DefaultLongTextInput
-        style={{
-          ...styles.textInput,
-          ...{
-            minHeight: minHeight,
-            maxHeight: maxHeight,
-          },
-        }}
-        value={text}
-        onChangeText={maybeSetText}
-        onKeyPress={onKeyPress}
-        placeholder="Type a message..."
-        placeholderTextColor="#888888"
-        multiline={true}
-      />
-      <View style={styles.sendButton}>
-        <Reanimated.View
-          style={{
-            opacity,
-            height: '100%',
-            width: '100%',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        >
-          <Pressable
-            style={{
-              height: '100%',
-              width: '100%',
-              justifyContent: 'center',
-              alignItems: 'center',
-              backgroundColor: 'rgb(228, 204, 255)',
-              borderRadius: 999,
-              borderWidth: 1,
-              borderColor: '#70f',
-            }}
-            onPressIn={fadeIn}
-            onPressOut={fadeOut}
-            onPress={() => sendMessage_()}
-          >
-            {isLoading &&
-              <ActivityIndicator size="small" color="#70f" />
-            }
-            {!isLoading &&
-              <FontAwesomeIcon
-                icon={faPaperPlane}
-                size={20}
-                color="#70f"
-                style={{
-                  marginRight: 5,
-                  marginBottom: 5,
-                  outline: 'none',
-                }}
-              />
-            }
-          </Pressable>
-        </Reanimated.View>
-        {text === "" &&
-          <Reanimated.View
-            style={styles.gifButton}
-            entering={FadeIn}
-            exiting={FadeOut}
-          >
-            <Reanimated.View
-              style={{
-                opacity,
-                height: '100%',
-                width: '100%',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
-            >
-              {isLoading &&
-                <ActivityIndicator size="small" color="#70f" />
-              }
-              {!isLoading &&
-                <Pressable
-                  style={{
-                    aspectRatio: 16/9,
-                    width: '100%',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    backgroundColor: 'white',
-                    borderRadius: 5,
-                    borderWidth: 3,
-                    borderColor: 'black',
-                  }}
-                  hitSlop={10}
-                  onPressIn={fadeIn}
-                  onPressOut={fadeOut}
-                  onPress={showGifPicker}
-                >
-                    <DefaultText style={{ fontWeight: 900 }} >
-                      GIF
-                    </DefaultText>
-                </Pressable>
-              }
-            </Reanimated.View>
-          </Reanimated.View>
-        }
+    <View style={styles.container} onLayout={onLayout}>
+      <View style={styles.row}>
+        {/* Input wrapper: position relative so we can overlay the cancel text */}
+        <View style={styles.inputWrapper}>
+          <Animated.View style={[styles.inputContainer, animatedInputStyle]}>
+            <TextInput
+              style={styles.textInput}
+              placeholder="Type a message..."
+              value={text}
+              onChangeText={handleTextChange}
+            />
+            <RectButton onPress={onPressGif}>
+              <Animated.View style={[styles.gifContainer, animatedGifStyle]}>
+                <Text style={styles.gifText}>GIF</Text>
+              </Animated.View>
+            </RectButton>
+          </Animated.View>
+          {isRecording && (
+            <Animated.View style={[styles.cancelContainer, animatedCancelTextStyle]}>
+              <Text style={styles.recordingText}>Slide to cancel</Text>
+            </Animated.View>
+          )}
+        </View>
+        {/* Mic/Send icon container */}
+        <View style={styles.iconContainer}>
+          {text.trim().length === 0 ? (
+            // When there's no text, show the mic with the combined gesture.
+            <GestureDetector gesture={combinedGesture}>
+              <Animated.View style={[styles.icon, isRecording && animatedRecordingStyle]}>
+                <Text style={styles.iconText}>🎤</Text>
+              </Animated.View>
+            </GestureDetector>
+          ) : (
+            // When text exists, show the send icon.
+            <RectButton onPress={handleSendPress}>
+              <Text style={styles.iconText}>📤</Text>
+            </RectButton>
+          )}
+        </View>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  keyboardAvoidingView: {
+  container: { padding: 10 },
+  row: { flexDirection: 'row', alignItems: 'center' },
+  inputWrapper: { flex: 1, position: 'relative', overflow: 'hidden' },
+  inputContainer: {
     flexDirection: 'row',
-    maxWidth: 600,
-    width: '100%',
-    paddingHorizontal: 10,
-    marginTop: 10,
-    alignSelf: 'center',
-    alignItems: 'flex-end',
-    gap: 10,
-  },
-  textInput: {
+    alignItems: 'center',
     backgroundColor: '#eee',
     borderRadius: 10,
-    borderWidth: 0,
-    padding: 10,
-    marginBottom: 10,
-    fontSize: 16,
-    flex: 1,
-    flexGrow: 1,
+    paddingHorizontal: 10,
   },
-  gifButton: {
+  textInput: { flex: 1, paddingVertical: 10 },
+  gifContainer: { justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+  gifText: { fontSize: 16 },
+  cancelContainer: {
     position: 'absolute',
-    top: 0,
     left: 0,
     right: 0,
-    bottom: 0,
-    backgroundColor: 'white',
-    alignItems: 'center',
+    height: '100%',
     justifyContent: 'center',
+    paddingHorizontal: 10,
   },
-  sendButton: {
-    height: 50,
-    width: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 10,
-  }
+  recordingText: { fontSize: 16, color: 'black' },
+  iconContainer: { width: 40, height: 40, marginLeft: 5, justifyContent: 'center', alignItems: 'center' },
+  icon: { justifyContent: 'center', alignItems: 'center' },
+  iconText: { fontSize: 24 },
 });
 
-export {
-  Input,
-};
+export { Input };
