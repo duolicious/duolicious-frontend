@@ -60,6 +60,7 @@ const parseUuidOrNull = (uuid: string): string | null => {
 // TODO: Update match percentages when user answers some questions
 
 type MessageStatus =
+  | 'sending'
   | 'sent'
   | 'offensive'
   | 'rate-limited-1day'
@@ -472,10 +473,11 @@ const sendMessage = async (
   } | {
     type: 'typing',
   },
+  id: string,
   numTries: number = 3,
 ): Promise<
   | { message: Message, status: 'sent' }
-  | { message: null, status: Exclude<MessageStatus, 'sent'>}
+  | { message: null, status: Exclude<MessageStatus, 'sent' | 'sending'>}
 > => {
   if (numTries <= 0) {
     return { message: null, status: 'timeout' };
@@ -484,8 +486,6 @@ const sendMessage = async (
   if (!credentials) {
     return { message: null, status: 'blocked' };
   }
-
-  const id = getRandomString(40);
 
   const data = (() => {
     if (content.type === 'typing') {
@@ -526,7 +526,7 @@ const sendMessage = async (
   })();
 
   const responseDetector = (doc: any): {
-    status: Exclude<MessageStatus, 'sent'>
+    status: Exclude<MessageStatus, 'sent' | 'sending'>
   } | {
     status: Extract<MessageStatus, 'sent'>
     audioUuid: string
@@ -644,15 +644,9 @@ const sendMessage = async (
     return null;
   };
 
-  const response = await send({
-    data,
-    responseDetector,
-    timeoutMs: messageTimeout,
-  });
+  if (content.type === 'typing') {
+    await send({ data, timeoutMs: messageTimeout });
 
-  if (response === 'timeout') {
-    ;
-  } else if (content.type === 'typing') {
     return {
       message: {
         type: 'typing',
@@ -662,6 +656,17 @@ const sendMessage = async (
       },
       status: 'sent', // Deliberately ignore timeouts for typing indicators
     };
+  }
+
+
+  const response = await send({
+    data,
+    responseDetector,
+    timeoutMs: messageTimeout,
+  });
+
+  if (response === 'timeout') {
+    ;
   } else if (response.status === 'sent' && response.audioUuid) {
     setInboxSent(recipientPersonUuid, AUDIO_MESSAGE);
 
@@ -711,7 +716,7 @@ const sendMessage = async (
     conversation === 'timeout' ||
     conversation[conversation.length - 1]?.id !== id
   ) {
-    return sendMessage(recipientPersonUuid, content, numTries - 1);
+    return sendMessage(recipientPersonUuid, content, id, numTries - 1);
   } else {
     return { message: null, status: 'timeout' };
   }

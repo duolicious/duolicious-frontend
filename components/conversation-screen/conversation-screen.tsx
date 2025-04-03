@@ -22,17 +22,18 @@ import {
 } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { TopNavBar } from '../top-nav-bar';
-import { SpeechBubble } from './speech-bubble';
+import { SpeechBubble, TypingSpeechBubble } from './speech-bubble';
 import { DefaultText } from '../default-text';
 import {
   Message,
-  ChatMessage,
-  MessageStatus,
-  fetchConversation,
   markDisplayed,
-  onReceiveMessage,
-  sendMessage,
 } from '../../chat/application-layer';
+import {
+  fetchConversationAndNotify,
+  getMessage,
+  onReceiveMessageAndNotify,
+  sendMessageAndNotify,
+} from '../../chat/application-layer/hooks/message'
 import {
   IMAGES_URL,
 } from '../../env/env';
@@ -40,7 +41,7 @@ import { api } from '../../api/api';
 import { TopNavBarButton } from '../top-nav-bar-button';
 import { RotateCcw, Flag, X } from "react-native-feather";
 import { setSkipped } from '../../hide-and-block/hide-and-block';
-import { delay, useAutoResetBoolean } from '../../util/util';
+import { delay } from '../../util/util';
 import { ReportModalInitialData } from '../modal/report-modal';
 import { listen, notify } from '../../events/events';
 import { ImageBackground } from 'expo-image';
@@ -51,20 +52,36 @@ import { ONLINE_COLOR } from '../../constants/constants';
 import { useOnline } from '../../chat/application-layer/hooks/online';
 import * as _ from 'lodash';
 import { Input } from './input';
+import { GifPickedEvent } from '../../components/modal/gif-picker-modal';
 
-const propAt = (messages: ChatMessage[] | null | undefined, index: number, prop: string): string => {
-  if (!messages) return '';
+// TODO: Ensure typing indicator works
+// TODO: Scrolling to the bottom works
 
-  const message = messages[index];
+const firstMamId = (messageIds: string[] | null): string => {
+  if (!messageIds) {
+    return ''
+  }
 
-  if (!message) return '';
+  if (!messageIds.length) {
+    return ''
+  }
 
-  return message[prop] ?? '';
+  const firstMessageId = messageIds[0];
+
+  const message = getMessage(firstMessageId);
+
+  if (!message) {
+    return '';
+  }
+
+  if (message.message.type === 'chat-text') {
+    return message.message.mamId ?? '';
+  } else if (message.message.type === 'chat-audio') {
+    return message.message.mamId ?? '';
+  }
+
+  return '';
 };
-
-const lastPropAt = (messages: ChatMessage[] | null | undefined, prop: string): string => {
-  return propAt(messages, (messages ?? []).length - 1, prop);
-}
 
 const maybeRequestReview = async (delayMs: number = 0) => {
   if (await StoreReview.hasAction() && !await askedForReviewBefore()) {
@@ -72,6 +89,7 @@ const maybeRequestReview = async (delayMs: number = 0) => {
     await StoreReview.requestReview();
   }
 };
+
 
 const Menu = ({navigation, name, personUuid, closeFn}) => {
   const [isSkipped, setIsSkipped] = useState<boolean | undefined>();
@@ -402,16 +420,14 @@ const ConversationScreen = ({navigation, route}) => {
   const [isActive, setIsActive] = useState(AppState.currentState === 'active');
   const [isOnline, setIsOnline] = useState(false);
 
-  const [messages, setMessages] = useState<ChatMessage[] | null>(null);
-  const [lastMessageStatus, setLastMessageStatus] = useState<
-    MessageStatus | null
-  >(null);
-  const hasScrolled = useRef(false);
+  const [messageIds, setMessageIds] = useState<string[] | null>(null);
   const hasFetchedAll = useRef(false);
   const hasFinishedFirstLoad = useRef(false);
   const isFetchingNextPage = useRef(false);
   const [isFocused, setIsFocused] = useState(true);
-  const [isTyping, setIsTyping] = useAutoResetBoolean();
+
+  const scrollOffsetRef = useRef(0);
+  const layoutMeasurementRef = useRef({ height: 0 });
 
   const personId: number = route?.params?.personId;
   const personUuid: string = route?.params?.personUuid;
@@ -419,41 +435,46 @@ const ConversationScreen = ({navigation, route}) => {
   const imageUuid: string = route?.params?.imageUuid;
   const imageBlurhash: string = route?.params?.imageBlurhash;
   const isAvailableUser: boolean = route?.params?.isAvailableUser ?? true;
-  const lastMessage = (messages && messages.length) ?
-    messages[messages.length - 1] :
-    null;
 
   const listRef = useRef<ScrollView>(null);
 
-  const onPressSend = useCallback(async (messageBody: string): Promise<MessageStatus> => {
-    setLastMessageStatus(null);
-
-    const {
-      message,
-      status,
-    } = await sendMessage(
+  const onPressSend = useCallback((messageBody: string): void => {
+    const messageId = sendMessageAndNotify(
       personUuid,
       { type: 'chat-text', text: messageBody }
     );
 
-    if (status === 'sent' && message.type === 'chat-text') {
-      hasScrolled.current = false;
-      setMessages(messages => [...(messages ?? []), message]);
-    }
+    setMessageIds(messageIds => [...(messageIds ?? []), messageId]);
 
     if (
-      status === 'sent' &&
       messageBody.toLowerCase().includes('hahaha') &&
-      messages &&
-      messages.length > 40
+      messageIds &&
+      messageIds.length > 40
     ) {
       maybeRequestReview(1000);
     }
+  }, [personUuid, messageIds]);
 
-    setLastMessageStatus(status);
+  const onChange = useCallback(
+    _.debounce(
+      () => sendMessageAndNotify(personUuid, { type: 'typing' }),
+      1000,
+      {
+        leading: true,
+        trailing: false,
+        maxWait: 1000,
+      },
+    ),
+    [personUuid]
+  );
 
-    return status;
-  }, [personId, messages]);
+  const onPressGif = useCallback(() => {
+    notify('show-gif-picker');
+  }, []);
+
+  useEffect(() => {
+    return listen<GifPickedEvent>('gif-picked', onPressSend);
+  }, [onPressSend]);
 
   const maybeLoadNextPage = useCallback(async () => {
     if (hasFetchedAll.current) {
@@ -465,33 +486,23 @@ const ConversationScreen = ({navigation, route}) => {
     }
     isFetchingNextPage.current = true;
 
-    const fetchedMessages = await fetchConversation(
+    const fetchedMessageIds = await fetchConversationAndNotify(
       personUuid || String(personId),
-      propAt(messages, 0, 'mamId')
+      firstMamId(messageIds),
     );
 
     isFetchingNextPage.current = false;
 
-    if (fetchedMessages !== 'timeout') {
+    if (fetchedMessageIds !== 'timeout') {
       // Prevents the list from moving up to the newly added speech bubbles and
       // triggering another fetch
-      if (listRef.current) listRef.current.scrollTo({y: 2, animated: false});
+      if (listRef.current) listRef.current.scrollTo({ y: 2, animated: false });
 
-      setMessages([...(fetchedMessages ?? []), ...(messages ?? [])]);
+      setMessageIds([...(fetchedMessageIds ?? []), ...(messageIds ?? [])]);
 
-      hasFetchedAll.current = !(fetchedMessages && fetchedMessages.length);
+      hasFetchedAll.current = !(fetchedMessageIds && fetchedMessageIds.length);
     }
-  }, [messages]);
-
-  const _onReceiveMessage = useCallback((msg: Message) => {
-    if (msg.type === 'chat-text' || msg.type === 'chat-audio') {
-      hasScrolled.current = false;
-      setMessages(msgs => [...(msgs ?? []), msg]);
-      setIsTyping(false);
-    } else if (msg.type === 'typing') {
-      setIsTyping(true);
-    }
-  }, []);
+  }, [messageIds]);
 
   const isCloseToTop = ({contentOffset}) => contentOffset.y < 1;
 
@@ -505,22 +516,37 @@ const ConversationScreen = ({navigation, route}) => {
   };
 
   const onScroll = useCallback(({nativeEvent}) => {
+    scrollOffsetRef.current = nativeEvent.contentOffset.y;
+    layoutMeasurementRef.current = nativeEvent.layoutMeasurement;
+
     if (isCloseToTop(nativeEvent) && hasFinishedFirstLoad.current) {
       maybeLoadNextPage();
     }
 
-    if (messages !== null && isAtBottom(nativeEvent)) {
+    if (messageIds !== null && isAtBottom(nativeEvent)) {
       hasFinishedFirstLoad.current = true;
     }
   }, [maybeLoadNextPage]);
 
   const markLastMessageRead = useCallback(async () => {
+    const lastMessageId = _.last(messageIds);
+
+    if (!lastMessageId) {
+      return;
+    }
+
+    const lastMessage = getMessage(lastMessageId);
+
     if (!lastMessage) {
       return;
     }
 
-    await markDisplayed(lastMessage);
-  }, [lastMessage]);
+    if (lastMessage.message.type === 'typing') {
+      return;
+    }
+
+    await markDisplayed(lastMessage.message);
+  }, [_.last(messageIds)]);
 
   useEffect(() => {
     return listen(`skip-profile-${personUuid}`, () => {
@@ -530,31 +556,32 @@ const ConversationScreen = ({navigation, route}) => {
 
   // Fetch the first page of messages when the conversation is first opened
   // while online
-  const fetchFirstPage = useCallback(async (personUuid, personId) => {
-    const fetchedMessages = await fetchConversation(
-      personUuid || String(personId)
-    );
+  const fetchFirstPage = useCallback(async (personUuid) => {
+    const fetchedMessageIds = await fetchConversationAndNotify(personUuid);
 
-    if (fetchedMessages === 'timeout') {
+    if (fetchedMessageIds === 'timeout') {
       return;
     }
 
-    if (fetchedMessages === undefined) {
+    const lastIdOfPage = _.last(fetchedMessageIds);
+
+    if (!lastIdOfPage) {
       return;
     }
 
-    setMessages((messages) => {
-      const lastIdOfPage = lastPropAt(fetchedMessages, 'id');
-      const lastIdOfConversation = lastPropAt(messages, 'id');
+    if (fetchedMessageIds.length === 0) {
+      return;
+    }
 
-      if (messages === null || lastIdOfPage !== lastIdOfConversation) {
-        return fetchedMessages;
+    setMessageIds((messageIds) => {
+      if (messageIds === null || !messageIds.includes(lastIdOfPage)) {
+        return fetchedMessageIds;
       } else {
-        return messages;
+        return messageIds;
       }
     });
 
-  }, [messages]);
+  }, []);
 
   useEffect(() => {
     const onChangeAppState = (state: AppStateStatus) => {
@@ -578,36 +605,38 @@ const ConversationScreen = ({navigation, route}) => {
     // If the user navigates to the conversation screen via a deep link, but the
     // conversation screen was already open on a conversation with a different
     // person, then the screen should be cleared.
-    setMessages(null);
-    setLastMessageStatus(null);
+    setMessageIds(null);
   }, [personUuid, personId]);
 
   useEffect(() => {
     if (isActive && isOnline) {
-      fetchFirstPage(personUuid, personId)
+      fetchFirstPage(personUuid)
     }
-  }, [personUuid, personId, isActive && isOnline]);
+  }, [personUuid, isActive && isOnline]);
 
   // Scroll to end when last message changes
   useEffect(() => {
     (async () => {
       await delay(500);
       if (listRef.current) {
-        listRef.current.scrollToEnd({animated: true});
+        listRef.current.scrollToEnd({ animated: true });
       }
     })();
-  }, [lastMessage?.id]);
+  }, [_.last(messageIds)]);
 
 
   // Listen for new messages
   useEffect(() => {
-    return onReceiveMessage(_onReceiveMessage, personUuid, isFocused);
-  }, [
-    onReceiveMessage,
-    _onReceiveMessage,
-    personUuid,
-    isFocused,
-  ]);
+    return onReceiveMessageAndNotify(
+      (message: Message) => {
+        if (message.type === 'chat-text' || message.type === 'chat-audio') {
+          setMessageIds(messageIds => [...(messageIds ?? []), message.id]);
+        }
+      },
+      personUuid,
+      isFocused
+    );
+  }, [personUuid, isFocused]);
 
   if (Platform.OS === 'web') {
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -645,15 +674,26 @@ const ConversationScreen = ({navigation, route}) => {
         name={name}
         isOnline={isOnline}
       />
-      {messages === null &&
+      {messageIds === null &&
         <View style={{flexGrow: 1, justifyContent: 'center', alignItems: 'center'}}>
           <ActivityIndicator size="large" color="#70f" />
         </View>
       }
-      {messages !== null &&
+      {messageIds !== null &&
         <ScrollView
           ref={listRef}
           onScroll={onScroll}
+          onContentSizeChange={(_, contentHeight) => {
+            const distanceToBottom = (
+              contentHeight - (
+                scrollOffsetRef.current + layoutMeasurementRef.current.height
+              )
+            );
+
+            if (listRef.current && distanceToBottom < 100) {
+              listRef.current.scrollToEnd({ animated: true });
+            }
+          }}
           scrollEventThrottle={0}
           maintainVisibleContentPosition={{
             minIndexForVisible: 0
@@ -664,14 +704,15 @@ const ConversationScreen = ({navigation, route}) => {
             maxWidth: 600,
             width: '100%',
             alignSelf: 'center',
-            ...(messages.length === 0 ? {
+            ...(messageIds.length === 0 ? {
               justifyContent: 'center',
               alignItems: 'center',
               flexGrow: 1,
             } : {}),
+            gap: 10,
           }}
         >
-          {messages.length === 0 &&
+          {messageIds.length === 0 &&
             <>
               <ImageBackground
                 source={imageUuid && {
@@ -725,78 +766,39 @@ const ConversationScreen = ({navigation, route}) => {
               </DefaultText>
             </>
           }
-          {messages.length > 0 && messages.map((message, index) => {
-            const shouldShowDivider = () => {
-              if (index === 0) return false;
-
-              const currentDate = new Date(message.timestamp);
-              const previousDate = new Date(messages[index - 1].timestamp);
-
-              return (
-                currentDate.getDate() !== previousDate.getDate() ||
-                currentDate.getMonth() !== previousDate.getMonth() ||
-                currentDate.getFullYear() !== previousDate.getFullYear()
-              );
-            };
+          {messageIds.length > 0 && messageIds.map((messageId, i) => {
+            const [previousMessage, message] = [
+              getMessage(messageIds[i - 1]),
+              getMessage(messageId)];
 
             return (
-              <Fragment key={message.id}>
-                {shouldShowDivider() &&
-                  <MessageDivider timestamp={message.timestamp} />
-                }
-                {message.type === 'chat-text' &&
-                  <SpeechBubble
-                    type="text"
-                    fromCurrentUser={message.fromCurrentUser}
-                    timestamp={message.timestamp}
-                    text={message.text}
-                    imageUuid={message.fromCurrentUser ? null : imageUuid}
+              <Fragment key={messageId}>
+                {previousMessage && message &&
+                  <MessageDivider
+                    previousMessage={previousMessage.message}
+                    message={message.message}
                   />
                 }
-                {message.type === 'chat-audio' &&
-                  <SpeechBubble
-                    type="audio"
-                    fromCurrentUser={message.fromCurrentUser}
-                    timestamp={message.timestamp}
-                    audioUuid={message.audioUuid}
-                    imageUuid={message.fromCurrentUser ? null : imageUuid}
-                  />
-                }
+                <SpeechBubble
+                  messageId={messageId}
+                  name={name}
+                  avatarUuid={imageUuid}
+                />
               </Fragment>
             );
           })}
+          <TypingSpeechBubble
+            personUuid={personUuid}
+            avatarUuid={imageUuid}
+          />
         </ScrollView>
       }
-      <DefaultText
-        style={{
-          maxWidth: 600,
-          width: '100%',
-          alignSelf: 'center',
-          textAlign: isTyping ? 'left' : 'center',
-          paddingLeft: 20,
-          paddingRight: 20,
-          opacity: lastMessageStatus !== 'sent' && lastMessageStatus !== null || isTyping ? 1 : 0,
-          color: lastMessageStatus === 'timeout' ? 'red' : '#70f',
-          ...(lastMessageStatus === 'timeout' ? {} : { fontFamily: 'Trueno' }),
-        }}
-      >
-        {(lastMessageStatus === 'sent' || lastMessageStatus === null) && isTyping ? `${name} is typing...` : ''}
-        {lastMessageStatus === 'timeout' ? "Message not delivered. Are you online?" : '' }
-        {lastMessageStatus === 'rate-limited-1day-unverified-basics' ? `You’ve used today’s daily intro limit! Message ${name} tomorrow or unlock extra daily intros by getting verified...` : '' }
-        {lastMessageStatus === 'rate-limited-1day-unverified-photos' ? `You’ve used today’s daily intro limit! Message ${name} tomorrow or unlock extra daily intros by verifying your photos...` : '' }
-        {lastMessageStatus === 'rate-limited-1day' ? `You’ve used today’s daily intro limit! Try messaging ${name} tomorrow...` : '' }
-        {lastMessageStatus === 'spam' ? `We think that might be spam. Try sending ${name} a different message...` : '' }
-        {lastMessageStatus === 'offensive' ? `Intros can’t be too rude. Try sending ${name} a different message...` : '' }
-        {lastMessageStatus === 'blocked' ? name + ' is unavailable right now. Try messaging someone else!' : '' }
-        {lastMessageStatus === 'not unique' ? `Someone already sent that intro! Try sending ${name} a different message...` : '' }
-        {lastMessageStatus === 'too long' ? 'That message is too big! 😩' : '' }
-      </DefaultText>
       {isAvailableUser &&
         <Input
-          onPressGif={() => {}}
+          onPressSend={onPressSend}
+          onChange={onChange}
+          onPressGif={onPressGif}
           onAudioComplete={() => {}}
-          onPressSend={() => {}}
-          onChange={() => {}}
         />
       }
       {!isAvailableUser &&

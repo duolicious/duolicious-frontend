@@ -97,7 +97,17 @@ const AutoResizingTextInput = Platform.OS === 'web' ? (props) => {
   );
 };
 
-const Input = ({ onPressGif, onAudioComplete, onPressSend, onChange }) => {
+const Input = ({
+  onPressSend,
+  onChange,
+  onPressGif,
+  onAudioComplete,
+}: {
+  onPressSend: (text: string) => void
+  onChange: () => void
+  onPressGif: () => void
+  onAudioComplete: (base64: string) => void
+}) => {
   const [text, setText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -241,7 +251,7 @@ const Input = ({ onPressGif, onAudioComplete, onPressSend, onChange }) => {
   };
 
   const handleFinishRecording = () => {
-    onAudioComplete();
+    onAudioComplete('');
     setIsRecording(false);
     haptics();
   };

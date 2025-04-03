@@ -1,9 +1,11 @@
 import {
   useCallback,
+  useEffect,
   useState,
 } from 'react';
 import {
   Pressable,
+  StyleSheet,
   View,
 } from 'react-native';
 import { DefaultText } from '../default-text';
@@ -13,24 +15,25 @@ import { IMAGES_URL } from '../../env/env';
 import { AutoResizingGif } from '../auto-resizing-gif';
 import { isMobile } from '../../util/util';
 import { AudioPlayer } from '../audio-player';
+import { MessageStatus } from '../../chat/application-layer';
+import { useMessage } from '../../chat/application-layer/hooks/message';
+import { onReceiveMessage, Message } from '../../chat/application-layer';
+import Animated, {
+  cancelAnimation,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withSequence,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
 
-type BaseProps = {
-  fromCurrentUser: boolean,
-  timestamp: Date,
-  imageUuid: string | null | undefined,
-};
+// TODO: Animate message status bubble by making it expand
 
-type AudioProps = BaseProps & {
-  type: 'audio',
-  audioUuid: string | null | undefined,
-};
+const otherUserBackgroundColor = '#eee';
 
-type TextProps = BaseProps & {
-  type: 'text',
-  text: string,
-};
-
-type Props = AudioProps | TextProps;
+const currentUserBackgroundColor = '#70f';
 
 type MarkdownBlock = QuoteBlock | TextBlock;
 
@@ -118,121 +121,6 @@ const isEmojiOnly = (str: string): boolean => {
   return emojiRegex.test(str);
 }
 
-const SpeechBubble = (props: Props) => {
-  const [showTimestamp, setShowTimestamp] = useState(false);
-  const [speechBubbleImageError, setSpeechBubbleImageError] = useState(false);
-
-  const onPress = useCallback(() => {
-    setShowTimestamp(t => !t);
-  }, [setShowTimestamp]);
-
-  const doRenderUrlAsImage = (
-    props.type === 'text' &&
-    isSafeImageUrl(props.text) &&
-    !speechBubbleImageError
-  );
-
-  const backgroundColor = (() => {
-    if (doRenderUrlAsImage) {
-      return 'transparent';
-    } else if (props.type === 'text' && isEmojiOnly(props.text)) {
-      return 'transparent';
-    } else if (props.fromCurrentUser) {
-      return '#70f';
-    } else {
-      return '#eee';
-    }
-  })();
-
-  return (
-    <View
-      style={{
-        paddingTop: 5,
-        paddingBottom: 5,
-        paddingLeft: 10,
-        paddingRight: 10,
-        alignItems: props.fromCurrentUser ? 'flex-end' : 'flex-start',
-        width: '100%',
-      }}
-    >
-      <View
-        style={{
-          flexDirection: 'row',
-          gap: 5,
-          alignItems: 'flex-end',
-          ...(doRenderUrlAsImage ? {
-            width: '66%',
-          }: {
-            maxWidth: '80%',
-          })
-        }}
-      >
-        {props.imageUuid &&
-          <Image
-            source={{ uri: `${IMAGES_URL}/450-${props.imageUuid}.jpg` }}
-            transition={150}
-            style={{
-              width: 24,
-              height: 24,
-              borderRadius: 9999,
-            }}
-          />
-        }
-        {props.type === 'text' &&
-        <Pressable
-          onPress={onPress}
-          style={{
-            borderRadius: 10,
-            backgroundColor: backgroundColor,
-            gap: 10,
-            ...(doRenderUrlAsImage ? {
-              width: '100%',
-            }: {
-              padding: 10,
-              flexShrink: 1,
-            })
-          }}
-        >
-          {doRenderUrlAsImage &&
-            <AutoResizingGif
-              uri={props.text}
-              onError={() => setSpeechBubbleImageError(true)}
-              requirePress={isMobile()}
-            />
-          }
-          {!doRenderUrlAsImage &&
-            <FormattedText
-              text={props.text}
-              color={props.fromCurrentUser ? 'white' : 'black'}
-              fontSize={isEmojiOnly(props.text) ? 50 : 15}
-            />
-          }
-        </Pressable>
-        }
-        {props.type === 'audio' &&
-          <AudioPlayer
-            uuid={props.audioUuid}
-            presentation="conversation"
-          />
-        }
-      </View>
-      {showTimestamp &&
-        <DefaultText
-          selectable={true}
-          style={{
-            fontSize: 13,
-            paddingTop: 10,
-            alignSelf: props.fromCurrentUser ? 'flex-end' : 'flex-start',
-            color: '#666',
-          }}
-        >
-          {longFriendlyTimestamp(props.timestamp)}
-        </DefaultText>
-      }
-    </View>
-  );
-};
-
 const FormattedText = ({
   text,
   color,
@@ -281,7 +169,327 @@ const FormattedText = ({
   );
 };
 
+const MessageStatusComponent = ({
+  messageStatus,
+  name,
+}: {
+  messageStatus: MessageStatus,
+  name: string,
+}) => {
+  const messageTexts: Record<MessageStatus, string> = {
+    'sending': '',
+    'sent': '',
+    'timeout': 'Message not delivered. Are you online?',
+    'rate-limited-1day-unverified-basics': `You’ve used today’s daily intro limit! Message ${name} tomorrow or unlock extra daily intros by getting verified...`,
+    'rate-limited-1day-unverified-photos': `You’ve used today’s daily intro limit! Message ${name} tomorrow or unlock extra daily intros by verifying your photos...`,
+    'rate-limited-1day': `You’ve used today’s daily intro limit! Try messaging ${name} tomorrow...`,
+    'spam': `We think that might be spam. Try sending ${name} a different message...`,
+    'offensive': `Intros can’t be too rude. Try sending ${name} a different message...`,
+    'blocked': name + ' is unavailable right now. Try messaging someone else!',
+    'not unique': `Someone already sent that intro! Try sending ${name} a different message...`,
+    'too long': 'That message is too big! 😩',
+  };
+
+  const messageText = messageTexts[messageStatus];
+
+  if (messageText === '') {
+    return <></>;
+  }
+
+  return (
+    <View
+      style={{
+        borderRadius: 10,
+        backgroundColor: 'black',
+        padding: 10,
+        maxWidth: '80%',
+      }}
+    >
+      <DefaultText style={{
+        color: 'white',
+        fontWeight: 700,
+      }}>
+        {messageText}
+      </DefaultText>
+    </View>
+  );
+};
+
+const SpeechBubble = ({
+  messageId,
+  name,
+  avatarUuid
+}: {
+  messageId: string
+  name: string
+  avatarUuid: string | null | undefined
+}) => {
+  const opacity = useSharedValue(0);
+  const [showTimestamp, setShowTimestamp] = useState(false);
+  const [speechBubbleImageError, setSpeechBubbleImageError] = useState(false);
+  const message = useMessage(messageId);
+
+  const onPress = useCallback(() => {
+    setShowTimestamp(t => !t);
+  }, [setShowTimestamp]);
+
+  const doRenderUrlAsImage = (
+    message &&
+    message.message.type === 'chat-text' &&
+    isSafeImageUrl(message.message.text) &&
+    !speechBubbleImageError
+  );
+
+  const backgroundColor = (() => {
+    if (!message) {
+      return 'transparent';
+    } else if (message.message.type !== 'chat-text') {
+      return 'transparent';
+    } else if (doRenderUrlAsImage) {
+      return 'transparent';
+    } else if (isEmojiOnly(message.message.text)) {
+      return 'transparent';
+    } else if (message.message.fromCurrentUser) {
+      return currentUserBackgroundColor;
+    } else {
+      return otherUserBackgroundColor;
+    }
+  })();
+
+  const animatedContainerStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
+  useEffect(() => {
+    if (message?.status === 'sent') {
+      opacity.value = withTiming(1.0);
+    } else {
+      opacity.value = 0.5;
+    }
+  }, [message?.status === 'sent']);
+
+  if (!message) {
+    return <></>;
+  }
+
+  if (message.message.type === 'typing') {
+    return <></>;
+  }
+
+  return (
+    <View
+      style={[
+        {
+          paddingLeft: 10,
+          paddingRight: 10,
+          alignItems: message.message.fromCurrentUser ? 'flex-end' : 'flex-start',
+          width: '100%',
+          gap: 4,
+        },
+      ]}
+    >
+      <Animated.View
+        style={[
+          {
+            flexDirection: 'row',
+            gap: 5,
+            alignItems: 'flex-end',
+            ...(doRenderUrlAsImage ? {
+              width: '66%',
+            }: {
+              maxWidth: '80%',
+            })
+          },
+          animatedContainerStyle
+        ]}
+      >
+        {!message.message.fromCurrentUser && avatarUuid &&
+          <Image
+            source={{ uri: `${IMAGES_URL}/450-${avatarUuid}.jpg` }}
+            transition={150}
+            style={{
+              width: 24,
+              height: 24,
+              borderRadius: 9999,
+            }}
+          />
+        }
+        {message.message.type === 'chat-text' &&
+          <Pressable
+            onPress={onPress}
+            style={{
+              borderRadius: 10,
+              backgroundColor: backgroundColor,
+              gap: 10,
+              ...(doRenderUrlAsImage ? {
+                width: '100%',
+              }: {
+                padding: 10,
+                flexShrink: 1,
+              })
+            }}
+          >
+            {doRenderUrlAsImage &&
+              <AutoResizingGif
+                uri={message.message.text}
+                onError={() => setSpeechBubbleImageError(true)}
+                requirePress={isMobile()}
+              />
+            }
+            {!doRenderUrlAsImage &&
+              <FormattedText
+                text={message.message.text}
+                color={message.message.fromCurrentUser ? 'white' : 'black'}
+                fontSize={isEmojiOnly(message.message.text) ? 50 : 15}
+              />
+            }
+          </Pressable>
+        }
+        {message.message.type === 'chat-audio' &&
+          <AudioPlayer
+            uuid={message.message.audioUuid}
+            presentation="conversation"
+          />
+        }
+      </Animated.View>
+      {showTimestamp &&
+        <DefaultText
+          selectable={true}
+          style={{
+            fontSize: 13,
+            alignSelf: message.message.fromCurrentUser ? 'flex-end' : 'flex-start',
+            color: '#666',
+          }}
+        >
+          {longFriendlyTimestamp(message.message.timestamp)}
+        </DefaultText>
+      }
+      <MessageStatusComponent
+        messageStatus={message.status}
+        name={name}
+      />
+    </View>
+  );
+};
+
+const TypingSpeechBubble = ({
+  personUuid,
+  avatarUuid,
+}: {
+  personUuid: string
+  avatarUuid: string
+}) => {
+  const opacity = useSharedValue(0.0);
+
+  useEffect(() => {
+    return onReceiveMessage(
+      (message: Message) => {
+        // Cancel any ongoing animation (including a pending fade-out)
+        cancelAnimation(opacity);
+
+        if (message.type === 'typing') {
+          opacity.value = withSequence(
+            withTiming(1),
+            withDelay(5000, withTiming(0))
+          );
+        } else {
+          opacity.value = withTiming(0);
+        }
+      },
+      personUuid
+    );
+  }, [personUuid]);
+
+  const animatedContainerStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
+  const progress = useSharedValue(0);
+
+  useEffect(() => {
+    progress.value = withRepeat(
+      withTiming(1, { duration: 2000, easing: Easing.linear }),
+      -1,
+      false
+    );
+  }, [progress]);
+
+  const Dot = ({ phaseOffset }: { phaseOffset: number }) => {
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
+        opacity: 0.5 + 0.5 * Math.sin(
+          2 * Math.PI * (phaseOffset - progress.value)
+        )
+      };
+    });
+    return <Animated.View style={[styles.dot, animatedStyle]} />;
+  };
+
+  return (
+    <Animated.View
+      style={[
+        styles.speechBubbleContainer,
+        animatedContainerStyle
+      ]}
+    >
+      <View
+        style={{
+          flexDirection: 'row',
+          gap: 5,
+          alignItems: 'flex-end',
+          maxWidth: '80%',
+        }}
+      >
+        {avatarUuid &&
+          <Image
+            source={{ uri: `${IMAGES_URL}/450-${avatarUuid}.jpg` }}
+            transition={150}
+            style={{
+              width: 24,
+              height: 24,
+              borderRadius: 9999,
+            }}
+          />
+        }
+        <View
+          style={{
+            borderRadius: 10,
+            backgroundColor: otherUserBackgroundColor,
+            gap: 5,
+            paddingVertical: 15,
+            paddingHorizontal: 12,
+            flexShrink: 1,
+            flexDirection: 'row',
+            alignItems: 'center',
+          }}
+        >
+          <Dot phaseOffset={0} />
+          <Dot phaseOffset={0.33} />
+          <Dot phaseOffset={0.66} />
+        </View>
+      </View>
+    </Animated.View>
+  );
+};
+
+const styles = StyleSheet.create({
+  speechBubbleContainer: {
+    paddingLeft: 10,
+    paddingRight: 10,
+    alignItems: 'flex-start',
+    width: '100%',
+    gap: 4,
+  },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 999,
+    backgroundColor: '#555',
+  },
+});
+
 export {
   SpeechBubble,
+  TypingSpeechBubble,
   parseMarkdown,
 };
