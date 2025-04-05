@@ -19,14 +19,15 @@ import { MessageStatus } from '../../chat/application-layer';
 import { useMessage } from '../../chat/application-layer/hooks/message';
 import { onReceiveMessage, Message } from '../../chat/application-layer';
 import Animated, {
+  Easing,
   cancelAnimation,
+  useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
   withRepeat,
   withSequence,
   withTiming,
-  Easing,
 } from 'react-native-reanimated';
 
 // TODO: Animate audio player while it loads
@@ -383,6 +384,7 @@ const TypingSpeechBubble = ({
   avatarUuid: string
 }) => {
   const opacity = useSharedValue(0.0);
+  const progress = useSharedValue(0);
 
   useEffect(() => {
     return onReceiveMessage(
@@ -403,38 +405,38 @@ const TypingSpeechBubble = ({
     );
   }, [personUuid]);
 
+  // Only run the dot animation while visible
+  useAnimatedReaction(
+    () => opacity.value,
+    (current, previous) => {
+      if (current > 0 && (previous ?? 0) === 0) {
+        // Start the repeating animation when bubble becomes visible
+        progress.value = withRepeat(
+          withTiming(1, { duration: 2000, easing: Easing.linear }),
+          -1,
+          false
+        );
+      } else if (current === 0 && (previous ?? 0) > 0) {
+        // Stop the animation when bubble is no longer visible
+        cancelAnimation(progress);
+        progress.value = 0;
+      }
+    }
+  );
+
   const animatedContainerStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
   }));
 
-  const progress = useSharedValue(0);
-
-  useEffect(() => {
-    progress.value = withRepeat(
-      withTiming(1, { duration: 2000, easing: Easing.linear }),
-      -1,
-      false
-    );
-  }, [progress]);
-
   const Dot = ({ phaseOffset }: { phaseOffset: number }) => {
-    const animatedStyle = useAnimatedStyle(() => {
-      return {
-        opacity: 0.5 + 0.5 * Math.sin(
-          2 * Math.PI * (phaseOffset - progress.value)
-        )
-      };
-    });
+    const animatedStyle = useAnimatedStyle(() => ({
+      opacity: 0.5 + 0.5 * Math.sin(2 * Math.PI * (phaseOffset - progress.value))
+    }));
     return <Animated.View style={[styles.dot, animatedStyle]} />;
   };
 
   return (
-    <Animated.View
-      style={[
-        styles.speechBubbleContainer,
-        animatedContainerStyle
-      ]}
-    >
+    <Animated.View style={[styles.speechBubbleContainer, animatedContainerStyle]}>
       <View
         style={{
           flexDirection: 'row',
