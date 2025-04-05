@@ -607,7 +607,6 @@ const sendMessage = async (
     };
   }
 
-
   const response = await send({ data, responseDetector, timeoutMs });
 
   if (response === 'timeout') {
@@ -648,6 +647,8 @@ const sendMessage = async (
       },
       status: response.status
     };
+  } else {
+    return { message: null, status: response.status };
   }
 
   // Deal with timeouts. To stop ourselves from sending the same message
