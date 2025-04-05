@@ -536,7 +536,8 @@ const sendMessage = async (
 
   const responseDetector = (doc: any):
     | { status: Exclude<MessageStatus, 'sent' | 'sending' | 'timeout'> }
-    | { status: Extract<MessageStatus, 'sent'>, audioUuid?: string } =>
+    | { status: Extract<MessageStatus, 'sent'>, audioUuid?: string }
+    | null =>
   {
     type MappingInput = Exclude<MessageStatus, 'sending' | 'timeout'>;
 
@@ -590,7 +591,7 @@ const sendMessage = async (
       }
     }
 
-    throw new Error('Unhandled doc');
+    return null;
   };
 
   if (content.type === 'typing') {
@@ -948,7 +949,7 @@ const fetchConversation = async (
     return _.isEqual(doc, expectedDoc);
   };
 
-  const response = await send<ChatMessage>({
+  const response = await send({
     data,
     responseDetector,
     sentinelDetector,
@@ -1072,7 +1073,7 @@ const refreshInbox = async (
     return _.isEqual(doc, expectedDoc);
   };
 
-  const response = await send<Conversation>({
+  const response = await send({
     data,
     responseDetector,
     sentinelDetector,
