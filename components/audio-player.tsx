@@ -1,10 +1,52 @@
 import { possessive, secToMinSec } from '../util/util';
 import { useEffect, useRef, useState } from 'react';
-import { Platform, View, Pressable, StyleSheet } from 'react-native';
+import { Platform, View, Pressable, StyleSheet, LayoutChangeEvent } from 'react-native';
 import { Audio, AVPlaybackStatus } from 'expo-av';
 import { AUDIO_URL } from '../env/env';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DefaultText } from './default-text';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
+
+const LoadingBar = () => {
+  const duration = 500;
+  const progress = useSharedValue(0);
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  // Set bar to be 30% of the container's width.
+  const barWidthRatio = 0.3;
+  const barWidth = containerWidth * barWidthRatio;
+  const maxTranslate = containerWidth - barWidth;
+
+  useEffect(() => {
+    // Animate progress from 0 to 1 and reverse it to create a bounce effect.
+    progress.value = withRepeat(withTiming(1, { duration }), -1, true);
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: progress.value * maxTranslate }],
+    };
+  });
+
+  const onContainerLayout = (event: LayoutChangeEvent) => {
+    setContainerWidth(event.nativeEvent.layout.width);
+  };
+
+  return (
+    <View style={styles.loadingBarContainer} onLayout={onContainerLayout}>
+      {containerWidth > 0 && (
+        <Animated.View
+          style={[styles.loadingBar, animatedStyle, { width: barWidth }]}
+        />
+      )}
+    </View>
+  );
+};
 
 type AudioPlayerProps = {
   name: string | null | undefined,
@@ -12,6 +54,7 @@ type AudioPlayerProps = {
   presentation: 'profile',
 } | {
   uuid: string | null | undefined,
+  sending: boolean,
   presentation: 'conversation',
 };
 
@@ -161,9 +204,21 @@ const AudioPlayer = (props: AudioPlayerProps) => {
         </View>
       </Pressable>
 
-      <DefaultText style={styles.audioPlayerMiddleText}>
-        {middleText}
-      </DefaultText>
+      {!props.uuid && props.presentation === 'conversation' && props.sending &&
+        <LoadingBar/>
+      }
+
+      {!props.uuid && props.presentation === 'conversation' && !props.sending &&
+        <DefaultText style={styles.audioPlayerMiddleText}>
+          Failed to send
+        </DefaultText>
+      }
+
+      {!!props.uuid &&
+        <DefaultText style={styles.audioPlayerMiddleText}>
+          {middleText}
+        </DefaultText>
+      }
 
       <DefaultText
         style={{
@@ -172,7 +227,7 @@ const AudioPlayer = (props: AudioPlayerProps) => {
           width: 50,
         }}
       >
-        {minutes}:{seconds}
+        {`${minutes}:${seconds}`}
       </DefaultText>
     </View>
   );
@@ -186,6 +241,18 @@ const styles = StyleSheet.create({
       wordBreak: 'break-all',
     } : {}),
     textAlign: 'center',
+  },
+  loadingBarContainer: {
+    width: 100,
+    height: 8,
+    backgroundColor: '#ddd',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  loadingBar: {
+    height: '100%',
+    borderRadius: 999,
+    backgroundColor: 'black',
   },
 });
 

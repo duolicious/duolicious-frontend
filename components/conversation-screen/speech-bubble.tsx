@@ -30,6 +30,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 // TODO: Animate audio player while it loads
+// TODO: Conversation reloads after sending a message
 
 const otherUserBackgroundColor = '#eee';
 
@@ -348,6 +349,7 @@ const SpeechBubble = ({
         }
         {message.message.type === 'chat-audio' &&
           <AudioPlayer
+            sending={message.status === 'sending'}
             uuid={message.message.audioUuid}
             presentation="conversation"
           />
