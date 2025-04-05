@@ -66,7 +66,10 @@ const sendMessageAndNotify = (
   } | {
     type: 'typing',
   },
-  numTries: number = 3,
+  config?: {
+    numTries?: number,
+    timeoutMs?: number,
+  }
 ): string => {
   const id = getRandomString(40);
 
@@ -111,7 +114,7 @@ const sendMessageAndNotify = (
       recipientPersonUuid,
       content,
       id,
-      numTries,
+      config,
     );
 
     const status = response.status;

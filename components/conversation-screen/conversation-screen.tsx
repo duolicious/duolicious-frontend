@@ -479,7 +479,8 @@ const ConversationScreen = ({navigation, route}) => {
   const onAudioComplete = useCallback((audioBase64: string) => {
     const messageId = sendMessageAndNotify(
       personUuid,
-      { type: 'chat-audio', audioBase64 }
+      { type: 'chat-audio', audioBase64 },
+      { timeoutMs: 2 * 60 * 1000 }
     );
 
     setMessageIds(messageIds => [...(messageIds ?? []), messageId]);

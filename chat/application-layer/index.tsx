@@ -475,11 +475,19 @@ const sendMessage = async (
     type: 'typing',
   },
   id: string,
-  numTries: number = 3,
+  config?: {
+    numTries?: number,
+    timeoutMs?: number,
+  },
 ): Promise<
   | { message: Message, status: 'sent' }
   | { message: null, status: Exclude<MessageStatus, 'sent' | 'sending'>}
 > => {
+  const {
+    numTries = 3,
+    timeoutMs = messageTimeout,
+  } = config ?? {};
+
   if (numTries <= 0) {
     return { message: null, status: 'timeout' };
   }
@@ -586,7 +594,7 @@ const sendMessage = async (
   };
 
   if (content.type === 'typing') {
-    await send({ data, timeoutMs: messageTimeout });
+    await send({ data, timeoutMs });
 
     return {
       message: {
@@ -600,11 +608,7 @@ const sendMessage = async (
   }
 
 
-  const response = await send({
-    data,
-    responseDetector,
-    timeoutMs: messageTimeout,
-  });
+  const response = await send({ data, responseDetector, timeoutMs });
 
   if (response === 'timeout') {
     ;
@@ -655,7 +659,15 @@ const sendMessage = async (
     conversation === 'timeout' ||
     conversation[conversation.length - 1]?.id !== id
   ) {
-    return sendMessage(recipientPersonUuid, content, id, numTries - 1);
+    return sendMessage(
+      recipientPersonUuid,
+      content,
+      id,
+      {
+        numTries: numTries - 1,
+        timeoutMs,
+      }
+    );
   } else {
     return { message: null, status: 'timeout' };
   }
