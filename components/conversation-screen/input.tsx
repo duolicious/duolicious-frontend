@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 import {
@@ -36,6 +37,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faPaperPlane } from '@fortawesome/free-solid-svg-icons/faPaperPlane';
 import { DefaultLongTextInput } from '../default-long-text-input';
 import { isMobile } from '../../util/util';
+import { Audio } from 'expo-av';
+import { uriToBase64 } from '../../api/api';
+import { notify } from '../../events/events';
+import { ValidationErrorToast } from '../toast';
+
+// TODO: Handle audio permissions
+// TODO: Increase timeout for uploading audio recordings
 
 const haptics = () => {
   if (Platform.OS !== 'web') {
@@ -52,6 +60,86 @@ const useComponentWidth = () => {
   }, []);
 
   return { width, onLayout };
+};
+
+const useRecorder = () => {
+  const maxDuration = 2 * 60;
+
+  const recording = useRef<Audio.Recording>();
+  const [duration, setDuration] = useState(0);
+
+  const startRecording = async () => {
+    try {
+      if ((await Audio.getPermissionsAsync())?.status !== 'granted') {
+        await Audio.requestPermissionsAsync();
+      }
+
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+
+      const onRecordingStatusUpdate = (status: Audio.RecordingStatus) => {
+        const seconds = Math.floor(status.durationMillis / 1000);
+
+        setDuration(seconds);
+
+        if (seconds >= maxDuration) {
+          stopRecording();
+        }
+      };
+
+      if (recording.current) {
+        await recording.current.stopAndUnloadAsync();
+      }
+
+      const recordingOptions: Audio.RecordingOptions = {
+        ...Audio.RecordingOptionsPresets.HIGH_QUALITY,
+        web: {
+          ...Audio.RecordingOptionsPresets.HIGH_QUALITY.web,
+          mimeType: undefined,
+        }
+      };
+
+      recording.current = (await Audio.Recording.createAsync(
+        recordingOptions,
+        onRecordingStatusUpdate,
+      )).recording;
+
+      return true;
+    } catch (err) {
+      notify<React.FC>(
+        'toast',
+        () => <ValidationErrorToast error={String(err)} />
+      );
+    }
+
+    return false;
+  };
+
+  const stopRecording = async () => {
+    const currentRecording = recording.current;
+    recording.current = undefined;
+
+    if (!currentRecording) {
+      return null;
+    }
+
+    await currentRecording.stopAndUnloadAsync();
+
+    await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
+
+    const uri = currentRecording.getURI();
+
+    if (!uri) {
+      console.error('Recording URI was unexpectedly null');
+      return null;
+    }
+
+    return `data:audio/*;base64,${await uriToBase64(uri)}`;
+  };
+
+  return { startRecording, stopRecording, duration };
 };
 
 const AutoResizingTextInput = Platform.OS === 'web' ? (props) => {
@@ -106,14 +194,15 @@ const Input = ({
   onPressSend: (text: string) => void
   onChange: () => void
   onPressGif: () => void
-  onAudioComplete: (base64: string) => void
+  onAudioComplete: (audioBase64: string) => void
 }) => {
   const [text, setText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
-  const [recordingTime, setRecordingTime] = useState(0);
   const [showHint, setShowHint] = useState(false);
 
   const { width, onLayout } = useComponentWidth();
+
+  const { startRecording, stopRecording, duration } = useRecorder();
 
   // Shared value for GIF container width.
   const gifWidth = useSharedValue(40);
@@ -157,22 +246,6 @@ const Input = ({
       recordTranslateX.value = withTiming(0);
     }
   }, [isRecording, inputTranslateX, cancelTextTranslateX, width]);
-
-  // Timer effect: update recordingTime every second while recording.
-  useEffect(() => {
-    let timer;
-    if (isRecording) {
-      setRecordingTime(0);
-      timer = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
-      }, 1000);
-    } else {
-      setRecordingTime(0);
-    }
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [isRecording]);
 
   // Animate arrow suggestion when recording is active.
   useEffect(() => {
@@ -248,12 +321,26 @@ const Input = ({
     micTranslateY.value = 0;
     setIsRecording(true);
     haptics();
+    startRecording();
   };
 
   const handleFinishRecording = () => {
-    onAudioComplete('');
     setIsRecording(false);
     haptics();
+
+    (async () => {
+      if (duration < 1) {
+        return;
+      }
+
+      const base64 = await stopRecording();
+
+      if (!base64) {
+        return;
+      }
+
+      onAudioComplete(base64);
+    })();
   };
 
   const handleCancelRecording = () => {
@@ -267,6 +354,7 @@ const Input = ({
     );
     haptics();
     setTimeout(() => setIsRecording(false), 1000);
+    stopRecording();
   };
 
   const handleFailedTap = () => {
@@ -382,7 +470,7 @@ const Input = ({
                   <Ionicons name="mic" style={{ fontSize: 28, color: 'crimson' }} />
                 </Animated.View>
                 <DefaultText style={[styles.recordingText, styles.recordingTimer]}>
-                  {formatTime(recordingTime)}
+                  {formatTime(duration)}
                 </DefaultText>
               </Animated.View>
               <Animated.View style={[styles.cancelTextStyle, animatedCancelTextStyle]}>

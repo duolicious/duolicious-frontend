@@ -29,7 +29,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 
-// TODO: Animate message status bubble by making it expand
+// TODO: Animate audio player while it loads
 
 const otherUserBackgroundColor = '#eee';
 

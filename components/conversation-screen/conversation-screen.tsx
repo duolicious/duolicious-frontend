@@ -476,6 +476,15 @@ const ConversationScreen = ({navigation, route}) => {
     return listen<GifPickedEvent>('gif-picked', onPressSend);
   }, [onPressSend]);
 
+  const onAudioComplete = useCallback((audioBase64: string) => {
+    const messageId = sendMessageAndNotify(
+      personUuid,
+      { type: 'chat-audio', audioBase64 }
+    );
+
+    setMessageIds(messageIds => [...(messageIds ?? []), messageId]);
+  }, []);
+
   const maybeLoadNextPage = useCallback(async () => {
     if (hasFetchedAll.current) {
       return;
@@ -487,7 +496,7 @@ const ConversationScreen = ({navigation, route}) => {
     isFetchingNextPage.current = true;
 
     const fetchedMessageIds = await fetchConversationAndNotify(
-      personUuid || String(personId),
+      personUuid,
       firstMamId(messageIds),
     );
 
@@ -563,18 +572,13 @@ const ConversationScreen = ({navigation, route}) => {
       return;
     }
 
-    const lastIdOfPage = _.last(fetchedMessageIds);
-
-    if (!lastIdOfPage) {
-      return;
-    }
-
-    if (fetchedMessageIds.length === 0) {
-      return;
-    }
-
     setMessageIds((messageIds) => {
-      if (messageIds === null || !messageIds.includes(lastIdOfPage)) {
+      const lastIdOfPage = _.last(fetchedMessageIds);
+
+      if (
+        messageIds === null ||
+        lastIdOfPage && !messageIds.includes(lastIdOfPage)
+      ) {
         return fetchedMessageIds;
       } else {
         return messageIds;
@@ -798,7 +802,7 @@ const ConversationScreen = ({navigation, route}) => {
           onPressSend={onPressSend}
           onChange={onChange}
           onPressGif={onPressGif}
-          onAudioComplete={() => {}}
+          onAudioComplete={onAudioComplete}
         />
       }
       {!isAvailableUser &&
