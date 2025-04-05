@@ -66,6 +66,7 @@ type MessageStatus =
   | 'rate-limited-1day'
   | 'rate-limited-1day-unverified-basics'
   | 'rate-limited-1day-unverified-photos'
+  | 'voice-intro'
   | 'spam'
   | 'blocked'
   | 'not unique'
@@ -525,123 +526,63 @@ const sendMessage = async (
     }
   })();
 
-  const responseDetector = (doc: any): {
-    status: Exclude<MessageStatus, 'sent' | 'sending'>
-  } | {
-    status: Extract<MessageStatus, 'sent'>
-    audioUuid: string
-  } | null => {
-    // Check duo_message_too_long
-    try {
-      const { duo_message_too_long: v } = doc;
-      assert(v !== undefined);
-      return { status: 'too long' };
-    } catch { }
+  const responseDetector = (doc: any):
+    | { status: Exclude<MessageStatus, 'sent' | 'sending' | 'timeout'> }
+    | { status: Extract<MessageStatus, 'sent'>, audioUuid?: string } =>
+  {
+    type MappingInput = Exclude<MessageStatus, 'sending' | 'timeout'>;
 
-    // Check duo_message_not_unique
-    try {
-      const {
-        duo_message_not_unique: {
-          '@id': receivedQueryId,
-        },
-      } = doc;
-      assert(receivedQueryId === id);
-      return { status: 'not unique' };
-    } catch { }
+    const messageStatusMapping: Record<
+      MappingInput,
+      (doc: any) => false | { audioUuid?: string }
+    > = {
+      'sent': (doc) =>
+        doc.duo_message_delivered !== undefined &&
+        { audioUuid: doc.duo_message_delivered?.['@audioUuid'] },
+      'offensive': (doc) =>
+        doc.duo_message_blocked?.['@reason'] === 'offensive' &&
+        {},
+      'rate-limited-1day': (doc) =>
+        doc.duo_message_blocked?.['@reason'] === 'rate-limited-1day' &&
+        !doc.duo_message_blocked?.['@subreason'] &&
+        {},
+      'rate-limited-1day-unverified-basics': (doc) =>
+        doc.duo_message_blocked?.['@reason'] === 'rate-limited-1day' &&
+        doc.duo_message_blocked?.['@subreason'] === 'unverified-basics' &&
+        {},
+      'rate-limited-1day-unverified-photos': (doc) =>
+        doc.duo_message_blocked?.['@reason'] === 'rate-limited-1day' &&
+        doc.duo_message_blocked?.['@subreason'] === 'unverified-photos' &&
+        {},
+      'voice-intro': (doc) =>
+        doc.duo_message_blocked?.['@reason'] === 'voice-intro' &&
+        {},
+      'spam': (doc) =>
+        doc.duo_message_blocked?.['@reason'] === 'spam' &&
+        {},
+      'blocked': (doc) =>
+        // Fallback for any blocked case not caught above.
+        doc.duo_message_blocked !== undefined &&
+        {},
+      'not unique': (doc) =>
+        doc.duo_message_not_unique !== undefined &&
+        {},
+      'too long': (doc) =>
+        doc.duo_message_too_long !== undefined &&
+        {},
+    };
 
-    // Check duo_message_blocked for rate-limited unverified basics
-    try {
-      const {
-        duo_message_blocked: {
-          '@id': receivedQueryId,
-          '@reason': reason,
-          '@subreason': subreason,
-        },
-      } = doc;
-      assert(receivedQueryId === id);
-      assert(reason === 'rate-limited-1day');
-      assert(subreason === 'unverified-basics');
-      return { status: 'rate-limited-1day-unverified-basics' };
-    } catch { }
+    for (const [status, subDetector] of Object.entries(messageStatusMapping)) {
+      const detectedContent = subDetector(doc);
+      if (detectedContent) {
+        return {
+          status: status as MappingInput,
+          ...detectedContent
+        };
+      }
+    }
 
-    // Check duo_message_blocked for rate-limited unverified photos
-    try {
-      const {
-        duo_message_blocked: {
-          '@id': receivedQueryId,
-          '@reason': reason,
-          '@subreason': subreason,
-        },
-      } = doc;
-      assert(receivedQueryId === id);
-      assert(reason === 'rate-limited-1day');
-      assert(subreason === 'unverified-photos');
-      return { status: 'rate-limited-1day-unverified-photos' };
-    } catch { }
-
-    // Check duo_message_blocked for generic rate-limited (no specific subreason)
-    try {
-      const {
-        duo_message_blocked: {
-          '@id': receivedQueryId,
-          '@reason': reason,
-        },
-      } = doc;
-      assert(receivedQueryId === id);
-      assert(reason === 'rate-limited-1day');
-      return { status: 'rate-limited-1day' };
-    } catch { }
-
-    // Check duo_message_blocked for spam
-    try {
-      const {
-        duo_message_blocked: {
-          '@id': receivedQueryId,
-          '@reason': reason,
-        },
-      } = doc;
-      assert(receivedQueryId === id);
-      assert(reason === 'spam');
-      return { status: 'spam' };
-    } catch { }
-
-    // Check duo_message_blocked for offensive
-    try {
-      const {
-        duo_message_blocked: {
-          '@id': receivedQueryId,
-          '@reason': reason,
-        },
-      } = doc;
-      assert(receivedQueryId === id);
-      assert(reason === 'offensive');
-      return { status: 'offensive' };
-    } catch { }
-
-    // Fallback for any duo_message_blocked case
-    try {
-      const {
-        duo_message_blocked: {
-          '@id': receivedQueryId,
-        },
-      } = doc;
-      assert(receivedQueryId === id);
-      return { status: 'blocked' };
-    } catch { }
-
-    // Check duo_message_delivered
-    try {
-      const {
-        duo_message_delivered: {
-          '@id': receivedQueryId,
-          '@audioUuid': audioUuid,
-        },
-      } = doc;
-      assert(receivedQueryId === id);
-      return { status: 'sent', audioUuid };
-    } catch { }
-
-    return null;
+    throw new Error('Unhandled doc');
   };
 
   if (content.type === 'typing') {
@@ -703,8 +644,6 @@ const sendMessage = async (
       },
       status: response.status
     };
-  } else if (response.status !== 'timeout') {
-    return { message: null, status: response.status };
   }
 
   // Deal with timeouts. To stop ourselves from sending the same message

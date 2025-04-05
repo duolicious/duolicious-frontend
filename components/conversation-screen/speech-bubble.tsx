@@ -183,6 +183,7 @@ const MessageStatusComponent = ({
     'rate-limited-1day-unverified-basics': `You’ve used today’s daily intro limit! Message ${name} tomorrow or unlock extra daily intros by getting verified...`,
     'rate-limited-1day-unverified-photos': `You’ve used today’s daily intro limit! Message ${name} tomorrow or unlock extra daily intros by verifying your photos...`,
     'rate-limited-1day': `You’ve used today’s daily intro limit! Try messaging ${name} tomorrow...`,
+    'voice-intro': `Voice messages aren’t allowed in intros`,
     'spam': `We think that might be spam. Try sending ${name} a different message...`,
     'offensive': `Intros can’t be too rude. Try sending ${name} a different message...`,
     'blocked': name + ' is unavailable right now. Try messaging someone else!',
