@@ -67,6 +67,7 @@ type MessageStatus =
   | 'rate-limited-1day-unverified-basics'
   | 'rate-limited-1day-unverified-photos'
   | 'voice-intro'
+  | 'server-error'
   | 'spam'
   | 'blocked'
   | 'not unique'
@@ -578,6 +579,9 @@ const sendMessage = async (
         {},
       'too long': (doc) =>
         doc.duo_message_too_long !== undefined &&
+        {},
+      'server-error': (doc) =>
+        doc.duo_server_error !== undefined &&
         {},
     };
 

@@ -182,15 +182,16 @@ const MessageStatusComponent = ({
     'sending': '',
     'sent': '',
     'timeout': 'Message not delivered. Are you online?',
-    'rate-limited-1day-unverified-basics': `You’ve used today’s daily intro limit! Message ${name} tomorrow or unlock extra daily intros by getting verified...`,
-    'rate-limited-1day-unverified-photos': `You’ve used today’s daily intro limit! Message ${name} tomorrow or unlock extra daily intros by verifying your photos...`,
+    'rate-limited-1day-unverified-basics': `You’ve used today’s daily intro limit! Message ${name} tomorrow or unlock extra daily intros by getting verified. Verification is free and takes just a few minutes.`,
+    'rate-limited-1day-unverified-photos': `You’ve used today’s daily intro limit! Message ${name} tomorrow or unlock extra daily intros by verifying your photos. Verification is free and takes just a few minutes.`,
     'rate-limited-1day': `You’ve used today’s daily intro limit! Try messaging ${name} tomorrow...`,
     'voice-intro': `Voice messages aren’t allowed in intros`,
-    'spam': `We think that might be spam. Try sending ${name} a different message...`,
-    'offensive': `Intros can’t be too rude. Try sending ${name} a different message...`,
+    'spam': `We think that might be spam. Try sending ${name} a different message.`,
+    'offensive': `Intros can’t be too rude. Try sending ${name} a different message.`,
     'blocked': name + ' is unavailable right now. Try messaging someone else!',
-    'not unique': `Someone already sent that intro! Try sending ${name} a different message...`,
+    'not unique': `Someone already sent that intro! Try sending ${name} a different message.`,
     'too long': 'That message is too big! 😩',
+    'server-error': 'Our server went boom. Please contact support@duolicious.app',
   };
 
   const messageText = messageTexts[messageStatus];
