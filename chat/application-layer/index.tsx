@@ -548,7 +548,7 @@ const sendMessage = async (
     > = {
       'sent': (doc) =>
         doc.duo_message_delivered !== undefined &&
-        { audioUuid: doc.duo_message_delivered?.['@audioUuid'] },
+        { audioUuid: doc.duo_message_delivered?.['@audio_uuid'] },
       'offensive': (doc) =>
         doc.duo_message_blocked?.['@reason'] === 'offensive' &&
         {},
