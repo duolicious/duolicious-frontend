@@ -68,7 +68,7 @@ const useRecorder = () => {
   const recording = useRef<Audio.Recording>();
   const [duration, setDuration] = useState(0);
 
-  const startRecording = async () => {
+  const startRecording = async (): Promise<boolean> => {
     try {
       if ((await Audio.getPermissionsAsync())?.status !== 'granted') {
         await Audio.requestPermissionsAsync();
@@ -321,7 +321,11 @@ const Input = ({
     micTranslateY.value = 0;
     setIsRecording(true);
     haptics();
-    startRecording();
+    startRecording().then((result) => {
+      if (!result) {
+        handleCancelRecording();
+      }
+    });
   };
 
   const handleFinishRecording = () => {
