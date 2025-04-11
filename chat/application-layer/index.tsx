@@ -527,7 +527,7 @@ const sendMessage = async (
           '@from': personUuidToJid(credentials.username),
           '@to': personUuidToJid(recipientPersonUuid),
           '@id': id,
-          '@audioBase64': content.audioBase64,
+          '@audio_base64': content.audioBase64,
         },
       };
     } else {
@@ -547,40 +547,49 @@ const sendMessage = async (
       (doc: any) => false | { audioUuid?: string }
     > = {
       'sent': (doc) =>
-        doc.duo_message_delivered !== undefined &&
+        doc.duo_message_delivered?.['@id'] === id &&
         { audioUuid: doc.duo_message_delivered?.['@audio_uuid'] },
       'offensive': (doc) =>
         doc.duo_message_blocked?.['@reason'] === 'offensive' &&
         {},
       'rate-limited-1day': (doc) =>
+        doc.duo_message_blocked?.['@id'] === id &&
         doc.duo_message_blocked?.['@reason'] === 'rate-limited-1day' &&
         !doc.duo_message_blocked?.['@subreason'] &&
         {},
       'rate-limited-1day-unverified-basics': (doc) =>
+        doc.duo_message_blocked?.['@id'] === id &&
         doc.duo_message_blocked?.['@reason'] === 'rate-limited-1day' &&
         doc.duo_message_blocked?.['@subreason'] === 'unverified-basics' &&
         {},
       'rate-limited-1day-unverified-photos': (doc) =>
+        doc.duo_message_blocked?.['@id'] === id &&
         doc.duo_message_blocked?.['@reason'] === 'rate-limited-1day' &&
         doc.duo_message_blocked?.['@subreason'] === 'unverified-photos' &&
         {},
       'voice-intro': (doc) =>
+        doc.duo_message_blocked?.['@id'] === id &&
         doc.duo_message_blocked?.['@reason'] === 'voice-intro' &&
         {},
       'spam': (doc) =>
+        doc.duo_message_blocked?.['@id'] === id &&
         doc.duo_message_blocked?.['@reason'] === 'spam' &&
         {},
       'blocked': (doc) =>
         // Fallback for any blocked case not caught above.
+        doc.duo_message_blocked?.['@id'] === id &&
         doc.duo_message_blocked !== undefined &&
         {},
       'not unique': (doc) =>
+        doc.duo_message_not_unique?.['@id'] === id &&
         doc.duo_message_not_unique !== undefined &&
         {},
       'too long': (doc) =>
+        doc.duo_message_too_long?.['@id'] === id &&
         doc.duo_message_too_long !== undefined &&
         {},
       'server-error': (doc) =>
+        doc.duo_server_error?.['@id'] === id &&
         doc.duo_server_error !== undefined &&
         {},
     };
@@ -894,7 +903,7 @@ const fetchConversation = async (
                 '@id': id,
                 '@from': from,
                 '@to': to,
-                '@audioUuid': audioUuid,
+                '@audio_uuid': audioUuid,
                 'body': text,
               }
             }
