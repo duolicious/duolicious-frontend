@@ -42,9 +42,6 @@ import { uriToBase64 } from '../../api/api';
 import { notify } from '../../events/events';
 import { ValidationErrorToast } from '../toast';
 
-// TODO: Handle audio permissions
-// TODO: Increase timeout for uploading audio recordings
-
 const haptics = () => {
   if (Platform.OS !== 'web') {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
@@ -66,12 +63,21 @@ const useRecorder = () => {
   const maxDuration = 2 * 60;
 
   const recording = useRef<Audio.Recording>();
+  const recordingActive = useRef(false);
   const [duration, setDuration] = useState(0);
 
   const startRecording = async (): Promise<boolean> => {
     try {
+      recordingActive.current = true;
+
       if ((await Audio.getPermissionsAsync())?.status !== 'granted') {
         await Audio.requestPermissionsAsync();
+      }
+
+      // The value of `recordingActive` might've changed while we were waiting
+      // for the user to respond to our request for permissions.
+      if (!recordingActive.current) {
+        return false;
       }
 
       await Audio.setAudioModeAsync({
@@ -119,6 +125,7 @@ const useRecorder = () => {
 
   const stopRecording = async () => {
     const currentRecording = recording.current;
+    recordingActive.current = false;
     recording.current = undefined;
 
     if (!currentRecording) {
@@ -239,11 +246,17 @@ const Input = ({
       inputTranslateX.value = withTiming(-width);
       cancelTextTranslateX.value = withTiming(0);
       recordOpacity.value = withTiming(0);
+      startRecording().then((didStart) => {
+        if (!didStart) {
+          setIsRecording(didStart);
+        }
+      });
     } else {
       inputTranslateX.value = withTiming(0);
       cancelTextTranslateX.value = withTiming(width);
       recordOpacity.value = withTiming(1);
       recordTranslateX.value = withTiming(0);
+      stopRecording();
     }
   }, [isRecording, inputTranslateX, cancelTextTranslateX, width]);
 
@@ -321,11 +334,6 @@ const Input = ({
     micTranslateY.value = 0;
     setIsRecording(true);
     haptics();
-    startRecording().then((result) => {
-      if (!result) {
-        handleCancelRecording();
-      }
-    });
   };
 
   const handleFinishRecording = () => {
@@ -358,7 +366,6 @@ const Input = ({
     );
     haptics();
     setTimeout(() => setIsRecording(false), 1000);
-    stopRecording();
   };
 
   const handleFailedTap = () => {
