@@ -18,10 +18,6 @@ import {
 import { getRandomString } from '../../../random/string';
 import { assertNever } from '../../../util/util';
 
-// TODO: Handle message onReceive
-
-// TODO: `sendMessage` returns a similar type. Can we export it from the same
-// file as `sendMessage` and use that instead?
 type UseMessage = {
   status: MessageStatus
   message: Message

@@ -30,9 +30,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-// TODO: Animate audio player while it loads
-// TODO: Conversation reloads after sending a message
-
 const otherUserBackgroundColor = '#eee';
 
 const currentUserBackgroundColor = '#70f';

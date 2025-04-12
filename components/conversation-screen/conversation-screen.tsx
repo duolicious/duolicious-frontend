@@ -54,9 +54,6 @@ import * as _ from 'lodash';
 import { Input } from './input';
 import { GifPickedEvent } from '../../components/modal/gif-picker-modal';
 
-// TODO: Ensure typing indicator works
-// TODO: Scrolling to the bottom works
-
 const firstMamId = (messageIds: string[] | null): string => {
   if (!messageIds) {
     return ''
