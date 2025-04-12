@@ -67,6 +67,10 @@ const useRecorder = () => {
   const [duration, setDuration] = useState(0);
 
   const startRecording = async (): Promise<boolean> => {
+    if (recording.current) {
+      return true;
+    };
+
     try {
       recordingActive.current = true;
 
@@ -94,10 +98,6 @@ const useRecorder = () => {
           stopRecording();
         }
       };
-
-      if (recording.current) {
-        await recording.current.stopAndUnloadAsync();
-      }
 
       const recordingOptions: Audio.RecordingOptions = {
         ...Audio.RecordingOptionsPresets.HIGH_QUALITY,
