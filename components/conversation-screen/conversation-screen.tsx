@@ -483,6 +483,13 @@ const ConversationScreen = ({navigation, route}) => {
     setMessageIds(messageIds => [...(messageIds ?? []), messageId]);
   }, []);
 
+  const onFocus = useCallback(async () => {
+    if (listRef.current) {
+      await delay(200);
+      listRef.current.scrollToEnd({ animated: true });
+    }
+  }, []);
+
   const maybeLoadNextPage = useCallback(async () => {
     if (hasFetchedAll.current) {
       return;
@@ -801,6 +808,7 @@ const ConversationScreen = ({navigation, route}) => {
           onChange={onChange}
           onPressGif={onPressGif}
           onAudioComplete={onAudioComplete}
+          onFocus={onFocus}
         />
       }
       {!isAvailableUser &&

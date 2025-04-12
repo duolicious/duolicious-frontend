@@ -197,11 +197,13 @@ const Input = ({
   onChange,
   onPressGif,
   onAudioComplete,
+  onFocus,
 }: {
   onPressSend: (text: string) => void
   onChange: () => void
   onPressGif: () => void
   onAudioComplete: (audioBase64: string) => void
+  onFocus: () => void,
 }) => {
   const [text, setText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
@@ -461,6 +463,7 @@ const Input = ({
               value={text}
               onChangeText={handleTextChange}
               onKeyPress={handleKeyPress}
+              onFocus={onFocus}
             />
             <RectButton onPress={onPressGif} hitSlop={10}>
               <Animated.View style={[styles.gifContainer, animatedGifStyle]}>
