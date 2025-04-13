@@ -43,8 +43,6 @@ import { uriToBase64 } from '../../api/api';
 import { notify } from '../../events/events';
 import { ValidationErrorToast } from '../toast';
 
-// TODO: kfzP9jXaioW9CmFc1FWilqtAfThrOHTgrxkFLHWh
-
 const haptics = () => {
   if (Platform.OS !== 'web') {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
@@ -251,7 +249,7 @@ const Input = ({
     if (isRecording) {
       inputTranslateX.value = withTiming(-width);
       cancelTextTranslateX.value = withTiming(0);
-      recordOpacity.value = withTiming(0);
+      recordOpacity.value = withTiming(isMobile() ? 0 : 0.3);
       startRecording().then((didStart) => {
         if (!didStart) {
           setIsRecording(didStart);
