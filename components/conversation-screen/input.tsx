@@ -35,12 +35,15 @@ import {
 } from '../default-text';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faPaperPlane } from '@fortawesome/free-solid-svg-icons/faPaperPlane';
+import { styles as defaultTextInputStyles } from '../default-text-input';
 import { DefaultLongTextInput } from '../default-long-text-input';
 import { isMobile } from '../../util/util';
 import { Audio } from 'expo-av';
 import { uriToBase64 } from '../../api/api';
 import { notify } from '../../events/events';
 import { ValidationErrorToast } from '../toast';
+
+// TODO: kfzP9jXaioW9CmFc1FWilqtAfThrOHTgrxkFLHWh
 
 const haptics = () => {
   if (Platform.OS !== 'web') {
@@ -161,6 +164,7 @@ const AutoResizingTextInput = Platform.OS === 'web' ? (props) => {
           width: '100%',
           minHeight: 30,
           opacity: 0,
+          fontSize: defaultTextInputStyles.textInput.fontSize,
         }}
       >
         {props.value}
