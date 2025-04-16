@@ -395,7 +395,6 @@ const Prospect = ({
       imageUuid={imageUuid}
       imageBlurhash={imageBlurhash}
       percentage={matchPercentage}
-      shadow={true}
       isSkipped={isSkipped}
       verificationRequired={verificationRequired}
     />

@@ -30,7 +30,6 @@ import { api } from '../api/api';
 import { cmToFeetInchesStr } from '../units/units';
 import { signedInUser } from '../App';
 import { setSkipped } from '../hide-and-block/hide-and-block';
-import { ImageOrSkeleton } from './profile-card';
 import { Pinchy } from './pinchy';
 import { Basic, Basics } from './basic';
 import { Club, Clubs } from './club';
@@ -66,6 +65,8 @@ import { useOnline } from '../chat/application-layer/hooks/online';
 import { ONLINE_COLOR } from '../constants/constants';
 import { HeartBackground } from './heart-background';
 import { AudioPlayer } from './audio-player';
+import { EnlargeableImage } from './enlargeable-image';
+import { commonStyles } from '../styles';
 
 const Stack = createNativeStackNavigator();
 
@@ -104,67 +105,6 @@ const GalleryScreen = ({navigation, route}) => {
       <StatusBarSpacer/>
       <FloatingBackButton onPress={() => navigation.goBack()}/>
     </>
-  );
-};
-
-const goToGallery = (navigation, imageUuid) => () =>
-  navigation.navigate('Gallery Screen', { imageUuid } );
-
-const EnlargeableImage = ({
-  imageUuid,
-  imageExtraExts,
-  imageBlurhash,
-  onChangeEmbiggened,
-  style,
-  innerStyle,
-  isPrimary,
-  isVerified = false,
-}: {
-  imageUuid: string | undefined | null,
-  imageExtraExts?: string[] | undefined | null,
-  imageBlurhash: string | undefined | null,
-  onChangeEmbiggened: (uuid: string) => void,
-  style?: any,
-  innerStyle?: any,
-  isPrimary: boolean,
-  isVerified?: boolean,
-}) => {
-  if (imageUuid === undefined && !isPrimary) {
-    return <></>;
-  }
-
-  return (
-    <Pressable
-      disabled={!!imageExtraExts?.length || !imageUuid}
-      onPress={() => imageUuid && onChangeEmbiggened(imageUuid)}
-      style={[
-        {
-          width: '100%',
-          aspectRatio: 1,
-        },
-        style,
-      ]}
-    >
-      <ImageOrSkeleton
-        resolution={900}
-        imageExtraExts={imageExtraExts}
-        imageUuid={imageUuid}
-        imageBlurhash={imageBlurhash}
-        showGradient={false}
-        style={innerStyle}
-        forceExpoImage={true}
-      />
-      {isVerified &&
-        <VerificationBadge
-          style={{
-            position: 'absolute',
-            top: 18,
-            right: 18,
-          }}
-          size={28}
-        />
-      }
-    </Pressable>
   );
 };
 
@@ -336,28 +276,26 @@ const FloatingSkipButton = ({personUuid, isSkipped}) => {
 
 const FloatingSendIntroButton = ({
   navigation,
-  personId,
   personUuid,
   name,
   imageUuid,
   imageBlurhash,
 }) => {
   const onPress = useCallback(() => {
-    if (personId === undefined) return;
     if (name === undefined) return;
 
     navigation.navigate(
       'Conversation Screen',
-      { personId, personUuid, name, imageUuid, imageBlurhash }
+      { personUuid, name, imageUuid, imageBlurhash }
     );
-  }, [navigation, personId, name, imageUuid]);
+  }, [navigation, name, imageUuid]);
 
   return (
     <FloatingProfileInteractionButton
       onPress={onPress}
       backgroundColor="#70f"
     >
-      {personId !== undefined && name !== undefined &&
+      {personUuid !== undefined && name !== undefined &&
         <FontAwesomeIcon
           icon={faPaperPlane}
           size={24}
@@ -839,12 +777,11 @@ const CurriedContent = ({navigationRef, navigation, route}) => {
                 imageUuid={imageUuid0}
                 imageExtraExts={imageExtraExts0}
                 imageBlurhash={imageBlurhash0}
-                onChangeEmbiggened={goToGallery(navigation, imageUuid0)}
                 isPrimary={true}
                 isVerified={imageVerification0}
                 style={
                   width > 600 ?
-                  styles.primaryEnlargeableImageBigScreen :
+                  commonStyles.primaryEnlargeableImageBigScreen :
                   undefined
                 }
               />
@@ -895,7 +832,6 @@ const CurriedContent = ({navigationRef, navigation, route}) => {
             />
             <FloatingSendIntroButton
               navigation={navigation}
-              personId={data?.person_id}
               personUuid={personUuid}
               name={data?.name}
               imageUuid={imageUuid}
@@ -1232,9 +1168,8 @@ const Body = ({
           imageUuid={imageUuid1}
           imageExtraExts={imageExtraExts1}
           imageBlurhash={imageBlurhash1}
-          onChangeEmbiggened={goToGallery(navigation, imageUuid1)}
-          style={styles.secondaryEnlargeableImage}
-          innerStyle={styles.secondaryEnlargeableImageInner}
+          style={commonStyles.secondaryEnlargeableImage}
+          innerStyle={commonStyles.secondaryEnlargeableImageInner}
           isPrimary={false}
           isVerified={imageVerification1}
         />
@@ -1255,9 +1190,8 @@ const Body = ({
           imageUuid={imageUuid2}
           imageExtraExts={imageExtraExts2}
           imageBlurhash={imageBlurhash2}
-          onChangeEmbiggened={goToGallery(navigation, imageUuid2)}
-          style={styles.secondaryEnlargeableImage}
-          innerStyle={styles.secondaryEnlargeableImageInner}
+          style={commonStyles.secondaryEnlargeableImage}
+          innerStyle={commonStyles.secondaryEnlargeableImageInner}
           isPrimary={false}
           isVerified={imageVerification2}
         />
@@ -1266,9 +1200,8 @@ const Body = ({
           imageUuid={imageUuid3}
           imageExtraExts={imageExtraExts3}
           imageBlurhash={imageBlurhash3}
-          onChangeEmbiggened={goToGallery(navigation, imageUuid3)}
-          style={styles.secondaryEnlargeableImage}
-          innerStyle={styles.secondaryEnlargeableImageInner}
+          style={commonStyles.secondaryEnlargeableImage}
+          innerStyle={commonStyles.secondaryEnlargeableImageInner}
           isPrimary={false}
           isVerified={imageVerification3}
         />
@@ -1285,9 +1218,8 @@ const Body = ({
           imageUuid={imageUuid4}
           imageExtraExts={imageExtraExts4}
           imageBlurhash={imageBlurhash4}
-          onChangeEmbiggened={goToGallery(navigation, imageUuid4)}
-          style={styles.secondaryEnlargeableImage}
-          innerStyle={styles.secondaryEnlargeableImageInner}
+          style={commonStyles.secondaryEnlargeableImage}
+          innerStyle={commonStyles.secondaryEnlargeableImageInner}
           isPrimary={false}
           isVerified={imageVerification4}
         />
@@ -1296,9 +1228,8 @@ const Body = ({
           imageUuid={imageUuid5}
           imageExtraExts={imageExtraExts5}
           imageBlurhash={imageBlurhash5}
-          onChangeEmbiggened={goToGallery(navigation, imageUuid5)}
-          style={styles.secondaryEnlargeableImage}
-          innerStyle={styles.secondaryEnlargeableImageInner}
+          style={commonStyles.secondaryEnlargeableImage}
+          innerStyle={commonStyles.secondaryEnlargeableImageInner}
           isPrimary={false}
           isVerified={imageVerification5}
         />
@@ -1307,9 +1238,8 @@ const Body = ({
           imageUuid={imageUuid6}
           imageExtraExts={imageExtraExts6}
           imageBlurhash={imageBlurhash6}
-          onChangeEmbiggened={goToGallery(navigation, imageUuid6)}
-          style={styles.secondaryEnlargeableImage}
-          innerStyle={styles.secondaryEnlargeableImageInner}
+          style={commonStyles.secondaryEnlargeableImage}
+          innerStyle={commonStyles.secondaryEnlargeableImageInner}
           isPrimary={false}
           isVerified={imageVerification6}
         />
@@ -1398,19 +1328,6 @@ const Body = ({
 };
 
 const styles = StyleSheet.create({
-  primaryEnlargeableImageBigScreen: {
-    overflow: 'hidden',
-    borderBottomLeftRadius: 10,
-    borderBottomRightRadius: 10,
-  },
-  secondaryEnlargeableImage: {
-    borderRadius: 10,
-    overflow: 'hidden',
-    marginTop: 10,
-    marginBottom: 10,
-  },
-  secondaryEnlargeableImageInner: {
-  },
   wFull: {
     width: '100%',
   },

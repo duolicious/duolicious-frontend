@@ -27,6 +27,7 @@ import SearchTab from './components/search-tab';
 import { QuizTab } from './components/quiz-tab';
 import ProfileTab from './components/profile-tab';
 import InboxTab from './components/inbox-tab';
+import { FeedTab } from './components/feed-tab';
 import { TraitsTab } from './components/traits-tab';
 import { ConversationScreen } from './components/conversation-screen/conversation-screen';
 import { UtilityScreen } from './components/utility-screen';
@@ -87,6 +88,7 @@ const HomeTabs = () => {
       <Tab.Screen name="Q&A" component={QuizTab} />
       <Tab.Screen name="Search" component={SearchTab} />
       <Tab.Screen name="Inbox" component={InboxTab} />
+      <Tab.Screen name="Feed" component={FeedTab} />
       <Tab.Screen name="Traits" component={TraitsTab} />
       <Tab.Screen name="Profile" component={ProfileTab} />
     </Tab.Navigator>

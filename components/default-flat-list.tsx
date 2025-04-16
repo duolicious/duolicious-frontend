@@ -275,7 +275,7 @@ const EndTextNotice = ({
   }
 };
 
-const DefaultFlatList = forwardRef(<ItemT,>(props: DefaultFlatListProps<ItemT>, ref) => {
+const InternalDefaultFlatList = <ItemT,>(props: DefaultFlatListProps<ItemT>, ref) => {
   const contentHeight = useRef(0);
   const viewportHeight = useRef(0);
 
@@ -412,7 +412,13 @@ const DefaultFlatList = forwardRef(<ItemT,>(props: DefaultFlatListProps<ItemT>, 
       onLayout={onLayout}
     />
   );
-});
+};
+
+const DefaultFlatList =
+  forwardRef(InternalDefaultFlatList) as <ItemT>(
+    props: DefaultFlatListProps<ItemT> &
+           React.RefAttributes<FlatList<ItemT>>
+  ) => React.ReactElement | null;
 
 export {
   DefaultFlatList,

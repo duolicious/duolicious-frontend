@@ -269,7 +269,6 @@ const Menu = ({navigation, name, personUuid, closeFn}) => {
 
 const ConversationScreenNavBar = ({
   navigation,
-  personId,
   personUuid,
   isAvailableUser,
   imageUuid,
@@ -285,11 +284,11 @@ const ConversationScreenNavBar = ({
         'Prospect Profile Screen',
         {
           screen: 'Prospect Profile',
-          params: { personId, personUuid, showBottomButtons: false },
+          params: { personUuid, showBottomButtons: false },
         }
       );
     }
-  }, [isAvailableUser, personId, name]);
+  }, [isAvailableUser, name]);
 
   const toggleMenu = useCallback(() => {
     setShowMenu(x => !x);
@@ -428,7 +427,6 @@ const ConversationScreen = ({navigation, route}) => {
 
   const duplicatedMessageIds = getDuplicates(messageIds ?? []);
 
-  const personId: number = route?.params?.personId;
   const personUuid: string = route?.params?.personUuid;
   const name: string = route?.params?.name;
   const imageUuid: string = route?.params?.imageUuid;
@@ -617,7 +615,7 @@ const ConversationScreen = ({navigation, route}) => {
     // conversation screen was already open on a conversation with a different
     // person, then the screen should be cleared.
     setMessageIds(null);
-  }, [personUuid, personId]);
+  }, [personUuid]);
 
   useEffect(() => {
     if (isActive && isOnline) {
@@ -677,7 +675,6 @@ const ConversationScreen = ({navigation, route}) => {
     <SafeAreaView style={styles.safeAreaView}>
       <ConversationScreenNavBar
         navigation={navigation}
-        personId={personId}
         personUuid={personUuid}
         isAvailableUser={isAvailableUser}
         imageUuid={imageUuid}
