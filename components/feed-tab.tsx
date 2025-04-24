@@ -10,7 +10,7 @@ import { useScrollbar } from './navigation/scroll-bar-hooks';
 import { Avatar } from './avatar';
 import { getShortElapsedTime } from '../util/util';
 import { Pressable } from 'react-native';
-import { EnlargeableImage } from './enlargeable-image';
+import { EnlargeablePhoto } from './enlargeable-image';
 import { commonStyles } from '../styles';
 import { useOnline } from '../chat/application-layer/hooks/online';
 import { ONLINE_COLOR } from '../constants/constants';
@@ -26,8 +26,8 @@ const DataItemBaseSchema = z.object({
   time: z.string(),
   person_uuid: z.string(),
   name: z.string(),
-  image_uuid: z.string().nullable(),
-  image_blurhash: z.string().nullable(),
+  photo_uuid: z.string().nullable(),
+  photo_blurhash: z.string().nullable(),
   is_verified: z.boolean(),
   match_percentage: z.number(),
 });
@@ -37,9 +37,9 @@ const DataItemJoinedSchema = DataItemBaseSchema.extend({
 });
 
 const DataItemAddedImageSchema = DataItemBaseSchema.extend({
-  type: z.literal('added-image'),
-  added_image_uuid: z.string(),
-  added_image_blurhash: z.string(),
+  type: z.literal('added-photo'),
+  added_photo_uuid: z.string(),
+  added_photo_blurhash: z.string(),
 });
 
 const DataItemUpdatedBioSchema = DataItemBaseSchema.extend({
@@ -94,7 +94,7 @@ const fetchPage = async (pageNumber: number): Promise<DataItem[] | null> => {
 
 const useNavigationToProfile = (
   personUuid: string,
-  imageBlurhash: string | null
+  photoBlurhash: string | null
 ) => {
   const navigation = useNavigation<any>();
 
@@ -103,13 +103,13 @@ const useNavigationToProfile = (
       'Prospect Profile Screen',
       {
         screen: 'Prospect Profile',
-        params: { personUuid, imageBlurhash },
+        params: { personUuid, photoBlurhash },
       }
     );
-  }, [personUuid, imageBlurhash]);
+  }, [personUuid, photoBlurhash]);
 };
 
-const useNavigationToProfileGallery = (imageUuid) => {
+const useNavigationToProfileGallery = (photoUuid) => {
   const navigation = useNavigation<any>();
 
   return useCallback(() => {
@@ -117,10 +117,10 @@ const useNavigationToProfileGallery = (imageUuid) => {
       'Prospect Profile Screen',
       {
         screen: 'Gallery Screen',
-        params: { imageUuid },
+        params: { photoUuid },
       }
     );
-  }, [imageUuid]);
+  }, [photoUuid]);
 };
 
 const NameActionTime = ({
@@ -193,7 +193,7 @@ const NameActionTime = ({
 const FeedItemJoined = ({ dataItem }: { dataItem: DataItemJoined }) => {
   const onPress = useNavigationToProfile(
     dataItem.person_uuid,
-    dataItem.image_blurhash,
+    dataItem.photo_blurhash,
   );
 
   return (
@@ -218,10 +218,10 @@ const FeedItemJoined = ({ dataItem }: { dataItem: DataItemJoined }) => {
 const FeedItemAddedImage = ({ dataItem }: { dataItem: DataItemAddedImage }) => {
   const onPress = useNavigationToProfile(
     dataItem.person_uuid,
-    dataItem.image_blurhash,
+    dataItem.photo_blurhash,
   );
 
-  const onPressImage = useNavigationToProfileGallery(dataItem.added_image_uuid);
+  const onPressImage = useNavigationToProfileGallery(dataItem.added_photo_uuid);
 
   return (
     <Pressable
@@ -240,13 +240,13 @@ const FeedItemAddedImage = ({ dataItem }: { dataItem: DataItemAddedImage }) => {
         time={new Date(dataItem.time)}
       />
 
-      <EnlargeableImage
+      <EnlargeablePhoto
         onPress={onPressImage}
-        imageUuid={dataItem.added_image_uuid}
-        imageBlurhash={dataItem.added_image_blurhash}
+        photoUuid={dataItem.added_photo_uuid}
+        photoBlurhash={dataItem.added_photo_blurhash}
         isPrimary={true}
         style={{
-          ...commonStyles.secondaryEnlargeableImage,
+          ...commonStyles.secondaryEnlargeablePhoto,
           marginTop: 0,
           marginBottom: 0,
         }}
@@ -258,7 +258,7 @@ const FeedItemAddedImage = ({ dataItem }: { dataItem: DataItemAddedImage }) => {
 const FeedItemUpdatedBio = ({ dataItem }: { dataItem: DataItemUpdatedBio }) => {
   const onPress = useNavigationToProfile(
     dataItem.person_uuid,
-    dataItem.image_blurhash,
+    dataItem.photo_blurhash,
   );
 
   return (
@@ -274,8 +274,8 @@ const FeedItemUpdatedBio = ({ dataItem }: { dataItem: DataItemUpdatedBio }) => {
       <Avatar
         percentage={dataItem.match_percentage}
         personUuid={dataItem.person_uuid}
-        imageUuid={dataItem.image_uuid}
-        imageBlurhash={dataItem.image_blurhash}
+        photoUuid={dataItem.photo_uuid}
+        photoBlurhash={dataItem.photo_blurhash}
         doUseOnline={false}
       />
       <View style={{ flex: 1, gap: NAME_ACTION_TIME_GAP }}>
@@ -307,7 +307,7 @@ const FeedItemUpdatedBio = ({ dataItem }: { dataItem: DataItemUpdatedBio }) => {
 const FeedItem = ({ dataItem }: { dataItem: DataItem }) => {
   if (dataItem.type === 'joined') {
     return <FeedItemJoined dataItem={dataItem} />;
-  } else if (dataItem.type === 'added-image') {
+  } else if (dataItem.type === 'added-photo') {
     return <FeedItemAddedImage dataItem={dataItem} />;
   } else if (dataItem.type === 'updated-bio') {
     return <FeedItemUpdatedBio dataItem={dataItem} />;

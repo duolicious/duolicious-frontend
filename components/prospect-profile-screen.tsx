@@ -65,7 +65,7 @@ import { useOnline } from '../chat/application-layer/hooks/online';
 import { ONLINE_COLOR } from '../constants/constants';
 import { HeartBackground } from './heart-background';
 import { AudioPlayer } from './audio-player';
-import { EnlargeableImage } from './enlargeable-image';
+import { EnlargeablePhoto } from './enlargeable-image';
 import { commonStyles } from '../styles';
 
 const Stack = createNativeStackNavigator();
@@ -97,11 +97,11 @@ const ProspectProfileScreen = () => {
 };
 
 const GalleryScreen = ({navigation, route}) => {
-  const { imageUuid } = route.params;
+  const { photoUuid } = route.params;
 
   return (
     <>
-      <Pinchy uuid={imageUuid}/>
+      <Pinchy uuid={photoUuid}/>
       <StatusBarSpacer/>
       <FloatingBackButton onPress={() => navigation.goBack()}/>
     </>
@@ -278,17 +278,17 @@ const FloatingSendIntroButton = ({
   navigation,
   personUuid,
   name,
-  imageUuid,
-  imageBlurhash,
+  photoUuid,
+  photoBlurhash,
 }) => {
   const onPress = useCallback(() => {
     if (name === undefined) return;
 
     navigation.navigate(
       'Conversation Screen',
-      { personUuid, name, imageUuid, imageBlurhash }
+      { personUuid, name, photoUuid, photoBlurhash }
     );
-  }, [navigation, name, imageUuid]);
+  }, [navigation, name, photoUuid]);
 
   return (
     <FloatingProfileInteractionButton
@@ -682,7 +682,7 @@ const CurriedContent = ({navigationRef, navigation, route}) => {
   const personId = route.params.personId;
   const personUuid = route.params.personUuid;
   const showBottomButtons = route.params.showBottomButtons ?? true;
-  const imageBlurhashParam = route.params.imageBlurhash;
+  const photoBlurhashParam = route.params.photoBlurhash;
 
   const [data, setData] = useState<UserData | undefined>(undefined);
 
@@ -702,51 +702,51 @@ const CurriedContent = ({navigationRef, navigation, route}) => {
     [personUuid, navigation]
   );
 
-  const imageUuid = data === undefined ?
+  const photoUuid = data === undefined ?
     undefined :
     data.photo_uuids.length === 0 ?
     null :
     data.photo_uuids[0];
 
-  const imageUuids = data?.photo_uuids;
+  const photoUuids = data?.photo_uuids;
 
-  const imageExtraExts = data?.photo_extra_exts;
+  const photoExtraExts = data?.photo_extra_exts;
 
-  const imageBlurhashes = data?.photo_blurhashes;
+  const photoBlurhashes = data?.photo_blurhashes;
 
   const imageVerifications = data?.photo_verifications;
 
-  const imageUuid0 = (() => {
-    if (imageUuids === undefined) {
+  const photoUuid0 = (() => {
+    if (photoUuids === undefined) {
       return undefined;
     }
-    if (imageUuids.length === 0) {
+    if (photoUuids.length === 0) {
       return null;
     }
-    return imageUuids[0];
+    return photoUuids[0];
   })();
 
-  const imageExtraExts0 = (() => {
-    if (imageExtraExts === undefined) {
+  const photoExtraExts0 = (() => {
+    if (photoExtraExts === undefined) {
       return undefined;
     }
-    if (imageExtraExts.length === 0) {
+    if (photoExtraExts.length === 0) {
       return null;
     }
-    return imageExtraExts[0];
+    return photoExtraExts[0];
   })();
 
-  const imageBlurhash0 = (() => {
-    if (imageBlurhashParam) {
-      return imageBlurhashParam;
+  const photoBlurhash0 = (() => {
+    if (photoBlurhashParam) {
+      return photoBlurhashParam;
     }
-    if (imageBlurhashes === undefined) {
+    if (photoBlurhashes === undefined) {
       return undefined;
     }
-    if (imageBlurhashes.length === 0) {
+    if (photoBlurhashes.length === 0) {
       return null;
     }
-    return imageBlurhashes[0];
+    return photoBlurhashes[0];
   })();
 
   const imageVerification0 = imageVerifications && imageVerifications[0];
@@ -773,15 +773,15 @@ const CurriedContent = ({navigationRef, navigation, route}) => {
                 paddingBottom: 100,
               }}
             >
-              <EnlargeableImage
-                imageUuid={imageUuid0}
-                imageExtraExts={imageExtraExts0}
-                imageBlurhash={imageBlurhash0}
+              <EnlargeablePhoto
+                photoUuid={photoUuid0}
+                photoExtraExts={photoExtraExts0}
+                photoBlurhash={photoBlurhash0}
                 isPrimary={true}
                 isVerified={imageVerification0}
                 style={
                   width > 600 ?
-                  commonStyles.primaryEnlargeableImageBigScreen :
+                  commonStyles.primaryEnlargeablePhotoBigScreen :
                   undefined
                 }
               />
@@ -834,8 +834,8 @@ const CurriedContent = ({navigationRef, navigation, route}) => {
               navigation={navigation}
               personUuid={personUuid}
               name={data?.name}
-              imageUuid={imageUuid}
-              imageBlurhash={imageBlurhash0}
+              photoUuid={photoUuid}
+              photoBlurhash={photoBlurhash0}
             />
           </View>
         </View>
@@ -993,26 +993,26 @@ const Body = ({
 }) => {
   const isOnline = useOnline(personUuid);
 
-  const imageUuid1 = data?.photo_uuids && data?.photo_uuids[1];
-  const imageUuid2 = data?.photo_uuids && data?.photo_uuids[2];
-  const imageUuid3 = data?.photo_uuids && data?.photo_uuids[3];
-  const imageUuid4 = data?.photo_uuids && data?.photo_uuids[4];
-  const imageUuid5 = data?.photo_uuids && data?.photo_uuids[5];
-  const imageUuid6 = data?.photo_uuids && data?.photo_uuids[6];
+  const photoUuid1 = data?.photo_uuids && data?.photo_uuids[1];
+  const photoUuid2 = data?.photo_uuids && data?.photo_uuids[2];
+  const photoUuid3 = data?.photo_uuids && data?.photo_uuids[3];
+  const photoUuid4 = data?.photo_uuids && data?.photo_uuids[4];
+  const photoUuid5 = data?.photo_uuids && data?.photo_uuids[5];
+  const photoUuid6 = data?.photo_uuids && data?.photo_uuids[6];
 
-  const imageExtraExts1 = data?.photo_extra_exts && data?.photo_extra_exts[1];
-  const imageExtraExts2 = data?.photo_extra_exts && data?.photo_extra_exts[2];
-  const imageExtraExts3 = data?.photo_extra_exts && data?.photo_extra_exts[3];
-  const imageExtraExts4 = data?.photo_extra_exts && data?.photo_extra_exts[4];
-  const imageExtraExts5 = data?.photo_extra_exts && data?.photo_extra_exts[5];
-  const imageExtraExts6 = data?.photo_extra_exts && data?.photo_extra_exts[6];
+  const photoExtraExts1 = data?.photo_extra_exts && data?.photo_extra_exts[1];
+  const photoExtraExts2 = data?.photo_extra_exts && data?.photo_extra_exts[2];
+  const photoExtraExts3 = data?.photo_extra_exts && data?.photo_extra_exts[3];
+  const photoExtraExts4 = data?.photo_extra_exts && data?.photo_extra_exts[4];
+  const photoExtraExts5 = data?.photo_extra_exts && data?.photo_extra_exts[5];
+  const photoExtraExts6 = data?.photo_extra_exts && data?.photo_extra_exts[6];
 
-  const imageBlurhash1 = data?.photo_blurhashes && data?.photo_blurhashes[1];
-  const imageBlurhash2 = data?.photo_blurhashes && data?.photo_blurhashes[2];
-  const imageBlurhash3 = data?.photo_blurhashes && data?.photo_blurhashes[3];
-  const imageBlurhash4 = data?.photo_blurhashes && data?.photo_blurhashes[4];
-  const imageBlurhash5 = data?.photo_blurhashes && data?.photo_blurhashes[5];
-  const imageBlurhash6 = data?.photo_blurhashes && data?.photo_blurhashes[6];
+  const photoBlurhash1 = data?.photo_blurhashes && data?.photo_blurhashes[1];
+  const photoBlurhash2 = data?.photo_blurhashes && data?.photo_blurhashes[2];
+  const photoBlurhash3 = data?.photo_blurhashes && data?.photo_blurhashes[3];
+  const photoBlurhash4 = data?.photo_blurhashes && data?.photo_blurhashes[4];
+  const photoBlurhash5 = data?.photo_blurhashes && data?.photo_blurhashes[5];
+  const photoBlurhash6 = data?.photo_blurhashes && data?.photo_blurhashes[6];
 
   const imageVerification1 = data?.photo_verifications && data?.photo_verifications[1] || false;
   const imageVerification2 = data?.photo_verifications && data?.photo_verifications[2] || false;
@@ -1164,12 +1164,12 @@ const Body = ({
           </>
         }
 
-        <EnlargeableImage
-          imageUuid={imageUuid1}
-          imageExtraExts={imageExtraExts1}
-          imageBlurhash={imageBlurhash1}
-          style={commonStyles.secondaryEnlargeableImage}
-          innerStyle={commonStyles.secondaryEnlargeableImageInner}
+        <EnlargeablePhoto
+          photoUuid={photoUuid1}
+          photoExtraExts={photoExtraExts1}
+          photoBlurhash={photoBlurhash1}
+          style={commonStyles.secondaryEnlargeablePhoto}
+          innerStyle={commonStyles.secondaryEnlargeablePhotoInner}
           isPrimary={false}
           isVerified={imageVerification1}
         />
@@ -1186,22 +1186,22 @@ const Body = ({
           </>
         }
 
-        <EnlargeableImage
-          imageUuid={imageUuid2}
-          imageExtraExts={imageExtraExts2}
-          imageBlurhash={imageBlurhash2}
-          style={commonStyles.secondaryEnlargeableImage}
-          innerStyle={commonStyles.secondaryEnlargeableImageInner}
+        <EnlargeablePhoto
+          photoUuid={photoUuid2}
+          photoExtraExts={photoExtraExts2}
+          photoBlurhash={photoBlurhash2}
+          style={commonStyles.secondaryEnlargeablePhoto}
+          innerStyle={commonStyles.secondaryEnlargeablePhotoInner}
           isPrimary={false}
           isVerified={imageVerification2}
         />
 
-        <EnlargeableImage
-          imageUuid={imageUuid3}
-          imageExtraExts={imageExtraExts3}
-          imageBlurhash={imageBlurhash3}
-          style={commonStyles.secondaryEnlargeableImage}
-          innerStyle={commonStyles.secondaryEnlargeableImageInner}
+        <EnlargeablePhoto
+          photoUuid={photoUuid3}
+          photoExtraExts={photoExtraExts3}
+          photoBlurhash={photoBlurhash3}
+          style={commonStyles.secondaryEnlargeablePhoto}
+          innerStyle={commonStyles.secondaryEnlargeablePhotoInner}
           isPrimary={false}
           isVerified={imageVerification3}
         />
@@ -1214,32 +1214,32 @@ const Body = ({
           titleColor={data?.theme?.title_color}
         />
 
-        <EnlargeableImage
-          imageUuid={imageUuid4}
-          imageExtraExts={imageExtraExts4}
-          imageBlurhash={imageBlurhash4}
-          style={commonStyles.secondaryEnlargeableImage}
-          innerStyle={commonStyles.secondaryEnlargeableImageInner}
+        <EnlargeablePhoto
+          photoUuid={photoUuid4}
+          photoExtraExts={photoExtraExts4}
+          photoBlurhash={photoBlurhash4}
+          style={commonStyles.secondaryEnlargeablePhoto}
+          innerStyle={commonStyles.secondaryEnlargeablePhotoInner}
           isPrimary={false}
           isVerified={imageVerification4}
         />
 
-        <EnlargeableImage
-          imageUuid={imageUuid5}
-          imageExtraExts={imageExtraExts5}
-          imageBlurhash={imageBlurhash5}
-          style={commonStyles.secondaryEnlargeableImage}
-          innerStyle={commonStyles.secondaryEnlargeableImageInner}
+        <EnlargeablePhoto
+          photoUuid={photoUuid5}
+          photoExtraExts={photoExtraExts5}
+          photoBlurhash={photoBlurhash5}
+          style={commonStyles.secondaryEnlargeablePhoto}
+          innerStyle={commonStyles.secondaryEnlargeablePhotoInner}
           isPrimary={false}
           isVerified={imageVerification5}
         />
 
-        <EnlargeableImage
-          imageUuid={imageUuid6}
-          imageExtraExts={imageExtraExts6}
-          imageBlurhash={imageBlurhash6}
-          style={commonStyles.secondaryEnlargeableImage}
-          innerStyle={commonStyles.secondaryEnlargeableImageInner}
+        <EnlargeablePhoto
+          photoUuid={photoUuid6}
+          photoExtraExts={photoExtraExts6}
+          photoBlurhash={photoBlurhash6}
+          style={commonStyles.secondaryEnlargeablePhoto}
+          innerStyle={commonStyles.secondaryEnlargeablePhotoInner}
           isPrimary={false}
           isVerified={imageVerification6}
         />

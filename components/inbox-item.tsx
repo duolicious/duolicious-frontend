@@ -20,16 +20,16 @@ const IntrosItem = ({
   wasRead,
   name,
   personUuid,
-  imageUuid,
-  imageBlurhash,
+  photoUuid,
+  photoBlurhash,
   matchPercentage,
   isVerified,
 }: {
   wasRead: boolean
   name: string
   personUuid: string
-  imageUuid: string | null
-  imageBlurhash: string | null
+  photoUuid: string | null
+  photoBlurhash: string | null
   matchPercentage: number
   lastMessage: string
   lastMessageTimestamp: Date
@@ -66,7 +66,7 @@ const IntrosItem = ({
     'Prospect Profile Screen',
     {
       screen: 'Prospect Profile',
-      params: { personUuid, imageBlurhash },
+      params: { personUuid, photoBlurhash },
     }
   ), [personUuid]);
 
@@ -101,8 +101,8 @@ const IntrosItem = ({
       >
         <Avatar
           percentage={matchPercentage}
-          imageUuid={imageUuid}
-          imageBlurhash={imageBlurhash}
+          photoUuid={photoUuid}
+          photoBlurhash={photoBlurhash}
           personUuid={personUuid}
         />
         <View
@@ -157,8 +157,8 @@ const ChatsItem = ({
   wasRead,
   name,
   personUuid,
-  imageUuid,
-  imageBlurhash,
+  photoUuid,
+  photoBlurhash,
   matchPercentage,
   lastMessage,
   lastMessageTimestamp,
@@ -168,8 +168,8 @@ const ChatsItem = ({
   wasRead: boolean
   name: string
   personUuid: string
-  imageUuid: string | null
-  imageBlurhash: string | null
+  photoUuid: string | null
+  photoBlurhash: string | null
   matchPercentage: number
   lastMessage: string
   lastMessageTimestamp: Date
@@ -204,8 +204,8 @@ const ChatsItem = ({
 
   const onPress = useCallback(() => navigation.navigate(
     'Conversation Screen',
-    { personUuid, name, imageUuid, imageBlurhash, isAvailableUser }
-  ), [personUuid, name, imageUuid, imageBlurhash, isAvailableUser]);
+    { personUuid, name, photoUuid, photoBlurhash, isAvailableUser }
+  ), [personUuid, name, photoUuid, photoBlurhash, isAvailableUser]);
 
   return (
     <Pressable
@@ -228,8 +228,8 @@ const ChatsItem = ({
       >
         <Avatar
           percentage={matchPercentage}
-          imageUuid={imageUuid}
-          imageBlurhash={imageBlurhash}
+          photoUuid={photoUuid}
+          photoBlurhash={photoBlurhash}
           personUuid={personUuid}
         />
         <View

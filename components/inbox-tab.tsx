@@ -274,8 +274,8 @@ const InboxTab = () => {
         wasRead={x.item.lastMessageRead}
         name={x.item.name}
         personUuid={x.item.personUuid}
-        imageUuid={x.item.imageUuid}
-        imageBlurhash={x.item.imageBlurhash}
+        photoUuid={x.item.photoUuid}
+        photoBlurhash={x.item.photoBlurhash}
         matchPercentage={x.item.matchPercentage}
         lastMessage={x.item.lastMessage}
         lastMessageTimestamp={x.item.lastMessageTimestamp}
@@ -287,8 +287,8 @@ const InboxTab = () => {
         wasRead={x.item.lastMessageRead}
         name={x.item.name}
         personUuid={x.item.personUuid}
-        imageUuid={x.item.imageUuid}
-        imageBlurhash={x.item.imageBlurhash}
+        photoUuid={x.item.photoUuid}
+        photoBlurhash={x.item.photoBlurhash}
         matchPercentage={x.item.matchPercentage}
         lastMessage={x.item.lastMessage}
         lastMessageTimestamp={x.item.lastMessageTimestamp}

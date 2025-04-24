@@ -271,8 +271,8 @@ const ConversationScreenNavBar = ({
   navigation,
   personUuid,
   isAvailableUser,
-  imageUuid,
-  imageBlurhash,
+  photoUuid,
+  photoBlurhash,
   name,
   isOnline,
 }) => {
@@ -284,7 +284,7 @@ const ConversationScreenNavBar = ({
         'Prospect Profile Screen',
         {
           screen: 'Prospect Profile',
-          params: { personUuid, showBottomButtons: false },
+          params: { personUuid, photoBlurhash, showBottomButtons: false },
         }
       );
     }
@@ -322,24 +322,24 @@ const ConversationScreenNavBar = ({
           }}
         >
           <ImageBackground
-            source={imageUuid && {
-              uri: `${IMAGES_URL}/450-${imageUuid}.jpg`,
+            source={photoUuid && {
+              uri: `${IMAGES_URL}/450-${photoUuid}.jpg`,
               height: 30,
               width: 30,
             }}
-            placeholder={imageBlurhash && { blurhash: imageBlurhash }}
+            placeholder={photoBlurhash && { blurhash: photoBlurhash }}
             transition={150}
             style={{
               width: 30,
               height: 30,
               borderRadius: 9999,
-              backgroundColor: imageUuid ? 'white' : '#f1e5ff',
+              backgroundColor: photoUuid ? 'white' : '#f1e5ff',
               justifyContent: 'center',
               alignItems: 'center',
               overflow: 'hidden',
             }}
           >
-            {!imageUuid &&
+            {!photoUuid &&
               <Ionicons
                 style={{fontSize: 14, color: 'rgba(119, 0, 255, 0.2)'}}
                 name={'person'}
@@ -429,8 +429,8 @@ const ConversationScreen = ({navigation, route}) => {
 
   const personUuid: string = route?.params?.personUuid;
   const name: string = route?.params?.name;
-  const imageUuid: string = route?.params?.imageUuid;
-  const imageBlurhash: string = route?.params?.imageBlurhash;
+  const photoUuid: string = route?.params?.photoUuid;
+  const photoBlurhash: string = route?.params?.photoBlurhash;
   const isAvailableUser: boolean = route?.params?.isAvailableUser ?? true;
 
   const listRef = useRef<ScrollView>(null);
@@ -677,8 +677,8 @@ const ConversationScreen = ({navigation, route}) => {
         navigation={navigation}
         personUuid={personUuid}
         isAvailableUser={isAvailableUser}
-        imageUuid={imageUuid}
-        imageBlurhash={imageBlurhash}
+        photoUuid={photoUuid}
+        photoBlurhash={photoBlurhash}
         name={name}
         isOnline={isOnline}
       />
@@ -722,12 +722,12 @@ const ConversationScreen = ({navigation, route}) => {
           {messageIds.length === 0 &&
             <>
               <ImageBackground
-                source={imageUuid && {
-                  uri: `${IMAGES_URL}/450-${imageUuid}.jpg`,
+                source={photoUuid && {
+                  uri: `${IMAGES_URL}/450-${photoUuid}.jpg`,
                   height: 450,
                   width: 450,
                 }}
-                placeholder={imageBlurhash && { blurhash: imageBlurhash }}
+                placeholder={photoBlurhash && { blurhash: photoBlurhash }}
                 transition={150}
                 style={{
                   height: 200,
@@ -735,14 +735,14 @@ const ConversationScreen = ({navigation, route}) => {
                   margin: 2,
                   borderRadius: 999,
                   borderColor: 'white',
-                  backgroundColor: imageUuid ? 'white' : '#f1e5ff',
+                  backgroundColor: photoUuid ? 'white' : '#f1e5ff',
                   overflow: 'hidden',
                   justifyContent: 'center',
                   alignItems: 'center',
                   alignSelf: 'center',
                 }}
               >
-                {!imageUuid &&
+                {!photoUuid &&
                   <Ionicons
                     style={{fontSize: 40, color: 'rgba(119, 0, 255, 0.2)'}}
                     name={'person'}
@@ -797,14 +797,14 @@ const ConversationScreen = ({navigation, route}) => {
                 <SpeechBubble
                   messageId={messageId}
                   name={name}
-                  avatarUuid={imageUuid}
+                  avatarUuid={photoUuid}
                 />
               </Fragment>
             );
           })}
           <TypingSpeechBubble
             personUuid={personUuid}
-            avatarUuid={imageUuid}
+            avatarUuid={photoUuid}
           />
         </ScrollView>
       }

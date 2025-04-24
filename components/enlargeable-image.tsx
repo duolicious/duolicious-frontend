@@ -1,23 +1,23 @@
 import { useCallback } from 'react';
 import { GestureResponderEvent, Pressable } from 'react-native';
-import { ImageOrSkeleton } from './profile-card';
+import { PhotoOrSkeleton } from './profile-card';
 import { VerificationBadge } from './verification-badge';
 import * as _ from 'lodash';
 import { useNavigation } from '@react-navigation/native';
 
-const EnlargeableImage = ({
-  imageUuid,
-  imageExtraExts,
-  imageBlurhash,
+const EnlargeablePhoto = ({
+  photoUuid,
+  photoExtraExts,
+  photoBlurhash,
   style,
   innerStyle,
   isPrimary,
   isVerified = false,
   onPress,
 }: {
-  imageUuid: string | undefined | null
-  imageExtraExts?: string[] | undefined | null
-  imageBlurhash: string | undefined | null
+  photoUuid: string | undefined | null
+  photoExtraExts?: string[] | undefined | null
+  photoBlurhash: string | undefined | null
   style?: any
   innerStyle?: any
   isPrimary: boolean
@@ -37,19 +37,19 @@ const EnlargeableImage = ({
       return onPress();
     }
 
-    if (imageUuid) {
-      return navigation.navigate('Gallery Screen', { imageUuid });
+    if (photoUuid) {
+      return navigation.navigate('Gallery Screen', { photoUuid });
     }
-  }, [imageUuid]);
+  }, [photoUuid]);
 
 
-  if (imageUuid === undefined && !isPrimary) {
+  if (photoUuid === undefined && !isPrimary) {
     return <></>;
   }
 
   return (
     <Pressable
-      disabled={!!imageExtraExts?.length || !imageUuid}
+      disabled={!!photoExtraExts?.length || !photoUuid}
       onPress={internalOnPress}
       style={[
         {
@@ -59,11 +59,11 @@ const EnlargeableImage = ({
         style,
       ]}
     >
-      <ImageOrSkeleton
+      <PhotoOrSkeleton
         resolution={900}
-        imageExtraExts={imageExtraExts}
-        imageUuid={imageUuid}
-        imageBlurhash={imageBlurhash}
+        photoExtraExts={photoExtraExts}
+        photoUuid={photoUuid}
+        photoBlurhash={photoBlurhash}
         showGradient={false}
         style={innerStyle}
         forceExpoImage={true}
@@ -83,5 +83,5 @@ const EnlargeableImage = ({
 };
 
 export {
-  EnlargeableImage,
+  EnlargeablePhoto,
 }

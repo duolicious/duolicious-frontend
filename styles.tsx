@@ -1,18 +1,18 @@
 import { StyleSheet } from 'react-native';
 
 const commonStyles = StyleSheet.create({
-  primaryEnlargeableImageBigScreen: {
+  primaryEnlargeablePhotoBigScreen: {
     overflow: 'hidden',
     borderBottomLeftRadius: 10,
     borderBottomRightRadius: 10,
   },
-  secondaryEnlargeableImage: {
+  secondaryEnlargeablePhoto: {
     borderRadius: 10,
     overflow: 'hidden',
     marginTop: 10,
     marginBottom: 10,
   },
-  secondaryEnlargeableImageInner: {
+  secondaryEnlargeablePhotoInner: {
   },
   cardBorders: {
     borderRadius: 10,

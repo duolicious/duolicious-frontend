@@ -71,39 +71,39 @@ const ImageBackground = (props) => {
   );
 };
 
-const ImageOrSkeleton_ = ({
+const PhotoOrSkeleton_ = ({
   resolution,
-  imageUuid,
-  imageBlurhash,
+  photoUuid,
+  photoBlurhash,
   forceExpoImage = false,
   ...rest
 }: {
   resolution: number,
-  imageUuid: string | undefined | null,
-  imageBlurhash: string | undefined | null,
-  imageExtraExts?: string[] | null,
+  photoUuid: string | undefined | null,
+  photoBlurhash: string | undefined | null,
+  photoExtraExts?: string[] | null,
   showGradient?: boolean,
   forceExpoImage?: boolean,
   style?: any,
 }) => {
   const {
-    imageExtraExts = [],
+    photoExtraExts = [],
     showGradient = true,
   } = rest;
 
-  const uriPrefix = imageExtraExts?.length ? '' : `${resolution}-`;
+  const uriPrefix = photoExtraExts?.length ? '' : `${resolution}-`;
 
-  const ext = (imageExtraExts && imageExtraExts[0]) ?? 'jpg';
+  const ext = (photoExtraExts && photoExtraExts[0]) ?? 'jpg';
 
-  const uri = imageUuid ?
-    `${IMAGES_URL}/${uriPrefix}${imageUuid}.${ext}` :
-    imageUuid;
+  const uri = photoUuid ?
+    `${IMAGES_URL}/${uriPrefix}${photoUuid}.${ext}` :
+    photoUuid;
 
   // This is a workaround for an issue where images that are only blurhashes
   // appear as blank. I'm guessing the root cause is another issue I vaguely
   // remember in React Native, where animations can be blocked by the rendering
   // of a flat list.
-  const transition = !imageUuid ? { duration: 0, effect: null } : 150;
+  const transition = !photoUuid ? { duration: 0, effect: null } : 150;
 
   // `ImageBackground` is a workaround that breaks gifs on prospect profiles in
   // order to fix flickering while scrolling through the search tab. That
@@ -119,12 +119,12 @@ const ImageOrSkeleton_ = ({
   return (
     <ImageBackground_
       source={uri && { uri: uri }}
-      placeholder={imageBlurhash && { blurhash: imageBlurhash }}
+      placeholder={photoBlurhash && { blurhash: photoBlurhash }}
       transition={transition}
       style={{
           width: '100%',
           aspectRatio: 1,
-          backgroundColor: imageUuid ? undefined : '#ccc',
+          backgroundColor: photoUuid ? undefined : '#ccc',
       }}
       contentFit="contain"
     >
@@ -148,7 +148,7 @@ const ImageOrSkeleton_ = ({
           alignItems: 'center',
         }}
       >
-        {imageUuid === null && imageBlurhash === null &&
+        {photoUuid === null && photoBlurhash === null &&
           <Ionicons
             style={{fontSize: 100, color: '#eee'}}
             name={'person'}
@@ -159,7 +159,7 @@ const ImageOrSkeleton_ = ({
   );
 };
 
-const ImageOrSkeleton = memo(ImageOrSkeleton_);
+const PhotoOrSkeleton = memo(PhotoOrSkeleton_);
 
 const ProfileCard = ({
   item,
@@ -170,8 +170,8 @@ const ProfileCard = ({
     name: name,
     age: age,
     match_percentage: matchPercentage,
-    profile_photo_uuid: imageUuid,
-    profile_photo_blurhash: imageBlurhash,
+    profile_photo_uuid: photoUuid,
+    profile_photo_blurhash: photoBlurhash,
     prospect_uuid: personUuid,
     person_messaged_prospect: personMessagedProspect,
     prospect_messaged_person: prospectMessagedPerson,
@@ -208,7 +208,7 @@ const ProfileCard = ({
         'Prospect Profile Screen',
         {
           screen: 'Prospect Profile',
-          params: { personUuid, imageBlurhash },
+          params: { personUuid, photoBlurhash },
         }
       );
     }
@@ -270,10 +270,10 @@ const ProfileCard = ({
           overflow: 'hidden',
         }}
       >
-        <ImageOrSkeleton
+        <PhotoOrSkeleton
           resolution={450}
-          imageUuid={imageUuid}
-          imageBlurhash={imageBlurhash}
+          photoUuid={photoUuid}
+          photoBlurhash={photoBlurhash}
         />
         <UserDetails
           name={name}
@@ -466,6 +466,6 @@ const UserDetails = ({name, age, matchPercentage, verified, ...rest}) => {
 };
 
 export {
-  ImageOrSkeleton,
+  PhotoOrSkeleton,
   ProfileCard,
 };

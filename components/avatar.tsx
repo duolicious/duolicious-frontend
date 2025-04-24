@@ -22,8 +22,8 @@ import { useOnline } from '../chat/application-layer/hooks/online';
 const Avatar = ({
   percentage,
   personUuid,
-  imageUuid,
-  imageBlurhash,
+  photoUuid,
+  photoBlurhash,
   personId,
   navigation,
   isSkipped = false,
@@ -32,8 +32,8 @@ const Avatar = ({
 }: {
   percentage: number
   personUuid: string
-  imageUuid: string | null
-  imageBlurhash: string | null
+  photoUuid: string | null
+  photoBlurhash: string | null
   personId?: number
   navigation?: any
   isSkipped?: boolean
@@ -58,7 +58,7 @@ const Avatar = ({
         'Prospect Profile Screen',
         {
           screen: 'Prospect Profile',
-          params: { personId, personUuid, imageBlurhash },
+          params: { personId, personUuid, photoBlurhash },
         }
       );
     }
@@ -73,7 +73,7 @@ const Avatar = ({
       style={styles.elementStyle}
       {...link}
     >
-      {!Boolean(imageUuid || imageBlurhash) &&
+      {!Boolean(photoUuid || photoBlurhash) &&
         <View style={styles.imageStyle}>
           <Ionicons
             style={{fontSize: 40, color: 'rgba(119, 0, 255, 0.2)'}}
@@ -81,15 +81,15 @@ const Avatar = ({
           />
         </View>
       }
-      {Boolean(imageUuid || imageBlurhash) &&
+      {Boolean(photoUuid || photoBlurhash) &&
         <ImageBackground
-          source={imageUuid ? {
-            uri: `${IMAGES_URL}/450-${imageUuid}.jpg`,
+          source={photoUuid ? {
+            uri: `${IMAGES_URL}/450-${photoUuid}.jpg`,
             height: 450,
             width: 450,
           } : undefined}
-          placeholder={imageBlurhash && { blurhash: imageBlurhash }}
-          transition={!imageUuid ? { duration: 0, effect: null } : 150}
+          placeholder={photoBlurhash && { blurhash: photoBlurhash }}
+          transition={!photoUuid ? { duration: 0, effect: null } : 150}
           style={styles.imageStyle}
         >
           {verificationRequired &&

@@ -93,8 +93,8 @@ const fetchNextQuestions = async (n: number = 10, o: number = 0): Promise<{
 const prospectState = (
   personId: number,
   personUuid: string,
-  imageUuid: string,
-  imageBlurhash: string,
+  photoUuid: string,
+  photoBlurhash: string,
   matchPercentage: number,
   verificationRequired: 'photos' | 'basics' | null,
 ): ProspectState => {
@@ -128,8 +128,8 @@ const prospectState = (
   return {
     personId: personId,
     personUuid: personUuid,
-    imageUuid: imageUuid,
-    imageBlurhash: imageBlurhash,
+    photoUuid: photoUuid,
+    photoBlurhash: photoBlurhash,
     matchPercentage: matchPercentage,
     verificationRequired: verificationRequired,
     style: {
@@ -198,8 +198,8 @@ type CardState = {
 type ProspectState = {
   personId: number
   personUuid: string
-  imageUuid: string
-  imageBlurhash: string
+  photoUuid: string
+  photoBlurhash: string
   matchPercentage: number
   verificationRequired: 'photos' | 'basics' | null
   style: {
@@ -364,8 +364,8 @@ const Prospect = ({
   style,
   personId,
   personUuid,
-  imageUuid,
-  imageBlurhash,
+  photoUuid,
+  photoBlurhash,
   matchPercentage,
   verificationRequired,
 }) => {
@@ -392,8 +392,8 @@ const Prospect = ({
       navigation={navigation}
       personId={personId}
       personUuid={personUuid}
-      imageUuid={imageUuid}
-      imageBlurhash={imageBlurhash}
+      photoUuid={photoUuid}
+      photoBlurhash={photoBlurhash}
       percentage={matchPercentage}
       isSkipped={isSkipped}
       verificationRequired={verificationRequired}
@@ -532,8 +532,8 @@ const Prospects = ({
               style={prospect.style}
               personId={prospect.personId}
               personUuid={prospect.personUuid}
-              imageUuid={prospect.imageUuid}
-              imageBlurhash={prospect.imageBlurhash}
+              photoUuid={prospect.photoUuid}
+              photoBlurhash={prospect.photoBlurhash}
               matchPercentage={prospect.matchPercentage}
               verificationRequired={prospect.verificationRequired} />
           )
