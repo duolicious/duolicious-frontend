@@ -50,12 +50,27 @@ const useSkipped = (
             return newData;
           }
         });
+      },
+      true,
+    );
+  }, [personUuid]);
+
+  useLayoutEffect(() => {
+    if (!personUuid) {
+      return;
+    }
+
+    return listen<Event>(
+      `skipped-state-${personUuid}`,
+      (partialNewData: Event | undefined) => {
+        if (partialNewData === undefined) {
+          return;
+        }
 
         if (partialNewData?.fireOnPostSkip) {
           onPostSkip?.();
         }
       },
-      true,
     );
   }, [personUuid]);
 
