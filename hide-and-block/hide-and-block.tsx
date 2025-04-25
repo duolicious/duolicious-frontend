@@ -7,8 +7,6 @@ import { listen, notify } from '../events/events';
 import { setConversationArchived } from '../chat/application-layer';
 import * as _ from 'lodash';
 
-// TODO: The spinner doesn't spin when skipping a profile
-
 type SkippedNetworkState
   = 'fetching'
   | 'posting'
@@ -19,9 +17,13 @@ type SkippedState = {
   networkState: SkippedNetworkState
 };
 
+type Event = Partial<SkippedState> & {
+  fireOnPostSkip?: boolean
+};
+
 const useSkipped = (
   personUuid: string | null | undefined,
-  onPostSkip?: () => void /* TODO: Should only run if posting a skip, not an unskip */
+  onPostSkip?: () => void
 ) => {
   const [state, setState] = useState<SkippedState>({
     isSkipped: false,
@@ -33,9 +35,9 @@ const useSkipped = (
       return;
     }
 
-    return listen<Partial<SkippedState>>(
+    return listen<Event>(
       `skipped-state-${personUuid}`,
-      (partialNewData: SkippedState | undefined) => {
+      (partialNewData: Event | undefined) => {
         if (partialNewData === undefined) {
           return;
         }
@@ -49,10 +51,7 @@ const useSkipped = (
           }
         });
 
-        if (
-          partialNewData.isSkipped &&
-          partialNewData.networkState === 'posting'
-        ) {
+        if (partialNewData?.fireOnPostSkip) {
           onPostSkip?.();
         }
       },
@@ -70,9 +69,9 @@ const useSkipped = (
 
 const setSkipped = (
   personUuid: string,
-  state: Partial<SkippedState>
+  state: Event
 ) => {
-  notify<Partial<SkippedState>>(`skipped-state-${personUuid}`, state);
+  notify<Event>(`skipped-state-${personUuid}`, state);
 };
 
 const postSkipped = async (
@@ -90,15 +89,23 @@ const postSkipped = async (
     { report_reason: reportReason } :
     undefined;
 
-  setSkipped(personUuid, { isSkipped, networkState: 'posting' });
+  setSkipped(personUuid, { networkState: 'posting' });
 
   const response = await japi('post', endpoint, payload);
 
   if (!response.ok) {
+    setSkipped(personUuid, { networkState: 'settled' });
     return false;
   }
 
-  setSkipped(personUuid, { networkState: 'settled' });
+  setSkipped(
+    personUuid,
+    {
+      isSkipped,
+      networkState: 'settled',
+      fireOnPostSkip: isSkipped,
+    }
+  );
 
   setConversationArchived(personUuid, isSkipped);
 
