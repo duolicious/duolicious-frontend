@@ -72,10 +72,12 @@ type DataItemAddedPhoto = z.infer<typeof DataItemAddedPhotoSchema>;
 type DataItemAddedVoiceBio = z.infer<typeof DataItemAddedVoiceBioSchema>;
 type DataItemUpdatedBio = z.infer<typeof DataItemUpdatedBioSchema>;
 
-const lastPage = {
-  value: null
+const pageMetadata = {
+  lastPage: null,
+  seenPersonUuids: new Set<string>()
 } as {
-  value: DataItem[] | null
+  lastPage: DataItem[] | null
+  seenPersonUuids: Set<string>
 };
 
 const isValidDataItem = (item: unknown): item is DataItem => {
@@ -88,13 +90,27 @@ const isValidDataItem = (item: unknown): item is DataItem => {
   return result.success;
 };
 
+const isDistinctItem = (item: DataItem) => {
+  const result = !pageMetadata.seenPersonUuids.has(item.person_uuid);
+
+  pageMetadata.seenPersonUuids.add(item.person_uuid);
+
+  return result;
+};
+
 const fetchPage = async (pageNumber: number): Promise<DataItem[] | null> => {
+  if (pageNumber === 1) {
+    pageMetadata.lastPage = null;
+    pageMetadata.seenPersonUuids = new Set();
+  }
+
   // TODO: One minute ago
-  const now = (new Date()).toISOString();
+  const now           = new Date();
+  const oneMinuteAgo  = new Date(now.getTime() - 60_000).toISOString(); // underscore for readability
 
-  const lastPageTime = lastPage?.value?.at(-1)?.time ?? now;
+  const lastPageTime = pageMetadata?.lastPage?.at(-1)?.time ?? oneMinuteAgo;
 
-  const before = pageNumber === 1 ? now : lastPageTime;
+  const before = pageNumber === 1 ? oneMinuteAgo : lastPageTime;
 
   const response = await japi(
     'get',
@@ -109,9 +125,12 @@ const fetchPage = async (pageNumber: number): Promise<DataItem[] | null> => {
     return null;
   }
 
-  lastPage.value = response.json.filter(isValidDataItem);
+  pageMetadata.lastPage = response
+    .json
+    .filter(isValidDataItem)
+    .filter(isDistinctItem);
 
-  return [...lastPage.value];
+  return [...pageMetadata.lastPage];
 };
 
 const useNavigationToProfile = (
@@ -481,6 +500,7 @@ const FeedTab = () => {
         renderItem={({ item }: { item: DataItem }) =>
           <FeedItem dataItem={item} />
         }
+        keyExtractor={(item: DataItem) => item.person_uuid}
         onLayout={onLayout}
         onContentSizeChange={onContentSizeChange}
         onScroll={onScroll}
