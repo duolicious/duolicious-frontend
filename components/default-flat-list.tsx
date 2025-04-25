@@ -421,7 +421,7 @@ const UntypedDefaultFlatList = <ItemT,>(props: DefaultFlatListProps<ItemT>, ref)
       }}
       refreshing={false}
       onRefresh={props.disableRefresh ? undefined : onRefresh}
-      onEndReachedThreshold={props.onEndReachedThreshold ?? 1}
+      onEndReachedThreshold={props.onEndReachedThreshold ?? 3}
       onEndReached={fetchNextPage}
       data={items}
       ListEmptyComponent={
@@ -492,7 +492,7 @@ const UntypedDefaultFlashList = <ItemT,>(props: DefaultFlashListProps<ItemT>, re
       }}
       refreshing={false}
       onRefresh={props.disableRefresh ? undefined : onRefresh}
-      onEndReachedThreshold={props.onEndReachedThreshold ?? 1}
+      onEndReachedThreshold={props.onEndReachedThreshold ?? 3}
       onEndReached={fetchNextPage}
       data={items}
       ListEmptyComponent={
