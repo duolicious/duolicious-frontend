@@ -3,13 +3,13 @@ import {
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { DefaultText } from './default-text';
 import { DuoliciousTopNavBar } from './top-nav-bar';
 import { useScrollbar } from './navigation/scroll-bar-hooks';
 import { Avatar } from './avatar';
 import { getShortElapsedTime } from '../util/util';
-import { Pressable } from 'react-native';
+import { GestureResponderEvent, Pressable } from 'react-native';
 import { EnlargeablePhoto } from './enlargeable-image';
 import { commonStyles } from '../styles';
 import { useOnline } from '../chat/application-layer/hooks/online';
@@ -19,8 +19,11 @@ import { useNavigation } from '@react-navigation/native';
 import { japi } from '../api/api';
 import { DefaultFlatList } from './default-flat-list';
 import { z } from 'zod';
+import { notify, listen } from '../events/events';
+import { ReportModalInitialData } from './modal/report-modal';
+import { Flag } from "react-native-feather";
 
-const NAME_ACTION_TIME_GAP = 12;
+const NAME_ACTION_TIME_GAP_VERTICAL = 16;
 
 const DataItemBaseSchema = z.object({
   time: z.string(),
@@ -36,10 +39,11 @@ const DataItemJoinedSchema = DataItemBaseSchema.extend({
   type: z.literal('joined'),
 });
 
-const DataItemAddedImageSchema = DataItemBaseSchema.extend({
+const DataItemAddedPhotoSchema = DataItemBaseSchema.extend({
   type: z.literal('added-photo'),
   added_photo_uuid: z.string(),
   added_photo_blurhash: z.string(),
+  added_photo_extra_exts: z.array(z.string()),
 });
 
 const DataItemUpdatedBioSchema = DataItemBaseSchema.extend({
@@ -51,14 +55,14 @@ const DataItemUpdatedBioSchema = DataItemBaseSchema.extend({
 
 const DataItemSchema = z.discriminatedUnion('type', [
   DataItemJoinedSchema,
-  DataItemAddedImageSchema,
+  DataItemAddedPhotoSchema,
   DataItemUpdatedBioSchema,
 ]);
 
 type DataItem = z.infer<typeof DataItemSchema>;
 type DataItemJoined = z.infer<typeof DataItemJoinedSchema>;
 type DataItemUpdatedBio = z.infer<typeof DataItemUpdatedBioSchema>;
-type DataItemAddedImage = z.infer<typeof DataItemAddedImageSchema>;
+type DataItemAddedPhoto = z.infer<typeof DataItemAddedPhotoSchema>;
 
 const isValidDataItem = (item: unknown): item is DataItem => {
   const result = DataItemSchema.safeParse(item);
@@ -129,6 +133,7 @@ const NameActionTime = ({
   isVerified,
   action,
   time,
+  doUseOnline,
   style,
 }: {
   personUuid: string
@@ -136,56 +141,88 @@ const NameActionTime = ({
   isVerified: boolean
   action: string
   time: Date
+  doUseOnline: boolean
   style?: any
 }) => {
-  const isOnline = useOnline(personUuid);
+  const isOnline = useOnline(doUseOnline ? personUuid : null);
+
+  const onPress = useCallback((event: GestureResponderEvent) => {
+    event.stopPropagation();
+
+    const data: ReportModalInitialData = {
+      name,
+      personUuid,
+      context: 'Feed',
+    };
+    notify('open-report-modal', data);
+  }, [notify, name, personUuid]);
 
   return (
     <View
       style={{
-        width: '100%',
-        flexWrap: 'wrap',
-        justifyContent: 'center',
-        gap: 2,
-        ...style,
+        flex: 1,
+        flexDirection: 'row',
       }}
     >
       <View
         style={{
-          flexDirection: 'row',
-          gap: 5,
-          alignItems: 'center',
+          flex: 1,
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          gap: 2,
+          ...style,
         }}
       >
-        {isOnline &&
-          <View
-            style={{
-              height: 10,
-              width: 10,
-              borderRadius: 999,
-              backgroundColor: ONLINE_COLOR,
-            }}
-          />
-        }
-        <DefaultText
+        <View
           style={{
-            fontWeight: '700',
-            color: 'black',
+            width: '100%',
+            flexDirection: 'row',
+            gap: 5,
+            alignItems: 'center',
           }}
         >
-          {name}
+          {isOnline &&
+            <View
+              style={{
+                height: 10,
+                width: 10,
+                borderRadius: 999,
+                backgroundColor: ONLINE_COLOR,
+              }}
+            />
+          }
+          <DefaultText
+            style={{
+              fontWeight: '700',
+              color: 'black',
+              flexShrink: 1,
+            }}
+          >
+            {name}
+          </DefaultText>
+          {isVerified &&
+            <VerificationBadge size={14} />
+          }
+        </View>
+        <DefaultText
+          style={{
+            color: '#999',
+            width: '100%',
+          }}
+        >
+          {action} • {getShortElapsedTime(time)}
         </DefaultText>
-        {isVerified &&
-          <VerificationBadge size={14} />
-        }
       </View>
-      <DefaultText
-        style={{
-          color: '#999',
-        }}
-      >
-        {action} • {getShortElapsedTime(time)}
-      </DefaultText>
+        <Flag
+          onPress={onPress}
+          stroke="rgba(0, 0, 0, 0.5)"
+          strokeWidth={2}
+          height={18}
+          width={18}
+          style={{
+            marginLeft: 10,
+          }}
+        />
     </View>
   );
 };
@@ -199,58 +236,73 @@ const FeedItemJoined = ({ dataItem }: { dataItem: DataItemJoined }) => {
   return (
     <Pressable
       onPress={onPress}
-      style={{
-        ...commonStyles.cardBorders,
-        padding: 10,
-      }}
+      style={styles.cardBorders}
     >
+      {dataItem.photo_uuid &&
+        <Avatar
+          percentage={dataItem.match_percentage}
+          personUuid={dataItem.person_uuid}
+          photoUuid={dataItem.photo_uuid}
+          photoBlurhash={dataItem.photo_blurhash}
+          doUseOnline={!!dataItem.photo_uuid}
+        />
+      }
       <NameActionTime
         personUuid={dataItem.person_uuid}
         name={dataItem.name}
         isVerified={dataItem.is_verified}
         action="joined"
         time={new Date(dataItem.time)}
+        doUseOnline={!dataItem.photo_uuid}
       />
     </Pressable>
   );
 };
 
-const FeedItemAddedImage = ({ dataItem }: { dataItem: DataItemAddedImage }) => {
+const FeedItemAddedPhoto = ({ dataItem }: { dataItem: DataItemAddedPhoto }) => {
   const onPress = useNavigationToProfile(
     dataItem.person_uuid,
     dataItem.photo_blurhash,
   );
 
-  const onPressImage = useNavigationToProfileGallery(dataItem.added_photo_uuid);
+  const onPressPhoto = useNavigationToProfileGallery(dataItem.added_photo_uuid);
 
   return (
     <Pressable
       onPress={onPress}
-      style={{
-        ...commonStyles.cardBorders,
-        gap: NAME_ACTION_TIME_GAP,
-        padding: 10,
-      }}
+      style={styles.cardBorders}
     >
-      <NameActionTime
-        personUuid={dataItem.person_uuid}
-        name={dataItem.name}
-        isVerified={dataItem.is_verified}
-        action="added a photo"
-        time={new Date(dataItem.time)}
-      />
-
-      <EnlargeablePhoto
-        onPress={onPressImage}
-        photoUuid={dataItem.added_photo_uuid}
-        photoBlurhash={dataItem.added_photo_blurhash}
-        isPrimary={true}
-        style={{
-          ...commonStyles.secondaryEnlargeablePhoto,
-          marginTop: 0,
-          marginBottom: 0,
-        }}
-      />
+      {dataItem.photo_uuid &&
+        <Avatar
+          percentage={dataItem.match_percentage}
+          personUuid={dataItem.person_uuid}
+          photoUuid={dataItem.photo_uuid}
+          photoBlurhash={dataItem.photo_blurhash}
+          doUseOnline={!!dataItem.photo_uuid}
+        />
+      }
+      <View style={{ flex: 1, gap: NAME_ACTION_TIME_GAP_VERTICAL }}>
+        <NameActionTime
+          personUuid={dataItem.person_uuid}
+          name={dataItem.name}
+          isVerified={dataItem.is_verified}
+          action="added a photo"
+          time={new Date(dataItem.time)}
+          doUseOnline={!dataItem.photo_uuid}
+        />
+        <EnlargeablePhoto
+          onPress={onPressPhoto}
+          photoUuid={dataItem.added_photo_uuid}
+          photoExtraExts={dataItem.added_photo_extra_exts}
+          photoBlurhash={dataItem.added_photo_blurhash}
+          isPrimary={true}
+          style={{
+            ...commonStyles.secondaryEnlargeablePhoto,
+            marginTop: 0,
+            marginBottom: 0,
+          }}
+        />
+      </View>
     </Pressable>
   );
 };
@@ -264,27 +316,29 @@ const FeedItemUpdatedBio = ({ dataItem }: { dataItem: DataItemUpdatedBio }) => {
   return (
     <Pressable
       onPress={onPress}
-      style={{
-        ...commonStyles.cardBorders,
-        flexDirection: 'row',
-        gap: 6,
-        padding: 10,
-      }}
+      style={styles.cardBorders}
     >
-      <Avatar
-        percentage={dataItem.match_percentage}
-        personUuid={dataItem.person_uuid}
-        photoUuid={dataItem.photo_uuid}
-        photoBlurhash={dataItem.photo_blurhash}
-        doUseOnline={false}
-      />
-      <View style={{ flex: 1, gap: NAME_ACTION_TIME_GAP }}>
+      {dataItem.photo_uuid &&
+        <Avatar
+          percentage={dataItem.match_percentage}
+          personUuid={dataItem.person_uuid}
+          photoUuid={dataItem.photo_uuid}
+          photoBlurhash={dataItem.photo_blurhash}
+          doUseOnline={!!dataItem.photo_uuid}
+        />
+      }
+      <View style={{ flex: 1, gap: NAME_ACTION_TIME_GAP_VERTICAL }}>
         <NameActionTime
           personUuid={dataItem.person_uuid}
           name={dataItem.name}
           isVerified={dataItem.is_verified}
-          action="updated their bio"
+          action={
+            dataItem.added_text.trim()
+              ? "updated their bio"
+              : "erased their bio"
+          }
           time={new Date(dataItem.time)}
+          doUseOnline={!dataItem.photo_uuid}
           style={{
             paddingHorizontal: 10,
           }}
@@ -305,10 +359,24 @@ const FeedItemUpdatedBio = ({ dataItem }: { dataItem: DataItemUpdatedBio }) => {
 };
 
 const FeedItem = ({ dataItem }: { dataItem: DataItem }) => {
-  if (dataItem.type === 'joined') {
+  const [isSkipped, setIsSkipped] = useState(false);
+
+  const { person_uuid: personUuid } = dataItem;
+
+  useEffect(() => {
+    return listen(`unskip-profile-${personUuid}`, () => setIsSkipped(false));
+  }, [personUuid]);
+
+  useEffect(() => {
+    return listen(`skip-profile-${personUuid}`, () => setIsSkipped(true));
+  }, [personUuid]);
+
+  if (isSkipped) {
+    return <></>;
+  } else if (dataItem.type === 'joined') {
     return <FeedItemJoined dataItem={dataItem} />;
   } else if (dataItem.type === 'added-photo') {
-    return <FeedItemAddedImage dataItem={dataItem} />;
+    return <FeedItemAddedPhoto dataItem={dataItem} />;
   } else if (dataItem.type === 'updated-bio') {
     return <FeedItemUpdatedBio dataItem={dataItem} />;
   } else {
@@ -332,10 +400,13 @@ const FeedTab = () => {
         innerRef={observeListRef}
         emptyText={
           "Your feed is empty right now. Check back later to see what " +
-          "everyone’s doing 👀"
+          "everyone’s doing\xa0👀"
         }
-        errorText="Something went wrong while fetching your feed"
-        endText="You’re all caught up!"
+        errorText={"Something went wrong while fetching your feed\xa0😵‍💫"}
+        endText={
+          "You’re all caught up! Check back later to see what " +
+          "everyone’s doing\xa0👀"
+        }
         fetchPage={fetchPage}
         contentContainerStyle={{
           paddingTop: 10,
@@ -362,7 +433,13 @@ const FeedTab = () => {
 const styles = StyleSheet.create({
   safeAreaView: {
     flex: 1
-  }
+  },
+  cardBorders: {
+    ...commonStyles.cardBorders,
+    flexDirection: 'row',
+    gap: 10,
+    padding: 10,
+  },
 });
 
 export {
