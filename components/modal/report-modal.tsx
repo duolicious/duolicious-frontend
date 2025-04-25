@@ -13,7 +13,7 @@ import { DefaultLongTextInput } from './../default-long-text-input';
 import { ButtonWithCenteredText } from './../button/centered-text';
 import { X } from "react-native-feather";
 import { listen } from '../../events/events';
-import { setSkipped } from '../../hide-and-block/hide-and-block';
+import { postSkipped } from '../../hide-and-block/hide-and-block';
 import { KeyboardDismissingView } from '../keyboard-dismissing-view';
 import { DefaultModal } from './deafult-modal';
 import {
@@ -61,7 +61,7 @@ const ReportModal = () => {
 
     setIsLoading(true);
     const completeReportText = `${context.slice(0, 7999)}\n${reportText}`;
-    if (await setSkipped(personUuid, true, completeReportText)) {
+    if (await postSkipped(personUuid, true, completeReportText)) {
       setIsVisible(false);
     } else {
       setIsSomethingWrong(true);
@@ -74,7 +74,7 @@ const ReportModal = () => {
     setIsLoading,
     setIsTooFewChars,
     setIsVisible,
-    setSkipped,
+    postSkipped,
   ]);
 
   const openReportModal = useCallback((data: ReportModalInitialData) => {

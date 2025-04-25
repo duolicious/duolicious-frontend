@@ -70,16 +70,6 @@ const IntrosItem = ({
     }
   ), [personUuid]);
 
-  // TODO: If the conversation is archived but there's no mounted component,
-  // this won't trigger
-  useEffect(() => {
-    return listen(`unskip-profile-${personUuid}`, () => setConversationArchived(personUuid, false));
-  }, [personUuid]);
-
-  useEffect(() => {
-    return listen(`skip-profile-${personUuid}`, () => setConversationArchived(personUuid, true));
-  }, [personUuid]);
-
   return (
     <Pressable
       onPressIn={fadeIn}

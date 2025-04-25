@@ -29,7 +29,7 @@ import { ButtonWithCenteredText } from './button/centered-text';
 import { api } from '../api/api';
 import { cmToFeetInchesStr } from '../units/units';
 import { signedInUser } from '../App';
-import { setSkipped } from '../hide-and-block/hide-and-block';
+import { postSkipped } from '../hide-and-block/hide-and-block';
 import { Pinchy } from './pinchy';
 import { Basic, Basics } from './basic';
 import { Club, Clubs } from './club';
@@ -67,6 +67,7 @@ import { HeartBackground } from './heart-background';
 import { AudioPlayer } from './audio-player';
 import { EnlargeablePhoto } from './enlargeable-image';
 import { commonStyles } from '../styles';
+import { useSkipped, setSkipped } from '../hide-and-block/hide-and-block';
 
 const Stack = createNativeStackNavigator();
 
@@ -219,51 +220,34 @@ const FloatingProfileInteractionButton = ({
   );
 };
 
-const FloatingSkipButton = ({personUuid, isSkipped}) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSkippedState, setIsSkippedState] = useState<
-    boolean | undefined
-  >(isSkipped);
-
-  useEffect(() => {
-    setIsSkippedState(isSkipped);
-  }, [isSkipped]);
-
-  useEffect(() => {
-    return listen(`unskip-profile-${personUuid}`, () => setIsSkippedState(false));
-  }, [personUuid]);
-
-  useEffect(() => {
-    return listen(`skip-profile-${personUuid}`, () => setIsSkippedState(true));
-  }, [personUuid]);
+const FloatingSkipButton = ({personUuid}) => {
+  const { isSkipped, isLoading, isPosting } = useSkipped(personUuid);
 
   const onPress = useCallback(async () => {
     if (personUuid === undefined) return;
+    if (isLoading) return;
 
-    const nextIsSkippedState = !isSkippedState;
+    const nextIsSkippedState = !isSkipped;
 
-    setIsLoading(true);
-    if (await setSkipped(personUuid, nextIsSkippedState)) {
-      setIsLoading(false);
-    }
-  }, [isLoading, isSkippedState, personUuid]);
+    await postSkipped(personUuid, nextIsSkippedState);
+  }, [isLoading, isSkipped, personUuid]);
 
   return (
     <FloatingProfileInteractionButton
       onPress={onPress}
       backgroundColor="white"
     >
-      {isLoading &&
+      {isPosting &&
         <ActivityIndicator size="large" color="#70f"/>
       }
-      {!isLoading && isSkippedState === true && <RotateCcw
+      {!isLoading && isSkipped === true && <RotateCcw
           stroke="#70f"
           strokeWidth={3}
           height={24}
           width={24}
         />
       }
-      {!isLoading && isSkippedState === false && <X
+      {!isLoading && isSkipped === false && <X
           stroke="#70f"
           strokeWidth={3}
           height={24}
@@ -355,24 +339,12 @@ const SeeQAndAButton = ({navigation, personId, name}) => {
   );
 };
 
-const BlockButton = ({name, personUuid, isSkipped}) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSkippedState, setIsSkippedState] = useState(false);
-
-  useEffect(() => {
-    setIsSkippedState(isSkipped);
-  }, [isSkipped]);
-
-  useEffect(() => {
-    return listen(`unskip-profile-${personUuid}`, () => setIsSkippedState(false));
-  }, [personUuid]);
+const BlockButton = ({name, personUuid}) => {
+  const { isSkipped, isLoading } = useSkipped(personUuid);
 
   const onPress = useCallback(async () => {
-    if (isSkippedState) {
-      setIsLoading(true);
-      if (await setSkipped(personUuid, false)) {
-        setIsLoading(false);
-      }
+    if (isSkipped) {
+      await postSkipped(personUuid, false);
     } else {
       const data: ReportModalInitialData = {
         name,
@@ -381,9 +353,9 @@ const BlockButton = ({name, personUuid, isSkipped}) => {
       };
       notify('open-report-modal', data);
     }
-  }, [notify, name, personUuid, isSkippedState]);
+  }, [notify, name, personUuid, isSkipped]);
 
-  const text = isSkippedState ?
+  const text = isSkipped ?
     `You have skipped ${name}. Press to unskip.` :
     `Report ${name}`;
 
@@ -406,7 +378,7 @@ const BlockButton = ({name, personUuid, isSkipped}) => {
       {isLoading &&
         <ActivityIndicator size="small" color="#70f"/>
       }
-      {!isLoading && isSkippedState &&
+      {!isLoading && isSkipped &&
         <RotateCcw
           stroke={iconStroke}
           strokeWidth={2}
@@ -414,7 +386,7 @@ const BlockButton = ({name, personUuid, isSkipped}) => {
           width={18}
         />
       }
-      {!isLoading && !isSkippedState &&
+      {!isLoading && !isSkipped &&
         <Flag
           stroke={iconStroke}
           strokeWidth={2}
@@ -685,22 +657,26 @@ const CurriedContent = ({navigationRef, navigation, route}) => {
   const photoBlurhashParam = route.params.photoBlurhash;
 
   const [data, setData] = useState<UserData | undefined>(undefined);
+  useSkipped(personUuid, () => navigation.popToTop());
 
   const { width } = useWindowDimensions();
 
   useEffect(() => {
     setData(undefined);
     (async () => {
+      setSkipped(personUuid, { networkState: 'fetching' });
       const response = await api('get', `/prospect-profile/${personUuid}`);
       setData(response?.json);
+      setSkipped(
+        personUuid,
+        {
+          isSkipped: response?.json?.is_skipped ?? false,
+          networkState: 'settled',
+        }
+      );
       route.params.personId = response?.json?.person_id;
     })();
   }, [personUuid]);
-
-  useEffect(() =>
-    listen(`skip-profile-${personUuid}`, () => navigation.popToTop()),
-    [personUuid, navigation]
-  );
 
   const photoUuid = data === undefined ?
     undefined :
@@ -828,7 +804,6 @@ const CurriedContent = ({navigationRef, navigation, route}) => {
           >
             <FloatingSkipButton
               personUuid={personUuid}
-              isSkipped={data?.is_skipped}
             />
             <FloatingSendIntroButton
               navigation={navigation}
@@ -1320,7 +1295,6 @@ const Body = ({
           <BlockButton
             name={data?.name}
             personUuid={personUuid}
-            isSkipped={data?.is_skipped}
           />}
       </View>
     </>

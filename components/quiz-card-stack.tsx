@@ -28,7 +28,7 @@ import { api, japi } from '../api/api';
 import { quizQueue } from '../api/queue';
 import * as _ from "lodash";
 import { markTraitDataDirty } from './traits-tab';
-import { listen } from '../events/events';
+import { useSkipped } from '../hide-and-block/hide-and-block';
 
 const styles = StyleSheet.create({
   stackContainerStyle: {
@@ -369,15 +369,7 @@ const Prospect = ({
   matchPercentage,
   verificationRequired,
 }) => {
-  const [isSkipped, setIsSkipped] = useState(false);
-
-  useEffect(() =>
-    listen(`skip-profile-${personUuid}`, () => setIsSkipped(true)),
-    [personUuid]);
-
-  useEffect(() =>
-    listen(`unskip-profile-${personUuid}`, () => setIsSkipped(false)),
-    [personUuid]);
+  const { isSkipped } = useSkipped(personUuid);
 
   return <Animated.View
     style={{

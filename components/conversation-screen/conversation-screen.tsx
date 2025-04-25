@@ -40,7 +40,7 @@ import {
 import { api } from '../../api/api';
 import { TopNavBarButton } from '../top-nav-bar-button';
 import { RotateCcw, Flag, X } from "react-native-feather";
-import { setSkipped } from '../../hide-and-block/hide-and-block';
+import { postSkipped } from '../../hide-and-block/hide-and-block';
 import { delay, getDuplicates } from '../../util/util';
 import { ReportModalInitialData } from '../modal/report-modal';
 import { listen, notify } from '../../events/events';
@@ -53,6 +53,7 @@ import { useOnline } from '../../chat/application-layer/hooks/online';
 import * as _ from 'lodash';
 import { Input } from './input';
 import { GifPickedEvent } from '../../components/modal/gif-picker-modal';
+import { useSkipped } from '../../hide-and-block/hide-and-block';
 
 const firstMamId = (messageIds: string[] | null): string => {
   if (!messageIds) {
@@ -103,7 +104,7 @@ const Menu = ({navigation, name, personUuid, closeFn}) => {
 
     setIsUpdating(true);
     const nextHiddenState = !isSkipped;
-    if (await setSkipped(personUuid, nextHiddenState)) {
+    if (await postSkipped(personUuid, nextHiddenState)) {
       setIsSkipped(nextHiddenState);
       setIsUpdating(false);
       closeFn();
@@ -562,11 +563,7 @@ const ConversationScreen = ({navigation, route}) => {
     await markDisplayed(lastMessage.message);
   }, [_.last(messageIds)]);
 
-  useEffect(() => {
-    return listen(`skip-profile-${personUuid}`, () => {
-      navigation.popToTop();
-    });
-  }, [navigation, personUuid]);
+  useSkipped(personUuid, () => navigation.popToTop());
 
   // Fetch the first page of messages when the conversation is first opened
   // while online

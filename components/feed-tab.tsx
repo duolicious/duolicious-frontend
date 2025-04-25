@@ -3,7 +3,7 @@ import {
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import { DefaultText } from './default-text';
 import { DuoliciousTopNavBar } from './top-nav-bar';
 import { useScrollbar } from './navigation/scroll-bar-hooks';
@@ -19,10 +19,11 @@ import { useNavigation } from '@react-navigation/native';
 import { japi } from '../api/api';
 import { DefaultFlashList } from './default-flat-list';
 import { z } from 'zod';
-import { notify, listen } from '../events/events';
+import { notify } from '../events/events';
 import { ReportModalInitialData } from './modal/report-modal';
 import { Flag } from "react-native-feather";
 import { AudioPlayer } from './audio-player';
+import { useSkipped } from '../hide-and-block/hide-and-block';
 
 const NAME_ACTION_TIME_GAP_VERTICAL = 16;
 
@@ -436,17 +437,7 @@ const FeedItemUpdatedBio = ({ dataItem }: { dataItem: DataItemUpdatedBio }) => {
 
 const FeedItem = ({ dataItem }: { dataItem: DataItem }) => {
   // TODO: Get this based on person_uuid to prevent flashlist breaking
-  const [isSkipped, setIsSkipped] = useState(false);
-
-  const { person_uuid: personUuid } = dataItem;
-
-  useEffect(() => {
-    return listen(`unskip-profile-${personUuid}`, () => setIsSkipped(false));
-  }, [personUuid]);
-
-  useEffect(() => {
-    return listen(`skip-profile-${personUuid}`, () => setIsSkipped(true));
-  }, [personUuid]);
+  const { isSkipped } = useSkipped(dataItem.person_uuid);
 
   if (isSkipped) {
     return <></>;

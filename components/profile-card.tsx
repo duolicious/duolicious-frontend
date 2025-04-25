@@ -28,6 +28,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { faLock } from '@fortawesome/free-solid-svg-icons/faLock'
 import { ONLINE_COLOR } from '../constants/constants';
 import { useOnline } from '../chat/application-layer/hooks/online';
+import { useSkipped } from '../hide-and-block/hide-and-block';
 
 // This component wouldn't need to exist if expo-image (and expo itself (and the
 // JS eco system generally)) wasn't buggy trash. This fixes an issue on
@@ -179,7 +180,7 @@ const ProfileCard = ({
     verification_required_to_view: verificationRequired,
   } = item;
 
-  const [isSkipped, setIsSkipped] = useState(false);
+  const { isSkipped } = useSkipped(personUuid);
 
   const isOnline = useOnline(personUuid);
 
@@ -214,9 +215,6 @@ const ProfileCard = ({
     }
   }, [navigation, personUuid, verificationRequired]);
 
-  const onHide = useCallback(() => setIsSkipped(true), [setIsSkipped]);
-  const onUnhide = useCallback(() => setIsSkipped(false), [setIsSkipped]);
-
   const onMessageFrom = useCallback(
     () => {
       setProspectMessagedPersonState(true);
@@ -231,16 +229,6 @@ const ProfileCard = ({
       item.person_messaged_prospect = true;
     },
     [setPersonMessagedProspectState, item]
-  );
-
-  useEffect(
-    () => listen(`skip-profile-${personUuid}`, onHide),
-    [personUuid, onHide]
-  );
-
-  useEffect(
-    () => listen(`unskip-profile-${personUuid}`, onUnhide),
-    [personUuid, onUnhide]
   );
 
   useEffect(
