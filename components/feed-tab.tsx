@@ -4,7 +4,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { DefaultText } from './default-text';
 import { DuoliciousTopNavBar } from './top-nav-bar';
 import { useScrollbar } from './navigation/scroll-bar-hooks';
@@ -25,6 +25,7 @@ import { ReportModalInitialData } from './modal/report-modal';
 import { Flag } from "react-native-feather";
 import { AudioPlayer } from './audio-player';
 import { useSkipped } from '../hide-and-block/hide-and-block';
+import { TopNavBarButton } from './top-nav-bar-button';
 
 const NAME_ACTION_TIME_GAP_VERTICAL = 16;
 
@@ -466,10 +467,28 @@ const FeedTab = () => {
     observeListRef,
   } = useScrollbar('traits');
 
+  const listRef = useRef<any>(undefined);
+
+  const onPressRefresh = useCallback(() => {
+    const refresh = listRef?.current?.refresh;
+    refresh && refresh();
+  }, []);
+
   return (
     <SafeAreaView style={styles.safeAreaView}>
-      <DuoliciousTopNavBar/>
+      <DuoliciousTopNavBar>
+        {Platform.OS === 'web' &&
+          <TopNavBarButton
+            onPress={onPressRefresh}
+            iconName="refresh"
+            position="left"
+            secondary={true}
+            label="Refresh"
+          />
+        }
+      </DuoliciousTopNavBar>
       <DefaultList
+        ref={listRef}
         innerRef={observeListRef}
         emptyText={
           "Your feed is empty right now. Check back later to see what " +
