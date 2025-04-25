@@ -340,7 +340,7 @@ const SeeQAndAButton = ({navigation, personId, name}) => {
 };
 
 const BlockButton = ({name, personUuid}) => {
-  const { isSkipped, isLoading } = useSkipped(personUuid);
+  const { isSkipped, isLoading, isPosting } = useSkipped(personUuid);
 
   const onPress = useCallback(async () => {
     if (isSkipped) {
@@ -375,7 +375,7 @@ const BlockButton = ({name, personUuid}) => {
         borderRadius: 5,
       }}
     >
-      {isLoading &&
+      {isPosting &&
         <ActivityIndicator size="small" color="#70f"/>
       }
       {!isLoading && isSkipped &&
