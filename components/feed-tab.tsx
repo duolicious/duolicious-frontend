@@ -3,7 +3,7 @@ import {
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
-import { useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 import { DefaultText } from './default-text';
 import { DuoliciousTopNavBar } from './top-nav-bar';
 import { useScrollbar } from './navigation/scroll-bar-hooks';
@@ -463,6 +463,8 @@ const FeedItem = ({ dataItem }: { dataItem: DataItem }) => {
   }
 };
 
+const FeedItemMemo = memo(FeedItem);
+
 const FeedTab = () => {
   const {
     onLayout,
@@ -487,18 +489,9 @@ const FeedTab = () => {
           "everyone’s doing\xa0👀"
         }
         fetchPage={fetchPage}
-        contentContainerStyle={{
-          paddingTop: 10,
-          paddingLeft: 10,
-          paddingRight: 10,
-          paddingBottom: 20,
-          maxWidth: 600,
-          width: '100%',
-          alignSelf: 'center',
-          gap: 20,
-        }}
+        contentContainerStyle={styles.listContentContainerStyle}
         renderItem={({ item }: { item: DataItem }) =>
-          <FeedItem dataItem={item} />
+          <FeedItemMemo dataItem={item} />
         }
         keyExtractor={(item: DataItem) => item.person_uuid}
         onLayout={onLayout}
@@ -511,6 +504,16 @@ const FeedTab = () => {
 };
 
 const styles = StyleSheet.create({
+  listContentContainerStyle: {
+    paddingTop: 10,
+    paddingLeft: 10,
+    paddingRight: 10,
+    paddingBottom: 20,
+    maxWidth: 600,
+    width: '100%',
+    alignSelf: 'center',
+    gap: 20,
+  },
   safeAreaView: {
     flex: 1
   },
