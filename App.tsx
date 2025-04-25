@@ -26,7 +26,7 @@ import { TabBar } from './components/navigation/tab-bar';
 import SearchTab from './components/search-tab';
 import { QuizTab } from './components/quiz-tab';
 import ProfileTab from './components/profile-tab';
-import InboxTab from './components/inbox-tab';
+import { InboxTab } from './components/inbox-tab';
 import { FeedTab } from './components/feed-tab';
 import { TraitsTab } from './components/traits-tab';
 import { ConversationScreen } from './components/conversation-screen/conversation-screen';

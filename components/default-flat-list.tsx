@@ -312,6 +312,11 @@ const useList = <ItemT, ListType>(ref, props: DefaultFlatListProps<ItemT> | Defa
   }, [dataKey]);
 
   const fetchNextPage = async () => {
+    if (viewportHeight.current < 1e-3) {
+      // FlashList seems to be calling `onEndReached` repeatedly when occluded
+      return;
+    }
+
     const book = getBookOrDefault(books, dataKey);
 
     if (isBookComplete(book)) {

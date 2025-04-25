@@ -397,4 +397,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default InboxTab;
+export { InboxTab };
