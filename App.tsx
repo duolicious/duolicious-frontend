@@ -82,7 +82,10 @@ const HomeTabs = () => {
   return (
     <Tab.Navigator
       backBehavior="history"
-      screenOptions={{ headerShown: false, animation: 'shift' }}
+      screenOptions={{
+        headerShown: false,
+        animation: 'shift',
+      }}
       tabBar={props => <TabBar {...props} />}
     >
       <Tab.Screen name="Q&A" component={QuizTab} />

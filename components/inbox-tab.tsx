@@ -358,36 +358,36 @@ const InboxTabNavBar = ({
   }, []);
 
   return (
-      <TopNavBar>
-        <View>
-          <DefaultText
+    <TopNavBar>
+      <View>
+        <DefaultText
+          style={{
+            fontWeight: '700',
+            fontSize: 20,
+          }}
+        >
+          {'Inbox' + (showArchive ? ' (Archive)' : '')}
+        </DefaultText>
+        {!isOnline &&
+          <ActivityIndicator
+            size="small"
+            color="#70f"
             style={{
-              fontWeight: '700',
-              fontSize: 20,
+              position: 'absolute',
+              right: -40,
+              top: 3,
             }}
-          >
-            {'Inbox' + (showArchive ? ' (Archive)' : '')}
-          </DefaultText>
-          {!isOnline &&
-            <ActivityIndicator
-              size="small"
-              color="#70f"
-              style={{
-                position: 'absolute',
-                right: -40,
-                top: 3,
-              }}
-            />
-          }
-        </View>
-        <TopNavBarButton
-          onPress={onPressArchiveButton}
-          iconName={showArchive ? 'chatbubbles-outline' : 'file-tray-full-outline'}
-          position="right"
-          secondary={false}
-          label={showArchive ? "Inbox" : "Archive"}
-        />
-      </TopNavBar>
+          />
+        }
+      </View>
+      <TopNavBarButton
+        onPress={onPressArchiveButton}
+        iconName={showArchive ? 'chatbubbles-outline' : 'file-tray-full-outline'}
+        position="right"
+        secondary={false}
+        label={showArchive ? "Inbox" : "Archive"}
+      />
+    </TopNavBar>
   );
 };
 
