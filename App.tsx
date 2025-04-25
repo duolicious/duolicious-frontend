@@ -61,8 +61,6 @@ import { Logo16 } from './components/logo';
 import { useScrollbarStyle } from './components/navigation/scroll-bar-hooks';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-// TODO: Onboarding works
-
 setNofications();
 verificationWatcher();
 

@@ -1,7 +1,8 @@
 import {
-  View,
-  StyleSheet,
+  Platform,
   SafeAreaView,
+  StyleSheet,
+  View,
 } from 'react-native';
 import { useCallback } from 'react';
 import { DefaultText } from './default-text';
@@ -17,7 +18,7 @@ import { ONLINE_COLOR } from '../constants/constants';
 import { VerificationBadge } from './verification-badge';
 import { useNavigation } from '@react-navigation/native';
 import { japi } from '../api/api';
-import { DefaultFlashList } from './default-flat-list';
+import { DefaultFlatList, DefaultFlashList } from './default-flat-list';
 import { z } from 'zod';
 import { notify } from '../events/events';
 import { ReportModalInitialData } from './modal/report-modal';
@@ -26,6 +27,8 @@ import { AudioPlayer } from './audio-player';
 import { useSkipped } from '../hide-and-block/hide-and-block';
 
 const NAME_ACTION_TIME_GAP_VERTICAL = 16;
+
+const DefaultList = Platform.OS === 'web' ? DefaultFlatList : DefaultFlashList;
 
 const DataItemBaseSchema = z.object({
   time: z.string(),
@@ -466,7 +469,7 @@ const FeedTab = () => {
   return (
     <SafeAreaView style={styles.safeAreaView}>
       <DuoliciousTopNavBar/>
-      <DefaultFlashList
+      <DefaultList
         innerRef={observeListRef}
         emptyText={
           "Your feed is empty right now. Check back later to see what " +
