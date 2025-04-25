@@ -5,15 +5,12 @@ import {
 } from 'react-native';
 import {
   useCallback,
-  useEffect,
   useRef,
 } from 'react';
 import { DefaultText } from './default-text';
 import { Avatar } from './avatar';
 import { useNavigation } from '@react-navigation/native';
 import { friendlyTimestamp } from '../util/util';
-import { listen } from '../events/events';
-import { setConversationArchived } from '../chat/application-layer';
 import { VerificationBadge } from './verification-badge';
 
 const IntrosItem = ({
