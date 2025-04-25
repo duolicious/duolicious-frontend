@@ -91,6 +91,7 @@ const Avatar = ({
           placeholder={photoBlurhash && { blurhash: photoBlurhash }}
           transition={!photoUuid ? { duration: 0, effect: null } : 150}
           style={styles.imageStyle}
+          recyclingKey={photoUuid}
         >
           {verificationRequired &&
             <View

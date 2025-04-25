@@ -3,7 +3,7 @@ import {
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
-import { memo, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { DefaultText } from './default-text';
 import { DuoliciousTopNavBar } from './top-nav-bar';
 import { useScrollbar } from './navigation/scroll-bar-hooks';
@@ -17,7 +17,7 @@ import { ONLINE_COLOR } from '../constants/constants';
 import { VerificationBadge } from './verification-badge';
 import { useNavigation } from '@react-navigation/native';
 import { japi } from '../api/api';
-import { DefaultFlatList } from './default-flat-list';
+import { DefaultFlashList } from './default-flat-list';
 import { z } from 'zod';
 import { notify, listen } from '../events/events';
 import { ReportModalInitialData } from './modal/report-modal';
@@ -104,7 +104,6 @@ const fetchPage = async (pageNumber: number): Promise<DataItem[] | null> => {
     pageMetadata.seenPersonUuids = new Set();
   }
 
-  // TODO: One minute ago
   const now           = new Date();
   const oneMinuteAgo  = new Date(now.getTime() - 60_000).toISOString(); // underscore for readability
 
@@ -436,6 +435,7 @@ const FeedItemUpdatedBio = ({ dataItem }: { dataItem: DataItemUpdatedBio }) => {
 };
 
 const FeedItem = ({ dataItem }: { dataItem: DataItem }) => {
+  // TODO: Get this based on person_uuid to prevent flashlist breaking
   const [isSkipped, setIsSkipped] = useState(false);
 
   const { person_uuid: personUuid } = dataItem;
@@ -463,8 +463,6 @@ const FeedItem = ({ dataItem }: { dataItem: DataItem }) => {
   }
 };
 
-const FeedItemMemo = memo(FeedItem);
-
 const FeedTab = () => {
   const {
     onLayout,
@@ -477,7 +475,7 @@ const FeedTab = () => {
   return (
     <SafeAreaView style={styles.safeAreaView}>
       <DuoliciousTopNavBar/>
-      <DefaultFlatList
+      <DefaultFlashList
         innerRef={observeListRef}
         emptyText={
           "Your feed is empty right now. Check back later to see what " +
@@ -491,7 +489,7 @@ const FeedTab = () => {
         fetchPage={fetchPage}
         contentContainerStyle={styles.listContentContainerStyle}
         renderItem={({ item }: { item: DataItem }) =>
-          <FeedItemMemo dataItem={item} />
+          <FeedItem dataItem={item} />
         }
         keyExtractor={(item: DataItem) => item.person_uuid}
         onLayout={onLayout}
@@ -512,7 +510,6 @@ const styles = StyleSheet.create({
     maxWidth: 600,
     width: '100%',
     alignSelf: 'center',
-    gap: 20,
   },
   safeAreaView: {
     flex: 1
@@ -522,6 +519,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
     padding: 10,
+    marginBottom: 20,
   },
 });
 
