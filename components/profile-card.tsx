@@ -56,6 +56,7 @@ const ImageBackground = (props) => {
       transition={transition}
       style={style}
       contentFit={contentFit}
+      placeholderContentFit={contentFit}
     >
       <RNImageBackground
         source={source}
@@ -128,6 +129,7 @@ const PhotoOrSkeleton_ = ({
           backgroundColor: photoUuid ? undefined : '#ccc',
       }}
       contentFit="contain"
+      placeholderContentFit="contain"
       recyclingKey={photoUuid}
     >
       <LinearGradient
