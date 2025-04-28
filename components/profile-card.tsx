@@ -183,7 +183,7 @@ const ProfileCard = ({
     verification_required_to_view: verificationRequired,
   } = item;
 
-  const { isSkipped } = useSkipped(personUuid);
+  const { isSkipped, wasPostSkipFiredInThisSession } = useSkipped(personUuid);
 
   const isOnline = useOnline(personUuid);
 
@@ -334,7 +334,7 @@ const ProfileCard = ({
           }}
         />
       </>}
-      {isSkipped &&
+      {isSkipped && wasPostSkipFiredInThisSession &&
         <View
           style={{
             position: 'absolute',
