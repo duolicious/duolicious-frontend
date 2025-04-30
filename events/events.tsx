@@ -64,9 +64,18 @@ const notify = <T = any>(key: string, data?: T) => {
   );
 };
 
+const mergeAndNotify = <T = object>(key: string, newData: T) => {
+  const oldData = lastEvent(key) ?? {};
+
+  const mergedData = { ...oldData, ...newData };
+
+  notify(key, mergedData);
+};
+
 export {
   listen,
   notify,
   unlisten,
   lastEvent,
+  mergeAndNotify,
 };

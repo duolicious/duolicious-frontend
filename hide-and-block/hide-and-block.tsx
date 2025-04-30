@@ -3,7 +3,7 @@ import {
   useState,
 } from 'react';
 import { japi } from '../api/api';
-import { listen, notify } from '../events/events';
+import { listen, mergeAndNotify } from '../events/events';
 import { setConversationArchived } from '../chat/application-layer';
 import * as _ from 'lodash';
 
@@ -37,34 +37,33 @@ const useSkipped = (
       return;
     }
 
-    return listen<Event>(
+    return listen<SkippedState>(
       `skipped-state-${personUuid}`,
-      (partialNewData: Event | undefined) => {
-        if (partialNewData === undefined) {
+      (newState: SkippedState | undefined) => {
+        if (newState === undefined) {
           return;
         }
 
-        setState((oldData) => {
-          const newData = { ...oldData, ...partialNewData};
-          if (_.isEqual(oldData, newData)) {
-            return oldData;
+        setState((newState) => {
+          if (_.isEqual(state, newState)) {
+            return 
           } else {
-            return newData;
+            return newState;
           }
         });
       },
       true,
     );
-  }, [personUuid]);
+  }, [state, personUuid]);
 
   useLayoutEffect(() => {
     if (!personUuid) {
       return;
     }
 
-    return listen<Event>(
+    return listen<SkippedState>(
       `skipped-state-${personUuid}`,
-      (partialNewData: Event | undefined) => {
+      (partialNewData: SkippedState | undefined) => {
         if (partialNewData === undefined) {
           return;
         }
@@ -75,10 +74,10 @@ const useSkipped = (
 
         onPostSkip?.();
 
-        setState((oldData) => {
-          const newData = { ...oldData, wasPostSkipFiredInThisSession: true };
-          if (_.isEqual(oldData, newData)) {
-            return oldData;
+        setState((newState) => {
+          const newData = { ...newState, wasPostSkipFiredInThisSession: true };
+          if (_.isEqual(newState, newData)) {
+            return newState;
           } else {
             return newData;
           }
@@ -100,7 +99,15 @@ const setSkipped = (
   personUuid: string,
   state: Event
 ) => {
-  notify<Event>(`skipped-state-${personUuid}`, state);
+  mergeAndNotify<Event>(
+    `skipped-state-${personUuid}`,
+    state.fireOnPostSkip ? {
+      ...state,
+      wasPostSkipFiredInThisSession: true
+    } : {
+      ...state
+    }
+  );
 };
 
 const postSkipped = async (
