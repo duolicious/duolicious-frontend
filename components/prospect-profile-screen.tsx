@@ -151,6 +151,7 @@ const FloatingBackButton = (props) => {
           icon={faArrowLeft}
           size={24}
           style={{
+            // @ts-ignore
             outline: 'none',
           }}
         />
@@ -285,6 +286,7 @@ const FloatingSendIntroButton = ({
           size={24}
           style={{
             color: 'white',
+            // @ts-ignore
             outline: 'none',
           }}
         />

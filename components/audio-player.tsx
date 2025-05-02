@@ -77,7 +77,7 @@ type AudioPlayerProps = {
 };
 
 const AudioPlayer = (props: AudioPlayerProps) => {
-  const sound = useRef<Audio.Sound>();
+  const sound = useRef<Audio.Sound>(undefined);
 
   const isMounted = useRef(true);
 

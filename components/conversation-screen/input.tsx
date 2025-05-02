@@ -63,7 +63,7 @@ const useComponentWidth = () => {
 const useRecorder = () => {
   const maxDuration = 2 * 60;
 
-  const recording = useRef<Audio.Recording>();
+  const recording = useRef<Audio.Recording>(undefined);
   const recordingActive = useRef(false);
   const [duration, setDuration] = useState(0);
 
