@@ -25,9 +25,6 @@ import { quizQueue } from '../api/queue';
 import { IndeterminateProgressBar } from './indeterminate-progress-bar';
 import { Logo14 } from './logo';
 
-// TODO: Test that it renders and animates
-// TODO: Test that it doesn't break flat list
-
 const cardBorders = {
   borderRadius: 10,
   shadowOffset: {

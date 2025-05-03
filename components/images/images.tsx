@@ -712,7 +712,6 @@ const MoveableImage = ({
   );
 
   const onSlotAssignmentFinish = useCallback(() => {
-    console.log('onSlotAssignmentFinish');
     notify<Images>(
       EV_IMAGES,
       { [fileNumber.value]: { exists: Boolean(uriRef.current) } });

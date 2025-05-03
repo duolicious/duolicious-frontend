@@ -14,8 +14,6 @@ import Animated, {
 import { DefaultText } from './default-text';
 
 
-// TODO: Replace rgba colors
-
 const DURATION = 250;
 
 type ButtonGroupProps = {

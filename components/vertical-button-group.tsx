@@ -1,9 +1,6 @@
 import { Pressable, StyleSheet, View, ViewStyle } from 'react-native';
 import { DefaultText } from './default-text';
 
-// TODO: Border colors
-// TODO: Check theme correctness in onboaring
-
 type VerticalButtonGroupProps = {
   buttons: string[];
   selectedIndex: number;

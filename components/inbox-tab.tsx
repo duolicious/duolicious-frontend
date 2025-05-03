@@ -27,9 +27,6 @@ import { useScrollbar } from './navigation/scroll-bar-hooks';
 import * as _ from "lodash";
 
 
-// TODO: Put a gap between the primary and secondary buttons
-
-
 const IntrosItemMemo = memo(IntrosItem);
 const ChatsItemMemo = memo(ChatsItem);
 
