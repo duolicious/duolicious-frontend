@@ -368,9 +368,10 @@ const Input = ({
   };
 
   const handleSendPress = () => {
-    if (text.trim().length > 0) {
-      onPressSend(text.trim());
+    const trimmedText = text.trim();
+    if (trimmedText.length > 0) {
       setText('');
+      onPressSend(trimmedText);
     }
   };
 
@@ -619,8 +620,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     marginLeft: 5,
-    justifyContent: 'center',
-    alignItems: 'center',
     position: 'relative',
   },
   microphoneIcon: {
@@ -633,14 +632,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sendPressable: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
   },
   sendAnimated: {
-    width: '100%',
-    height: '100%',
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgb(228, 204, 255)',
