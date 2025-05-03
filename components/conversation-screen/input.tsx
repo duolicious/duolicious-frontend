@@ -24,7 +24,6 @@ import Animated, {
 import {
   Gesture,
   GestureDetector,
-  RectButton,
   Pressable,
 } from 'react-native-gesture-handler';
 import { LayoutChangeEvent } from 'react-native';
@@ -457,7 +456,7 @@ const Input = ({
               onKeyPress={handleKeyPress}
               onFocus={onFocus}
             />
-            <RectButton onPress={onPressGif} hitSlop={10}>
+            <Pressable onPress={onPressGif} hitSlop={10}>
               <Animated.View style={[styles.gifContainer, animatedGifStyle]}>
                 <DefaultText
                   style={styles.gifText}
@@ -467,7 +466,7 @@ const Input = ({
                   GIF
                 </DefaultText>
               </Animated.View>
-            </RectButton>
+            </Pressable>
           </Animated.View>
           {isRecording && (
             <View style={styles.cancelOverlay}>
