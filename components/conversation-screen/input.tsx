@@ -150,7 +150,7 @@ const useRecorder = () => {
   return { startRecording, stopRecording, duration };
 };
 
-const AutoResizingTextInput = Platform.OS === 'web' ? (props) => {
+const AutoResizingTextInput = (props) => {
   const { height } = useWindowDimensions();
 
   return (
@@ -163,6 +163,7 @@ const AutoResizingTextInput = Platform.OS === 'web' ? (props) => {
           minHeight: 30,
           opacity: 0,
           fontSize: defaultTextInputStyles.textInput.fontSize,
+          paddingTop: Platform.OS === 'web' ? 5 : 4,
         }}
       >
         {props.value}
@@ -173,24 +174,13 @@ const AutoResizingTextInput = Platform.OS === 'web' ? (props) => {
           ...props.style,
           outline: 'none',
           position: 'absolute',
-          width: '100%',
-          height: '100%',
-          minHeight: 30,
+          top: Platform.OS === 'web' ? 5 : 4,
+          bottom: 0,
+          left: 0,
+          right: 0,
         }}
       />
     </View>
-  );
-} : (props) => {
-  const { height } = useWindowDimensions();
-
-  return (
-    <DefaultLongTextInput
-      {...props}
-      style={{
-        ...props.style,
-        maxHeight: height / 4,
-      }}
-    />
   );
 };
 
@@ -575,7 +565,6 @@ const styles = StyleSheet.create({
     borderRadius: undefined,
     height: undefined,
     flex: 1,
-    textAlignVertical: 'center',
   },
   gifContainer: {
     height: 28,
