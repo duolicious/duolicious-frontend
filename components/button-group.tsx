@@ -74,6 +74,7 @@ const ButtonGroup: React.FC<ButtonGroupProps> = ({
 
   const animatedIndicatorStyle = useAnimatedStyle(() => ({
     width: indicatorW.value,
+    opacity: indicatorW.value ? 1 : 0,
     transform: [{ translateX: indicatorX.value }],
   }));
 
