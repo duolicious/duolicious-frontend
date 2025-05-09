@@ -34,6 +34,8 @@ const otherUserBackgroundColor = '#eee';
 
 const currentUserBackgroundColor = '#70f';
 
+const attributionRegex = /^\s*-\s*/;
+
 type MarkdownBlock = QuoteBlock | TextBlock;
 
 type QuoteBlock = {
@@ -60,8 +62,8 @@ const parseMarkdown = (markdown: string): MarkdownBlock[] => {
 
     for (let i = trimmedLines.length - 1; i >= 0; i--) {
       if (trimmedLines[i] === '') continue;
-      if (/^-\s+/.test(trimmedLines[i])) {
-        attribution = trimmedLines[i].replace(/^-\s+/, '');
+      if (attributionRegex.test(trimmedLines[i])) {
+        attribution = trimmedLines[i].replace(attributionRegex, '');
         endIndex = i;
       }
       break;
@@ -96,7 +98,7 @@ const parseMarkdown = (markdown: string): MarkdownBlock[] => {
         currentBlockType = 'quote';
       }
       // Remove the leading ">" and an optional space.
-      currentBlockLines.push(line.replace(/^>\s?/, ''));
+      currentBlockLines.push(line.replace(/^>\s*/, ''));
     } else {
       if (currentBlockType !== 'text') {
         flushBlock();
