@@ -79,7 +79,7 @@ const FormattedText = ({
       {blocks.map((block, i) =>
         <DefaultText
           key={i}
-          selectable={true}
+          selectable={!isMobile()}
           style={{
             color,
             fontSize,
