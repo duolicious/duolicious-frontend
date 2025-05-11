@@ -71,6 +71,7 @@ import { commonStyles } from '../styles';
 import { useSkipped, setSkipped } from '../hide-and-block/hide-and-block';
 import { useQuote, setQuote } from './conversation-screen/quote';
 import { AutoResizingTextInput } from './auto-resizing-text-input';
+import { DefaultLongTextInput } from './default-long-text-input';
 
 const Stack = createNativeStackNavigator();
 
@@ -1192,16 +1193,22 @@ const Body = ({
         {!!data?.name && !!data?.about && data.about.trim() &&
           <>
             <Title style={{color: data?.theme?.title_color}}>About {data.name}</Title>
-            <AutoResizingTextInput
+            <DefaultLongTextInput
               style={{
+                overflow: 'hidden',
+                height: 'auto',
                 color: data?.theme?.body_color,
                 backgroundColor: 'transparent',
-                borderWidth: 0,
-                padding: 0,
-                fontSize: undefined,
-                borderRadius: 0,
+                fontSize: 15,
               }}
+              disableFullscreenUI={true}
+              importantForAutofill="no"
+              inputMode="none"
+              autoCorrect={false}
+              caretHidden={true}
+              showSoftInputOnFocus={false}
               value={data.about}
+              contextMenuHidden={Platform.OS !== 'android'}
               editable={Platform.OS === 'android'}
               onSelectionChange={({ nativeEvent: { selection: { start, end } } }) => {
                 if (start === end) {

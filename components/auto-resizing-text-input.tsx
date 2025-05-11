@@ -1,27 +1,38 @@
 import {
   Platform,
   View,
-  useWindowDimensions,
 } from 'react-native';
 import { DefaultText } from './default-text';
 import { DefaultLongTextInput } from './default-long-text-input';
 import { styles as defaultTextInputStyles } from './default-text-input';
 
 
-const AutoResizingTextInput = (props) => {
-  const { height } = useWindowDimensions();
-
+const AutoResizingTextInput = ({
+  maxHeight = undefined,
+  ...props
+}: any) => {
   return (
-    <View style={{ flex: 1, maxHeight: height / 4 }}>
+    <View style={{ flex: 1, maxHeight }}>
       <DefaultText
         style={{
           zIndex: -1,
           flexWrap: 'wrap',
           width: '100%',
           minHeight: 30,
-          opacity: 0,
+          overflow: 'hidden',
+
+          // TODO
+          borderRadius: 0,
+          borderWidth: 0,
+          backgroundColor: 'transparent',
+          color: 'red',
+          paddingTop: 0,
+          paddingLeft: 0,
+          paddingRight: 0,
+          paddingBottom: 0,
           fontSize: defaultTextInputStyles.textInput.fontSize,
-          paddingTop: Platform.OS === 'web' ? 5 : 4,
+
+          ...props.style,
         }}
       >
         {props.value}
@@ -29,13 +40,25 @@ const AutoResizingTextInput = (props) => {
       <DefaultLongTextInput
         {...props}
         style={{
-          ...props.style,
           outline: 'none',
           position: 'absolute',
-          top: Platform.OS === 'web' ? 5 : 4,
+          top: 0,
           bottom: 0,
           left: 0,
           right: 0,
+
+          // TODO
+          borderRadius: 0,
+          borderWidth: 0,
+          backgroundColor: 'transparent',
+          color: 'blue',
+          paddingTop: 0,
+          paddingLeft: 0,
+          paddingRight: 0,
+          paddingBottom: 0,
+          fontSize: defaultTextInputStyles.textInput.fontSize,
+
+          ...props.style,
         }}
       />
     </View>

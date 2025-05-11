@@ -9,6 +9,7 @@ import {
   Platform,
   StyleSheet,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -216,6 +217,7 @@ const Input = ({
   const [showHint, setShowHint] = useState(false);
 
   const { width, onLayout } = useComponentWidth();
+  const { height: windowHeight } = useWindowDimensions();
 
   const { startRecording, stopRecording, duration } = useRecorder();
 
@@ -479,6 +481,7 @@ const Input = ({
         <View style={styles.inputWrapper}>
           <Animated.View style={[styles.inputContainer, animatedInputStyle]}>
             <AutoResizingTextInput
+              maxHeight={windowHeight / 4}
               style={styles.textInput}
               multiline={true}
               placeholder="Type a message..."
@@ -583,18 +586,7 @@ const styles = StyleSheet.create({
     paddingVertical: Platform.OS === 'web' ? 10 : 6,
   },
   textInput: {
-    backgroundColor: undefined,
-    paddingTop: 0,
-    paddingBottom: 0,
-    paddingLeft: 0,
-    paddingRight: 0,
-    marginLeft: undefined,
-    marginRight: undefined,
-    borderColor: undefined,
-    borderWidth: undefined,
-    borderRadius: undefined,
-    height: undefined,
-    flex: 1,
+    paddingTop: Platform.OS === 'web' ? 5 : 4,
   },
   gifContainer: {
     height: 28,
