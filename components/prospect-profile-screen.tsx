@@ -49,6 +49,7 @@ import { faPills } from '@fortawesome/free-solid-svg-icons/faPills'
 import { faSmoking } from '@fortawesome/free-solid-svg-icons/faSmoking'
 import { faVenusMars } from '@fortawesome/free-solid-svg-icons/faVenusMars'
 import { faPaperPlane } from '@fortawesome/free-solid-svg-icons/faPaperPlane'
+import { faReply } from '@fortawesome/free-solid-svg-icons/faReply'
 import { faLocationDot } from '@fortawesome/free-solid-svg-icons/faLocationDot'
 import { RotateCcw, Flag, X } from "react-native-feather";
 import Reanimated, {
@@ -68,6 +69,9 @@ import { AudioPlayer } from './audio-player';
 import { EnlargeablePhoto } from './enlargeable-image';
 import { commonStyles } from '../styles';
 import { useSkipped, setSkipped } from '../hide-and-block/hide-and-block';
+import { useQuote, setQuote } from './conversation-screen/quote';
+import { AutoResizingTextInput } from './auto-resizing-text-input';
+import { DefaultLongTextInput } from './default-long-text-input';
 
 const Stack = createNativeStackNavigator();
 
@@ -266,6 +270,8 @@ const FloatingSendIntroButton = ({
   photoUuid,
   photoBlurhash,
 }) => {
+  const quote = useQuote();
+
   const onPress = useCallback(() => {
     if (name === undefined) return;
 
@@ -282,7 +288,12 @@ const FloatingSendIntroButton = ({
     >
       {personUuid !== undefined && name !== undefined &&
         <FontAwesomeIcon
-          icon={faPaperPlane}
+          icon={
+            // TODO: Fade between icon changes
+            quote
+              ? faReply
+              : faPaperPlane
+          }
           size={24}
           style={{
             color: 'white',
@@ -667,6 +678,7 @@ const CurriedContent = ({navigationRef, navigation, route}) => {
   useEffect(() => {
     setData(undefined);
     setNotFound(false);
+
     (async () => {
       setSkipped(personUuid, { networkState: 'fetching' });
       const response = await api('get', `/prospect-profile/${personUuid}`);
@@ -681,6 +693,10 @@ const CurriedContent = ({navigationRef, navigation, route}) => {
       );
       route.params.personId = response?.json?.person_id;
     })();
+
+    // Clear the quote, in case the user selected some text on the prospect's
+    // profile.
+    return () => setQuote(null);
   }, [personUuid]);
 
   const photoUuid = data === undefined ?
@@ -1177,9 +1193,34 @@ const Body = ({
         {!!data?.name && !!data?.about && data.about.trim() &&
           <>
             <Title style={{color: data?.theme?.title_color}}>About {data.name}</Title>
-            <DefaultText style={{color: data?.theme?.body_color}} selectable={true}>
-              {data.about}
-            </DefaultText>
+            <DefaultLongTextInput
+              style={{
+                overflow: 'hidden',
+                height: 'auto',
+                color: data?.theme?.body_color,
+                backgroundColor: 'transparent',
+                fontSize: 15,
+              }}
+              disableFullscreenUI={true}
+              importantForAutofill="no"
+              inputMode="none"
+              autoCorrect={false}
+              caretHidden={true}
+              showSoftInputOnFocus={false}
+              value={data.about}
+              contextMenuHidden={Platform.OS !== 'android'}
+              editable={Platform.OS === 'android'}
+              onSelectionChange={({ nativeEvent: { selection: { start, end } } }) => {
+                if (start === end) {
+                  setQuote(null);
+                } else {
+                  setQuote({
+                    text: data.about.slice(start, end),
+                    attribution: data.name,
+                  });
+                }
+              }}
+            />
           </>
         }
 

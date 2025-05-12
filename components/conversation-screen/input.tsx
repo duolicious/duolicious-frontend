@@ -36,8 +36,6 @@ import {
 } from '../default-text';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faPaperPlane } from '@fortawesome/free-solid-svg-icons/faPaperPlane';
-import { styles as defaultTextInputStyles } from '../default-text-input';
-import { DefaultLongTextInput } from '../default-long-text-input';
 import { isMobile } from '../../util/util';
 import { Audio } from 'expo-av';
 import { uriToBase64 } from '../../api/api';
@@ -52,6 +50,7 @@ import {
   setQuote,
   useQuote,
 } from './quote';
+import { AutoResizingTextInput } from '../auto-resizing-text-input';
 
 const haptics = () => {
   if (Platform.OS !== 'web') {
@@ -160,40 +159,6 @@ const useRecorder = () => {
   return { startRecording, stopRecording, duration };
 };
 
-const AutoResizingTextInput = (props) => {
-  const { height } = useWindowDimensions();
-
-  return (
-    <View style={{ flex: 1, maxHeight: height / 4 }}>
-      <DefaultText
-        style={{
-          zIndex: -1,
-          flexWrap: 'wrap',
-          width: '100%',
-          minHeight: 30,
-          opacity: 0,
-          fontSize: defaultTextInputStyles.textInput.fontSize,
-          paddingTop: Platform.OS === 'web' ? 5 : 4,
-        }}
-      >
-        {props.value}
-      </DefaultText>
-      <DefaultLongTextInput
-        {...props}
-        style={{
-          ...props.style,
-          outline: 'none',
-          position: 'absolute',
-          top: Platform.OS === 'web' ? 5 : 4,
-          bottom: 0,
-          left: 0,
-          right: 0,
-        }}
-      />
-    </View>
-  );
-};
-
 const Quote = ({ quote }: { quote: QuoteType | null }) => {
   if (!quote) {
     return null;
@@ -252,6 +217,7 @@ const Input = ({
   const [showHint, setShowHint] = useState(false);
 
   const { width, onLayout } = useComponentWidth();
+  const { height: windowHeight } = useWindowDimensions();
 
   const { startRecording, stopRecording, duration } = useRecorder();
 
@@ -515,6 +481,7 @@ const Input = ({
         <View style={styles.inputWrapper}>
           <Animated.View style={[styles.inputContainer, animatedInputStyle]}>
             <AutoResizingTextInput
+              maxHeight={windowHeight / 4}
               style={styles.textInput}
               multiline={true}
               placeholder="Type a message..."
@@ -619,18 +586,7 @@ const styles = StyleSheet.create({
     paddingVertical: Platform.OS === 'web' ? 10 : 6,
   },
   textInput: {
-    backgroundColor: undefined,
-    paddingTop: 0,
-    paddingBottom: 0,
-    paddingLeft: 0,
-    paddingRight: 0,
-    marginLeft: undefined,
-    marginRight: undefined,
-    borderColor: undefined,
-    borderWidth: undefined,
-    borderRadius: undefined,
-    height: undefined,
-    flex: 1,
+    paddingTop: Platform.OS === 'web' ? 5 : 4,
   },
   gifContainer: {
     height: 28,
