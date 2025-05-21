@@ -11,6 +11,7 @@ import {
   TextStyle,
   View,
   ViewStyle,
+  BackHandler,
 } from 'react-native';
 import {
   Fragment,
@@ -622,6 +623,20 @@ const ConversationScreen = ({navigation, route}) => {
   }, [personUuid, isFocused]);
 
   if (Platform.OS === 'web') {
+    // intercept mobile back button on mobile to go back instead of closing the app
+    useEffect(() => {
+      const onBackPress = () => {
+        navigation.navigate(-1);
+        return true;
+      };
+  
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+  
+      return () => {
+        backHandler.remove();
+      };
+    }, []);
+
     // eslint-disable-next-line react-hooks/rules-of-hooks
     useEffect(() => {
       const handleFocus = () => {
