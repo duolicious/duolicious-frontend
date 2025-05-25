@@ -59,7 +59,6 @@ import { useScrollbarStyle } from './components/navigation/scroll-bar-hooks';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ErrorBoundary } from './components/error-boundary';
 import { TooltipListener } from './components/tooltip';
-import { VerificationCamera } from './components/verification-camera'; // TODO
 
 verificationWatcher();
 
@@ -483,7 +482,72 @@ const App = () => {
 
   return (
     <ErrorBoundary onError={onError}>
-      <VerificationCamera />
+      <SafeAreaProvider>
+        <GestureHandlerRootView>
+          {!isLoading && initialState !== undefined &&
+            <NavigationContainer
+              ref={navigationContainerRef}
+              initialState={
+                initialState ?
+                { ...initialState, stale: true } :
+                undefined
+              }
+              onStateChange={onNavigationStateChange}
+              theme={{
+                ...DefaultTheme,
+                colors: {
+                  ...DefaultTheme.colors,
+                  background: 'white',
+                },
+              }}
+              documentTitle={{
+                formatter: () =>
+                  (numUnreadTitle ? `(${numUnreadTitle}) ` : '') + 'Duolicious'
+              }}
+            >
+              <StatusBar
+                translucent={true}
+                backgroundColor="transparent"
+                barStyle="dark-content"
+              />
+              <Stack.Navigator
+                screenOptions={{
+                  headerShown: false,
+                  presentation: 'card',
+                }}
+              >
+                <Tab.Screen
+                  name="Welcome"
+                  component={WelcomeScreen} />
+                <Tab.Screen
+                  name="Home"
+                  component={HomeTabs} />
+                <Tab.Screen
+                  name="Conversation Screen"
+                  component={ConversationScreen} />
+                <Tab.Screen
+                  name="Prospect Profile Screen"
+                  component={ProspectProfileScreen} />
+                <Tab.Screen
+                  name="Invite Screen"
+                  component={InviteScreen} />
+              </Stack.Navigator>
+            </NavigationContainer>
+          }
+          <TooltipListener/>
+          <DonationNagModal
+            name={signedInUser?.name}
+            estimatedEndDate={signedInUser?.estimatedEndDate}
+            visible={signedInUser?.doShowDonationNag}
+          />
+          <ReportModal/>
+          <ImageCropper/>
+          <ColorPickerModal/>
+          <GifPickerModal/>
+          <Toast/>
+        </GestureHandlerRootView>
+        <WebSplashScreen loading={isLoading}/>
+      </SafeAreaProvider>
     </ErrorBoundary>
   );
 };

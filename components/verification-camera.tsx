@@ -9,8 +9,14 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { faTimes } from '@fortawesome/free-solid-svg-icons/faTimes';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { DefaultText } from './default-text';
+import { SomethingWentWrongToast } from './toast';
+import { notify } from '../events/events';
 
-const VerificationCamera = () => {
+const VerificationCamera = ({
+  onSubmit,
+}: {
+  onSubmit: (base64: string) => any,
+}) => {
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
 
@@ -29,10 +35,17 @@ const VerificationCamera = () => {
         const photo = await cameraRef.current.takePictureAsync({
           base64: true
         });
+        if (!photo.base64) {
+          throw new Error(
+            'Expected base64 property to be set while taking verification photo'
+          );
+        }
+        onSubmit(photo.base64);
         console.log('Photo captured:', photo);
         // TODO: handle the captured photo
       } catch (err) {
         console.warn('Error capturing photo:', err);
+        notify<React.FC>('toast', SomethingWentWrongToast);
       }
     }
   };

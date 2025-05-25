@@ -119,6 +119,12 @@ type OptionGroupCheckChips = {
   }
 };
 
+type OptionGroupVerificationCamera = {
+  verificationCamera: {
+    submit: (base64: string) => Promise<boolean>
+  }
+};
+
 type OptionGroupVerificationChecker = {
   verificationChecker: {}
 };
@@ -184,6 +190,7 @@ type OptionGroupInputs
   | OptionGroupTextShort
   | OptionGroupOtp
   | OptionGroupCheckChips
+  | OptionGroupVerificationCamera
   | OptionGroupVerificationChecker
   | OptionGroupThemePicker
   | OptionGroupNone;
@@ -195,6 +202,7 @@ type OptionGroup<T extends OptionGroupInputs> = {
   input: T,
   scrollView?: boolean,
   buttonLabel?: string,
+  fullScreen?: boolean,
 };
 
 const hasExactKeys = (obj, keys) => {
@@ -248,6 +256,10 @@ const isOptionGroupTextShort = (x: any): x is OptionGroupTextShort => {
 
 const isOptionGroupOtp = (x: any): x is OptionGroupOtp => {
   return hasExactKeys(x, ['otp']);
+}
+
+const isOptionGroupVerificationCamera = (x: any): x is OptionGroupVerificationCamera => {
+  return hasExactKeys(x, ['verificationCamera']);
 }
 
 const isOptionGroupVerificationChecker = (x: any): x is OptionGroupVerificationChecker => {
@@ -1937,18 +1949,19 @@ const verificationOptionGroups: OptionGroup<OptionGroupInputs>[] = [
   {
     title: 'Get Verified',
     description: `Press ‘Continue’ to submit your selfie.`,
+    fullScreen: true,
     input: {
-      photos: {
-        submit: async (position, cropperOutput) => {
-          const response = await japi(
+      verificationCamera: {
+        submit: async (base64) => {
+          const response1 = await japi(
             'post',
             '/verification-selfie',
             {
               base64_file: {
                 position: 1,
-                base64: cropperOutput.originalBase64,
-                top: cropperOutput.top,
-                left: cropperOutput.left,
+                base64,
+                top: 0,
+                left: 0,
               },
             },
             {
@@ -1957,14 +1970,19 @@ const verificationOptionGroups: OptionGroup<OptionGroupInputs>[] = [
             }
           );
 
-          return response.ok;
-        },
-        submitAll: async () => api(
-          'post', '/verify', undefined, { maxRetries: 0 }),
-        delete: async () => true,
-        showProtip: false,
-        validateAtLeastOne: true,
-        firstFileNumber: -1,
+          if (!response1.ok) {
+            return false;
+          }
+
+          const response2 = await api(
+            'post', '/verify', undefined, { maxRetries: 0 });
+
+          if (!response2.ok) {
+            return false;
+          }
+
+          return true;
+        }
       }
     }
   },
@@ -1993,6 +2011,7 @@ export {
   OptionGroupTextLong,
   OptionGroupTextShort,
   OptionGroupThemePicker,
+  OptionGroupVerificationCamera,
   OptionGroupVerificationChecker,
   basicsOptionGroups,
   createAccountOptionGroups,
@@ -2014,6 +2033,7 @@ export {
   isOptionGroupTextLong,
   isOptionGroupTextShort,
   isOptionGroupThemePicker,
+  isOptionGroupVerificationCamera,
   isOptionGroupVerificationChecker,
   maxDailySelfies,
   noneFontSize,
