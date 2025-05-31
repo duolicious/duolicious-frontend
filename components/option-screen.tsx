@@ -842,8 +842,6 @@ const VerificationChecker = forwardRef((props: InputProps<OptionGroupVerificatio
   }, []);
 
   useEffect(() => {
-    notify('watch-verification');
-
     return listen<VerificationEvent>(
       'updated-verification',
       onVerificationEvent,

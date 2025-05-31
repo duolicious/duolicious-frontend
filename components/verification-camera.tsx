@@ -12,6 +12,7 @@ import { DefaultText } from './default-text';
 import { SomethingWentWrongToast } from './toast';
 import { notify, listen } from '../events/events';
 import { japi, api } from '../api/api';
+import { notifyUpdatedVerification } from '../verification/verification';
 
 // TODO: Show an 'uploading' message
 
@@ -50,7 +51,12 @@ const VerificationCamera = () => {
           );
         }
 
-        showVerificationCamera(false)
+        notifyUpdatedVerification({
+          status: 'uploading-photo',
+          message: 'Uploading photo...',
+        });
+
+        showVerificationCamera(false);
 
         await japi(
           'post',
@@ -68,6 +74,8 @@ const VerificationCamera = () => {
             showValidationToast: true,
           }
         );
+
+        notify('watch-verification');
 
         await api('post', '/verify', undefined, { maxRetries: 0 });
       } catch (err) {
@@ -214,5 +222,6 @@ const styles = StyleSheet.create({
 
 export {
   VerificationCameraModal,
+  notifyUpdatedVerification,
   showVerificationCamera,
 };

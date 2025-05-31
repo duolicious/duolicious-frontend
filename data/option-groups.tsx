@@ -20,7 +20,6 @@ import { NonNullImageCropperOutput } from '../components/image-cropper';
 import { login, logout } from '../chat/application-layer';
 import { LOGARITHMIC_SCALE, Scale } from "../scales/scales";
 import { VerificationBadge } from '../components/verification-badge';
-import { VerificationEvent } from '../verification/verification';
 import { notify } from '../events/events';
 import { ClubItem } from '../club/club';
 import { DefaultText } from '../components/default-text';
@@ -32,7 +31,10 @@ import {
 } from 'react-native';
 import { FC } from 'react';
 import { onboardingQueue } from '../api/queue';
-import { showVerificationCamera } from '../components/verification-camera';
+import {
+  notifyUpdatedVerification,
+  showVerificationCamera,
+} from '../components/verification-camera';
 
 const noneFontSize = 16;
 
@@ -573,7 +575,7 @@ const genderOptionGroup: OptionGroup<OptionGroupButtons> = {
         const ok = (await japi('patch', '/profile-info', { gender })).ok;
         if (ok) {
           this.currentValue = gender;
-          notify<VerificationEvent>('updated-verification', { gender: false });
+          notifyUpdatedVerification({ gender: false });
         }
         return ok;
       },
@@ -607,7 +609,7 @@ const ethnicityOptionGroup: OptionGroup<OptionGroupButtons> = {
         const ok = (await japi('patch', '/profile-info', { ethnicity })).ok;
         if (ok) {
           this.currentValue = ethnicity;
-          notify<VerificationEvent>('updated-verification', { ethnicity: false });
+          notifyUpdatedVerification({ ethnicity: false });
         }
         return ok;
       },
