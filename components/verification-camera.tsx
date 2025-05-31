@@ -24,8 +24,8 @@ const VerificationCamera = () => {
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
 
-  const { width, height } = useWindowDimensions();
-  const size = Math.min(width, height);
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const windowSize = Math.min(windowWidth, windowHeight);
 
   useEffect(() => {
     if (permission && !permission.granted) {
@@ -49,6 +49,8 @@ const VerificationCamera = () => {
           );
         }
 
+        const photoSize = Math.min(photo.width, photo.height);
+
         notifyUpdatedVerification({
           status: 'uploading-photo',
           message: 'Uploading photo',
@@ -63,8 +65,8 @@ const VerificationCamera = () => {
             base64_file: {
               position: 1,
               base64: photo.base64,
-              top: 0,
-              left: 0,
+              top:  Math.round((photo.height - photoSize) / 2),
+              left: Math.round((photo.width  - photoSize) / 2),
             },
           },
           {
@@ -99,11 +101,10 @@ const VerificationCamera = () => {
 
   return (
     <View style={styles.container}>
-      <View style={{ width: size, height: size }}>
+      <View style={{ width: windowSize, height: windowSize }}>
         <CameraView
           ref={cameraRef}
           facing="front"
-          ratio="1:1"
           zoom={0}
           flash="off"
           mute={true}
