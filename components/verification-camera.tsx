@@ -11,13 +11,28 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { DefaultText } from './default-text';
 import { SomethingWentWrongToast } from './toast';
 import { notify, listen } from '../events/events';
-import { japi, api } from '../api/api';
-import { notifyUpdatedVerification } from '../verification/verification';
 
 const EVENT_KEY_SHOW = 'verification-camera-show';
+const EVENT_KEY_RESULT = 'verification-camera-result';
+
+type VerificationCameraResult = null | {
+  base64: string
+  height: number
+  width: number
+};
 
 const showVerificationCamera = (show: boolean) => {
   notify(EVENT_KEY_SHOW, show);
+};
+
+const notifyVerificationCameraResult = (base64: VerificationCameraResult) => {
+  notify<VerificationCameraResult>(EVENT_KEY_RESULT, base64);
+};
+
+const listenVerificationCameraResult = (
+  f: (base64: VerificationCameraResult) => Promise<void>
+) => {
+  return listen<VerificationCameraResult>(EVENT_KEY_RESULT, f);
 };
 
 const VerificationCamera = () => {
@@ -34,7 +49,7 @@ const VerificationCamera = () => {
   }, [permission]);
 
   const onPressClose = useCallback(() => {
-    showVerificationCamera(false);
+    notifyVerificationCameraResult(null);
   }, []);
 
   const handleTakePhoto = async () => {
@@ -43,41 +58,18 @@ const VerificationCamera = () => {
         const photo = await cameraRef.current.takePictureAsync({
           base64: true
         });
+
         if (!photo.base64) {
           throw new Error(
             'Expected base64 property to be set while taking verification photo'
           );
         }
 
-        const photoSize = Math.min(photo.width, photo.height);
-
-        notifyUpdatedVerification({
-          status: 'uploading-photo',
-          message: 'Uploading photo',
+        notifyVerificationCameraResult({
+          base64: photo.base64,
+          height: photo.height,
+          width: photo.width,
         });
-
-        showVerificationCamera(false);
-
-        await japi(
-          'post',
-          '/verification-selfie',
-          {
-            base64_file: {
-              position: 1,
-              base64: photo.base64,
-              top:  Math.round((photo.height - photoSize) / 2),
-              left: Math.round((photo.width  - photoSize) / 2),
-            },
-          },
-          {
-            timeout: 2 * 60 * 1000, // 2 minutes
-            showValidationToast: true,
-          }
-        );
-
-        notify('watch-verification');
-
-        await api('post', '/verify', undefined, { maxRetries: 0 });
       } catch (err) {
         console.warn('Error capturing photo:', err);
         notify<React.FC>('toast', SomethingWentWrongToast);
@@ -221,6 +213,7 @@ const styles = StyleSheet.create({
 
 export {
   VerificationCameraModal,
-  notifyUpdatedVerification,
   showVerificationCamera,
+  notifyVerificationCameraResult,
+  listenVerificationCameraResult,
 };

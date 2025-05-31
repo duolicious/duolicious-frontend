@@ -31,10 +31,8 @@ import {
 } from 'react-native';
 import { FC } from 'react';
 import { onboardingQueue } from '../api/queue';
-import {
-  notifyUpdatedVerification,
-  showVerificationCamera,
-} from '../components/verification-camera';
+import { showVerificationCamera } from '../components/verification-camera';
+import { notifyUpdatedVerification } from '../verification/verification';
 
 const noneFontSize = 16;
 
