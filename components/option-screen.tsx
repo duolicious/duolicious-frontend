@@ -784,7 +784,7 @@ const VerificationChecker = forwardRef((props: InputProps<OptionGroupVerificatio
     | 'failure'
   >('uploading-photo');
   const [message, setMessage] = useState('Loading...');
-  const [numChecks, setNumChecks] = useState(0);
+  const [numChecks, setNumChecks] = useState(3);
   const [verifiedThings, setVerifiedThings] = useState<string[]>([]);
   const [unverifiedThings, setUnverifiedThings] = useState<string[]>([]);
 

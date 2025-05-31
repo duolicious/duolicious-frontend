@@ -14,8 +14,6 @@ import { notify, listen } from '../events/events';
 import { japi, api } from '../api/api';
 import { notifyUpdatedVerification } from '../verification/verification';
 
-// TODO: Show an 'uploading' message
-
 const EVENT_KEY_SHOW = 'verification-camera-show';
 
 const showVerificationCamera = (show: boolean) => {
@@ -53,7 +51,7 @@ const VerificationCamera = () => {
 
         notifyUpdatedVerification({
           status: 'uploading-photo',
-          message: 'Uploading photo...',
+          message: 'Uploading photo',
         });
 
         showVerificationCamera(false);
