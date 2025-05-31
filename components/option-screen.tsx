@@ -43,7 +43,6 @@ import {
   OptionGroupTextLong,
   OptionGroupTextShort,
   OptionGroupThemePicker,
-  OptionGroupVerificationCamera,
   OptionGroupVerificationChecker,
   descriptionStyle,
   isOptionGroupButtons,
@@ -59,7 +58,6 @@ import {
   isOptionGroupTextLong,
   isOptionGroupTextShort,
   isOptionGroupThemePicker,
-  isOptionGroupVerificationCamera,
   isOptionGroupVerificationChecker,
   maxDailySelfies,
   noneFontSize,
@@ -83,7 +81,6 @@ import { listen, notify } from '../events/events';
 import { Title } from './title';
 import { ShowColorPickerEvent } from './modal/color-picker-modal/color-picker-modal';
 import { isMobile } from '../util/util';
-import { VerificationCamera as VerificationCamera_ } from './verification-camera';
 
 type InputProps<T extends OptionGroupInputs> = {
   input: T,
@@ -506,13 +503,6 @@ const Photos = forwardRef((props: InputProps<OptionGroupPhotos>, ref) => {
     </View>
   );
 });
-
-const VerificationCamera = (props: InputProps<OptionGroupVerificationCamera> & { ref: any }) => {
-  // TODO: Use input props
-  return <VerificationCamera_
-    onSubmit={props.input.verificationCamera.submit}
-  />;
-};
 
 const TextLong = forwardRef((props: InputProps<OptionGroupTextLong>, ref) => {
   const [isInvalid, setIsInvalid] = useState(false);
@@ -1260,8 +1250,6 @@ const InputElement = forwardRef((props: InputProps<OptionGroupInputs>, ref) => {
     return <LocationSelector {...{ref, ...props, input: props.input}}/>;
   } else if (isOptionGroupPhotos(props.input)) {
     return <Photos {...{ref, ...props, input: props.input}}/>;
-  } else if (isOptionGroupVerificationCamera(props.input)) {
-    return <VerificationCamera {...{ref, ...props, input: props.input}}/>;
   } else if (isOptionGroupTextLong(props.input)) {
     return <TextLong {...{ref, ...props, input: props.input}}/>;
   } else if (isOptionGroupTextShort(props.input)) {
@@ -1309,7 +1297,6 @@ const OptionScreen = ({navigation, route}) => {
     input,
     scrollView,
     buttonLabel,
-    fullScreen = false,
   } = thisOptionGroup;
 
   if (!input) {
@@ -1375,19 +1362,6 @@ const OptionScreen = ({navigation, route}) => {
       setIsBottom(containerHeight >= contentHeight);
     }
   }, [containerHeight, contentHeight]);
-
-  if (fullScreen) {
-    return <InputElement
-      ref={inputRef}
-      input={input}
-      isLoading={isLoading}
-      setIsLoading={setIsLoading}
-      onSubmitSuccess={_onSubmitSuccess}
-      title={title}
-      showSkipButton={showSkipButton}
-      theme={theme}
-    />;
-  }
 
   return (
     <SafeAreaView

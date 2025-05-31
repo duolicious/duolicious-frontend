@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -10,13 +10,18 @@ import { faTimes } from '@fortawesome/free-solid-svg-icons/faTimes';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { DefaultText } from './default-text';
 import { SomethingWentWrongToast } from './toast';
-import { notify } from '../events/events';
+import { notify, listen } from '../events/events';
+import { japi, api } from '../api/api';
 
-const VerificationCamera = ({
-  onSubmit,
-}: {
-  onSubmit: (base64: string) => any,
-}) => {
+// TODO: Show an 'uploading' message
+
+const EVENT_KEY_SHOW = 'verification-camera-show';
+
+const showVerificationCamera = (show: boolean) => {
+  notify(EVENT_KEY_SHOW, show);
+};
+
+const VerificationCamera = () => {
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
 
@@ -29,6 +34,10 @@ const VerificationCamera = ({
     }
   }, [permission]);
 
+  const onPressClose = useCallback(() => {
+    showVerificationCamera(false);
+  }, []);
+
   const handleTakePhoto = async () => {
     if (cameraRef.current) {
       try {
@@ -40,9 +49,27 @@ const VerificationCamera = ({
             'Expected base64 property to be set while taking verification photo'
           );
         }
-        onSubmit(photo.base64);
-        console.log('Photo captured:', photo);
-        // TODO: handle the captured photo
+
+        showVerificationCamera(false)
+
+        await japi(
+          'post',
+          '/verification-selfie',
+          {
+            base64_file: {
+              position: 1,
+              base64: photo.base64,
+              top: 0,
+              left: 0,
+            },
+          },
+          {
+            timeout: 2 * 60 * 1000, // 2 minutes
+            showValidationToast: true,
+          }
+        );
+
+        await api('post', '/verify', undefined, { maxRetries: 0 });
       } catch (err) {
         console.warn('Error capturing photo:', err);
         notify<React.FC>('toast', SomethingWentWrongToast);
@@ -81,7 +108,7 @@ const VerificationCamera = ({
       <View style={styles.controlsContainer}>
         <TouchableOpacity
           style={styles.closeButton}
-          onPress={() => { /* hook up later */ }}
+          onPress={onPressClose}
         >
           <FontAwesomeIcon
             icon={faTimes}
@@ -104,9 +131,27 @@ const VerificationCamera = ({
   );
 };
 
+const VerificationCameraModal = () => {
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    return listen(EVENT_KEY_SHOW, setShow);
+  }, []);
+
+  if (show) {
+    return <VerificationCamera/>;
+  } else {
+    return null;
+  }
+};
+
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: 0,
     backgroundColor: 'black',
     justifyContent: 'center',
     alignItems: 'center',
@@ -167,4 +212,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export { VerificationCamera };
+export {
+  VerificationCameraModal,
+  showVerificationCamera,
+};
