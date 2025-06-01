@@ -8,9 +8,10 @@ import {
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { faTimes } from '@fortawesome/free-solid-svg-icons/faTimes';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
-import { DefaultText } from './default-text';
-import { SomethingWentWrongToast } from './toast';
-import { notify, listen } from '../events/events';
+import { DefaultText } from '../default-text';
+import { SomethingWentWrongToast } from '../toast';
+import { notify, listen } from '../../events/events';
+import { getBestResolution } from './resolution';
 
 const EVENT_KEY_SHOW = 'verification-camera-show';
 const EVENT_KEY_RESULT = 'verification-camera-result';
@@ -37,6 +38,7 @@ const listenVerificationCameraResult = (
 
 const VerificationCamera = () => {
   const [permission, requestPermission] = useCameraPermissions();
+  const [pictureSize, setPictureSize] = useState<string | undefined>();
   const cameraRef = useRef<CameraView>(null);
 
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
@@ -102,6 +104,12 @@ const VerificationCamera = () => {
           mute={true}
           mirror={false}
           style={styles.camera}
+          pictureSize={pictureSize}
+          onCameraReady={async () => {
+            const availablePictureSizes = await cameraRef.current?.getAvailablePictureSizesAsync();
+            const bestResolution = getBestResolution(availablePictureSizes);
+            setPictureSize(bestResolution ?? undefined);
+          }}
         />
       </View>
       <View style={styles.controlsContainer}>
