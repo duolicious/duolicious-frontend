@@ -83,35 +83,31 @@ const VerificationCamera = () => {
     return <View style={styles.container} />;
   }
 
-  if (!permission.granted) {
-    return (
-      <View style={styles.container}>
+  return (
+    <View style={styles.container}>
+      {permission?.granted ? (
+        <View style={{ width: windowSize, height: windowSize }}>
+          <CameraView
+            ref={cameraRef}
+            facing="front"
+            zoom={0}
+            flash="off"
+            mute={true}
+            mirror={false}
+            style={styles.camera}
+            pictureSize={pictureSize}
+            onCameraReady={async () => {
+              const availablePictureSizes = await cameraRef.current?.getAvailablePictureSizesAsync();
+              const bestResolution = getBestResolution(availablePictureSizes);
+              setPictureSize(bestResolution ?? undefined);
+            }}
+          />
+        </View>
+      ) : (
         <DefaultText style={styles.message}>
           We need your permission to show the camera
         </DefaultText>
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.container}>
-      <View style={{ width: windowSize, height: windowSize }}>
-        <CameraView
-          ref={cameraRef}
-          facing="front"
-          zoom={0}
-          flash="off"
-          mute={true}
-          mirror={false}
-          style={styles.camera}
-          pictureSize={pictureSize}
-          onCameraReady={async () => {
-            const availablePictureSizes = await cameraRef.current?.getAvailablePictureSizesAsync();
-            const bestResolution = getBestResolution(availablePictureSizes);
-            setPictureSize(bestResolution ?? undefined);
-          }}
-        />
-      </View>
+      )}
       <View style={styles.controlsContainer}>
         <TouchableOpacity
           style={styles.closeButton}
@@ -128,11 +124,13 @@ const VerificationCamera = () => {
           />
         </TouchableOpacity>
 
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.shutterOuter} onPress={handleTakePhoto}>
-            <View style={styles.shutterInner} />
-          </TouchableOpacity>
-        </View>
+        {permission?.granted &&
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity style={styles.shutterOuter} onPress={handleTakePhoto}>
+              <View style={styles.shutterInner} />
+            </TouchableOpacity>
+          </View>
+        }
       </View>
     </View>
   );
