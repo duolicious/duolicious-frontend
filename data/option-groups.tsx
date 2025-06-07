@@ -1171,7 +1171,11 @@ const createAccountOptionGroups: OptionGroup<OptionGroupInputs>[] = [
   ),
   {
     title: 'Step 4 of 5: Birth Date',
-    description: "When were you born? You can’t change this later",
+    description: (
+      "Unlock better matches and features exclusively for age-verified users " +
+      "by setting this accurately. It can’t be easily changed, so make sure " +
+      "it’s correct."
+    ),
     input: {
       date: {
         submit: async (input) => await onboardingQueue.addTask(
