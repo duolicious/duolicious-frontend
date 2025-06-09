@@ -126,13 +126,16 @@ const MessageStatusComponent = ({
     'age-verification',
   ];
 
-  const requestsVerification = verificationStatuses.includes(messageStatus);
+  const isPressable = verificationStatuses.includes(messageStatus);
 
   const navigation = useNavigation<any>();
 
-  // TODO: Disable arrow on mouse over
-  const onPress = useCallback(() => {
-    if (!requestsVerification) {
+  const onHandlerStateChange = useCallback(({ nativeEvent }) => {
+    if (!isPressable) {
+      return;
+    }
+
+    if (nativeEvent.state !== State.ACTIVE) {
       return;
     }
 
@@ -150,7 +153,7 @@ const MessageStatusComponent = ({
         },
       }
     );
-  }, [requestsVerification]);
+  }, [isPressable]);
 
   const verificationMessageText = ` Verification is free and takes just a few minutes. Press here to start.`;
 
@@ -178,20 +181,14 @@ const MessageStatusComponent = ({
   }
 
   return (
-    <TapGestureHandler
-      onHandlerStateChange={({ nativeEvent }) => {
-        console.log('hi'); // TODO
-        if (nativeEvent.state === State.ACTIVE) {
-          onPress();
-        }
-      }}
-    >
+    <TapGestureHandler onHandlerStateChange={onHandlerStateChange} >
       <View
         style={{
           borderRadius: 10,
           backgroundColor: 'black',
           padding: 10,
           maxWidth: '80%',
+          cursor: isPressable ? 'pointer' : undefined,
         }}
       >
         <DefaultText style={{
