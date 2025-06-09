@@ -1360,7 +1360,7 @@ const OptionScreen = ({navigation, route}) => {
     } else {
       navigation.popToTop();
     }
-  }, []);
+  }, [returnTo, extraPopToTop]);
 
   const _onSubmitSuccess = useCallback(async () => {
     onSubmitSuccess && onSubmitSuccess();
@@ -1383,7 +1383,7 @@ const OptionScreen = ({navigation, route}) => {
         );
       }
     }
-  }, [inputRef]);
+  }, [inputRef, close]);
 
   const onPressContinue = useCallback(() => {
     const submit = inputRef.current?.submit;
