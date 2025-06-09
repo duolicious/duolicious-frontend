@@ -149,6 +149,7 @@ const MessageStatusComponent = ({
             optionGroups: verificationOptionGroups,
             showSkipButton: false,
             theme: 'light',
+            extraPopToTop: true,
           }
         },
       }
