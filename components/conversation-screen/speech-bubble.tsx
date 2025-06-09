@@ -478,8 +478,7 @@ const SpeechBubble = ({
         </DefaultText>
       }
       <MessageStatusComponent
-        messageStatus="age-verification"
-        // messageStatus={message.status} // TODO
+        messageStatus={message.status}
         name={name}
       />
     </View>
