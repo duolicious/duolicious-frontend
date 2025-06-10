@@ -1353,6 +1353,7 @@ const OptionScreen = ({navigation, route}) => {
 
   const close = useCallback(() => {
     if (returnTo) {
+      navigation.popToTop();
       navigation.navigate(returnTo);
     } else if (extraPopToTop) {
       navigation.popToTop();
