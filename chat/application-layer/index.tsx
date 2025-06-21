@@ -575,7 +575,6 @@ const sendMessage = async (
       'blocked': (doc) =>
         // Fallback for any blocked case not caught above.
         doc.duo_message_blocked?.['@id'] === id &&
-        doc.duo_message_blocked !== undefined &&
         {},
       'not unique': (doc) =>
         doc.duo_message_not_unique?.['@id'] === id &&
