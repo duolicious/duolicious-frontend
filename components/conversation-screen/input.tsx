@@ -81,13 +81,16 @@ const useRecorder = () => {
   const startRecording = async (): Promise<boolean> => {
     if (recording.current) {
       return true;
-    };
+    }
 
     try {
       recordingActive.current = true;
 
-      if ((await Audio.getPermissionsAsync())?.status !== 'granted') {
-        await Audio.requestPermissionsAsync();
+      if ((await Audio.getPermissionsAsync())?.status === 'granted') {
+        ;
+      } else if ((await Audio.requestPermissionsAsync()).status !== 'granted') {
+        // Permission permanently denied or dismissed.
+        recordingActive.current = false;
       }
 
       // The value of `recordingActive` might've changed while we were waiting
