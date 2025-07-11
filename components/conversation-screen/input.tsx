@@ -54,12 +54,17 @@ import {
 } from './quote';
 import { Tooltip } from '../tooltip';
 
+// Helper that triggers a short, heavy haptic feedback whenever the user starts/stops/cancels
+// a recording **as long as we are _not_ on the web** (the browser would ignore the call).
+// Using a single place for this keeps the UX consistent and avoids repetition.
 const haptics = () => {
   if (Platform.OS !== 'web') {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
   }
 };
 
+// Simple hook that exposes the rendered width of a component (we need this to know how far
+// to slide the text input out of the way when recording starts).
 const useComponentWidth = () => {
   const [width, setWidth] = useState(0);
 
@@ -71,6 +76,20 @@ const useComponentWidth = () => {
   return { width, onLayout };
 };
 
+// ────────────────────────────────────────────────────────────────────────────────
+// useRecorder ─ encapsulates everything related to audio recording life-cycle
+// ────────────────────────────────────────────────────────────────────────────────
+//  • Requests / verifies microphone permission and surfaces **permission errors**
+//    through a toast so the user understands why recording failed.
+//  • Starts a HIGH_QUALITY recording session (with platform specific overrides).
+//  • Exposes a reactive `duration` (in seconds) so the UI can show a timer.
+//  • Enforces a hard limit (`maxDuration`) and gracefully stops when reached.
+//  • Converts the final file to a base-64 data-uri so callers can POST it without
+//    having to deal with the file-system.
+//
+//  NOTE: We purposefully keep mutable `recording.current` & `recordingActive`
+//  refs so we can *synchronously* know if a session is live from gesture
+//  callbacks that run on the UI thread.
 const useRecorder = () => {
   const maxDuration = 2 * 60;
 
@@ -240,6 +259,45 @@ const Quote = ({ quote }: { quote: QuoteType | null }) => {
   )
 };
 
+// ────────────────────────────────────────────────────────────────────────────────
+// <Input /> component – this is the heart of the chat composer.
+// ────────────────────────────────────────────────────────────────────────────────
+//  Layout overview:
+//  ┌──────────────────────────────────────────────────────────────────────────┐
+//  │  TextInput  |  GIF button  |  (hidden) cancel-overlay                    │
+//  └──────────────────────────────────────────────────────────────────────────┘
+//                                   │
+//  ┌──────────────────────────────────────────────────────────────────────────┐
+//  │  Mic / Send button (overlaps, fades in/out)                             │
+//  └──────────────────────────────────────────────────────────────────────────┘
+//
+//  Interaction matrix:
+//  ────────────────────────────────────────────────────────────────────────────
+//   Tap mic   → show hint ("Hold to record")
+//   Hold mic  → start recording (after 300 ms) & slide input left
+//   Drag left → live-update mic position, if >150 px → **cancel** recording
+//   Release    ├─ if cancelled → discard
+//              └─ else → stop & emit audio (≥1 s)
+//  Errors (permission denied, unexpected exceptions) are surfaced immediately
+//  via `ValidationErrorToast` so the user gets feedback without breaking flow.
+//
+//  Animation strategy:
+//  • All transient UI state (widths, translations, opacity, timers…) lives in
+//    Reanimated **shared values** so it can be mutated from the worklet side
+//    inside gesture handlers without causing React renders.
+//  • When `isRecording` flips we kick off `withTiming`/`withRepeat` sequences
+//    to move the input out, reveal the cancel overlay, flash the red mic, and
+//    run the “slide to cancel” arrow.
+//  • The overlay re-uses the same `cancelTextTranslateX` shared value that the
+//    input container animates with – that guarantees both elements stay in
+//    perfect sync regardless of screen width.
+//
+//  High-level data-flow:
+//     Gestures  ──→ SharedValues ──→ AnimatedStyles ──→ Rendered UI
+//                      ▲                                   │
+//                      │                                   ▼
+//                useRecorder (timer & async events) ── setState/props
+//
 const Input = ({
   onPressSend,
   onChange,
@@ -262,6 +320,14 @@ const Input = ({
   const { width, onLayout } = useComponentWidth();
 
   const { startRecording, stopRecording, duration } = useRecorder();
+
+  // ────────────────────────────────
+  // Shared animation state (Reanimated)
+  // ────────────────────────────────
+  // All of the following `useSharedValue` calls create values that can be read
+  // and mutated from worklet context (e.g. inside gesture handlers). This keeps
+  // every frame on the UI thread and avoids the overhead of React state
+  // updates during high-frequency interactions such as drags.
 
   // Shared value for GIF container width.
   const gifWidth = useSharedValue(40);
@@ -337,6 +403,13 @@ const Input = ({
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // ──────────────────────────────────────────────────────────────────────
+  // AnimatedStyle hooks – declaratively bind shared values to view props
+  // ──────────────────────────────────────────────────────────────────────
+  // Each hook maps an *input* (shared value) to an *output* (style object).
+  // We never mutate the styles directly; instead we nudge the shared values
+  // and let Reanimated update the view on the UI thread.
+
   const animatedGifStyle = useAnimatedStyle(() => ({
     width: gifWidth.value,
     opacity: gifWidth.value / 40,
@@ -376,7 +449,12 @@ const Input = ({
     transform: [{ translateX: arrowTranslateX.value }],
   }));
 
-  // Define functions before they're used in gestures.
+  // ------------------------------------------------------------------
+  // Recording life-cycle handlers (called from gesture worklets via runOnJS)
+  // ------------------------------------------------------------------
+  // We keep these separate from the gesture definitions so they stay readable
+  // and can be unit-tested if needed.
+
   // Try to begin recording – only mark `isRecording` true once we actually
   // have a recording session running.
   const handleStartRecording = () => {
