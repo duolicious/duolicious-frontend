@@ -91,6 +91,10 @@ const useRecorder = () => {
       } else if ((await Audio.requestPermissionsAsync()).status !== 'granted') {
         // Permission permanently denied or dismissed.
         recordingActive.current = false;
+        notify<React.FC>(
+          'toast',
+          () => <ValidationErrorToast error="You need to give permission to record audio" />
+        );
       }
 
       // The value of `recordingActive` might've changed while we were waiting
@@ -288,23 +292,17 @@ const Input = ({
     }
   }, [text, gifWidth]);
 
-  // Animate the input area and cancel overlay when recording starts/ends.
+  // Animate UI elements based on the *actual* recording state.
   useEffect(() => {
     if (isRecording) {
       inputTranslateX.value = withTiming(-width);
       cancelTextTranslateX.value = withTiming(0);
       recordOpacity.value = withTiming(isMobile() ? 0 : 0.3);
-      startRecording().then((didStart) => {
-        if (!didStart) {
-          setIsRecording(didStart);
-        }
-      });
     } else {
       inputTranslateX.value = withTiming(0);
       cancelTextTranslateX.value = withTiming(width);
       recordOpacity.value = withTiming(1);
       recordTranslateX.value = withTiming(0);
-      stopRecording();
     }
   }, [isRecording, inputTranslateX, cancelTextTranslateX, width]);
 
@@ -379,31 +377,45 @@ const Input = ({
   }));
 
   // Define functions before they're used in gestures.
+  // Try to begin recording – only mark `isRecording` true once we actually
+  // have a recording session running.
   const handleStartRecording = () => {
     cancelTriggered.value = false;
     // Reset cancellation animation values.
     micRotation.value = 0;
     micTranslateY.value = 0;
-    setIsRecording(true);
     haptics();
+
+    startRecording().then((didStart) => {
+      if (didStart) {
+        // Real recording session started → trigger UI/animation state.
+        setIsRecording(true);
+      } else {
+        // Permission denied or other failure – make sure mic snaps back.
+        recordTranslateX.value = withTiming(0);
+      }
+    });
   };
 
   const handleFinishRecording = () => {
+    // Grab current state before we flip it so we know if a recording was live.
+    const wasRecording = isRecording;
+
     setIsRecording(false);
     haptics();
+    // Always reset the mic position.
+    recordTranslateX.value = withTiming(0);
 
     (async () => {
-      if (duration < 1) {
-        return;
-      }
-
+      // Stop the recorder no matter what – it is safe to call even if it
+      // never started.
       const base64 = await stopRecording();
 
-      if (!base64) {
-        return;
+      // Only emit the audio if we were actually recording and we captured
+      // something of reasonable length.
+      if (wasRecording && base64 && duration >= 1) {
+        onAudioComplete(base64);
       }
-
-      onAudioComplete(base64);
     })();
   };
 
@@ -417,6 +429,10 @@ const Input = ({
       withTiming(-300, { duration: 500 }),
     );
     haptics();
+    // Always snap the mic back.
+    recordTranslateX.value = withTiming(0);
+    // Stop and discard any recording.
+    stopRecording();
     setTimeout(() => setIsRecording(false), 1000);
   };
 
