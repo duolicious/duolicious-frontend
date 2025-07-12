@@ -141,8 +141,12 @@ const useRecorder = () => {
 
       if ((await Audio.getPermissionsAsync())?.status === 'granted') {
         ;
-      } else if ((await Audio.requestPermissionsAsync()).status !== 'granted') {
-        // Permission permanently denied or dismissed.
+      } else if ((await Audio.requestPermissionsAsync()).status === 'granted') {
+        // Permission was granted but the recording shouldn't start until the
+        // user repeats the gesture to start the recording
+        recordingActive.current = false;
+      } else {
+        // Permission denied or dismissed permanently
         recordingActive.current = false;
         notify<React.FC>(
           'toast',
