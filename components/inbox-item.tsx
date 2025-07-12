@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   Animated,
   Pressable,
@@ -7,32 +8,28 @@ import {
   useCallback,
   useRef,
 } from 'react';
+import { useConversation } from '../chat/application-layer/hooks/conversation';
 import { DefaultText } from './default-text';
 import { Avatar } from './avatar';
 import { useNavigation } from '@react-navigation/native';
 import { friendlyTimestamp } from '../util/util';
 import { VerificationBadge } from './verification-badge';
 
-const IntrosItem = ({
-  wasRead,
-  name,
-  personUuid,
-  photoUuid,
-  photoBlurhash,
-  matchPercentage,
-  isVerified,
-}: {
-  wasRead: boolean
-  name: string
-  personUuid: string
-  photoUuid: string | null
-  photoBlurhash: string | null
-  matchPercentage: number
-  lastMessage: string
-  lastMessageTimestamp: Date
-  isAvailableUser: boolean
-  isVerified: boolean
-}) => {
+const IntrosItem = ({ personUuid }: { personUuid: string }) => {
+  const conversation = useConversation(personUuid);
+
+  if (!conversation) {
+    return null;
+  }
+
+  const {
+    lastMessageRead: wasRead,
+    name,
+    photoUuid,
+    photoBlurhash,
+    matchPercentage,
+    isVerified,
+  } = conversation;
   const navigation = useNavigation<any>();
 
   const animated = useRef(new Animated.Value(1)).current;
@@ -140,29 +137,24 @@ const IntrosItem = ({
   );
 };
 
-const ChatsItem = ({
-  wasRead,
-  name,
-  personUuid,
-  photoUuid,
-  photoBlurhash,
-  matchPercentage,
-  lastMessage,
-  lastMessageTimestamp,
-  isAvailableUser,
-  isVerified,
-}: {
-  wasRead: boolean
-  name: string
-  personUuid: string
-  photoUuid: string | null
-  photoBlurhash: string | null
-  matchPercentage: number
-  lastMessage: string
-  lastMessageTimestamp: Date
-  isAvailableUser: boolean
-  isVerified: boolean
-}) => {
+const ChatsItem = ({ personUuid }: { personUuid: string }) => {
+  const conversation = useConversation(personUuid);
+
+  if (!conversation) {
+    return null;
+  }
+
+  const {
+    lastMessageRead: wasRead,
+    name,
+    photoUuid,
+    photoBlurhash,
+    matchPercentage,
+    lastMessage,
+    lastMessageTimestamp,
+    isAvailableUser,
+    isVerified,
+  } = conversation;
   const navigation = useNavigation<any>();
 
   const animated = useRef(new Animated.Value(1)).current;
