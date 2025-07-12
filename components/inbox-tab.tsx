@@ -5,7 +5,7 @@ import {
   SafeAreaView,
   View,
 } from 'react-native';
-import {
+import React, {
   memo,
   useCallback,
   useEffect,
@@ -13,27 +13,67 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useConversation } from '../chat/application-layer/hooks/conversation';
 import { TopNavBar } from './top-nav-bar';
 import { IntrosItem, ChatsItem } from './inbox-item';
 import { DefaultText } from './default-text';
 import { ButtonGroup } from './button-group';
 import { DefaultFlatList } from './default-flat-list';
-import { Inbox, Conversation, inboxStats } from '../chat/application-layer';
+import { Conversation, inboxStats } from '../chat/application-layer';
+import { useInbox } from '../chat/application-layer/hooks/inbox';
 import { compareArrays } from '../util/util';
 import { TopNavBarButton } from './top-nav-bar-button';
 import { inboxOrder, inboxSection } from '../kv-storage/inbox';
 import { listen } from '../events/events';
 import { useScrollbar } from './navigation/scroll-bar-hooks';
-import * as _ from "lodash";
 
 
 const IntrosItemMemo = memo(IntrosItem);
 const ChatsItemMemo = memo(ChatsItem);
 
+const RenderItem = ({ item }: { item: Conversation }) => {
+  const conversation = useConversation(item.personUuid);
+
+  if (!conversation) {
+    return <></>;
+  } else if (conversation.location === 'intros') {
+    return <IntrosItemMemo
+      wasRead={conversation.lastMessageRead}
+      name={conversation.name}
+      personUuid={conversation.personUuid}
+      photoUuid={conversation.photoUuid}
+      photoBlurhash={conversation.photoBlurhash}
+      matchPercentage={conversation.matchPercentage}
+      lastMessage={conversation.lastMessage}
+      lastMessageTimestamp={conversation.lastMessageTimestamp}
+      isAvailableUser={conversation.isAvailableUser}
+      isVerified={conversation.isVerified}
+    />
+  } else {
+    return <ChatsItemMemo
+      wasRead={conversation.lastMessageRead}
+      name={conversation.name}
+      personUuid={conversation.personUuid}
+      photoUuid={conversation.photoUuid}
+      photoBlurhash={conversation.photoBlurhash}
+      matchPercentage={conversation.matchPercentage}
+      lastMessage={conversation.lastMessage}
+      lastMessageTimestamp={conversation.lastMessageTimestamp}
+      isAvailableUser={conversation.isAvailableUser}
+      isVerified={conversation.isVerified}
+    />
+  }
+};
+
+const renderItem = ({ item }: ListRenderItemInfo<Conversation>) =>
+  <RenderItem item={item} />;
+
+const keyExtractor = (c: Conversation) => c.personUuid;
+
 const InboxTab = () => {
   const [sectionIndex, setSectionIndex] = useState(0);
   const [sortByIndex, setSortByIndex] = useState(0);
-  const [inbox, setInbox] = useState<Inbox | null>(null);
+  const inbox = useInbox();
   const [showArchive, setShowArchive] = useState(false);
   const listRef = useRef<any>(undefined);
 
@@ -67,22 +107,6 @@ const InboxTab = () => {
   const maybeRefresh = useCallback(() => {
     listRef.current?.refresh && listRef.current.refresh();
   }, [listRef]);
-
-  useEffect(() => {
-    return listen<Inbox | null>(
-      'inbox',
-      (inbox) => {
-        setInbox((oldInbox) => {
-          if (_.isEqual(oldInbox, inbox)) {
-            return oldInbox ?? null
-          } else {
-            return inbox ?? null
-          }
-        });
-      },
-      true
-    );
-  }, []);
 
   useEffect(() => {
     (async () => {
@@ -185,38 +209,6 @@ const InboxTab = () => {
     }
   })();
 
-  const renderItem = useCallback((x: ListRenderItemInfo<Conversation>) => {
-    if (sectionIndex === 0 && !showArchive) {
-      return <IntrosItemMemo
-        wasRead={x.item.lastMessageRead}
-        name={x.item.name}
-        personUuid={x.item.personUuid}
-        photoUuid={x.item.photoUuid}
-        photoBlurhash={x.item.photoBlurhash}
-        matchPercentage={x.item.matchPercentage}
-        lastMessage={x.item.lastMessage}
-        lastMessageTimestamp={x.item.lastMessageTimestamp}
-        isAvailableUser={x.item.isAvailableUser}
-        isVerified={x.item.isVerified}
-      />
-    } else {
-      return <ChatsItemMemo
-        wasRead={x.item.lastMessageRead}
-        name={x.item.name}
-        personUuid={x.item.personUuid}
-        photoUuid={x.item.photoUuid}
-        photoBlurhash={x.item.photoBlurhash}
-        matchPercentage={x.item.matchPercentage}
-        lastMessage={x.item.lastMessage}
-        lastMessageTimestamp={x.item.lastMessageTimestamp}
-        isAvailableUser={x.item.isAvailableUser}
-        isVerified={x.item.isVerified}
-      />
-    }
-  }, [sectionIndex, showArchive]);
-
-  const keyExtractor = useCallback((c: Conversation) => JSON.stringify(c), []);
-
   const {
     onLayout,
     onContentSizeChange,
@@ -238,7 +230,6 @@ const InboxTab = () => {
       }
       {inbox !== null &&
         <DefaultFlatList
-          key={JSON.stringify(inbox)}
           ref={listRef}
           innerRef={observeListRef}
           emptyText={emptyText}
