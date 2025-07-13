@@ -19,7 +19,8 @@ import { IntrosItem, ChatsItem } from './inbox-item';
 import { DefaultText } from './default-text';
 import { ButtonGroup } from './button-group';
 import { DefaultFlatList } from './default-flat-list';
-import { Conversation, inboxStats } from '../chat/application-layer';
+import { Conversation } from '../chat/application-layer';
+import { useInboxStats } from '../chat/application-layer/hooks/inbox-stats';
 import { useInbox } from '../chat/application-layer/hooks/inbox';
 import { compareArrays } from '../util/util';
 import { TopNavBarButton } from './top-nav-bar-button';
@@ -77,10 +78,10 @@ const InboxTab = () => {
   const [showArchive, setShowArchive] = useState(false);
   const listRef = useRef<any>(undefined);
 
-  const _inboxStats = inbox ? inboxStats(inbox) : null;
+  const stats = useInboxStats();
 
-  const numUnreadIntros = _inboxStats?.numUnreadIntros ?? 0;
-  const numUnreadChats  = _inboxStats?.numUnreadChats  ?? 0;
+  const numUnreadIntros = stats?.numUnreadIntros ?? 0;
+  const numUnreadChats  = stats?.numUnreadChats  ?? 0;
 
   const introsNumericalLabel = (
     numUnreadIntros ?
