@@ -5,24 +5,21 @@ import {
   SafeAreaView,
   View,
 } from 'react-native';
-import React, {
+import {
   memo,
   useCallback,
   useEffect,
   useLayoutEffect,
-  useRef,
   useState,
 } from 'react';
+import Animated from 'react-native-reanimated';
 import { useConversation } from '../chat/application-layer/hooks/conversation';
 import { TopNavBar } from './top-nav-bar';
 import { IntrosItem, ChatsItem } from './inbox-item';
 import { DefaultText } from './default-text';
 import { ButtonGroup } from './button-group';
-import { DefaultFlatList } from './default-flat-list';
-import { Conversation } from '../chat/application-layer';
 import { useInboxStats } from '../chat/application-layer/hooks/inbox-stats';
-import { useInbox } from '../chat/application-layer/hooks/inbox';
-import { compareArrays } from '../util/util';
+import { useConversations } from '../chat/application-layer/hooks/conversations';
 import { TopNavBarButton } from './top-nav-bar-button';
 import { inboxOrder, inboxSection } from '../kv-storage/inbox';
 import { listen } from '../events/events';
@@ -32,8 +29,8 @@ import { useScrollbar } from './navigation/scroll-bar-hooks';
 const IntrosItemMemo = memo(IntrosItem);
 const ChatsItemMemo = memo(ChatsItem);
 
-const RenderItem = ({ item }: { item: Conversation }) => {
-  const conversation = useConversation(item.personUuid);
+const RenderItem = ({ item }: { item: string }) => {
+  const conversation = useConversation(item);
 
   if (!conversation) {
     return <></>;
@@ -66,17 +63,22 @@ const RenderItem = ({ item }: { item: Conversation }) => {
   }
 };
 
-const renderItem = ({ item }: ListRenderItemInfo<Conversation>) =>
+const renderItem = ({ item }: ListRenderItemInfo<string>) =>
   <RenderItem item={item} />;
 
-const keyExtractor = (c: Conversation) => c.personUuid;
+const keyExtractor = (id: string) => id;
 
 const InboxTab = () => {
   const [sectionIndex, setSectionIndex] = useState(0);
   const [sortByIndex, setSortByIndex] = useState(0);
-  const inbox = useInbox();
   const [showArchive, setShowArchive] = useState(false);
-  const listRef = useRef<any>(undefined);
+
+  const sectionName: 'chats' | 'intros' | 'archive' =
+    showArchive ? 'archive' : (sectionIndex === 0 ? 'intros' : 'chats');
+
+  const sortBy: 'latest' | 'match' = sortByIndex ? 'latest' : 'match';
+
+  const conversations = useConversations(sectionName, sortBy);
 
   const stats = useInboxStats();
 
@@ -105,10 +107,6 @@ const InboxTab = () => {
     setShowArchive(x => !x);
   }, []);
 
-  const maybeRefresh = useCallback(() => {
-    listRef.current?.refresh && listRef.current.refresh();
-  }, [listRef]);
-
   useEffect(() => {
     (async () => {
       const _inboxOrder = await inboxOrder();
@@ -118,69 +116,6 @@ const InboxTab = () => {
       setSortByIndex(_inboxOrder);
     })();
   }, []);
-
-  useEffect(maybeRefresh, [maybeRefresh, sectionIndex]);
-  useEffect(maybeRefresh, [maybeRefresh, sortByIndex]);
-  useEffect(maybeRefresh, [maybeRefresh, inbox]);
-  useEffect(maybeRefresh, [maybeRefresh, showArchive]);
-
-  const fetchInboxPage = (
-    sectionName: 'chats' | 'intros' | 'archive'
-  ) => async (
-    n: number
-  ): Promise<Conversation[]> => {
-    if (inbox === null) {
-      return [];
-    }
-
-    if (n >= 2) {
-      return [];
-    }
-
-    const section = (() => {
-      switch (sectionName) {
-        case 'chats':   return inbox.chats;
-        case 'intros':  return inbox.intros;
-        case 'archive': return inbox.archive;
-      }
-    })();
-
-    const page = [...section.conversations]
-      .sort((a, b) => {
-        if (sectionName === 'archive') {
-          return compareArrays(
-            [+b.lastMessageTimestamp],
-            [+a.lastMessageTimestamp],
-          );
-        } else if (sectionName === 'intros' && sortByIndex === 0) {
-          return compareArrays(
-            [b.matchPercentage, +b.lastMessageTimestamp],
-            [a.matchPercentage, +a.lastMessageTimestamp],
-          );
-        } else {
-          return compareArrays(
-            [+b.lastMessageTimestamp, b.matchPercentage],
-            [+a.lastMessageTimestamp, a.matchPercentage],
-          );
-        }
-      });
-
-    return page;
-  };
-
-  const fetchChatsPage   = fetchInboxPage('chats');
-  const fetchIntrosPage  = fetchInboxPage('intros');
-  const fetchArchivePage = fetchInboxPage('archive');
-
-  const fetchPage = (() => {
-    if (!showArchive && sectionIndex === 0)
-      return fetchIntrosPage;
-    if (!showArchive && sectionIndex === 1)
-      return fetchChatsPage;
-    if (showArchive)
-      return fetchArchivePage;
-    throw Error('Unhandled inbox section');
-  })();
 
   const emptyText = (() => {
     if (!showArchive && sectionIndex === 0)
@@ -224,19 +159,15 @@ const InboxTab = () => {
         showArchive={showArchive}
         onPressArchiveButton={onPressArchiveButton}
       />
-      {inbox === null &&
+      {conversations === null &&
         <View style={{height: '100%', justifyContent: 'center', alignItems: 'center'}}>
           <ActivityIndicator size="large" color="#70f" />
         </View>
       }
-      {inbox !== null &&
-        <DefaultFlatList
-          ref={listRef}
-          innerRef={observeListRef}
-          emptyText={emptyText}
-          endText={endText}
-          fetchPage={fetchPage}
-          dataKey={JSON.stringify({showArchive, sectionIndex})}
+      {conversations !== null &&
+        <Animated.FlatList<string>
+          ref={observeListRef}
+          data={conversations}
           ListHeaderComponent={<>{
             !showArchive && <>
               <ButtonGroup
@@ -266,14 +197,23 @@ const InboxTab = () => {
               />
             </>
           }</>}
-          hideListHeaderComponentWhenLoading={false}
+          ListEmptyComponent={
+            <DefaultText style={styles.emptyText}>
+              {emptyText}
+            </DefaultText>
+          }
+          ListFooterComponent={
+            conversations.length > 0 ?
+              <DefaultText style={styles.endText}>{endText}</DefaultText> :
+              null
+          }
           renderItem={renderItem}
           keyExtractor={keyExtractor}
-          disableRefresh={true}
           onLayout={onLayout}
           onContentSizeChange={onContentSizeChange}
           onScroll={onScroll}
           showsVerticalScrollIndicator={showsVerticalScrollIndicator}
+          contentContainerStyle={styles.flatList}
         />
       }
     </SafeAreaView>
@@ -331,6 +271,29 @@ const InboxTabNavBar = ({
 const styles = StyleSheet.create({
   safeAreaView: {
     flex: 1
+  },
+  flatList: {
+    paddingTop: 10,
+    alignItems: 'stretch',
+    width: '100%',
+    maxWidth: 600,
+    alignSelf: 'center',
+  },
+  emptyText: {
+    fontFamily: 'Trueno',
+    margin: '20%',
+    textAlign: 'center',
+  },
+  endText: {
+    fontFamily: 'TruenoBold',
+    color: '#000',
+    fontSize: 16,
+    textAlign: 'center',
+    alignSelf: 'center',
+    marginTop: 30,
+    marginBottom: 30,
+    marginLeft: '15%',
+    marginRight: '15%',
   }
 });
 

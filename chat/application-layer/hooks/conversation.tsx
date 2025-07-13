@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Conversation, Inbox } from '../index';
 import { listen, lastEvent } from '../../../events/events';
 import * as _ from 'lodash';
@@ -20,9 +20,6 @@ const getConversationFromInbox = (
 
 /**
  * Returns the up-to-date Conversation object for the given personUuid.
- * Internally this hook subscribes to the inbox via `useInbox` and derives the
- * conversation from there, so whenever the inbox changes only the components
- * that depend on the specific conversation will re-render.
  */
 const useConversation = (personUuid: string): Conversation | null => {
   const initialConversation = getConversationFromInbox(
@@ -36,7 +33,7 @@ const useConversation = (personUuid: string): Conversation | null => {
 
   // Subscribe to inbox updates and only update local state when the specific
   // conversation actually changes (reference equality).
-  useLayoutEffect(() => {
+  useEffect(() => {
     return listen<Inbox | null>(
       'inbox',
       (newInbox) => {
