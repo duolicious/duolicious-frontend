@@ -231,13 +231,18 @@ const setQuote = (quote: Quote | null) => notify(eventKey, quote);
 // Exports – gathered here per request
 // ──────────────────────────────────────────────────────────────────────────
 
-export type { Quote, MarkdownBlock, InlineToken, TextToken };
 export {
-  useQuote,
-  setQuote,
-  parseMarkdown,
-  quoteToPreviewMarkdown,
-  quoteToMessageMarkdown,
-  tokenizeInline,
+  InlineToken,
   isLinkToken,
+  MarkdownBlock,
+  parseMarkdown,
+  Quote,
+  QuoteBlock,
+  quoteToMessageMarkdown,
+  quoteToPreviewMarkdown,
+  setQuote,
+  TextBlock,
+  TextToken,
+  tokenizeInline,
+  useQuote,
 };
