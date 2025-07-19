@@ -69,16 +69,17 @@ const renderItem = ({ item }: ListRenderItemInfo<string>) =>
 const keyExtractor = (id: string) => id;
 
 const InboxTab = () => {
-  const [sectionIndex, setSectionIndex] = useState(0);
-  const [sortByIndex, setSortByIndex] = useState(0);
-  const [showArchive, setShowArchive] = useState(false);
+  const {
+    conversations,
+    sectionIndex,
+    sortByIndex,
+    showArchive,
+    setSectionIndex,
+    setSortByIndex,
+    setShowArchive,
+  } = useConversations();
 
-  const sectionName: 'chats' | 'intros' | 'archive' =
-    showArchive ? 'archive' : (sectionIndex === 0 ? 'intros' : 'chats');
-
-  const sortBy: 'latest' | 'match' = sortByIndex ? 'latest' : 'match';
-
-  const conversations = useConversations(sectionName, sortBy);
+  console.log('rendering InboxTab', conversations); // TODO
 
   const stats = useInboxStats();
 
@@ -98,6 +99,7 @@ const InboxTab = () => {
     setSectionIndex(value);
     inboxSection(value);
   }, []);
+
   const setSortByIndex_  = useCallback((value: number) => {
     setSortByIndex(value);
     inboxOrder(value);

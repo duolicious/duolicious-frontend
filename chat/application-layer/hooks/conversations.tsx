@@ -1,8 +1,27 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { compareArrays } from '../../../util/util';
-import { Inbox, Conversation } from '../index';
-import { listen, lastEvent } from '../../../events/events';
+import { Inbox, Conversation, getInbox } from '../index';
+import { listen } from '../../../events/events';
 import * as _ from 'lodash';
+
+
+const getSection = (sectionIndex: number, showArchive: boolean) => {
+  if (showArchive) {
+    return 'archive';
+  } else if (sectionIndex === 0) {
+    return 'intros';
+  } else {
+    return 'chats';
+  }
+};
+
+const getSortBy = (sortByIndex: number) => {
+  if (sortByIndex === 0) {
+    return 'match';
+  } else {
+    return 'latest'
+  }
+};
 
 /**
  * React hook that returns the list of `personUuid`s for the conversations
@@ -72,32 +91,107 @@ const computeConversationIds = (
   return sorted.map((c) => c.personUuid);
 };
 
-const useConversations = (
-  section: 'intros' | 'chats' | 'archive',
-  sortBy: 'latest' | 'match'
-): string[] | null => {
-  // Initial value derived synchronously from the last known inbox.
-  const initialIds = computeConversationIds(
-    lastEvent<Inbox | null>('inbox') ?? null,
-    section,
-    sortBy,
-  );
-
-  const [conversationIds, setConversationIds] = useState<string[] | null>(initialIds);
+const useConversations = () => {
+  const [state, setState] = useState<{
+    conversations: string[] | null,
+    sectionIndex: number,
+    sortByIndex: number,
+    showArchive: boolean,
+  }>({
+    conversations: null,
+    sectionIndex: 0,
+    sortByIndex: 0,
+    showArchive: false,
+  });
 
   // Subscribe to inbox updates and update only when the derived list changes.
   useEffect(() => {
-    const update = (newInbox?: Inbox | null) => {
+    const { sectionIndex, sortByIndex, showArchive } = state;
+
+    const section = getSection(sectionIndex, showArchive);
+    const sortBy = getSortBy(sortByIndex);
+
+    const onUpdate = (newInbox?: Inbox | null) => {
+      console.log('onUpdate', newInbox);
       const newIds = computeConversationIds(newInbox ?? null, section, sortBy);
-      setConversationIds((prevIds) =>
-        _.isEqual(prevIds, newIds) ? prevIds : newIds
+      setState((oldState) =>
+        _.isEqual(oldState.conversations, newIds)
+          ? oldState
+          : { ...oldState, conversations: newIds }
       );
     };
 
-    return listen<Inbox | null>('inbox', update, true);
-  }, [section, sortBy]);
+    return listen<Inbox | null>('inbox', onUpdate, true);
+  }, [state]);
 
-  return conversationIds;
+  const setSectionIndex = useCallback((sectionIndex: number) => {
+    setState((oldState) => {
+      if (oldState.sectionIndex === sectionIndex) {
+        return oldState;
+      }
+
+      const { sortByIndex, showArchive } = oldState;
+
+      const section = getSection(sectionIndex, showArchive);
+      const sortBy = getSortBy(sortByIndex);
+
+      const inbox = getInbox();
+      const conversations = computeConversationIds(inbox, section, sortBy);
+
+      console.log('setSectionIndex', conversations); // TODO
+
+      return { ...oldState, conversations, sectionIndex };
+    });
+  }, []);
+
+  const setSortByIndex = useCallback((sortByIndex: number) => {
+    setState((oldState) => {
+      if (oldState.sortByIndex === sortByIndex) {
+        return oldState;
+      }
+
+      const { sectionIndex, showArchive } = oldState;
+
+      const section = getSection(sectionIndex, showArchive);
+      const sortBy = getSortBy(sortByIndex);
+
+      const inbox = getInbox();
+      const conversations = computeConversationIds(inbox, section, sortBy);
+
+      console.log('setSortByIndex', conversations); // TODO
+
+      return { ...oldState, conversations, sortByIndex };
+    });
+  }, []);
+
+  const setShowArchive = useCallback((f: (showArchive: boolean) => boolean) => {
+    setState((oldState) => {
+      const showArchive = f(oldState.showArchive);
+
+      if (oldState.showArchive === showArchive) {
+        return oldState;
+      }
+
+      const { sectionIndex, sortByIndex } = oldState;
+
+      const section = getSection(sectionIndex, showArchive);
+      const sortBy = getSortBy(sortByIndex);
+
+      const inbox = getInbox();
+      const conversations = computeConversationIds(inbox, section, sortBy);
+
+      console.log('setShowArchive', conversations); // TODO
+
+      return { ...oldState, conversations, showArchive };
+    });
+  }, []);
+
+  return {
+    ...state,
+    setSectionIndex,
+    setSortByIndex,
+    setShowArchive,
+  }
 };
 
 export { useConversations };
