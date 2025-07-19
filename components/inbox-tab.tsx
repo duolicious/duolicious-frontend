@@ -165,56 +165,57 @@ const InboxTab = () => {
         </View>
       }
       {conversations !== null &&
-        <Animated.FlatList<string>
-          ref={observeListRef}
-          data={conversations}
-          ListHeaderComponent={<>{
-            !showArchive && <>
-              <ButtonGroup
-                buttons={[
-                  'Intros' + introsNumericalLabel,
-                  'Chats'  + chatsNumericalLabel
-                ]}
-                selectedIndex={sectionIndex}
-                onPress={setSectionIndex_}
-                containerStyle={{
-                  marginTop: 5,
-                  marginLeft: 20,
-                  marginRight: 20,
-                }}
-              />
-              <ButtonGroup
-                buttons={['Best Matches First', 'Latest First']}
-                selectedIndex={sortByIndex}
-                onPress={setSortByIndex_}
-                secondary={true}
-                disabled={sectionIndex === 1}
-                containerStyle={{
-                  flexGrow: 1,
-                  marginLeft: 20,
-                  marginRight: 20,
-                }}
-              />
-            </>
-          }</>}
-          ListEmptyComponent={
-            <DefaultText style={styles.emptyText}>
-              {emptyText}
-            </DefaultText>
-          }
-          ListFooterComponent={
-            conversations.length > 0 ?
-              <DefaultText style={styles.endText}>{endText}</DefaultText> :
-              null
-          }
-          renderItem={renderItem}
-          keyExtractor={keyExtractor}
-          onLayout={onLayout}
-          onContentSizeChange={onContentSizeChange}
-          onScroll={onScroll}
-          showsVerticalScrollIndicator={showsVerticalScrollIndicator}
-          contentContainerStyle={styles.flatList}
-        />
+        <View style={styles.flatListContainer} onLayout={onLayout}>
+          <Animated.FlatList<string>
+            ref={observeListRef}
+            data={conversations}
+            ListHeaderComponent={<>{
+              !showArchive && <>
+                <ButtonGroup
+                  buttons={[
+                    'Intros' + introsNumericalLabel,
+                    'Chats'  + chatsNumericalLabel
+                  ]}
+                  selectedIndex={sectionIndex}
+                  onPress={setSectionIndex_}
+                  containerStyle={{
+                    marginTop: 5,
+                    marginLeft: 20,
+                    marginRight: 20,
+                  }}
+                />
+                <ButtonGroup
+                  buttons={['Best Matches First', 'Latest First']}
+                  selectedIndex={sortByIndex}
+                  onPress={setSortByIndex_}
+                  secondary={true}
+                  disabled={sectionIndex === 1}
+                  containerStyle={{
+                    flexGrow: 1,
+                    marginLeft: 20,
+                    marginRight: 20,
+                  }}
+                />
+              </>
+            }</>}
+            ListEmptyComponent={
+              <DefaultText style={styles.emptyText}>
+                {emptyText}
+              </DefaultText>
+            }
+            ListFooterComponent={
+              conversations.length > 0 ?
+                <DefaultText style={styles.endText}>{endText}</DefaultText> :
+                null
+            }
+            renderItem={renderItem}
+            keyExtractor={keyExtractor}
+            onContentSizeChange={onContentSizeChange}
+            onScroll={onScroll}
+            showsVerticalScrollIndicator={showsVerticalScrollIndicator}
+            contentContainerStyle={styles.flatList}
+          />
+        </View>
       }
     </SafeAreaView>
   );
@@ -278,6 +279,9 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 600,
     alignSelf: 'center',
+  },
+  flatListContainer: {
+    flex: 1,
   },
   emptyText: {
     fontFamily: 'Trueno',
