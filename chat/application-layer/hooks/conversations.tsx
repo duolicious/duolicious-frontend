@@ -106,23 +106,24 @@ const useConversations = () => {
 
   // Subscribe to inbox updates and update only when the derived list changes.
   useEffect(() => {
-    const { sectionIndex, sortByIndex, showArchive } = state;
-
-    const section = getSection(sectionIndex, showArchive);
-    const sortBy = getSortBy(sortByIndex);
-
     const onUpdate = (newInbox?: Inbox | null) => {
       console.log('onUpdate', newInbox);
-      const newIds = computeConversationIds(newInbox ?? null, section, sortBy);
-      setState((oldState) =>
-        _.isEqual(oldState.conversations, newIds)
+      setState((oldState) => {
+        const { sectionIndex, sortByIndex, showArchive } = oldState;
+
+        const section = getSection(sectionIndex, showArchive);
+        const sortBy = getSortBy(sortByIndex);
+
+        const newIds = computeConversationIds(newInbox ?? null, section, sortBy);
+
+        return _.isEqual(oldState.conversations, newIds)
           ? oldState
           : { ...oldState, conversations: newIds }
-      );
+      });
     };
 
     return listen<Inbox | null>('inbox', onUpdate, true);
-  }, [state]);
+  }, []);
 
   const setSectionIndex = useCallback((sectionIndex: number) => {
     setState((oldState) => {
@@ -137,8 +138,6 @@ const useConversations = () => {
 
       const inbox = getInbox();
       const conversations = computeConversationIds(inbox, section, sortBy);
-
-      console.log('setSectionIndex', conversations); // TODO
 
       return { ...oldState, conversations, sectionIndex };
     });
@@ -157,8 +156,6 @@ const useConversations = () => {
 
       const inbox = getInbox();
       const conversations = computeConversationIds(inbox, section, sortBy);
-
-      console.log('setSortByIndex', conversations); // TODO
 
       return { ...oldState, conversations, sortByIndex };
     });
@@ -179,8 +176,6 @@ const useConversations = () => {
 
       const inbox = getInbox();
       const conversations = computeConversationIds(inbox, section, sortBy);
-
-      console.log('setShowArchive', conversations); // TODO
 
       return { ...oldState, conversations, showArchive };
     });

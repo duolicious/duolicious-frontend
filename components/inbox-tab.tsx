@@ -79,8 +79,6 @@ const InboxTab = () => {
     setShowArchive,
   } = useConversations();
 
-  console.log('rendering InboxTab', conversations); // TODO
-
   const stats = useInboxStats();
 
   const numUnreadIntros = stats?.numUnreadIntros ?? 0;
