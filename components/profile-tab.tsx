@@ -62,8 +62,6 @@ import {
   notifyUpdatedVerification,
   listenUpdatedVerification,
 } from '../verification/verification';
-import { InviteEntrypoint } from './invite';
-import { InvitePicker } from './invite';
 import { AudioBio } from './audio-bio';
 import { useScrollbar } from './navigation/scroll-bar-hooks';
 import { WEB_VERSION } from '../env/env';
@@ -106,7 +104,6 @@ const ProfileTab = () => {
       <Stack.Screen name="Profile Tab" component={ProfileTab_} />
       <Stack.Screen name="Profile Option Screen" component={OptionScreen} />
       <Stack.Screen name="Club Selector" component={ClubSelector} />
-      <Stack.Screen name="Invite Picker" component={InvitePicker} />
     </Stack.Navigator>
   );
 };
@@ -640,7 +637,6 @@ const Options = ({ navigation, data }) => {
         setting={clubsSetting}
         noSettingText="None"
       />
-      <InviteEntrypoint navigation={navigation}/>
 
       <Title>Theme</Title>
       <Button_
