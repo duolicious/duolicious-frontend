@@ -24,7 +24,7 @@ import { DefaultFlatList } from './default-flat-list';
 import { japi } from '../api/api';
 import { TopNavBarButton } from './top-nav-bar-button';
 import { LinearGradient } from 'expo-linear-gradient';
-import { isMobile } from '../util/util';
+import { isMobile, isMobileBrowser } from '../util/util';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ClubItem, sortClubs } from '../club/club';
 import { listen, lastEvent } from '../events/events';
@@ -57,13 +57,24 @@ const styles = StyleSheet.create({
     zIndex: 9999,
     opacity: 0.9,
     backgroundColor: 'white',
+    gap: 10,
   },
-  clubsContentContainerContainer: {
+  clubsListContainer: {
     borderRadius: 5,
     overflow: 'hidden',
     alignSelf: 'center',
     width: '100%',
     maxWidth: 600,
+  },
+  clubsInviteContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 20,
+    backgroundColor: '#eee',
+    padding: 10,
+    borderRadius: 10,
   },
   clubTitle: {
     fontSize: 18,
@@ -415,7 +426,7 @@ const ClubSelector = (props: ClubSelectorProps) => {
 
   return (
     <View style={styles.clubsContentContainer}>
-      <View style={styles.clubsContentContainerContainer}>
+      <View style={styles.clubsListContainer}>
         <ScrollView
           ref={scrollViewRef}
           horizontal={true}
@@ -471,6 +482,83 @@ const ClubSelector = (props: ClubSelectorProps) => {
         {!isTop && <LeftContinuation scrollLeft={scrollLeft} />}
         {!isBottom && <RightContinuation scrollRight={scrollRight} />}
       </View>
+      {props.selectedClub && !isMobileBrowser() &&
+        <View style={styles.clubsInviteContainer}>
+          <View
+            style={{
+              flex: 1,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <DefaultText
+              style={{
+                textAlign: 'center',
+              }}
+            >
+              Invite friends to
+              <DefaultText
+                style={{
+                  fontWeight: 700,
+                }}
+              >
+                {} {props.selectedClub}
+              </DefaultText>
+            </DefaultText>
+          </View>
+          <View
+            style={{
+              flexDirection: 'row',
+              gap: 10,
+              flex: 1,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <View
+              style={{
+                borderWidth: 1,
+                borderRadius: 7,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#70f',
+                paddingVertical: 8,
+                paddingHorizontal: 10,
+              }}
+            >
+              <DefaultText
+                style={{
+                  fontWeight: 700,
+                  color: 'white',
+                }}
+              >
+                GET INVITE LINK
+              </DefaultText>
+            </View>
+            {Platform.OS === 'web' && /* React Native's header isn't sticky on web */
+              <View
+                style={{
+                  borderWidth: 1,
+                  borderRadius: 7,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: 'white',
+                  paddingVertical: 8,
+                  paddingHorizontal: 10,
+                }}
+              >
+                <DefaultText
+                  style={{
+                    fontWeight: 700
+                  }}
+                >
+                  DISMISS
+                </DefaultText>
+              </View>
+            }
+          </View>
+        </View>
+      }
     </View>
   );
 };

@@ -15,13 +15,17 @@ import {
 } from 'date-fns'
 import * as _ from 'lodash';
 
-const isMobile = () => {
+const isMobileBrowser = () => {
   const re = /(android|iphone|ipod|iemobile|blackberry|webos|symbian)/i;
 
+  return re.test(window.navigator.userAgent);
+};
+
+const isMobile = () => {
   return (
     Platform.OS === 'android' ||
     Platform.OS === 'ios' ||
-    re.test(window.navigator.userAgent)
+    isMobileBrowser()
   );
 };
 
@@ -221,6 +225,7 @@ export {
   getRandomElement,
   getShortElapsedTime,
   isMobile,
+  isMobileBrowser,
   jsonParseSilently,
   longFriendlyTimestamp,
   parseUrl,
