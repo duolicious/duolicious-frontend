@@ -49,6 +49,15 @@ const LinkCopiedToast = () => {
   );
 };
 
+const onPressInvite = (clubName: string) => async () => {
+  const url = (
+    `https://get.duolicious.app/invite/${encodeURIComponent(clubName)}`);
+
+  await Clipboard.setStringAsync(url);
+
+  notify<React.FC>('toast', LinkCopiedToast)
+};
+
 const InvitePicker = ({navigation}) => {
   const [clubs, setClubs] = useState(lastEvent<ClubItem[]>('updated-clubs'));
 
@@ -59,15 +68,6 @@ const InvitePicker = ({navigation}) => {
   const goBack = useCallback(() => {
     navigation.goBack();
   }, [navigation]);
-
-  const onPressInvite = (clubName: string) => async () => {
-    const url = (
-      `https://get.duolicious.app/invite/${encodeURIComponent(clubName)}`);
-
-    await Clipboard.setStringAsync(url);
-
-    notify<React.FC>('toast', LinkCopiedToast)
-  };
 
   return (
     <SafeAreaView style={styles.safeAreaView}>
@@ -224,4 +224,5 @@ const styles = StyleSheet.create({
 export {
   InviteEntrypoint,
   InvitePicker,
+  onPressInvite,
 };
