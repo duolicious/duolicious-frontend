@@ -43,6 +43,32 @@ const useShake = (): [Animated.Value, () => void] => {
   return [shakeAnimation, startShake];
 };
 
+
+const useFadePressable = (
+  opacityLo: number = 0.5,
+  opacityHi: number = 1.0,
+  duration: number = 200
+) => {
+  const animatedOpacity = useRef(new Animated.Value(opacityHi)).current;
+
+  const fade = useCallback(() => {
+    animatedOpacity.stopAnimation();
+    animatedOpacity.setValue(opacityLo);
+  }, [opacityLo, opacityHi, duration]);
+
+  const unfade = useCallback(() => {
+    animatedOpacity.stopAnimation();
+    Animated.timing(animatedOpacity, {
+      toValue: opacityHi,
+      duration,
+      useNativeDriver: true,
+    }).start();
+  }, [opacityLo, opacityHi, duration]);
+
+  return { animatedOpacity, fade, unfade };
+};
+
 export {
+  useFadePressable,
   useShake,
 };

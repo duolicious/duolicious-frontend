@@ -3,36 +3,16 @@ import {
   Pressable,
   StyleSheet,
 } from 'react-native';
-import {
-  useRef,
-} from 'react'
 import { DefaultText } from '../default-text';
+import { useFadePressable } from '../../animation/animation';
 
 const ModalButton = ({onPress, title, color}) => {
-  const animatedOpacity = useRef(new Animated.Value(1)).current;
-
-  const opacityLo = 0.7;
-  const opacityHi = 1.0;
-
-  const fade = (callback?: () => void) => {
-    animatedOpacity.stopAnimation();
-    animatedOpacity.setValue(opacityLo);
-    callback && callback();
-  };
-
-  const unfade = (callback?: () => void) => {
-    animatedOpacity.stopAnimation();
-    Animated.timing(animatedOpacity, {
-      toValue: opacityHi,
-      duration: 200,
-      useNativeDriver: true,
-    }).start((result) => result.finished && callback && callback());
-  };
+  const { animatedOpacity, fade, unfade } = useFadePressable();
 
   return <Pressable
     style={styles.pressable}
-    onPressIn={() => fade()}
-    onPressOut={() => unfade()}
+    onPressIn={fade}
+    onPressOut={unfade}
     onPress={onPress}
   >
     <Animated.View

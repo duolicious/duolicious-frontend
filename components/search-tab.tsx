@@ -1,4 +1,5 @@
 import {
+  Animated,
   Platform,
   Pressable,
   SafeAreaView,
@@ -30,6 +31,12 @@ import { ClubItem, sortClubs } from '../club/club';
 import { listen, lastEvent } from '../events/events';
 import { searchQueue } from '../api/queue';
 import { useScrollbar } from './navigation/scroll-bar-hooks';
+import { useFadePressable } from '../animation/animation';
+import { ToastContainer } from './toast';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
+import { faLink } from '@fortawesome/free-solid-svg-icons/faLink'
+import * as Clipboard from 'expo-clipboard';
+import { notify } from '../events/events';
 
 const styles = StyleSheet.create({
   safeAreaView: {
@@ -312,6 +319,82 @@ const RightContinuation = ({scrollRight}) => {
   }
 };
 
+const LinkCopiedToast = () => {
+  return (
+    <ToastContainer>
+      <FontAwesomeIcon
+        icon={faLink}
+        color="black"
+        size={24}
+      />
+      <DefaultText
+        style={{
+          color: 'black',
+          fontWeight: '700',
+        }}
+      >
+        Invite Link Copied!
+      </DefaultText>
+    </ToastContainer>
+  );
+};
+
+const InviteButton = ({
+  text,
+  color,
+  backgroundColor,
+  onPress,
+}: {
+  text: string,
+  color: string
+  backgroundColor: string
+  onPress: () => void,
+}) => {
+  const { animatedOpacity, fade, unfade } = useFadePressable();
+
+  return (
+    <Pressable
+      style={{
+        borderWidth: 1,
+        borderRadius: 7,
+        backgroundColor: 'white',
+        overflow: 'hidden',
+      }}
+      onPressIn={fade}
+      onPressOut={unfade}
+      onPress={onPress}
+    >
+      <Animated.View
+        style={{
+          opacity: animatedOpacity,
+          backgroundColor,
+          paddingVertical: 8,
+          paddingHorizontal: 10,
+        }}
+      >
+        <DefaultText
+          style={{
+            color,
+            fontWeight: 700
+          }}
+        >
+          {text}
+        </DefaultText>
+      </Animated.View>
+    </Pressable>
+  );
+};
+
+const useInviteDismiss = () => {
+  const [isDimissed, setIsDismissed] = useState(false);
+
+  const onPressDismiss = useCallback(() => {
+    setIsDismissed(true);
+  }, []);
+
+  return { onPressDismiss, isDimissed };
+};
+
 const ClubSelector = (props: ClubSelectorProps) => {
   const scrollJumpSize = 150;
 
@@ -420,6 +503,22 @@ const ClubSelector = (props: ClubSelectorProps) => {
     }
   }, [props.selectedClub, JSON.stringify(clubs)]);
 
+
+  const onPressInvite = useCallback(async () => {
+    if (!props.selectedClub) {
+      return;
+    }
+
+    const url = (
+      `https://get.duolicious.app/invite/${encodeURIComponent(props.selectedClub)}`);
+
+    await Clipboard.setStringAsync(url);
+
+    notify<React.FC>('toast', LinkCopiedToast)
+  }, [props.selectedClub]);
+
+  const { onPressDismiss, isDimissed } = useInviteDismiss();
+
   if (!clubs || !clubs.length) {
     return null;
   }
@@ -482,7 +581,7 @@ const ClubSelector = (props: ClubSelectorProps) => {
         {!isTop && <LeftContinuation scrollLeft={scrollLeft} />}
         {!isBottom && <RightContinuation scrollRight={scrollRight} />}
       </View>
-      {props.selectedClub && !isMobileBrowser() &&
+      {props.selectedClub && !isMobileBrowser() && !isDimissed &&
         <View style={styles.clubsInviteContainer}>
           <View
             style={{
@@ -515,46 +614,19 @@ const ClubSelector = (props: ClubSelectorProps) => {
               justifyContent: 'center',
             }}
           >
-            <View
-              style={{
-                borderWidth: 1,
-                borderRadius: 7,
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: '#70f',
-                paddingVertical: 8,
-                paddingHorizontal: 10,
-              }}
-            >
-              <DefaultText
-                style={{
-                  fontWeight: 700,
-                  color: 'white',
-                }}
-              >
-                GET INVITE LINK
-              </DefaultText>
-            </View>
+            <InviteButton
+              text="GET INVITE LINK"
+              color="white"
+              backgroundColor="#70f"
+              onPress={onPressInvite}
+            />
             {Platform.OS === 'web' && /* React Native's header isn't sticky on web */
-              <View
-                style={{
-                  borderWidth: 1,
-                  borderRadius: 7,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: 'white',
-                  paddingVertical: 8,
-                  paddingHorizontal: 10,
-                }}
-              >
-                <DefaultText
-                  style={{
-                    fontWeight: 700
-                  }}
-                >
-                  DISMISS
-                </DefaultText>
-              </View>
+              <InviteButton
+                text="DISMISS"
+                color="black"
+                backgroundColor="white"
+                onPress={onPressDismiss}
+              />
             }
           </View>
         </View>
