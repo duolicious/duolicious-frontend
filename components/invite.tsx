@@ -28,6 +28,7 @@ import { notify } from '../events/events';
 import { faLink } from '@fortawesome/free-solid-svg-icons/faLink'
 import * as Clipboard from 'expo-clipboard';
 import { ToastContainer } from './toast';
+import { DEEP_LINK_URL } from '../env/env';
 
 const LinkCopiedToast = () => {
   return (
@@ -51,7 +52,7 @@ const LinkCopiedToast = () => {
 
 const onPressInvite = (clubName: string) => async () => {
   const url = (
-    `https://get.duolicious.app/invite/${encodeURIComponent(clubName)}`);
+    `${DEEP_LINK_URL}/${encodeURIComponent(clubName)}`);
 
   await Clipboard.setStringAsync(url);
 

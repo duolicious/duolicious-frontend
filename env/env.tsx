@@ -16,6 +16,9 @@ export const AUDIO_URL = Constants.expoConfig?.extra?.audioUrl
 export const STATUS_URL = Constants.expoConfig?.extra?.statusUrl
   ?? 'http://localhost:8080';
 
+export const DEEP_LINK_URL = Constants.expoConfig?.extra?.deepLinkUrl
+  ?? 'https://duolicious.gg';
+
 export const WEB_VERSION = Constants.expoConfig?.extra?.webVersion
   ?? '000000';
 
