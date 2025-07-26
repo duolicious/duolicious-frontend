@@ -596,7 +596,7 @@ const SearchScreen_ = ({navigation}) => {
               onPress={onPressInvite(selectedClub)}
               iconName="person-add-outline"
               position={null}
-              secondary={false}
+              secondary={true}
               label="Invite"
             />
           }
