@@ -605,7 +605,7 @@ const SearchScreen_ = ({navigation}) => {
             iconName="options-outline"
             position={null}
             secondary={false}
-            label="Search Filters"
+            label="Filters"
           />
         </View>
       </DuoliciousTopNavBar>
