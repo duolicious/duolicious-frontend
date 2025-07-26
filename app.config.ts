@@ -29,7 +29,7 @@ const config: ExpoConfig = {
     imagesUrl: process.env.DUO_IMAGES_URL,
     audioUrl: process.env.DUO_AUDIO_URL,
     statusUrl: process.env.DUO_STATUS_URL,
-    deepLinkUrl: process.env.DUO_DEEP_LINK_URL,
+    inviteUrl: process.env.DUO_INVITE_URL,
     webVersion: process.env.DUO_WEB_VERSION,
     tenorApiKey: process.env.DUO_TENOR_API_KEY,
     notificationIconUrl: process.env.NOTIFICATION_ICON_URL,
@@ -41,10 +41,7 @@ const config: ExpoConfig = {
   ios: {
     bundleIdentifier: "app.duolicious",
     supportsTablet: false,
-    associatedDomains: [
-      "applinks:get.duolicious.app",
-      `applinks:${process.env.DUO_DEEP_LINK_URL}`,
-    ],
+    associatedDomains: ["applinks:get.duolicious.app"],
     appStoreUrl: "https://apps.apple.com/us/app/duolicious-dating-app/id6499066647",
     infoPlist: {
       NSMicrophoneUsageDescription: "This app uses the microphone to capture audio for updating and sharing on your profile.",
@@ -67,10 +64,6 @@ const config: ExpoConfig = {
           {
             scheme: "https",
             host: "get.duolicious.app"
-          },
-          {
-            scheme: "https",
-            host: `applinks:${process.env.DUO_DEEP_LINK_URL}`
           }
         ],
         category: ["BROWSABLE", "DEFAULT"]
