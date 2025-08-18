@@ -68,6 +68,7 @@ import { AudioBio } from './audio-bio';
 import { useScrollbar } from './navigation/scroll-bar-hooks';
 import { WEB_VERSION } from '../env/env';
 import { photoQueue } from '../api/queue';
+import { showPointOfSale } from './modal/point-of-sale-modal';
 
 const formatHeight = (og: OptionGroup<OptionGroupInputs>): string | undefined => {
   if (!isOptionGroupSlider(og.input)) return '';
@@ -262,6 +263,7 @@ const DisplayNameAndAboutPerson = ({data}) => {
     | 'saved'
     | 'error'
     | 'too rude'
+    | 'needs Gold'
     | 'spam'
     | 'too short'
     | 'too long';
@@ -275,6 +277,7 @@ const DisplayNameAndAboutPerson = ({data}) => {
     'too short',
     'too long',
     'too rude',
+    'needs Gold',
     'spam',
   ];
 
@@ -291,6 +294,9 @@ const DisplayNameAndAboutPerson = ({data}) => {
         stateSetter('too rude');
       } else if (r.validationErrors[0] === 'Spam') {
         stateSetter('spam');
+      } else if (r.validationErrors[0] === 'Needs Gold') {
+        showPointOfSale('blocked');
+        stateSetter('needs Gold');
       } else {
         stateSetter('error');
       }
@@ -643,12 +649,21 @@ const Options = ({ navigation, data }) => {
       <InviteEntrypoint navigation={navigation}/>
 
       <Title>Theme</Title>
-      <Button_
-        setting=""
-        optionGroups={_themePickerOptionGroups}
-        showSkipButton={false}
-        theme="light"
-      />
+      {signedInUser?.hasGold ? (
+        <Button_
+          setting=""
+          optionGroups={_themePickerOptionGroups}
+          showSkipButton={false}
+          theme="light"
+        />
+      ) : (
+        <ButtonForOption
+          onPress={() => showPointOfSale('blocked')}
+          label={_themePickerOptionGroups.at(0)?.title}
+          icon={_themePickerOptionGroups.at(0)?.Icon}
+          setting=""
+        />
+      )}
 
       <ButtonWithCenteredText
         onPress={() => navigation.navigate(

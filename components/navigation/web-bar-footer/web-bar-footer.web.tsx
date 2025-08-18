@@ -54,38 +54,42 @@ const AppStoreBadges = () => {
         flexDirection: 'row',
       }}
     >
-      <a
-        target="_blank"
-        href="https://apps.apple.com/us/app/duolicious-dating-app/id6499066647"
-        style={{
-          flex: 1,
-        }}
-      >
-        <img
-          alt="Download on the App Store"
-          src={appStoreBadge.uri}
+      {!/android/i.test(window.navigator.userAgent) &&
+        <a
+          target="_blank"
+          href="https://apps.apple.com/us/app/duolicious-dating-app/id6499066647"
           style={{
-            width: '100%',
+            flex: 1,
           }}
-        />
-      </a>
+        >
+          <img
+            alt="Download on the App Store"
+            src={appStoreBadge.uri}
+            style={{
+              width: '100%',
+            }}
+          />
+        </a>
+      }
 
-      <a
-        target="_blank"
-        href="https://play.google.com/store/apps/details?id=app.duolicious&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1"
-        style={{
-          flex: 1,
-          display: 'block',
-        }}
-      >
-        <img
-          alt="Get it on Google Play"
-          src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
+      {!/iphone|ipod/i.test(window.navigator.userAgent) &&
+        <a
+          target="_blank"
+          href="https://play.google.com/store/apps/details?id=app.duolicious&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1"
           style={{
-            width: '100%',
+            flex: 1,
+            display: 'block',
           }}
-        />
-      </a>
+        >
+          <img
+            alt="Get it on Google Play"
+            src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
+            style={{
+              width: '100%',
+            }}
+          />
+        </a>
+      }
     </div>
   );
 };
@@ -111,4 +115,5 @@ const WebBarFooter = () => {
 
 export {
   WebBarFooter,
+  AppStoreBadges,
 }

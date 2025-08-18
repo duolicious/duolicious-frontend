@@ -1105,6 +1105,7 @@ const createAccountOptionGroups: OptionGroup<OptionGroupInputs>[] = [
             pendingClub: pendingClub,
             estimatedEndDate: new Date(response?.json?.estimated_end_date),
             name: response?.json?.name,
+            hasGold: response?.json?.has_gold,
           });
 
           await sessionPersonUuid(personUuid);
@@ -1260,6 +1261,7 @@ const createAccountOptionGroups: OptionGroup<OptionGroupInputs>[] = [
             pendingClub: pendingClub,
             estimatedEndDate: new Date(response?.json?.estimated_end_date),
             name: response?.json?.name,
+            hasGold: response?.json?.has_gold,
           }));
 
           await sessionPersonUuid(response?.json?.person_uuid);
