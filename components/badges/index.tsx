@@ -8,11 +8,17 @@ import { faPen } from '@fortawesome/free-solid-svg-icons/faPen'
 import { faSeedling } from '@fortawesome/free-solid-svg-icons/faSeedling'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSequence,
+  withRepeat,
+  Easing,
+} from 'react-native-reanimated';
 
 
 // TODO: Add tooltips to explain the badges
-// TODO: Animate pen
-
 
 const size = 20;
 
@@ -86,7 +92,7 @@ const QAndA100 = ({
   pauseMs = 3000,    // pause at target before looping
 }) => {
   const [count, setCount] = useState(startAt);
-  const timerRef = useRef(null);
+  const timerRef = useRef<NodeJS.Timeout>(null);
   const countRef = useRef(startAt);
 
   useEffect(() => {
@@ -256,19 +262,93 @@ const OneYear = ({
 };
 
 const LongBio = () => {
+  const iconSize = 14;
+  const stepDuration = 200;
+
+  const x = useSharedValue(0);
+  const rot = useSharedValue(0);
+
+  // A tiny “writing” path (all points are within 0..max)
+  const path = [
+    { x: 0, rot:   0 },
+    { x: 0, rot: -10 },
+    { x: 2, rot: -10 },
+    { x: 0, rot: -10 },
+    { x: 2, rot: -10 },
+    { x: 0, rot: -10 },
+    { x: 2, rot: -10 },
+    { x: 0, rot:   0 },
+    // Adds a delay before looping
+    ...new Array(10).fill({ x: 0, rot: 0 })
+  ];
+
+  useEffect(() => {
+    // Move along the path, then loop
+    x.value = withRepeat(
+      withSequence(
+        ...path.map(
+          p => withTiming(
+            p.x,
+            { duration: stepDuration, easing: Easing.inOut(Easing.quad) }
+          )
+        )
+      ),
+      -1,
+      true,
+    );
+
+    // Subtle “write” tilt: tip forward, back past center a bit, then settle
+    rot.value = withRepeat(
+      withSequence(
+        ...path.map(
+          path => withTiming(
+            path.rot,
+            { duration: stepDuration, easing: Easing.inOut(Easing.quad) }
+          )
+        )
+      ),
+      -1,
+      true,
+    );
+  }, [x, rot]);
+
+  const penStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: x.value },
+      { rotateZ: `${rot.value}deg` },
+    ],
+  }));
+
   return (
     <View
       style={{
-        height: size,
+        overflow: 'hidden',
         alignItems: 'center',
         justifyContent: 'center',
+        width: size,
+        height: size,
       }}
     >
-      <FontAwesomeIcon
-        icon={faPen}
-        size={14}
-        style={{color: '#373990'}}
-      />
+      <Animated.View
+        style={[
+          {
+            position: 'absolute',
+            alignItems: 'center',
+            justifyContent: 'center',
+            left: 0,
+            top: 0,
+            bottom: 0,
+            right: 0,
+          },
+          penStyle
+        ]}
+      >
+        <FontAwesomeIcon
+          icon={faPen}
+          size={iconSize}
+          style={{ color: '#373990' }}
+        />
+      </Animated.View>
     </View>
   );
 };

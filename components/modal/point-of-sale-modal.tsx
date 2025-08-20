@@ -18,28 +18,38 @@ import { listen, notify } from '../../events/events';
 // TODO: Close button
 // TODO: What if there's more than one offering?
 // TODO: Wire up purchase logic
-//
-// You’re gonna need {currentPackage.product.title} for that...
+
 
 const cardPadding = 20;
 
-type Referer = 'blocked' | 'inquiry' | false;
+type Referrer = 'blocked' | 'inquiry' | false;
 
-const showPointOfSale = (reason: Referer) => {
-  notify<Referer>('show-point-of-sale', reason);
+const showPointOfSale = (reason: Referrer) => {
+  notify<Referrer>('show-point-of-sale', reason);
 };
 
 const useShowPointOfSale = () => {
-  const [referer, setReferer] = useState<Referer>(false);
+  const [referrer, setReferrer] = useState<Exclude<Referrer, false>>('blocked');
+  const [isVisible, setIsVisible] = useState<boolean>(false);
 
   useEffect(() => {
-    return listen<Referer>(
+    return listen<Referrer>(
       'show-point-of-sale',
-      (x) => x !== undefined && setReferer(x)
+      (x) => {
+        if (x === undefined) {
+          return;
+        }
+
+        if (x !== false) {
+          setReferrer(x);
+        }
+
+        setIsVisible(x !== false);
+      }
     );
   }, []);
 
-  return referer;
+  return [referrer, isVisible] as const;
 };
 
 const PurchaseButton = ({ label }: { label: string }) => {
@@ -93,12 +103,12 @@ const Offering = ({
   currentOffering,
   currentPackage,
   onPressClose,
-  referer,
+  referrer,
 }: {
   currentOffering: PurchasesOffering | null | undefined,
   currentPackage: PurchasesPackage | null | undefined
   onPressClose: () => void,
-  referer: Referer
+  referrer: Referrer
 }) => {
   if (!currentOffering || !currentPackage) {
     return (
@@ -125,7 +135,7 @@ const Offering = ({
 
 
   const subtitle =
-    referer === 'blocked'
+    referrer === 'blocked'
       ? `You’re gonna need ${currentPackage?.product.title} for that...`
       : 'Please support Duolicious 🥺 👉👈'
 
@@ -269,7 +279,7 @@ const Offering = ({
 };
 
 const PointOfSaleModal = () => {
-  const referer = useShowPointOfSale();
+  const [referrer, isVisible] = useShowPointOfSale();
   const [currentOffering, setCurrentOffering] = useState<PurchasesOffering | null>();
 
   const onPressClose = useCallback(() => showPointOfSale(false), []);
@@ -289,7 +299,7 @@ const PointOfSaleModal = () => {
   return (
     <DefaultModal
       transparent={true}
-      visible={referer !== false}
+      visible={isVisible}
       onRequestClose={onPressClose}
     >
       <View
@@ -327,7 +337,7 @@ const PointOfSaleModal = () => {
               currentOffering={currentOffering}
               currentPackage={currentPackage}
               onPressClose={onPressClose}
-              referer={referer}
+              referrer={referrer}
             />
           </View>
         </View>
