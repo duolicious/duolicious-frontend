@@ -30,8 +30,8 @@ const Admin = () => {
       style={{
           backgroundColor: '#70f',
           borderRadius: 999,
-          paddingLeft: 9,
-          paddingRight: 10,
+          paddingLeft: 7,
+          paddingRight: 8,
           height: size,
           alignItems: 'center',
           justifyContent: 'center',
@@ -53,7 +53,7 @@ const Admin = () => {
           fontWeight: 700,
         }}
       >
-        Admin
+        ADMIN
       </DefaultText>
     </View>
   );
