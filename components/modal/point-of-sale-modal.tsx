@@ -8,7 +8,7 @@ import { Logo14 } from '../logo';
 import { Close } from '../button/close';
 import Purchases, { PurchasesPackage, PurchasesOffering } from 'react-native-purchases';
 import * as _ from 'lodash';
-import { AppStoreBadges } from '../navigation/web-bar-footer/web-bar-footer.web'; // TODO: move
+import { AppStoreBadges } from '../badges/app-store';
 import { listen, notify } from '../../events/events';
 
 // TODO: Products should come from revenue cat
