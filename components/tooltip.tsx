@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import { DefaultText } from './default-text';
 import { listen, notify } from '../events/events';
+import { isMobile } from '../util/util';
 
 type TooltipState = {
   text: string
@@ -49,15 +50,22 @@ const TooltipListener = () => {
     listen<TooltipState>(EVENT_KEY, setState);
   }, []);
 
-  if (Platform.OS !== 'web') {
-    return null;
-  }
-
   if (!state) {
     return null;
   }
 
   const { paddingLeft, paddingTop } = state;
+
+  const props = isMobile() ? {
+    onStartShouldSetResponder: () => true,
+    onResponderGrant: () => setTooltip(null),
+  } : {
+    onMouseMove: (e) => {
+      if (e.target === e.currentTarget) {
+        setTooltip(null);
+      }
+    }
+  };
 
   return (
     <View
@@ -68,14 +76,7 @@ const TooltipListener = () => {
         left: 0,
         right: 0,
       }}
-      // @ts-ignore
-      onMouseMove={
-        (e) => {
-          if (e.target === e.currentTarget) {
-            setTooltip(null);
-          }
-        }
-      }
+      {...props}
     >
       <View
         style={{
@@ -111,7 +112,16 @@ const useTooltip = (text: string) => {
     });
   }, [text]);
 
-  return { viewRef, showTooltip };
+  const onStartShouldSetResponder = useCallback(() => true, []);
+
+  const props = isMobile() ? {
+    onStartShouldSetResponder,
+    onResponderGrant: showTooltip,
+  } : {
+    onMouseEnter: showTooltip,
+  };
+
+  return { viewRef, props };
 };
 
 export {

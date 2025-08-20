@@ -37,7 +37,7 @@ const OnlineIndicator = ({
   style?: object,
 }) => {
   const onlineStatus = useOnline(personUuid);
-  const { viewRef, showTooltip } = useTooltip(friendlyOnlineStatus(onlineStatus));
+  const { viewRef, props } = useTooltip(friendlyOnlineStatus(onlineStatus));
 
   /**
    * Snap all dimensions to the physical pixel‑grid.
@@ -72,10 +72,7 @@ const OnlineIndicator = ({
           alignItems: 'center',
           ...style,
         }}
-        // @ts-ignore
-        onMouseEnter={
-          showTooltip
-        }
+        {...props}
       >
         <View
           style={{
