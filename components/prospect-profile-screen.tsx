@@ -68,6 +68,17 @@ import { EnlargeablePhoto } from './enlargeable-image';
 import { commonStyles } from '../styles';
 import { useSkipped, setSkipped } from '../hide-and-block/hide-and-block';
 import { OnlineIndicator } from './online-indicator';
+import {
+  Admin,
+  GoldBadge,
+  OgMember,
+  QAndA100,
+  OneWeek,
+  OneMonth,
+  OneYear,
+  LongBio,
+  EarlyAdopter,
+} from './badges';
 
 const Stack = createNativeStackNavigator();
 
@@ -942,6 +953,22 @@ const ProspectUserDetails = ({
           {'\u2002'}
           {userLocation === null ? 'Private location' : userLocation}
         </DefaultText>
+        <View
+          style={{
+            flexDirection: 'row',
+            gap: 3,
+          }}
+        >
+          <Admin/>
+          <GoldBadge/>
+          <OgMember/>
+          <QAndA100/>
+          <OneWeek/>
+          <OneMonth/>
+          <OneYear/>
+          <LongBio/>
+          <EarlyAdopter/>
+        </View>
       </View>
       <DonutChart
         percentage={matchPercentage}
