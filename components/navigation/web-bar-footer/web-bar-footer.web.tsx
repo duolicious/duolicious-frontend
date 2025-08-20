@@ -1,4 +1,4 @@
-import { AppStoreBadges } from '../../badges/app-store';
+import { AppStoreBadges } from '../../badges/app-store/app-store';
 const twitterIcon = require('../../../assets/social/twitter-white.svg');
 const redditIcon = require('../../../assets/social/reddit-white.svg');
 const githubIcon = require('../../../assets/social/github-white.svg');
