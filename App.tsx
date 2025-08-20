@@ -62,7 +62,6 @@ import { TooltipListener } from './components/tooltip';
 import { VerificationCameraModal } from './components/verification-camera';
 import { notify } from './events/events';
 import { PointOfSaleModal } from './components/modal/point-of-sale-modal';
-import { configurePurchases } from './purchases/purchases';
 
 verificationWatcher();
 
@@ -370,7 +369,6 @@ const App = () => {
       lockScreenOrientation(),
       restoreSessionAndNavigate(),
       fetchServerStatusState(),
-      configurePurchases(),
     ]);
 
     setIsLoading(false);

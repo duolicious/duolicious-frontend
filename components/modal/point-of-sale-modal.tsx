@@ -6,10 +6,12 @@ import { backgroundColors } from './background-colors';
 import { ButtonWithCenteredText } from '../button/centered-text';
 import { Logo14 } from '../logo';
 import { Close } from '../button/close';
-import Purchases, { PurchasesPackage, PurchasesOffering } from 'react-native-purchases';
+import Purchases, { PurchasesOffering } from 'react-native-purchases';
 import * as _ from 'lodash';
 import { AppStoreBadges } from '../badges/app-store/app-store';
 import { listen, notify } from '../../events/events';
+import { setSignedInUser } from '../../App';
+import { ensurePurchasesConfigured } from '../../purchases/purchases';
 
 // TODO: Products should come from revenue cat
 // TODO: On web, Revenuecat only supports Stripe. Redirect web users to mobile app
@@ -52,11 +54,17 @@ const useShowPointOfSale = () => {
   return [referrer, isVisible] as const;
 };
 
-const PurchaseButton = ({ label }: { label: string }) => {
+const PurchaseButton = ({
+  label,
+  onPress,
+}: {
+  label: string
+  onPress: () => void,
+}) => {
   if (Platform.OS === 'ios' || Platform.OS === 'android') {
     return (
       <ButtonWithCenteredText
-        onPress={() => {}}
+        onPress={onPress}
         textStyle={{
           fontWeight: 700,
         }}
@@ -100,16 +108,28 @@ const PurchaseButton = ({ label }: { label: string }) => {
 };
 
 const Offering = ({
-  currentOffering,
-  currentPackage,
   onPressClose,
   referrer,
 }: {
-  currentOffering: PurchasesOffering | null | undefined,
-  currentPackage: PurchasesPackage | null | undefined
   onPressClose: () => void,
   referrer: Referrer
 }) => {
+  const [hasError, setHasError] = useState(false);
+  const [currentOffering, setCurrentOffering] = useState<PurchasesOffering | null>();
+
+  useEffect(() => {
+    (async () => {
+      await ensurePurchasesConfigured();
+      const offerings = await Purchases.getOfferings();
+      console.log(offerings); // TODO
+      setCurrentOffering(offerings.current);
+    })();
+  }, []);
+
+  console.log(currentOffering); // TODO
+
+  const currentPackage = currentOffering?.availablePackages.at(0);
+
   if (!currentOffering || !currentPackage) {
     return (
       <>
@@ -138,6 +158,34 @@ const Offering = ({
     referrer === 'blocked'
       ? `You’re gonna need ${currentPackage?.product.title} for that...`
       : 'Please support Duolicious 🥺 👉👈'
+
+  const onPress = async () => {
+    try {
+      const { customerInfo } = await Purchases.purchasePackage(currentPackage);
+      if (!customerInfo.entitlements.active[currentPackage.identifier]) {
+        throw new Error('Purchase failed');
+      }
+    } catch (e) {
+      if (!e?.userCancelled) {
+        setHasError(true);
+        console.error(e);
+      }
+      return;
+    }
+
+    setSignedInUser((u) => {
+      if (!u) {
+        return u;
+      }
+
+      return {
+        ...u,
+        hasGold: true,
+      };
+    });
+
+    onPressClose();
+  };
 
   return (
     <>
@@ -258,7 +306,21 @@ const Offering = ({
             {String(currentOffering.metadata.description)}
           </DefaultText>
 
-          <PurchaseButton label={buttonCta} />
+          <PurchaseButton
+            label={buttonCta}
+            onPress={onPress}
+          />
+          {hasError &&
+            <DefaultText
+              style={{
+                color: 'red',
+                textAlign: 'center',
+                fontWeight: 700,
+              }}
+            >
+              Something went wrong
+            </DefaultText>
+          }
         </View>
 
         <DefaultText
@@ -280,21 +342,8 @@ const Offering = ({
 
 const PointOfSaleModal = () => {
   const [referrer, isVisible] = useShowPointOfSale();
-  const [currentOffering, setCurrentOffering] = useState<PurchasesOffering | null>();
 
   const onPressClose = useCallback(() => showPointOfSale(false), []);
-
-  useEffect(() => {
-    (async () => {
-      const offerings = await Purchases.getOfferings();
-      console.log(offerings); // TODO
-      setCurrentOffering(offerings.current);
-    })();
-  }, []);
-
-  console.log(currentOffering); // TODO
-
-  const currentPackage = currentOffering?.availablePackages.at(0);
 
   return (
     <DefaultModal
@@ -334,8 +383,6 @@ const PointOfSaleModal = () => {
             }}
           >
             <Offering
-              currentOffering={currentOffering}
-              currentPackage={currentPackage}
               onPressClose={onPressClose}
               referrer={referrer}
             />
