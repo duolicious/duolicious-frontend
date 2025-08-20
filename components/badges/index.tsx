@@ -16,17 +16,18 @@ import Animated, {
   withRepeat,
   Easing,
 } from 'react-native-reanimated';
-
-
-// TODO: Add tooltips to explain the badges
+import { useTooltip } from '../tooltip';
 
 const size = 20;
 
 const durationColor = '#ff6bfa';
 
-const Admin = () => {
+const Staff = ({ label, tip }: { label: string, tip: string }) => {
+  const { viewRef, showTooltip } = useTooltip(tip);
+
   return (
     <View
+      ref={viewRef}
       style={{
           backgroundColor: '#70f',
           borderRadius: 999,
@@ -38,6 +39,10 @@ const Admin = () => {
           flexDirection: 'row',
           gap: 2,
       }}
+      // @ts-ignore
+      onMouseEnter={
+        showTooltip
+      }
     >
       <Ionicons
         style={{
@@ -53,15 +58,22 @@ const Admin = () => {
           fontWeight: 700,
         }}
       >
-        ADMIN
+        {label.toUpperCase()}
       </DefaultText>
     </View>
   );
 };
 
+const Admin = () => <Staff label="admin" tip="Duolicious administrator" />;
+
+const Bot = () => <Staff label="bot" tip="Duolicious bot" />;
+
 const GoldBadge = () => {
+  const { viewRef, showTooltip } = useTooltip(`Has a Gold account`);
+
   return (
     <View
+      ref={viewRef}
       style={{
         backgroundColor: '#70f',
         borderRadius: 999,
@@ -70,6 +82,10 @@ const GoldBadge = () => {
         width: size,
         height: size,
       }}
+      // @ts-ignore
+      onMouseEnter={
+        showTooltip
+      }
     >
       <Logo16
         size={16}
@@ -80,10 +96,6 @@ const GoldBadge = () => {
   );
 };
 
-const OgMember = () => {
-  return <></>;
-};
-
 const QAndA100 = ({
   intervalMs = 400,  // time between each step
   step = 50,         // increment amount
@@ -91,6 +103,8 @@ const QAndA100 = ({
   target = 100,
   pauseMs = 3000,    // pause at target before looping
 }) => {
+  const { viewRef, showTooltip } = useTooltip(`Answered 100 Q&A`);
+
   const [count, setCount] = useState(startAt);
   const timerRef = useRef<NodeJS.Timeout>(null);
   const countRef = useRef(startAt);
@@ -139,6 +153,7 @@ const QAndA100 = ({
 
   return (
     <View
+      ref={viewRef}
       style={{
         height: size,
         width: size,
@@ -146,6 +161,10 @@ const QAndA100 = ({
         alignItems: 'center',
         justifyContent: 'center',
       }}
+      // @ts-ignore
+      onMouseEnter={
+        showTooltip
+      }
     >
       <QAndADevice
         color="#004467"
@@ -170,8 +189,11 @@ const QAndA100 = ({
 };
 
 const OneWeek = () => {
+  const { viewRef, showTooltip } = useTooltip(`Member for a week`);
+
   return (
     <View
+      ref={viewRef}
       style={{
         width: 0,
         height: 0,
@@ -184,16 +206,23 @@ const OneWeek = () => {
         borderRightColor: 'transparent',
         borderBottomColor: durationColor,
       }}
+      // @ts-ignore
+      onMouseEnter={
+        showTooltip
+      }
     />
   );
 };
 
 
 const OneMonth = () => {
+  const { viewRef, showTooltip } = useTooltip(`Member for a month`);
+
   const inner = size / Math.SQRT2; // tip-to-tip box of a 45° square
 
   return (
     <View
+      ref={viewRef}
       style={{
         width: size,
         height: size,
@@ -201,6 +230,10 @@ const OneMonth = () => {
         justifyContent: 'center',
         overflow: 'visible',
       }}
+      // @ts-ignore
+      onMouseEnter={
+        showTooltip
+      }
     >
       <View
         style={{
@@ -217,6 +250,8 @@ const OneMonth = () => {
 const OneYear = ({
   orientation = 'pointy',
 }) => {
+  const { viewRef, showTooltip } = useTooltip(`Member for a year`);
+
   const SQRT3 = Math.sqrt(3);
 
   // Flat-top hex viewBox is 2 : √3; Pointy-top is √3 : 2
@@ -250,18 +285,34 @@ const OneYear = ({
   }
 
   return (
-    <Svg
-      width={size}
-      height={size}
-      viewBox={viewBox}
-      preserveAspectRatio="xMidYMid meet" // keep it regular; never distort
+    <View
+      ref={viewRef}
+      style={{
+        height: size,
+        width: size,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+      // @ts-ignore
+      onMouseEnter={
+        showTooltip
+      }
     >
-      <Polygon points={points} fill={durationColor} />
-    </Svg>
+      <Svg
+        width={size}
+        height={size}
+        viewBox={viewBox}
+        preserveAspectRatio="xMidYMid meet" // keep it regular; never distort
+      >
+        <Polygon points={points} fill={durationColor} />
+      </Svg>
+    </View>
   );
 };
 
 const LongBio = () => {
+  const { viewRef, showTooltip } = useTooltip(`Has a long bio`);
+
   const iconSize = 14;
   const stepDuration = 200;
 
@@ -321,6 +372,7 @@ const LongBio = () => {
 
   return (
     <View
+      ref={viewRef}
       style={{
         overflow: 'hidden',
         alignItems: 'center',
@@ -328,6 +380,10 @@ const LongBio = () => {
         width: size,
         height: size,
       }}
+      // @ts-ignore
+      onMouseEnter={
+        showTooltip
+      }
     >
       <Animated.View
         style={[
@@ -354,13 +410,22 @@ const LongBio = () => {
 };
 
 const EarlyAdopter = () => {
+  const { viewRef, showTooltip } = useTooltip(
+    `Joined Duolicious in its first year`
+  );
+
   return (
     <View
+      ref={viewRef}
       style={{
         height: size,
         alignItems: 'center',
         justifyContent: 'center',
       }}
+      // @ts-ignore
+      onMouseEnter={
+        showTooltip
+      }
     >
       <FontAwesomeIcon
         icon={faSeedling}
@@ -373,8 +438,8 @@ const EarlyAdopter = () => {
 
 export {
   Admin,
+  Bot,
   GoldBadge,
-  OgMember,
   QAndA100,
   OneWeek,
   OneMonth,

@@ -71,7 +71,6 @@ import { OnlineIndicator } from './online-indicator';
 import {
   Admin,
   GoldBadge,
-  OgMember,
   QAndA100,
   OneWeek,
   OneMonth,
@@ -961,7 +960,6 @@ const ProspectUserDetails = ({
         >
           <Admin/>
           <GoldBadge/>
-          <OgMember/>
           <QAndA100/>
           <OneWeek/>
           <OneMonth/>

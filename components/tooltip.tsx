@@ -1,15 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { DefaultText } from './default-text';
 import { listen, notify } from '../events/events';
 
 type TooltipState = {
   text: string
-  padding: number
-  bottom?: number
-  top?: number
-  left?: number
-  right?: number
+  paddingLeft: number
+  paddingTop: number
+  top: number
+  left: number
 } | null | undefined;
 
 const EVENT_KEY = 'tooltip';
@@ -58,7 +57,7 @@ const TooltipListener = () => {
     return null;
   }
 
-  const padding = state.padding;
+  const { paddingLeft, paddingTop } = state;
 
   return (
     <View
@@ -81,15 +80,11 @@ const TooltipListener = () => {
       <View
         style={{
           position: 'absolute',
-          top: state.top === undefined ? undefined : state.top - padding,
-          bottom: state.bottom === undefined ? undefined : state.bottom - padding,
-          left: state.left === undefined ? undefined : state.left - padding,
-          right: state.right === undefined ? undefined : state.right - padding,
+          top: state.top === undefined ? undefined : state.top,
+          left: state.left === undefined ? undefined : state.left,
 
-          paddingTop: state.top === undefined ? undefined : padding,
-          paddingBottom: state.bottom === undefined ? undefined : padding,
-          paddingLeft: state.left === undefined ? undefined : padding,
-          paddingRight: state.right === undefined ? undefined : padding,
+          paddingTop: state.top === undefined ? undefined : paddingTop,
+          paddingLeft: state.left === undefined ? undefined : paddingLeft,
         }}
       >
         <Tooltip>{state.text}</Tooltip>
@@ -98,9 +93,29 @@ const TooltipListener = () => {
   );
 };
 
+const useTooltip = (text: string) => {
+  const viewRef = useRef<View>(null);
+
+  const showTooltip = useCallback(() => {
+    viewRef.current?.measureInWindow((x, y, width, height) => {
+      // Position the tooltip at the center of the icon
+      const state: TooltipState = {
+        left: x,
+        top: y,
+        paddingLeft: Math.max(0, width - 4),
+        paddingTop: Math.max(0, height - 4),
+        text,
+      };
+
+      setTooltip(state);
+    });
+  }, [text]);
+
+  return { viewRef, showTooltip };
+};
+
 export {
   Tooltip,
   TooltipListener,
-  TooltipState,
-  setTooltip,
+  useTooltip,
 };
