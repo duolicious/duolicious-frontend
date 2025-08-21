@@ -2,7 +2,7 @@ import { View } from 'react-native';
 import { DefaultText } from '../default-text';
 import { Logo16 } from '../logo';
 import { QAndADevice } from '../q-and-a-device';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, Fragment } from 'react';
 import Svg, { Polygon } from 'react-native-svg';
 import { faPen } from '@fortawesome/free-solid-svg-icons/faPen'
 import { faSeedling } from '@fortawesome/free-solid-svg-icons/faSeedling'
@@ -76,7 +76,7 @@ const Bot = () => <Staff label="bot" tip="Duolicious bot" />;
 const Mod = () => <Staff label="mod" tip="Duolicious moderator" color="black" />;
 
 const Gold = () => {
-  const { viewRef, props } = useTooltip(`Has a Gold account`);
+  const { viewRef, props } = useTooltip(`Has Gold membership`);
 
   return (
     <View
@@ -100,14 +100,16 @@ const Gold = () => {
   );
 };
 
-const QAndA100 = ({
+const QAndA = ({
   intervalMs = 400,  // time between each step
   step = 50,         // increment amount
   startAt = 0,
   target = 100,
   pauseMs = 3000,    // pause at target before looping
+  color1 = "#004467",
+  color2 = "#45ddc0",
 }) => {
-  const { viewRef, props } = useTooltip(`Answered 100 Q&A`);
+  const { viewRef, props } = useTooltip(`Answered ${target} Q&A`);
 
   const [count, setCount] = useState(startAt);
   const timerRef = useRef<NodeJS.Timeout>(null);
@@ -168,19 +170,22 @@ const QAndA100 = ({
       {...props}
     >
       <QAndADevice
-        color="#004467"
+        color={color1}
         height={(size / 3) * 2}
-        backgroundColor="#45ddc0"
+        backgroundColor={color2}
         isBold
       />
       <DefaultText
         style={{
           marginTop: -2,
-          fontSize: 8,
-          backgroundColor: '#45ddc0',
+          fontSize: 7,
+          backgroundColor: color2,
+          color: color1,
           zIndex: -1,
           borderRadius: 999,
-          paddingHorizontal: 3,
+          width: '100%',
+          fontWeight: 700,
+          textAlign: 'center',
         }}
       >
         {count}
@@ -188,6 +193,10 @@ const QAndA100 = ({
     </View>
   );
 };
+
+const QAndA200  = () => <QAndA target={200}  step={100} />
+const QAndA500  = () => <QAndA target={500}  step={250} color2="orange" />
+const QAndA1000 = () => <QAndA target={1000} step={500} color2="black" color1="white" />
 
 const OneWeek = () => {
   const { viewRef, props } = useTooltip(`Member for a week`);
@@ -422,15 +431,42 @@ const EarlyAdopter = () => {
   );
 };
 
+const Flair = ({
+  flair
+}: {
+  flair: string[]
+}) => {
+  if (!flair.length) {
+    return <></>;
+  }
+
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        gap: 3,
+      }}
+    >
+      {flair.map((f) =>
+        <Fragment key={f}>
+          {f === 'admin'         && <Admin />}
+          {f === 'mod'           && <Mod />}
+          {f === 'bot'           && <Bot />}
+          {f === 'gold'          && false && <Gold /> /* TODO */}
+          {f === 'q-and-a-200'   && <QAndA200 />}
+          {f === 'q-and-a-500'   && <QAndA500 />}
+          {f === 'q-and-a-1000'  && <QAndA1000 />}
+          {f === 'one-week'      && <OneWeek />}
+          {f === 'one-month'     && <OneMonth />}
+          {f === 'one-year'      && <OneYear />}
+          {f === 'long-bio'      && <LongBio />}
+          {f === 'early-adopter' && <EarlyAdopter />}
+        </Fragment>
+      )}
+    </View>
+  );
+};
+
 export {
-  Admin,
-  Mod,
-  Bot,
-  Gold,
-  QAndA100,
-  OneWeek,
-  OneMonth,
-  OneYear,
-  LongBio,
-  EarlyAdopter,
+  Flair,
 };

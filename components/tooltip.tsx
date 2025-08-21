@@ -34,9 +34,10 @@ const Tooltip = ({
         paddingHorizontal: 12,
         borderRadius: 5,
         fontSize: 14,
+        textAlign: 'center',
+        maxWidth: 150,
         ...style,
       }}
-      numberOfLines={1}
     >
       {children}
     </DefaultText>
