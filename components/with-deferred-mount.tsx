@@ -8,36 +8,32 @@ type RandomDelay = {
 
 type WithDeferredMountProps = {
   children: ReactNode | (() => ReactNode);
+} & ({
   /**
    * Fixed delay in milliseconds before mounting children.
    * Ignored if randomDelay is provided.
    */
-  delay?: number;
+  delay: number;
+} | {
   /**
    * Randomized delay range (inclusive of min, exclusive of max).
    * Takes precedence over delay when provided.
    */
-  randomDelay?: RandomDelay;
+  randomDelay: RandomDelay;
+});
+
+
+const computeDelay = (props: WithDeferredMountProps): number => {
+  if ('delay' in props) {
+    return props.delay;
+  } else {
+    const { min, max } = props.randomDelay;
+    return Math.floor(min + Math.random() * (max - min));
+  }
 };
 
-const WithDeferredMount = ({
-  children,
-  delay,
-  randomDelay,
-}: WithDeferredMountProps) => {
-  const computeDelay = (): number => {
-    if (randomDelay) {
-      const min = Math.max(0, Math.trunc(randomDelay.min));
-      const max = Math.max(min, Math.trunc(randomDelay.max));
-      return Math.floor(min + Math.random() * (max - min));
-    } else {
-      return Math.max(0, Math.trunc(delay ?? 0));
-    }
-  };
-
-  // Compute once per mount so the delay doesn't change on re-renders
-  const delayRef = useRef<number>(-1);
-  if (delayRef.current < 0) delayRef.current = computeDelay();
+const WithDeferredMount = (props: WithDeferredMountProps) => {
+  const delayRef = useRef<number>(computeDelay(props));
 
   const [ready, setReady] = useState(delayRef.current === 0);
 
@@ -55,15 +51,9 @@ const WithDeferredMount = ({
     return null;
   }
 
-  return (
-    <>
-      {
-        typeof children === 'function'
-          ? (children as () => ReactNode)()
-          : children
-      }
-    </>
-  );
+  return typeof props.children === 'function'
+    ? props.children()
+    : props.children;
 };
 
 export { WithDeferredMount };
