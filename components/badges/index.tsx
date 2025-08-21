@@ -22,14 +22,22 @@ const size = 20;
 
 const durationColor = '#ff6bfa';
 
-const Staff = ({ label, tip }: { label: string, tip: string }) => {
+const Staff = ({
+  label,
+  tip,
+  color = '#70f',
+}: {
+  label: string,
+  tip: string,
+  color?: string,
+}) => {
   const { viewRef, props } = useTooltip(tip);
 
   return (
     <View
       ref={viewRef}
       style={{
-          backgroundColor: '#70f',
+          backgroundColor: color,
           borderRadius: 999,
           paddingLeft: 7,
           paddingRight: 8,
@@ -65,7 +73,7 @@ const Admin = () => <Staff label="admin" tip="Duolicious administrator" />;
 
 const Bot = () => <Staff label="bot" tip="Duolicious bot" />;
 
-const Mod = () => <Staff label="mod" tip="Duolicious moderator" />;
+const Mod = () => <Staff label="mod" tip="Duolicious moderator" color="black" />;
 
 const Gold = () => {
   const { viewRef, props } = useTooltip(`Has a Gold account`);
