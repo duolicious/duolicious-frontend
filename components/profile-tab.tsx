@@ -20,7 +20,6 @@ import { OptionScreen } from './option-screen';
 import { Title } from './title';
 import { DefaultLongTextInput } from './default-long-text-input';
 import { DefaultTextInput } from './default-text-input';
-import { Notice } from './notice';
 import {
   OptionGroup,
   OptionGroupInputs,
@@ -729,8 +728,6 @@ const Options = ({ navigation, data }) => {
         )
       }
 
-      <MaybeDonate/>
-
       <Title style={{ marginTop: 70 }}>Sign Out</Title>
       <ButtonForOption
         onPress={signOut}
@@ -753,88 +750,6 @@ const Options = ({ navigation, data }) => {
         loading={dataExportStatus === 'loading'}
       />
     </View>
-  );
-};
-
-const MaybeDonate = () => {
-  const isWeb = Platform.OS === 'web';
-
-  const goToDonationPage = useCallback(
-    () => Linking.openURL('https://ko-fi.com/duolicious'),
-    [],
-  );
-
-  return (
-    <Notice
-      onPress={isWeb ? goToDonationPage : undefined}
-      style={{
-        marginLeft: 0,
-        marginRight: 0,
-        marginTop: 70,
-        flexDirection: 'column',
-
-      }}
-    >
-      <DefaultText
-        style={{
-          color: '#70f',
-          fontWeight: '700',
-          fontSize: 18,
-          marginBottom: 10,
-        }}
-      >
-        Support Duolicious{'\u00A0'}🙏
-      </DefaultText>
-      {isWeb &&
-        <>
-          <DefaultText
-            style={{
-              color: '#70f',
-              textAlign: 'center',
-            }}
-          >
-            If Duolicious helped you find love, consider donating via our Ko-fi
-            page:
-            {'\n'}
-
-            <DefaultText
-              style={{
-                fontWeight: '700',
-              }}
-            >
-              https://ko-fi.com/duolicious
-            </DefaultText>
-          </DefaultText>
-          <DefaultText
-            style={{
-              color: '#70f',
-              textAlign: 'center',
-            }}
-          >
-            {'\n'}
-            If you can’t donate but still want to help, tell your friends and
-            share on social media!
-            Over 90% of our users found Duolicious through friends, not ads.
-          </DefaultText>
-        </>
-      }
-      {!isWeb &&
-        <>
-          <DefaultText
-            style={{
-              color: '#70f',
-              textAlign: 'center',
-            }}
-          >
-            If Duolicious helped you find love, support us by telling your
-            friends and sharing on social media!
-            {'\n\n'}
-            We’re free thanks to members like you. Over 90% of our users found
-            us through friends, not ads.
-          </DefaultText>
-        </>
-      }
-    </Notice>
   );
 };
 

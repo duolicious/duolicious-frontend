@@ -25,7 +25,6 @@ import { ClubItem } from '../club/club';
 import { DefaultText } from '../components/default-text';
 import {
   Linking,
-  Platform,
   StyleSheet,
   View,
 } from 'react-native';
@@ -514,18 +513,6 @@ const DeletionDescription = () => (
       immediately log you out.
     </DefaultText> {}
     If you’re sure, type “delete” to confirm.
-    {Platform.OS === 'web' &&
-      <DefaultText>
-        {'\n\n'}
-        Please consider donating before leaving by pressing {}
-        <DefaultText
-          onPress={() => Linking.openURL('https://ko-fi.com/duolicious')}
-          style={{ fontWeight: '700' }}
-        >
-          here{'\xa0'}💕
-        </DefaultText>
-      </DefaultText>
-    }
   </DefaultText>
 );
 
@@ -537,18 +524,6 @@ const DeactivationDescription = () => (
     </DefaultText> {}
     The next time you sign in, your account will be reactivated. Press
     “continue” to deactivate your account.
-    {Platform.OS === 'web' &&
-      <DefaultText>
-        {'\n\n'}
-        Please consider donating before leaving by pressing {}
-        <DefaultText
-          onPress={() => Linking.openURL('https://ko-fi.com/duolicious')}
-          style={{ fontWeight: '700' }}
-        >
-          here{'\xa0'}💕
-        </DefaultText>
-      </DefaultText>
-    }
   </DefaultText>
 );
 

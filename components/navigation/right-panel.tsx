@@ -1,16 +1,13 @@
-import {
-  View,
-  Linking,
-} from 'react-native';
+import { useCallback } from 'react';
+import { View } from 'react-native';
 import { DefaultText } from '../default-text';
 import { ButtonWithCenteredText } from '../button/centered-text';
-import { api } from '../../api/api';
+import { showPointOfSale } from '../modal/point-of-sale-modal';
 
 const RightPanel = () => {
-  const onPressDonate = () => {
-    Linking.openURL('https://ko-fi.com/duolicious');
-    api('post', '/dismiss-donation');
-  };
+  const onPress = useCallback(() => {
+    showPointOfSale('inquiry');
+  }, []);
 
   return (
     <View
@@ -43,27 +40,31 @@ const RightPanel = () => {
           style={{
             color: 'white',
             textAlign: 'center',
+            backgroundColor: 'black',
+            borderRadius: 10,
+            padding: 10,
           }}
         >
-          While we’re 100% volunteer-run, servers aren’t free. Thankfully, {}
-          <DefaultText style={{ fontWeight: '700' }}>
-            just 2¢ per user keeps us online another month.
+          Want more messages from more attractive people?? Well, you’re on the
+          wrong app! But at least you can get barely-any-good-messages in
+          comfort and style, with {}
+          <DefaultText style={{ fontWeight: 700 }}>
+            Duolicious GOLD
           </DefaultText>
-          {} That's less than 1% of what Tinder charges, but without the
-          paywalls or ads. Learn more about donating {}
-          <DefaultText
-            onPress={() => Linking.openURL('https://duolicious.app/donation-faq/')}
-            style={{
-              fontWeight: '700',
-            }}
-          >
-            here
-          </DefaultText>
-          {} or donate now.
+          .
+          {'\n\n'}
+          That’s right! With Duolicious GOLD, you get a bunch of perks for a
+          price so low our payment processor almost wouldn’t let us charge it!
+          Plus it gives us the money to keep this Sisyphean shit show on the
+          road!
+          {'\n\n'}
+          (Please. We need money. They're gonna take our thumbs.)
+          {'\n\n'}
+          Kisses! 🤗
         </DefaultText>
 
         <ButtonWithCenteredText
-          onPress={onPressDonate}
+          onPress={onPress}
           textStyle={{
             fontWeight: '700',
           }}
@@ -73,7 +74,7 @@ const RightPanel = () => {
           }}
           secondary={true}
         >
-          Donate via Ko-fi
+          Get GOLD
         </ButtonWithCenteredText>
       </View>
     </View>
