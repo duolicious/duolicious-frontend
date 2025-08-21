@@ -17,6 +17,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { useTooltip } from '../tooltip';
+import { WithDeferredMount } from '../with-deferred-mount';
 
 const size = 20;
 
@@ -91,11 +92,15 @@ const Gold = () => {
       }}
       {...props}
     >
-      <Logo16
-        size={16}
-        color="#ffd700"
-        doAnimate={true}
-      />
+      <WithDeferredMount
+        randomDelay={{ min: 2000, max: 3000 }}
+      >
+        <Logo16
+          size={16}
+          color="#ffd700"
+          doAnimate={true}
+        />
+      </WithDeferredMount>
     </View>
   );
 };
@@ -452,7 +457,7 @@ const Flair = ({
           {f === 'admin'         && <Admin />}
           {f === 'mod'           && <Mod />}
           {f === 'bot'           && <Bot />}
-          {f === 'gold'          && false && <Gold /> /* TODO */}
+          {f === 'gold'          && <Gold />}
           {f === 'q-and-a-200'   && <QAndA200 />}
           {f === 'q-and-a-500'   && <QAndA500 />}
           {f === 'q-and-a-1000'  && <QAndA1000 />}
