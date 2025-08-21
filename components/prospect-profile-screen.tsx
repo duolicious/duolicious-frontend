@@ -69,17 +69,7 @@ import { EnlargeablePhoto } from './enlargeable-image';
 import { commonStyles } from '../styles';
 import { useSkipped, setSkipped } from '../hide-and-block/hide-and-block';
 import { OnlineIndicator } from './online-indicator';
-import {
-  Admin,
-  Mod,
-  Gold,
-  QAndA100,
-  OneWeek,
-  OneMonth,
-  OneYear,
-  LongBio,
-  EarlyAdopter,
-} from './badges';
+import { Flair } from './badges';
 
 const Stack = createNativeStackNavigator();
 
@@ -811,7 +801,7 @@ const CurriedContent = ({navigationRef, navigation, route}) => {
                   matchPercentage={data?.match_percentage}
                   userLocation={data?.location}
                   textColor={data?.theme?.title_color}
-                  flair={data?.flair}
+                  flair={data?.flair ?? []}
                 />
                 <Body
                   navigation={navigation}
@@ -958,28 +948,8 @@ const ProspectUserDetails = ({
           {'\u2002'}
           {userLocation === null ? 'Private location' : userLocation}
         </DefaultText>
-        {!!flair?.length &&
-          <View
-            style={{
-              flexDirection: 'row',
-              gap: 3,
-            }}
-          >
-            {flair.map((f) =>
-              <Fragment key={f}>
-                {f === 'admin'         && <Admin />}
-                {f === 'mod'           && <Mod />}
-                {f === 'gold'          && <Gold />}
-                {f === 'q-and-a-100'   && <QAndA100 />}
-                {f === 'one-week'      && <OneWeek />}
-                {f === 'one-month'     && <OneMonth />}
-                {f === 'one-year'      && <OneYear />}
-                {f === 'long-bio'      && <LongBio />}
-                {f === 'early-adopter' && <EarlyAdopter />}
-              </Fragment>
-            )}
-          </View>
-        }
+
+        <Flair flair={flair} />
       </View>
       <DonutChart
         percentage={matchPercentage}
