@@ -12,6 +12,7 @@ import { AppStoreBadges } from '../badges/app-store/app-store';
 import { listen, notify } from '../../events/events';
 import { setSignedInUser } from '../../App';
 import { ensurePurchasesConfigured } from '../../purchases/purchases';
+import { pluralize } from '../../util/util';
 
 // TODO: Products should come from revenue cat
 // TODO: On web, Revenuecat only supports Stripe. Redirect web users to mobile app
@@ -157,11 +158,22 @@ const Offering = ({
     );
   }
 
-  const buttonCta =
-    currentPackage.product.introPrice ?
-      `Try ${currentPackage.product.introPrice.periodNumberOfUnits} ${_.capitalize(currentPackage.product.introPrice.periodUnit)}s Free` :
-      `Get ${currentPackage.product.title.toUpperCase()}`;
+  const buttonCta = (() => {
+    if (!currentPackage.product.introPrice) {
+      return `Get ${currentPackage.product.title.toUpperCase()}`;
+    }
 
+    const numUnits = currentPackage.product.introPrice.periodNumberOfUnits;
+
+    const formattedUnits = _.capitalize(
+      pluralize(
+        currentPackage.product.introPrice.periodUnit,
+        currentPackage.product.introPrice.periodNumberOfUnits
+      )
+    );
+
+    return `Try ${numUnits} ${formattedUnits} Free`
+  })();
 
   const subtitle =
     referrer === 'blocked'
