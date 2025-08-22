@@ -262,7 +262,7 @@ const DisplayNameAndAboutPerson = ({data}) => {
     | 'saved'
     | 'error'
     | 'too rude'
-    | 'needs Gold'
+    | 'needs gold'
     | 'spam'
     | 'too short'
     | 'too long';
@@ -276,7 +276,7 @@ const DisplayNameAndAboutPerson = ({data}) => {
     'too short',
     'too long',
     'too rude',
-    'needs Gold',
+    'needs gold',
     'spam',
   ];
 
@@ -284,24 +284,24 @@ const DisplayNameAndAboutPerson = ({data}) => {
     (stateSetter: (state: State) => void) =>
     (r: ApiResponse): boolean =>
   {
-      if (r.ok && r.validationErrors === null) {
-        stateSetter('saved');
-        return true;
-      } else if (r.validationErrors === null) {
-        stateSetter('error');
-      } else if (r.validationErrors[0] === 'Too rude') {
-        stateSetter('too rude');
-      } else if (r.validationErrors[0] === 'Spam') {
-        stateSetter('spam');
-      } else if (r.validationErrors[0] === 'Needs Gold') {
-        showPointOfSale('blocked');
-        stateSetter('needs Gold');
-      } else {
-        stateSetter('error');
-      }
+    if (r.ok && r.validationErrors === null) {
+      stateSetter('saved');
+      return true;
+    } else if (r.validationErrors === null) {
+      stateSetter('error');
+    } else if (r.validationErrors[0] === 'Too rude') {
+      stateSetter('too rude');
+    } else if (r.validationErrors[0] === 'Spam') {
+      stateSetter('spam');
+    } else if (r.text === 'Requires gold') {
+      showPointOfSale('blocked');
+      stateSetter('needs gold');
+    } else {
+      stateSetter('error');
+    }
 
-      return false;
-    };
+    return false;
+  };
 
   const debouncedOnChangeNameText = useCallback(
     _.debounce(enqueueName, 1000),
