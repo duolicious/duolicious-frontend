@@ -99,6 +99,7 @@ const Gold = () => {
           size={16}
           color="#ffd700"
           doAnimate={true}
+          doLoop={false}
         />
       </WithDeferredMount>
     </View>
