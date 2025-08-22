@@ -9,12 +9,13 @@ import { faSeedling } from '@fortawesome/free-solid-svg-icons/faSeedling'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withSequence,
-  withRepeat,
   Easing,
+  PinwheelIn,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
 } from 'react-native-reanimated';
 import { useTooltip } from '../tooltip';
 import { WithDeferredMount } from '../with-deferred-mount';
@@ -92,13 +93,12 @@ const Gold = () => {
       }}
       {...props}
     >
-      <WithDeferredMount
-        randomDelay={{ min: 2000, max: 3000 }}
-      >
+      <WithDeferredMount randomDelay={{ min: 2000, max: 3000 }}>
         <Logo16
           size={16}
           color="#ffd700"
           doAnimate={true}
+          doLoop={false}
         />
       </WithDeferredMount>
     </View>
@@ -175,18 +175,17 @@ const QAndA = ({
       {...props}
     >
       <QAndADevice
-        color={color1}
-        height={(size / 3) * 2}
-        backgroundColor={color2}
+        color={color2}
+        height={size * 0.7}
+        backgroundColor="transparent"
         isBold
       />
       <DefaultText
         style={{
-          marginTop: -2,
+          marginTop: -3,
           fontSize: 7,
           backgroundColor: color2,
           color: color1,
-          zIndex: -1,
           borderRadius: 999,
           width: '100%',
           fontWeight: 700,
@@ -436,6 +435,70 @@ const EarlyAdopter = () => {
   );
 };
 
+const VoiceBio = () => {
+  const { viewRef, props } = useTooltip(`Has a voice bio`);
+
+  return (
+    <View
+      ref={viewRef}
+      style={{
+        height: size,
+        width: size,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 999,
+        backgroundColor: '#d10000',
+      }}
+      {...props}
+    >
+      <Ionicons
+        disabled={true}
+        style={{
+          fontSize: size - 6,
+          color: 'white',
+          marginRight: -2,
+        }}
+        name="play"
+      />
+    </View>
+  );
+};
+
+const Gif = () => {
+  const { viewRef, props } = useTooltip(`Has an animated profile pic`);
+
+  return (
+    <View style={{ height: size, width: size }}>
+      <WithDeferredMount randomDelay={{ min: 500, max: 1500 }}>
+        <Animated.View
+          ref={viewRef}
+          style={{
+            height: size,
+            width: size,
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: 2,
+            backgroundColor: '#28afff',
+          }}
+          entering={PinwheelIn}
+          {...props}
+        >
+          <DefaultText
+            style={{
+              fontSize: 9,
+              fontWeight: 600,
+              textAlign: 'center',
+              color: '#dff2ff',
+            }}
+          >
+            GIF
+          </DefaultText>
+        </Animated.View>
+      </WithDeferredMount>
+    </View>
+  );
+};
+
 const Flair = ({
   flair
 }: {
@@ -466,6 +529,8 @@ const Flair = ({
           {f === 'one-year'      && <OneYear />}
           {f === 'long-bio'      && <LongBio />}
           {f === 'early-adopter' && <EarlyAdopter />}
+          {f === 'voice-bio'     && <VoiceBio />}
+          {f === 'gif'           && <Gif />}
         </Fragment>
       )}
     </View>
