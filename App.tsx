@@ -61,6 +61,7 @@ import { ErrorBoundary } from './components/error-boundary';
 import { TooltipListener } from './components/tooltip';
 import { VerificationCameraModal } from './components/verification-camera';
 import { notify } from './events/events';
+import { PointOfSaleModal } from './components/modal/point-of-sale-modal';
 
 verificationWatcher();
 
@@ -142,6 +143,7 @@ type SignedInUser = {
   pendingClub: ClubItem | null
   estimatedEndDate: Date
   name: string | null
+  hasGold: boolean
 };
 
 
@@ -264,6 +266,7 @@ const App = () => {
       pendingClub: pendingClub,
       estimatedEndDate: new Date(response?.json?.estimated_end_date),
       name: response?.json?.name,
+      hasGold: response?.json?.has_gold,
     });
 
     notify<ClubItem[]>('updated-clubs', clubs);
@@ -466,8 +469,8 @@ const App = () => {
   return (
     <ErrorBoundary onError={onError}>
       <SafeAreaProvider>
-        <GestureHandlerRootView>
-          {!isLoading && initialState !== undefined &&
+        {!isLoading && initialState !== undefined &&
+          <GestureHandlerRootView>
             <NavigationContainer
               ref={navigationContainerRef}
               initialState={
@@ -516,15 +519,16 @@ const App = () => {
                   component={InviteScreen} />
               </Stack.Navigator>
             </NavigationContainer>
-          }
-          <TooltipListener/>
-          <ReportModal/>
-          <ImageCropper/>
-          <ColorPickerModal/>
-          <GifPickerModal/>
-          <Toast/>
-          <VerificationCameraModal/>
-        </GestureHandlerRootView>
+            <TooltipListener/>
+            <ReportModal/>
+            <ImageCropper/>
+            <ColorPickerModal/>
+            <GifPickerModal/>
+            <Toast/>
+            <PointOfSaleModal/>
+            <VerificationCameraModal/>
+          </GestureHandlerRootView>
+        }
         <WebSplashScreen loading={isLoading}/>
       </SafeAreaProvider>
     </ErrorBoundary>

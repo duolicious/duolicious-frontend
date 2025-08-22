@@ -22,8 +22,10 @@ import { api } from '../api/api';
 import * as _ from "lodash";
 import { Basic } from './basic';
 import { listen, lastEvent  } from '../events/events';
-import { ClubItem, joinClub, leaveClub, CLUB_QUOTA } from '../club/club';
+import { ClubItem, joinClub, leaveClub, clubQuota } from '../club/club';
 import { useShake } from '../animation/animation';
+import { signedInUser } from '../App';
+import { showPointOfSale } from './modal/point-of-sale-modal';
 
 const SelectedClub = ({
   clubItem,
@@ -83,10 +85,16 @@ const UnselectedClub = ({
     animateOpacity();
   }, [animateOpacity]);
 
-  const _onPress = useCallback(
-    () => isAtQuota ? startShake() : onPress(clubItem),
-    [isAtQuota, onPress, clubItem, startShake]
-  );
+  const _onPress = useCallback(() => {
+    if (isAtQuota) {
+      startShake();
+      if (!signedInUser?.hasGold) {
+        showPointOfSale('blocked');
+      }
+    } else {
+      onPress(clubItem)
+    }
+  }, [isAtQuota, onPress, clubItem, startShake]);
 
   return (
     <Animated.View
@@ -265,7 +273,7 @@ const ClubSelector = ({navigation}) => {
       >
         {!_.isEmpty(selectedClubs) &&
           <>
-            <Title>Clubs you’re in ({selectedClubs.length}/{CLUB_QUOTA})</Title>
+            <Title>Clubs you’re in ({selectedClubs.length}/{clubQuota()})</Title>
             <View
               style={{
                 flexDirection: 'row',
@@ -327,7 +335,7 @@ const ClubSelector = ({navigation}) => {
                 key={String(i)}
                 clubItem={a}
                 onPress={onSelectClub}
-                isAtQuota={selectedClubs.length >= CLUB_QUOTA}
+                isAtQuota={selectedClubs.length >= clubQuota()}
               />
             )}
             <DefaultText style={{

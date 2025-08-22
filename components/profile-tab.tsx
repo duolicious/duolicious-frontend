@@ -20,7 +20,6 @@ import { OptionScreen } from './option-screen';
 import { Title } from './title';
 import { DefaultLongTextInput } from './default-long-text-input';
 import { DefaultTextInput } from './default-text-input';
-import { Notice } from './notice';
 import {
   OptionGroup,
   OptionGroupInputs,
@@ -68,6 +67,7 @@ import { AudioBio } from './audio-bio';
 import { useScrollbar } from './navigation/scroll-bar-hooks';
 import { WEB_VERSION } from '../env/env';
 import { photoQueue } from '../api/queue';
+import { showPointOfSale } from './modal/point-of-sale-modal';
 
 const formatHeight = (og: OptionGroup<OptionGroupInputs>): string | undefined => {
   if (!isOptionGroupSlider(og.input)) return '';
@@ -262,6 +262,7 @@ const DisplayNameAndAboutPerson = ({data}) => {
     | 'saved'
     | 'error'
     | 'too rude'
+    | 'needs gold'
     | 'spam'
     | 'too short'
     | 'too long';
@@ -275,6 +276,7 @@ const DisplayNameAndAboutPerson = ({data}) => {
     'too short',
     'too long',
     'too rude',
+    'needs gold',
     'spam',
   ];
 
@@ -282,21 +284,24 @@ const DisplayNameAndAboutPerson = ({data}) => {
     (stateSetter: (state: State) => void) =>
     (r: ApiResponse): boolean =>
   {
-      if (r.ok && r.validationErrors === null) {
-        stateSetter('saved');
-        return true;
-      } else if (r.validationErrors === null) {
-        stateSetter('error');
-      } else if (r.validationErrors[0] === 'Too rude') {
-        stateSetter('too rude');
-      } else if (r.validationErrors[0] === 'Spam') {
-        stateSetter('spam');
-      } else {
-        stateSetter('error');
-      }
+    if (r.ok && r.validationErrors === null) {
+      stateSetter('saved');
+      return true;
+    } else if (r.validationErrors === null) {
+      stateSetter('error');
+    } else if (r.validationErrors[0] === 'Too rude') {
+      stateSetter('too rude');
+    } else if (r.validationErrors[0] === 'Spam') {
+      stateSetter('spam');
+    } else if (r.text === 'Requires gold') {
+      showPointOfSale('blocked');
+      stateSetter('needs gold');
+    } else {
+      stateSetter('error');
+    }
 
-      return false;
-    };
+    return false;
+  };
 
   const debouncedOnChangeNameText = useCallback(
     _.debounce(enqueueName, 1000),
@@ -643,12 +648,21 @@ const Options = ({ navigation, data }) => {
       <InviteEntrypoint navigation={navigation}/>
 
       <Title>Theme</Title>
-      <Button_
-        setting=""
-        optionGroups={_themePickerOptionGroups}
-        showSkipButton={false}
-        theme="light"
-      />
+      {signedInUser?.hasGold ? (
+        <Button_
+          setting=""
+          optionGroups={_themePickerOptionGroups}
+          showSkipButton={false}
+          theme="light"
+        />
+      ) : (
+        <ButtonForOption
+          onPress={() => showPointOfSale('blocked')}
+          label={_themePickerOptionGroups.at(0)?.title}
+          icon={_themePickerOptionGroups.at(0)?.Icon}
+          setting=""
+        />
+      )}
 
       <ButtonWithCenteredText
         onPress={() => navigation.navigate(
@@ -714,8 +728,6 @@ const Options = ({ navigation, data }) => {
         )
       }
 
-      <MaybeDonate/>
-
       <Title style={{ marginTop: 70 }}>Sign Out</Title>
       <ButtonForOption
         onPress={signOut}
@@ -738,88 +750,6 @@ const Options = ({ navigation, data }) => {
         loading={dataExportStatus === 'loading'}
       />
     </View>
-  );
-};
-
-const MaybeDonate = () => {
-  const isWeb = Platform.OS === 'web';
-
-  const goToDonationPage = useCallback(
-    () => Linking.openURL('https://ko-fi.com/duolicious'),
-    [],
-  );
-
-  return (
-    <Notice
-      onPress={isWeb ? goToDonationPage : undefined}
-      style={{
-        marginLeft: 0,
-        marginRight: 0,
-        marginTop: 70,
-        flexDirection: 'column',
-
-      }}
-    >
-      <DefaultText
-        style={{
-          color: '#70f',
-          fontWeight: '700',
-          fontSize: 18,
-          marginBottom: 10,
-        }}
-      >
-        Support Duolicious{'\u00A0'}🙏
-      </DefaultText>
-      {isWeb &&
-        <>
-          <DefaultText
-            style={{
-              color: '#70f',
-              textAlign: 'center',
-            }}
-          >
-            If Duolicious helped you find love, consider donating via our Ko-fi
-            page:
-            {'\n'}
-
-            <DefaultText
-              style={{
-                fontWeight: '700',
-              }}
-            >
-              https://ko-fi.com/duolicious
-            </DefaultText>
-          </DefaultText>
-          <DefaultText
-            style={{
-              color: '#70f',
-              textAlign: 'center',
-            }}
-          >
-            {'\n'}
-            If you can’t donate but still want to help, tell your friends and
-            share on social media!
-            Over 90% of our users found Duolicious through friends, not ads.
-          </DefaultText>
-        </>
-      }
-      {!isWeb &&
-        <>
-          <DefaultText
-            style={{
-              color: '#70f',
-              textAlign: 'center',
-            }}
-          >
-            If Duolicious helped you find love, support us by telling your
-            friends and sharing on social media!
-            {'\n\n'}
-            We’re free thanks to members like you. Over 90% of our users found
-            us through friends, not ads.
-          </DefaultText>
-        </>
-      }
-    </Notice>
   );
 };
 
