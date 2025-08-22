@@ -173,7 +173,7 @@ const Offering = ({
 
     try {
       const { customerInfo } = await Purchases.purchasePackage(currentPackage);
-      if (!customerInfo.entitlements.active[currentPackage.identifier]) {
+      if (!customerInfo.allPurchasedProductIdentifiers.includes(currentPackage.product.identifier)) {
         throw new Error('Purchase failed');
       }
     } catch (e) {
@@ -288,7 +288,7 @@ const Offering = ({
                 fontWeight: 700,
               }}
             >
-              {currentPackage.product.currencyCode} {currentPackage.product.price}
+              {currentPackage.product.priceString} {currentPackage.product.currencyCode}
             </DefaultText>
             {} / {currentPackage.packageType.toLowerCase().replace(/ly$/, '')}
           </DefaultText>
