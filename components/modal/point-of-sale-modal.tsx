@@ -61,10 +61,18 @@ const PurchaseButton = ({
   label: string
   onPress: () => void,
 }) => {
+  const [loading, setLoading] = useState(false);
+
+  const _onPress = useCallback(async () => {
+    setLoading(true);
+    await onPress();
+    setLoading(false);
+  }, []);
+
   if (Platform.OS === 'ios' || Platform.OS === 'android') {
     return (
       <ButtonWithCenteredText
-        onPress={onPress}
+        onPress={_onPress}
         textStyle={{
           fontWeight: 700,
         }}
@@ -73,6 +81,7 @@ const PurchaseButton = ({
           marginBottom: 0,
         }}
         secondary={true}
+        loading={loading}
       >
         {label}
       </ButtonWithCenteredText>
