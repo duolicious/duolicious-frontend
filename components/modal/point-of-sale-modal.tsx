@@ -160,6 +160,8 @@ const Offering = ({
       : 'Please support Duolicious 🥺 👉👈'
 
   const onPress = async () => {
+    setHasError(false);
+
     try {
       const { customerInfo } = await Purchases.purchasePackage(currentPackage);
       if (!customerInfo.entitlements.active[currentPackage.identifier]) {
