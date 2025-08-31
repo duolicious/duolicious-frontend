@@ -43,7 +43,7 @@ import { Images } from './images/images';
 import { DefaultText } from './default-text';
 import { sessionToken, sessionPersonUuid } from '../kv-storage/session-token';
 import { api, japi, ApiResponse } from '../api/api';
-import { signedInUser, setSignedInUser } from '../App';
+import { useSignedInUser, setSignedInUser, getSignedInUser } from '../events/signed-in-user';
 import { cmToFeetInchesStr } from '../units/units';
 import {
   IMAGES_URL,
@@ -73,6 +73,7 @@ const formatHeight = (og: OptionGroup<OptionGroupInputs>): string | undefined =>
   if (!isOptionGroupSlider(og.input)) return '';
 
   const currentValue = getCurrentValue(og.input);
+  const signedInUser = getSignedInUser();
 
   if (_.isNumber(currentValue)) {
     return signedInUser?.units === 'Imperial' ?
@@ -403,6 +404,7 @@ const Options = ({ navigation, data }) => {
   const [dataExportStatus, setDataExportStatus] = useState<
     'error' | 'loading' | 'ok'
   >('ok');
+  const [signedInUser] = useSignedInUser();
 
   const addCurrentValue = (optionGroups: OptionGroup<OptionGroupInputs>[]) =>
     optionGroups.map(

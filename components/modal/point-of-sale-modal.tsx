@@ -10,7 +10,7 @@ import Purchases, { PurchasesOffering } from 'react-native-purchases';
 import * as _ from 'lodash';
 import { AppStoreBadges } from '../badges/app-store/app-store';
 import { listen, notify } from '../../events/events';
-import { setSignedInUser } from '../../App';
+import { setSignedInUser } from '../../events/signed-in-user';
 import { ensurePurchasesConfigured } from '../../purchases/purchases';
 import { pluralize } from '../../util/util';
 

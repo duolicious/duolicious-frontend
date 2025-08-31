@@ -1,10 +1,10 @@
 import { japi } from '../api/api';
 import { notify, lastEvent } from '../events/events';
 import { searchQueue } from '../api/queue';
-import { signedInUser } from '../App';
+import { getSignedInUser } from '../events/signed-in-user';
 
 const clubQuota = () => {
-  if (signedInUser?.hasGold) {
+  if (getSignedInUser()?.hasGold) {
     return 100;
   } else {
     return 50;

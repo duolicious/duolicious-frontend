@@ -9,7 +9,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { useShake } from '../animation/animation';
 import { showPointOfSale } from './modal/point-of-sale-modal';
-import { signedInUser } from '../App';
+import { useSignedInUser } from '../events/signed-in-user';
 
 const isIconDefinition = (x: any): x is IconDefinition => {
   return x.iconName !== undefined;
@@ -46,6 +46,7 @@ const Basic = ({children, ...rest}) => {
   } = rest;
 
   const [shakeAnimation, startShake] = useShake();
+  const [signedInUser] = useSignedInUser();
 
   return (
     <Animated.View

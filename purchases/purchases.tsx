@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 import Purchases from 'react-native-purchases';
 import Constants, { ExecutionEnvironment } from "expo-constants";
 import { notify, lastEvent } from '../events/events';
-import { signedInUser } from '../App';
+import { getSignedInUser } from '../events/signed-in-user';
 
 // TODO: I think this should only be initialized once
 // TODO: Call these:
@@ -22,7 +22,7 @@ const API_KEYS = {
 };
 
 const ensurePurchasesConfigured = async () => {
-  const personUuid = signedInUser?.personUuid;
+  const personUuid = getSignedInUser()?.personUuid;
 
   if (!personUuid) {
     return;

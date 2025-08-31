@@ -1,6 +1,7 @@
 import * as _ from "lodash";
 import { japi, ApiResponse } from '../api/api';
-import { setSignedInUser, navigationContainerRef } from '../App';
+import { navigationContainerRef } from '../App';
+import { setSignedInUser } from '../events/signed-in-user';
 import { sessionToken, sessionPersonUuid } from '../kv-storage/session-token';
 import { X } from "react-native-feather";
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'

@@ -62,6 +62,7 @@ import { TooltipListener } from './components/tooltip';
 import { VerificationCameraModal } from './components/verification-camera';
 import { notify } from './events/events';
 import { PointOfSaleModal } from './components/modal/point-of-sale-modal';
+import { setSignedInUser, useSignedInUser } from './events/signed-in-user';
 
 verificationWatcher();
 
@@ -135,21 +136,6 @@ const WebSplashScreen = ({loading}) => {
   }
 };
 
-type SignedInUser = {
-  personId: number
-  personUuid: string,
-  units: 'Metric' | 'Imperial'
-  sessionToken: string
-  pendingClub: ClubItem | null
-  estimatedEndDate: Date
-  name: string | null
-  hasGold: boolean
-};
-
-
-let signedInUser: SignedInUser | undefined;
-let setSignedInUser: React.Dispatch<React.SetStateAction<typeof signedInUser>>;
-
 const otpDestination = { value: '' };
 const isImagePickerOpen = { value: false };
 
@@ -159,7 +145,7 @@ const App = () => {
   const [initialState, setInitialState] = useState<any>(undefined);
   const [isLoading, setIsLoading] = useState(true);
   const [serverStatus, setServerStatus] = useState<ServerStatus>("ok");
-  [signedInUser, setSignedInUser] = useState<SignedInUser | undefined>();
+  const [signedInUser] = useSignedInUser();
 
   const loadFonts = useCallback(async () => {
     await Font.loadAsync({
@@ -540,6 +526,4 @@ export {
   isImagePickerOpen,
   navigationContainerRef,
   otpDestination,
-  setSignedInUser,
-  signedInUser,
 };

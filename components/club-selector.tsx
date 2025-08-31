@@ -24,7 +24,7 @@ import { Basic } from './basic';
 import { listen, lastEvent  } from '../events/events';
 import { ClubItem, joinClub, leaveClub, clubQuota } from '../club/club';
 import { useShake } from '../animation/animation';
-import { signedInUser } from '../App';
+import { useSignedInUser } from '../events/signed-in-user';
 import { showPointOfSale } from './modal/point-of-sale-modal';
 
 const SelectedClub = ({
@@ -69,6 +69,7 @@ const UnselectedClub = ({
   isAtQuota: boolean
 }) => {
   const [shakeAnimation, startShake] = useShake();
+  const [signedInUser] = useSignedInUser();
 
   const opacityAnimation = useRef(new Animated.Value(1)).current;
 
@@ -94,7 +95,7 @@ const UnselectedClub = ({
     } else {
       onPress(clubItem)
     }
-  }, [isAtQuota, onPress, clubItem, startShake]);
+  }, [isAtQuota, onPress, clubItem, startShake, signedInUser?.hasGold]);
 
   return (
     <Animated.View
