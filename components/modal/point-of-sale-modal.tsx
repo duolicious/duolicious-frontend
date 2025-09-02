@@ -131,12 +131,9 @@ const Offering = ({
     (async () => {
       await ensurePurchasesConfigured();
       const offerings = await Purchases.getOfferings();
-      console.log(offerings); // TODO
       setCurrentOffering(offerings.current);
     })();
   }, []);
-
-  console.log(currentOffering); // TODO
 
   const currentPackage = currentOffering?.availablePackages.at(0);
 
@@ -158,9 +155,11 @@ const Offering = ({
     );
   }
 
+  const productName = currentOffering.serverDescription;
+
   const buttonCta = (() => {
     if (!currentPackage.product.introPrice) {
-      return `Get ${currentPackage.product.title.toUpperCase()}`;
+      return `Get ${productName.toUpperCase()}`;
     }
 
     const numUnits = currentPackage.product.introPrice.periodNumberOfUnits;
@@ -177,7 +176,7 @@ const Offering = ({
 
   const subtitle =
     referrer === 'blocked'
-      ? `You’re gonna need ${currentPackage?.product.title} for that...`
+      ? `You’re gonna need ${productName} for that...`
       : 'Please support Duolicious 🥺 👉👈'
 
   const onPress = async () => {
@@ -243,7 +242,7 @@ const Offering = ({
               textAlign: 'center',
             }}
           >
-            {currentPackage.product.title.toUpperCase()}
+            {productName.toUpperCase()}
           </DefaultText>
         </View>
         <DefaultText
@@ -287,7 +286,7 @@ const Offering = ({
               color: '#ffd700',
             }}
           >
-            {currentPackage.product.title.toUpperCase()}
+            {productName.toUpperCase()}
           </DefaultText>
 
           <DefaultText
