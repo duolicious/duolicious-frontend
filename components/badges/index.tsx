@@ -336,7 +336,7 @@ const OneYear = ({
   );
 };
 
-const LongBio = () => {
+const BaseLongBio = ({ numLoops = Infinity }) => {
   const { viewRef, props } = useTooltip(`Has a long bio`);
 
   const iconSize = 14;
@@ -360,34 +360,30 @@ const LongBio = () => {
   ];
 
   useEffect(() => {
-    // Move along the path, then loop
+    const reps = Number.isFinite(numLoops) ? numLoops : -1;
+
+    // Move along the path, then repeat
     x.value = withRepeat(
       withSequence(
-        ...path.map(
-          p => withTiming(
-            p.x,
-            { duration: stepDuration, easing: Easing.inOut(Easing.quad) }
-          )
+        ...path.map(p =>
+          withTiming(p.x, { duration: stepDuration, easing: Easing.inOut(Easing.quad) })
         )
       ),
-      -1,
+      reps,
       true,
     );
 
     // Subtle “write” tilt: tip forward, back past center a bit, then settle
     rot.value = withRepeat(
       withSequence(
-        ...path.map(
-          path => withTiming(
-            path.rot,
-            { duration: stepDuration, easing: Easing.inOut(Easing.quad) }
-          )
+        ...path.map(p =>
+          withTiming(p.rot, { duration: stepDuration, easing: Easing.inOut(Easing.quad) })
         )
       ),
-      -1,
+      reps,
       true,
     );
-  }, [x, rot]);
+  }, [x, rot, path, stepDuration, numLoops]);
 
   const penStyle = useAnimatedStyle(() => ({
     transform: [
@@ -431,6 +427,8 @@ const LongBio = () => {
     </View>
   );
 };
+
+const LongBio = () => <BaseLongBio numLoops={3} />;
 
 const EarlyAdopter = () => {
   const { viewRef, props } = useTooltip(
