@@ -77,7 +77,12 @@ const Bot = () => <Staff label="bot" tip="Duolicious bot" />;
 
 const Mod = () => <Staff label="mod" tip="Duolicious moderator" color="black" />;
 
-const Gold = () => {
+const Gold = ({
+  style = {},
+  doAnimate = true,
+  color = "#ffd700",
+  rectSize = undefined,
+}) => {
   const { viewRef, props } = useTooltip(`Has Gold membership`);
 
   return (
@@ -90,14 +95,16 @@ const Gold = () => {
         justifyContent: 'center',
         width: size,
         height: size,
+        ...style,
       }}
       {...props}
     >
       <WithDeferredMount randomDelay={{ min: 2000, max: 3000 }}>
         <Logo16
           size={16}
-          color="#ffd700"
-          doAnimate={true}
+          rectSize={rectSize}
+          color={color}
+          doAnimate={doAnimate}
           doLoop={false}
         />
       </WithDeferredMount>
@@ -539,4 +546,5 @@ const Flair = ({
 
 export {
   Flair,
+  Gold,
 };
