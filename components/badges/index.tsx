@@ -520,6 +520,7 @@ const Flair = ({
       style={{
         flexDirection: 'row',
         gap: 3,
+        flexWrap: 'wrap',
       }}
     >
       {flair.map((f) =>
