@@ -34,6 +34,7 @@ import { onboardingQueue } from '../api/queue';
 import { showVerificationCamera } from '../components/verification-camera';
 import { notifyUpdatedVerification } from '../verification/verification';
 import { searchQueue } from '../api/queue';
+import { setAppThemeName } from '../app-theme/app-theme';
 
 const noneFontSize = 16;
 
@@ -412,6 +413,11 @@ const verificationLevel = [
   'No verification',
   'Basics only',
   'Photos',
+];
+
+const appThemeName = [
+  'Light',
+  'Dark',
 ];
 
 const verificationDescription = `
@@ -881,7 +887,7 @@ const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
 
 const themePickerOptionGroups: OptionGroup<OptionGroupThemePicker>[] = [
   {
-    title: 'Theme',
+    title: 'Profile Theme',
     Icon: () => (
       <FontAwesomeIcon
         icon={faPalette}
@@ -908,6 +914,34 @@ const themePickerOptionGroups: OptionGroup<OptionGroupThemePicker>[] = [
           return ok;
         },
       },
+    },
+  }
+];
+
+const appThemePickerOptionGroups: OptionGroup<OptionGroupButtons>[] = [
+  {
+    title: 'App Theme',
+    Icon: () => (
+      <FontAwesomeIcon
+        icon={faPalette}
+        size={14}
+        style={{color: 'black'}}
+      />
+    ),
+    description: "Customize the app’s appearance",
+    input: {
+      buttons: {
+        values: appThemeName,
+        submit: async function(input: 'Light' | 'Dark') {
+          if (input === 'Dark') {
+            setAppThemeName('dark');
+          } else {
+            setAppThemeName('light');
+          }
+          this.currentValue = input;
+          return true;
+        },
+      }
     },
   }
 ];
@@ -2088,5 +2122,6 @@ export {
   searchOtherBasicsOptionGroups,
   searchTwoWayBasicsOptionGroups,
   themePickerOptionGroups,
+  appThemePickerOptionGroups,
   verificationOptionGroups,
 };
