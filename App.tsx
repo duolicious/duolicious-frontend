@@ -63,6 +63,7 @@ import { VerificationCameraModal } from './components/verification-camera';
 import { notify } from './events/events';
 import { PointOfSaleModal } from './components/modal/point-of-sale-modal';
 import { setSignedInUser, useSignedInUser } from './events/signed-in-user';
+import { loadAppTheme } from './app-theme/app-theme';
 
 verificationWatcher();
 
@@ -355,6 +356,7 @@ const App = () => {
       lockScreenOrientation(),
       restoreSessionAndNavigate(),
       fetchServerStatusState(),
+      loadAppTheme(),
     ]);
 
     setIsLoading(false);
