@@ -57,6 +57,7 @@ const DuoliciousRightPanelContent = () => {
         Inquiries: {}
         <DefaultText
           style={{
+            color: 'white',
             fontWeight: '700'
           }}
           // @ts-ignore

@@ -9,7 +9,7 @@ import { DefaultText } from './default-text';
 import { DuoliciousTopNavBar } from './top-nav-bar';
 import { useScrollbar } from './navigation/scroll-bar-hooks';
 import { Avatar } from './avatar';
-import { getShortElapsedTime, isMobile, assertNever } from '../util/util';
+import { getShortElapsedTime, isMobile, assertNever, capLuminance } from '../util/util';
 import { GestureResponderEvent, Pressable } from 'react-native';
 import { EnlargeablePhoto } from './enlargeable-image';
 import { commonStyles } from '../styles';
@@ -29,6 +29,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faReply } from '@fortawesome/free-solid-svg-icons/faReply';
 import { OnlineIndicator } from './online-indicator';
 import { Flair } from './badges';
+import { useAppTheme } from '../app-theme/app-theme';
 
 const NAME_ACTION_TIME_GAP_VERTICAL = 16;
 
@@ -253,6 +254,8 @@ const NameActionTime = ({
   flair: string[]
   style?: any
 }) => {
+  const { appTheme } = useAppTheme();
+
   const onPress = useCallback((event: GestureResponderEvent) => {
     event.stopPropagation();
 
@@ -298,7 +301,6 @@ const NameActionTime = ({
           <DefaultText
             style={{
               fontWeight: '700',
-              color: 'black',
               flexShrink: 1,
             }}
           >
@@ -321,7 +323,7 @@ const NameActionTime = ({
       <Flag
         hitSlop={20}
         onPress={onPress}
-        stroke="rgba(0, 0, 0, 0.5)"
+        stroke={`${appTheme.secondaryColor}80`}
         strokeWidth={2}
         height={18}
         width={18}
@@ -334,6 +336,8 @@ const NameActionTime = ({
 };
 
 const FeedItemJoined = ({ fields }: { fields: JoinedFields }) => {
+  const { appTheme } = useAppTheme();
+
   const onPress = useNavigationToProfile(
     fields.person_uuid,
     fields.photo_blurhash,
@@ -342,7 +346,7 @@ const FeedItemJoined = ({ fields }: { fields: JoinedFields }) => {
   return (
     <Pressable
       onPress={onPress}
-      style={styles.cardBorders}
+      style={[styles.cardBorders, appTheme.card]}
     >
       {fields.photo_uuid &&
         <Avatar
@@ -393,6 +397,8 @@ const FeedItemAddedPhoto = ({
   fields: AddedPhotoFields,
   action?: Action,
 }) => {
+  const { appTheme } = useAppTheme();
+
   const onPress = useNavigationToProfile(
     fields.person_uuid,
     fields.photo_blurhash,
@@ -403,7 +409,7 @@ const FeedItemAddedPhoto = ({
   return (
     <Pressable
       onPress={onPress}
-      style={styles.cardBorders}
+      style={[styles.cardBorders, appTheme.card]}
     >
       {fields.photo_uuid &&
         <Avatar
@@ -448,6 +454,8 @@ const FeedItemAddedVoiceBio = ({
   fields: AddedVoiceBioFields
   action?: Action
 }) => {
+  const { appTheme } = useAppTheme();
+
   const onPress = useNavigationToProfile(
     fields.person_uuid,
     fields.photo_blurhash,
@@ -456,7 +464,7 @@ const FeedItemAddedVoiceBio = ({
   return (
     <Pressable
       onPress={onPress}
-      style={styles.cardBorders}
+      style={[styles.cardBorders, appTheme.card]}
     >
       {fields.photo_uuid &&
         <Avatar
@@ -494,6 +502,8 @@ const FeedItemUpdatedBio = ({
   fields: UpdatedBioFields,
   action?: Action,
 }) => {
+  const { appTheme } = useAppTheme();
+
   const onPress = useNavigationToProfile(
     fields.person_uuid,
     fields.photo_blurhash,
@@ -510,7 +520,7 @@ const FeedItemUpdatedBio = ({
   return (
     <Pressable
       onPress={onPress}
-      style={styles.cardBorders}
+      style={[styles.cardBorders, appTheme.card]}
     >
       {fields.photo_uuid &&
         <Avatar
@@ -541,7 +551,7 @@ const FeedItemUpdatedBio = ({
           />
           <DefaultText
             style={{
-              backgroundColor: fields.background_color,
+              backgroundColor: capLuminance(fields.background_color),
               color: fields.body_color,
               borderRadius: 10,
               padding: 10,
@@ -566,7 +576,7 @@ const FeedItemUpdatedBio = ({
             <FontAwesomeIcon
               icon={faReply}
               size={16}
-              color="black"
+              color={appTheme.secondaryColor}
               style={{
                 /* @ts-ignore */
                 outline: 'none',

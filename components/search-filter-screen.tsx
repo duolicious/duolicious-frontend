@@ -39,6 +39,7 @@ import { useSignedInUser, getSignedInUser } from '../events/signed-in-user';
 import { cmToFeetInchesStr, kmToMilesStr } from '../units/units';
 import { TopNavBarButton } from './top-nav-bar-button';
 import { QAndADevice } from './q-and-a-device';
+import { useAppTheme } from '../app-theme/app-theme';
 
 const getCurrentValueAsLabel = (og: OptionGroup<OptionGroupInputs> | undefined) => {
   if (!og) return undefined;
@@ -144,6 +145,7 @@ const SearchFilterScreen = () => {
 };
 
 const SearchFilterScreen_ = ({navigation, route}) => {
+  const { appTheme } = useAppTheme();
   const [signedInUser] = useSignedInUser();
 
   const onPressRefresh = route?.params?.onPressRefresh;
@@ -403,7 +405,7 @@ const SearchFilterScreen_ = ({navigation, route}) => {
             flexGrow: 1,
           }}
         >
-          <ActivityIndicator size="large" color="#70f"/>
+          <ActivityIndicator size="large" color={appTheme.brandColor} />
         </View>
       }
     </SafeAreaView>
@@ -411,6 +413,7 @@ const SearchFilterScreen_ = ({navigation, route}) => {
 };
 
 const QandQFilterScreen = ({navigation, route}) => {
+  const { appTheme } = useAppTheme();
   const answers: AnswerItem[] = route?.params?.answers;
   const triggerRender = route?.params?.triggerRender;
 
@@ -464,6 +467,7 @@ const QandQFilterScreen = ({navigation, route}) => {
           <Ionicons
             style={{
               fontSize: 20,
+              color: appTheme.secondaryColor,
             }}
             name="arrow-back"
           />
@@ -513,7 +517,7 @@ const QandQFilterScreen = ({navigation, route}) => {
             flexGrow: 1,
           }}
         >
-          <ActivityIndicator size="large" color="#70f"/>
+          <ActivityIndicator size="large" color={appTheme.brandColor} />
         </View>
       }
       {!isLoading &&

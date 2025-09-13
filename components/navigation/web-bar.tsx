@@ -24,6 +24,7 @@ import {
 } from './util';
 import { useInboxStats } from '../../chat/application-layer/hooks/inbox-stats';
 import { WebBarFooter } from './web-bar-footer/web-bar-footer';
+import { useAppTheme } from '../../app-theme/app-theme';
 
 const Logo = () => {
   return (
@@ -59,6 +60,8 @@ const Logo = () => {
 };
 
 const NavigationItems = ({state, navigation, descriptors}) => {
+  const { appThemeName } = useAppTheme();
+
   const unreadIndicatorOpacity = useRef(new Animated.Value(0)).current;
 
   const hideIndicator = useCallback(() => {
@@ -102,6 +105,14 @@ const NavigationItems = ({state, navigation, descriptors}) => {
 
         const isFocused = state.index === index;
 
+        const iconBackgroundColor = (() => {
+          if (appThemeName === 'dark') {
+            return isFocused ?  '#ffffff' : '#000000';
+          } else {
+            return isFocused ?  '#ffffff' : '#7700ff';
+          }
+        })();
+
         return (
           <Pressable
             key={route.key}
@@ -143,7 +154,7 @@ const NavigationItems = ({state, navigation, descriptors}) => {
                 isFocused={isFocused}
                 unreadIndicatorOpacity={unreadIndicatorOpacity}
                 color={isFocused ? "black" : "white"}
-                backgroundColor={isFocused ? "white" : "#70f"}
+                backgroundColor={iconBackgroundColor}
                 unreadIndicatorColor={isFocused ? '#70f' : 'white'}
                 fontSize={26}
               />
@@ -165,11 +176,13 @@ const NavigationItems = ({state, navigation, descriptors}) => {
 };
 
 const WebBar = ({state, navigation, tabBarStyle, descriptors}) => {
+  const { appThemeName } = useAppTheme();
+
   return (
     <ScrollView
       style={{
         height: '100%',
-        backgroundColor: '#70f',
+        backgroundColor: appThemeName === 'dark' ? 'black' : '#70f',
         borderRightWidth: 5,
         borderColor: 'black',
       }}

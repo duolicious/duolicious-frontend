@@ -90,6 +90,7 @@ import {
 } from './verification-camera';
 import { notifyUpdatedVerification } from '../verification/verification';
 import { useNavigation } from '@react-navigation/native';
+import { useAppTheme } from '../app-theme/app-theme';
 
 type InputProps<T extends OptionGroupInputs> = {
   input: T,
@@ -1262,7 +1263,6 @@ const None = forwardRef((props: InputProps<OptionGroupNone>, ref) => {
   const Description = props.input.none.description;
 
   const style = {
-    color: props.theme !== 'light' ? 'white' : 'black',
     textAlign: props.input.none.textAlign ?? 'center',
     paddingHorizontal: 20,
     fontSize: noneFontSize,
@@ -1325,15 +1325,18 @@ const OptionScreen = ({navigation, route}) => {
   const [isBottom, setIsBottom] = useState(true);
   const [contentHeight, setContentHeight] = useState(0);
   const [containerHeight, setContainerHeight] = useState(0);
+  const { appTheme } = useAppTheme();
 
   const optionGroups: OptionGroup<OptionGroupInputs>[] = route?.params?.optionGroups ?? [];
   const showSkipButton: boolean = route?.params?.showSkipButton ?? true;
   const showCloseButton: boolean = route?.params?.showCloseButton ?? true;
   const showBackButton: boolean = route?.params?.showBackButton ?? false;
-  const backgroundColor: string = route?.params?.backgroundColor ?? 'white';
-  const color: string | undefined = route?.params?.color;
   const onSubmitSuccess: any | undefined = route?.params?.onSubmitSuccess;
   const theme: any | undefined = route?.params?.theme;
+
+  // TODO: Ensure onboarding still looks okay
+  const backgroundColor = appTheme.primaryColor;
+  const color = appTheme.secondaryColor;
 
   const transparentBackgroundColor = backgroundColor === 'white' ? '#ffffff00' : '#7700ff00';
 
@@ -1449,6 +1452,7 @@ const OptionScreen = ({navigation, route}) => {
                   marginTop: 10,
                   marginLeft: 10,
                   fontSize: 30,
+                  color: appTheme.secondaryColor,
                 }}
                 name="close"
               />

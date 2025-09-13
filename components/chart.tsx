@@ -13,6 +13,7 @@ import {
 import { DefaultText } from './default-text';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { commonStyles } from '../styles';
+import { useAppTheme } from '../app-theme/app-theme';
 
 const Chart = ({name1, percentage1, name2, percentage2, ...props}) => {
   const {
@@ -24,6 +25,7 @@ const Chart = ({name1, percentage1, name2, percentage2, ...props}) => {
 
   const compact = name1 === null && !name2;
 
+  const { appTheme } = useAppTheme();
   const [expanded, setExpanded] = useState(false);
 
   const { scaleXY } = LayoutAnimation.Properties;
@@ -33,7 +35,7 @@ const Chart = ({name1, percentage1, name2, percentage2, ...props}) => {
 
   const backgroundColor = animatedBackgroundColor.interpolate({
     inputRange: [0, 1],
-    outputRange: ['rgba(222,222,222, 1)', 'rgba(255,255,255, 1)'],
+    outputRange: ['rgba(0, 0, 0, 0.3)', `${appTheme.primaryColor}ff`],
     extrapolate: 'clamp',
   });
 
