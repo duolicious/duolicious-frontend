@@ -6,23 +6,38 @@ import { useSignedInUser } from '../events/signed-in-user';
 type AppThemeName = 'light' | 'dark';
 
 type AppTheme = {
-  backgroundColor: string
-  textColor: string
-  secondaryTextColor: string
+  primaryColor: string
+  secondaryColor: string
+  inputColor: string
+  quizCardColor: string
+  quizCardBackgroundColor: string
+  speechBubbleOtherUserBackgroundColor: string
+  speechBubbleOtherUserColor: string
+  brandColor: string
 };
 
 type AppThemes = Record<AppThemeName, AppTheme>;
 
 const APP_THEME: AppThemes = {
   light: {
-    backgroundColor: 'white',
-    textColor: 'black',
-    secondaryTextColor: '',
+    primaryColor: '#ffffff',
+    secondaryColor: '#000000',
+    inputColor: '#eeeeee',
+    quizCardBackgroundColor: '#ffffff',
+    quizCardColor: '#7700ff',
+    speechBubbleOtherUserBackgroundColor: '#eeeeee',
+    speechBubbleOtherUserColor: '#000000',
+    brandColor: '#7700ff',
   },
   dark: {
-    backgroundColor: 'black',
-    textColor: 'white',
-    secondaryTextColor: '',
+    primaryColor: '#121214',
+    secondaryColor: '#ffffff',
+    inputColor: '#222327',
+    quizCardBackgroundColor: '#2C2C33',
+    quizCardColor: '#000000',
+    speechBubbleOtherUserBackgroundColor: '#333333',
+    speechBubbleOtherUserColor: '#ffffff',
+    brandColor: '#ffffff',
   }
 };
 
@@ -34,7 +49,7 @@ const setAppThemeName = (appThemeName: AppThemeName) => {
 };
 
 // React hook for components to subscribe to changes
-const useAppTheme = (): [AppThemeName, AppTheme] => {
+const useAppTheme = (): { appThemeName: AppThemeName, appTheme: AppTheme } => {
   const initialAppThemeName = lastEvent<AppThemeName>(EVENT_KEY) ?? 'light';
 
   const [appThemeName, setAppThemeName] = useState<AppThemeName>(
@@ -54,9 +69,9 @@ const useAppTheme = (): [AppThemeName, AppTheme] => {
   }, []);
 
   if (!signedInUser || !signedInUser.hasGold) {
-    return ['light', APP_THEME['light']] as const;
+    return { appThemeName: 'light', appTheme: APP_THEME['light'] };
   } else {
-    return [appThemeName, APP_THEME[appThemeName]] as const;
+    return { appThemeName, appTheme: APP_THEME[appThemeName] };
   }
 };
 

@@ -7,7 +7,6 @@ import {
   SafeAreaView,
   ScrollView,
   StyleSheet,
-  Text,
   TextStyle,
   View,
   ViewStyle,
@@ -54,6 +53,7 @@ import { useDraftMessage } from '../../chat/application-layer/hooks/draft-messag
 import { GifPickedEvent } from '../../components/modal/gif-picker-modal';
 import { useSkipped } from '../../hide-and-block/hide-and-block';
 import { OnlineIndicator } from '../online-indicator';
+import { useAppTheme } from '../../app-theme/app-theme';
 
 const firstMamId = (messageIds: string[] | null): string => {
   if (!messageIds) {
@@ -92,6 +92,7 @@ const maybeRequestReview = async (delayMs: number = 0) => {
 const Menu = ({navigation, name, personUuid, closeFn}) => {
   const [isSkipped, setIsSkipped] = useState<boolean | undefined>();
   const [isUpdating, setIsUpdating] = useState(false);
+  const { appTheme } = useAppTheme();
 
   const isLoading = (
     isSkipped === undefined ||
@@ -168,7 +169,7 @@ const Menu = ({navigation, name, personUuid, closeFn}) => {
     borderRadius: 3,
   };
 
-  const iconStroke = isLoading ? "transparent" : "black";
+  const iconStroke = isLoading ? "transparent" : appTheme.secondaryColor;
 
   const borderRadius = 10;
 
@@ -181,7 +182,7 @@ const Menu = ({navigation, name, personUuid, closeFn}) => {
         padding: 25,
         gap: 40,
         flexDirection: 'column',
-        backgroundColor: 'white',
+        backgroundColor: appTheme.primaryColor,
         borderRadius: borderRadius,
         borderWidth: 1,
         borderColor: '#999',
@@ -257,11 +258,11 @@ const Menu = ({navigation, name, personUuid, closeFn}) => {
             right: 0,
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: 'white',
+            backgroundColor: appTheme.primaryColor,
             borderRadius: 10,
           }}
         >
-          <ActivityIndicator size="large" color="#70f" />
+          <ActivityIndicator size="large" color={appTheme.brandColor} />
         </View>
       }
     </View>
@@ -730,7 +731,7 @@ const ConversationScreen = ({navigation, route}) => {
                   />
                 }
               </ImageBackground>
-              <Text
+              <DefaultText
                 style={{
                   marginTop: 20,
                   marginBottom: 10,
@@ -741,7 +742,7 @@ const ConversationScreen = ({navigation, route}) => {
                 }}
               >
                 This is the start of your conversation with {name}
-              </Text>
+              </DefaultText>
               <DefaultText
                 style={{
                   textAlign: 'center',

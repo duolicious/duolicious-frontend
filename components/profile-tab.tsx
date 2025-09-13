@@ -176,7 +176,7 @@ const Images_ = ({data}) => {
 
   return (
     <>
-      <Images input={input} style={{zIndex: 999}}/>
+      <Images input={input} style={{ zIndex: 999 }}/>
       <DefaultText
         style={{
           color: '#999',
@@ -192,6 +192,7 @@ const Images_ = ({data}) => {
 };
 
 const ProfileTab_ = ({navigation}) => {
+  const { appTheme } = useAppTheme();
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
@@ -249,7 +250,7 @@ const ProfileTab_ = ({navigation}) => {
             flexGrow: 1,
           }}
         >
-          <ActivityIndicator size="large" color="#70f"/>
+          <ActivityIndicator size="large" color={appTheme.brandColor} />
         </View>
       }
     </SafeAreaView>
@@ -363,7 +364,6 @@ const DisplayNameAndAboutPerson = ({data}) => {
         defaultValue={data?.name ?? ''}
         onChangeText={onChangeNameText}
         style={{
-          backgroundColor: '#eee',
           borderWidth: 0,
           marginLeft: 0,
           marginRight: 0,
@@ -391,7 +391,6 @@ const DisplayNameAndAboutPerson = ({data}) => {
         onChangeText={onChangeAboutText}
         numberOfLines={8}
         style={{
-          backgroundColor: '#eee',
           borderWidth: 0,
           height: 200,
         }}
@@ -407,7 +406,7 @@ const Options = ({ navigation, data }) => {
     'error' | 'loading' | 'ok'
   >('ok');
   const [signedInUser] = useSignedInUser();
-  const [appThemeName] = useAppTheme();
+  const { appThemeName } = useAppTheme();
 
   const addCurrentValue = (optionGroups: OptionGroup<OptionGroupInputs>[]) =>
     optionGroups.map(

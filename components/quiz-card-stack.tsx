@@ -28,6 +28,7 @@ import { api, japi } from '../api/api';
 import { quizQueue } from '../api/queue';
 import * as _ from "lodash";
 import { useSkipped } from '../hide-and-block/hide-and-block';
+import { useAppTheme } from '../app-theme/app-theme';
 
 const styles = StyleSheet.create({
   stackContainerStyle: {
@@ -38,12 +39,6 @@ const styles = StyleSheet.create({
     // @ts-ignore
     touchAction: 'none',
   },
-  dcStyle: {
-    width: 90,
-    height: 90,
-    backgroundColor: 'white',
-    borderRadius: 999,
-  }
 });
 
 
@@ -408,6 +403,8 @@ const Prospects = ({
   prospect3: ProspectState | undefined,
   prospect4: ProspectState | undefined,
 }) => {
+  const { appTheme } = useAppTheme();
+
   const animatedTranslateY = useRef(new Animated.Value(0)).current;
 
   const translateY = animatedTranslateY.interpolate({
@@ -417,9 +414,9 @@ const Prospects = ({
   });
 
   const lgColors = useRef<readonly [string, string, string]>([
-    'rgb(255, 255, 255)',
-    'rgba(255, 255, 255, 0.75)',
-    'rgba(255, 255, 255, 0)',
+    `${appTheme.primaryColor}ff`,
+    `${appTheme.primaryColor}bf`,
+    `${appTheme.primaryColor}00`,
   ]).current;
   const lgLocations = useRef<readonly [number, number, number]>([
     0.0,
@@ -466,7 +463,7 @@ const Prospects = ({
         style={{
           width: 90,
           height: 90,
-          backgroundColor: 'white',
+          backgroundColor: appTheme.primaryColor,
           borderRadius: 999,
         }}
         percentage={matchPercentage}
@@ -531,7 +528,15 @@ const Prospects = ({
           )
         }
         <View style={dcViewStyle}>
-          <DonutChart style={styles.dcStyle} percentage={undefined}/>
+          <DonutChart
+            style={{
+              width: 90,
+              height: 90,
+              backgroundColor: appTheme.primaryColor,
+              borderRadius: 999,
+            }}
+            percentage={undefined}
+          />
         </View>
         {
           bestProspects.map((prospect, i) =>

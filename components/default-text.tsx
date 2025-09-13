@@ -3,6 +3,7 @@ import {
   TextProps,
 } from 'react-native';
 import Animated from 'react-native-reanimated';
+import { useAppTheme } from '../app-theme/app-theme';
 
 const montserratFontFamily: Record<string, string> = {
   '100': 'MontserratThin',
@@ -17,6 +18,8 @@ const montserratFontFamily: Record<string, string> = {
 };
 
 const DefaultText = (props: TextProps & { animated?: boolean }) => {
+  const { appTheme } = useAppTheme();
+
   const fontWeight = (props?.style as any)?.fontWeight;
   const fontFamily = (props?.style as any)?.fontFamily;
 
@@ -25,9 +28,10 @@ const DefaultText = (props: TextProps & { animated?: boolean }) => {
 
   const props_ = {
     style: [
-      {fontFamily: fontFamily || montserratFont},
+      { fontFamily: fontFamily || montserratFont },
+      { color: appTheme.secondaryColor },
       props.style,
-      {fontWeight: undefined},
+      { fontWeight: undefined },
     ]
   };
 
