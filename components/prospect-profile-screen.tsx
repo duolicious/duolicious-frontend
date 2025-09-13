@@ -70,6 +70,7 @@ import { commonStyles } from '../styles';
 import { useSkipped, setSkipped } from '../hide-and-block/hide-and-block';
 import { OnlineIndicator } from './online-indicator';
 import { Flair } from './badges';
+import { useAppTheme } from '../app-theme/app-theme';
 
 const Stack = createNativeStackNavigator();
 
@@ -119,6 +120,8 @@ const FloatingBackButton = (props) => {
     safeAreaView = true,
   } = props;
 
+  const { appTheme } = useAppTheme();
+
   const RootElement = useCallback(({children}) => {
     if (safeAreaView) {
       return (
@@ -141,11 +144,11 @@ const FloatingBackButton = (props) => {
           marginTop: 0,
           width: 45,
           height: 45,
-          backgroundColor: 'white',
+          backgroundColor: appTheme.primaryColor,
           alignItems: 'center',
           justifyContent: 'center',
           borderWidth: 1,
-          borderColor: 'black',
+          borderColor: appTheme.secondaryColor,
         }}
         onPress={onPress ?? (navigationRef?.current || navigation).goBack}
       >
@@ -153,6 +156,7 @@ const FloatingBackButton = (props) => {
           icon={faArrowLeft}
           size={24}
           style={{
+            color: appTheme.secondaryColor,
             // @ts-ignore
             outline: 'none',
           }}
@@ -225,6 +229,7 @@ const FloatingProfileInteractionButton = ({
 
 const FloatingSkipButton = ({personUuid}) => {
   const { isSkipped, isLoading, isPosting } = useSkipped(personUuid);
+  const { appTheme } = useAppTheme();
 
   const onPress = useCallback(async () => {
     if (personUuid === undefined) return;
@@ -238,20 +243,20 @@ const FloatingSkipButton = ({personUuid}) => {
   return (
     <FloatingProfileInteractionButton
       onPress={onPress}
-      backgroundColor="white"
+      backgroundColor={appTheme.primaryColor}
     >
       {isPosting &&
-        <ActivityIndicator size="large" color="#70f"/>
+        <ActivityIndicator size="large" color={appTheme.brandColor} />
       }
       {!isLoading && isSkipped === true && <RotateCcw
-          stroke="#70f"
+          stroke={appTheme.brandColor}
           strokeWidth={3}
           height={24}
           width={24}
         />
       }
       {!isLoading && isSkipped === false && <X
-          stroke="#70f"
+          stroke={appTheme.brandColor}
           strokeWidth={3}
           height={24}
           width={24}
@@ -268,6 +273,8 @@ const FloatingSendIntroButton = ({
   photoUuid,
   photoBlurhash,
 }) => {
+  const { appTheme } = useAppTheme();
+
   const onPress = useCallback(() => {
     if (name === undefined) return;
 
@@ -280,14 +287,14 @@ const FloatingSendIntroButton = ({
   return (
     <FloatingProfileInteractionButton
       onPress={onPress}
-      backgroundColor="#70f"
+      backgroundColor={appTheme.brandColor}
     >
       {personUuid !== undefined && name !== undefined &&
         <FontAwesomeIcon
           icon={faPaperPlane}
           size={24}
           style={{
-            color: 'white',
+            color: appTheme.primaryColor,
             // @ts-ignore
             outline: 'none',
           }}
@@ -664,6 +671,7 @@ const CurriedContent = ({navigationRef, navigation, route}) => {
 
   const [data, setData] = useState<UserData | undefined>(undefined);
   const [notFound, setNotFound] = useState(false);
+  const { appTheme } = useAppTheme();
   useSkipped(personUuid, () => navigation.popToTop());
 
   const { width } = useWindowDimensions();
@@ -737,7 +745,10 @@ const CurriedContent = ({navigationRef, navigation, route}) => {
   const imageVerification0 = imageVerifications && imageVerifications[0];
 
   const animatedStyle = useAnimatedStyle(() => ({
-    backgroundColor: withTiming(data?.theme?.background_color ?? '#ffffff'),
+    backgroundColor: withTiming(
+      data?.theme?.background_color
+        ?? appTheme.primaryColor
+    ),
   }));
 
   return (
@@ -755,7 +766,7 @@ const CurriedContent = ({navigationRef, navigation, route}) => {
             style={{
               fontWeight: '900',
               fontSize: 26,
-              color: 'white',
+              color: appTheme.primaryColor,
             }}
           >
             Profile not found
@@ -763,7 +774,12 @@ const CurriedContent = ({navigationRef, navigation, route}) => {
         </View>
       }
       {!notFound && <>
-        <ScrollView style={{ backgroundColor: data?.theme?.background_color }}>
+        <ScrollView
+          style={{
+            backgroundColor: data?.theme?.background_color
+              ?? appTheme.primaryColor
+          }}
+        >
           <Reanimated.View style={animatedStyle}>
             <HeartBackground
               style={{
@@ -800,7 +816,10 @@ const CurriedContent = ({navigationRef, navigation, route}) => {
                   verified={verificationLevelId(data) > 1}
                   matchPercentage={data?.match_percentage}
                   userLocation={data?.location}
-                  textColor={data?.theme?.title_color}
+                  textColor={
+                    data?.theme?.title_color
+                      ?? appTheme.secondaryColor
+                  }
                   flair={data?.flair ?? []}
                 />
                 <Body

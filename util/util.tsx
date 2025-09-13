@@ -217,6 +217,50 @@ const truncateText = (
   return truncated ? `${result}…` : result;
 };
 
+
+const getLuminance = (hex: string): number => {
+  let h = hex.trim().replace(/^#/, '');
+  // expand #RGB / #RGBA to #RRGGBB (drop alpha)
+  if (h.length === 3 || h.length === 4) h = h.slice(0, 3).split('').map(c => c + c).join('');
+  // drop alpha if #RRGGBBAA
+  if (h.length === 8) h = h.slice(0, 6);
+  if (h.length !== 6) throw new Error(`Invalid hex color: ${hex}`);
+
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+
+  const toLinear = (c: number): number => {
+    const s = c / 255;
+    return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  };
+
+  const R = toLinear(r), G = toLinear(g), B = toLinear(b);
+  return 0.2126 * R + 0.7152 * G + 0.0722 * B;
+};
+
+/**
+ * Choose readable text color for a given background.
+ * @param bg - background hex (#RGB, #RRGGBB, #RGBA, #RRGGBBAA)
+ * @param bias - number in [-1, 1]; positive leans toward white, negative toward black.
+ *               Implemented as a multiplicative weight on the white/black contrast.
+ *               0 = neutral (no bias).
+ */
+const bestTextOn = (bg: string, bias: number = 0): '#000000' | '#ffffff' => {
+  const L = getLuminance(bg);
+  const contrastWhite = (1 + 0.05) / (L + 0.05);
+  const contrastBlack = (L + 0.05) / 0.05;
+
+  // Clamp bias to [-0.99, 0.99] to avoid zeroing a side completely
+  const b = Math.max(-0.99, Math.min(0.99, bias));
+
+  // Tilt the decision by weighting contrasts
+  const weightedWhite = contrastWhite * (1 + b);
+  const weightedBlack = contrastBlack * (1 - b);
+
+  return weightedWhite >= weightedBlack ? '#ffffff' : '#000000';
+};
+
 export {
   assert,
   assertNever,
@@ -237,4 +281,6 @@ export {
   truncateText,
   withTimeout,
   pluralize,
+  getLuminance,
+  bestTextOn,
 };

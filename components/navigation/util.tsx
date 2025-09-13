@@ -6,13 +6,13 @@ import { QAndADevice } from '../q-and-a-device';
 import { Gold } from '../badges';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useSignedInUser } from '../../events/signed-in-user';
-
+import { useAppTheme } from '../../app-theme/app-theme';
 
 const LabelToIcon = ({
   label,
   isFocused,
   unreadIndicatorOpacity,
-  color = "black",
+  color = undefined,
   backgroundColor = undefined,
   fontSize = 20,
   unreadIndicatorColor = '#70f',
@@ -21,11 +21,12 @@ const LabelToIcon = ({
   isFocused: boolean
   unreadIndicatorOpacity: any,
   color?: string
-  backgroundColor?: string | undefined
+  backgroundColor?: string
   fontSize?: number
   unreadIndicatorColor?: string
 }) => {
   const [signedInUser] = useSignedInUser();
+  const { appTheme } = useAppTheme();
 
   const searchIcon =
     isFocused ? 'search' : 'search-outline';
@@ -40,7 +41,7 @@ const LabelToIcon = ({
 
   const iconStyle = {
     fontSize: fontSize,
-    color: color,
+    color: color ?? appTheme.secondaryColor,
     height,
   };
 
@@ -48,10 +49,10 @@ const LabelToIcon = ({
     <>
       {label === 'Q&A' &&
         <QAndADevice
-          color={color}
+          color={color ?? appTheme.secondaryColor}
           height={height}
           isBold={isFocused}
-          backgroundColor={backgroundColor}
+          backgroundColor={backgroundColor ?? appTheme.primaryColor}
         />
       }
       {label === 'Search' &&

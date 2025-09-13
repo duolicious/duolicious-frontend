@@ -9,6 +9,7 @@ import {
 } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DefaultText } from '../default-text';
+import { useAppTheme } from '../../app-theme/app-theme';
 
 const ButtonForOption = (props) => {
   const {
@@ -40,6 +41,8 @@ const ButtonForOption = (props) => {
 
   const Icon_ = icon ?? (optionGroups ? optionGroups[0]?.Icon : undefined);
   const label_ = label ?? optionGroups[0].title
+
+  const { appTheme } = useAppTheme();
 
   const opacity = useRef(new Animated.Value(1)).current;
 
@@ -99,7 +102,7 @@ const ButtonForOption = (props) => {
         }}
       >
         {Icon_ &&
-          <Icon_/>
+          <Icon_ color={appTheme.secondaryColor} />
         }
         <DefaultText
           style={{
@@ -113,7 +116,7 @@ const ButtonForOption = (props) => {
           style={{
             paddingLeft: 20,
             paddingRight: 10,
-            color: (setting ?? noSettingText) === noSettingText ? '#888' : 'black',
+            color: (setting ?? noSettingText) === noSettingText ? '#888' : undefined,
             fontStyle: (setting ?? noSettingText) === noSettingText ? 'italic' : 'normal',
             textAlign: 'right',
             flex: 1,
@@ -138,6 +141,7 @@ const ButtonForOption = (props) => {
               position: 'absolute',
               right: 5,
               fontSize: 20,
+              color: appTheme.secondaryColor,
             }}
             name="chevron-forward"
           />

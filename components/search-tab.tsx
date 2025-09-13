@@ -31,6 +31,7 @@ import { listen, lastEvent } from '../events/events';
 import { searchQueue } from '../api/queue';
 import { useScrollbar } from './navigation/scroll-bar-hooks';
 import { onPressInvite } from '../components/invite';
+import { useAppTheme } from '../app-theme/app-theme';
 
 const styles = StyleSheet.create({
   safeAreaView: {
@@ -46,18 +47,6 @@ const styles = StyleSheet.create({
   },
   clubsScrollViewContainer: {
     alignItems: 'center',
-  },
-  clubsContentContainer: {
-    width: '100%',
-    alignItems: 'stretch',
-    alignSelf: 'center',
-    paddingTop: 10,
-    paddingBottom: 5,
-    paddingHorizontal: 5,
-    overflow: 'hidden',
-    zIndex: 9999,
-    opacity: 0.9,
-    backgroundColor: 'white',
   },
   clubsContentContainerContainer: {
     borderRadius: 5,
@@ -81,21 +70,6 @@ const styles = StyleSheet.create({
   clubContainer: {
     borderRadius: 5,
     overflow: 'hidden',
-  },
-  selectedClubText: {
-    fontSize: 16,
-    fontFamily: 'Trueno',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    color: 'white',
-    backgroundColor: 'black',
-  },
-  unselectedClubText: {
-    fontSize: 16,
-    fontFamily: 'Trueno',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    color: 'black',
   },
 });
 
@@ -303,6 +277,8 @@ const RightContinuation = ({scrollRight}) => {
 };
 
 const ClubSelector = (props: ClubSelectorProps) => {
+  const { appTheme } = useAppTheme();
+
   const scrollJumpSize = 150;
 
   const scrollViewRef = useRef<ScrollView>(null);
@@ -410,12 +386,43 @@ const ClubSelector = (props: ClubSelectorProps) => {
     }
   }, [props.selectedClub, JSON.stringify(clubs)]);
 
+  const dynamicStyles = StyleSheet.create({
+    selectedClubText: {
+      fontSize: 16,
+      fontFamily: 'Trueno',
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      color: appTheme.primaryColor,
+      backgroundColor: appTheme.secondaryColor,
+    },
+    unselectedClubText: {
+      fontSize: 16,
+      fontFamily: 'Trueno',
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      color: appTheme.secondaryColor,
+    },
+  });
+
   if (!clubs || !clubs.length) {
     return null;
   }
 
   return (
-    <View style={styles.clubsContentContainer}>
+    <View
+      style={{
+        width: '100%',
+        alignItems: 'stretch',
+        alignSelf: 'center',
+        paddingTop: 10,
+        paddingBottom: 5,
+        paddingHorizontal: 5,
+        overflow: 'hidden',
+        zIndex: 9999,
+        opacity: 0.9,
+        backgroundColor: appTheme.primaryColor,
+      }}
+    >
       <View style={styles.clubsContentContainerContainer}>
         <ScrollView
           ref={scrollViewRef}
@@ -426,7 +433,7 @@ const ClubSelector = (props: ClubSelectorProps) => {
           onContentSizeChange={onContentSizeChange}
           onLayout={onScrollViewLayout}
         >
-          <DefaultText style={styles.clubTitle} >
+          <DefaultText style={styles.clubTitle}>
             CLUBS
           </DefaultText>
 
@@ -437,8 +444,8 @@ const ClubSelector = (props: ClubSelectorProps) => {
             <DefaultText
               style={
                 props.selectedClub === null ?
-                  styles.selectedClubText :
-                  styles.unselectedClubText
+                  dynamicStyles.selectedClubText :
+                  dynamicStyles.unselectedClubText
               }
             >
               Everyone
@@ -459,8 +466,8 @@ const ClubSelector = (props: ClubSelectorProps) => {
               <DefaultText
                 style={
                   props.selectedClub === club.name ?
-                    styles.selectedClubText :
-                    styles.unselectedClubText
+                    dynamicStyles.selectedClubText :
+                    dynamicStyles.unselectedClubText
                 }
               >
                 {club.name}

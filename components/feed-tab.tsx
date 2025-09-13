@@ -29,6 +29,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faReply } from '@fortawesome/free-solid-svg-icons/faReply';
 import { OnlineIndicator } from './online-indicator';
 import { Flair } from './badges';
+import { useAppTheme } from '../app-theme/app-theme';
 
 const NAME_ACTION_TIME_GAP_VERTICAL = 16;
 
@@ -253,6 +254,8 @@ const NameActionTime = ({
   flair: string[]
   style?: any
 }) => {
+  const { appTheme } = useAppTheme();
+
   const onPress = useCallback((event: GestureResponderEvent) => {
     event.stopPropagation();
 
@@ -298,7 +301,6 @@ const NameActionTime = ({
           <DefaultText
             style={{
               fontWeight: '700',
-              color: 'black',
               flexShrink: 1,
             }}
           >
@@ -321,7 +323,7 @@ const NameActionTime = ({
       <Flag
         hitSlop={20}
         onPress={onPress}
-        stroke="rgba(0, 0, 0, 0.5)"
+        stroke={`${appTheme.secondaryColor}80`}
         strokeWidth={2}
         height={18}
         width={18}
@@ -494,6 +496,8 @@ const FeedItemUpdatedBio = ({
   fields: UpdatedBioFields,
   action?: Action,
 }) => {
+  const { appTheme } = useAppTheme();
+
   const onPress = useNavigationToProfile(
     fields.person_uuid,
     fields.photo_blurhash,
@@ -566,7 +570,7 @@ const FeedItemUpdatedBio = ({
             <FontAwesomeIcon
               icon={faReply}
               size={16}
-              color="black"
+              color={appTheme.secondaryColor}
               style={{
                 /* @ts-ignore */
                 outline: 'none',

@@ -18,6 +18,7 @@ import {
 import { DefaultText } from './default-text';
 import { RenderedHoc } from './rendered-hoc';
 import { FlashList, FlashListProps } from '@shopify/flash-list';
+import { useAppTheme } from '../app-theme/app-theme';
 
 const styles = StyleSheet.create({
   activityIndicator: {
@@ -206,9 +207,11 @@ type DefaultFlashListProps<ItemT> =
   >;
 
 const ActivityIndicator_ = memo(() => {
+  const { appTheme } = useAppTheme();
+
   return (
     <View style={styles.activityIndicator}>
-      <ActivityIndicator size="large" color="#70f" />
+      <ActivityIndicator size="large" color={appTheme.brandColor} />
     </View>
   );
 });
