@@ -477,7 +477,6 @@ const QandQFilterScreen = ({navigation, route}) => {
           style={{
             marginLeft: 50,
             marginRight: 50,
-            borderRadius: 0,
             borderWidth: 0,
             height: '100%',
           }}
@@ -503,6 +502,7 @@ const QandQFilterScreen = ({navigation, route}) => {
             <Ionicons
               style={{
                 fontSize: 20,
+                color: appTheme.secondaryColor,
               }}
               name="close"
             />
@@ -600,7 +600,7 @@ const QandQFilterScreen = ({navigation, route}) => {
               )}
               <DefaultText style={{
                 fontFamily: 'TruenoBold',
-                color: '#000',
+                color: appTheme.secondaryColor,
                 fontSize: 16,
                 textAlign: 'center',
                 alignSelf: 'center',

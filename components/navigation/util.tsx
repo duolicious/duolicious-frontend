@@ -87,7 +87,7 @@ const LabelToIcon = ({
                 position: 'absolute',
                 top: -4,
                 right: -14,
-                backgroundColor,
+                backgroundColor: 'transparent',
               }}
               color={color}
               doAnimate={false}

@@ -497,15 +497,17 @@ const AnswerIcon = ({
   enabled: boolean,
   onPress?: any
 }) => {
+  const { appThemeName } = useAppTheme();
+
   const backgroundColor = (() => {
-    if (selected === false) return 'white';
+    if (selected === false) return appThemeName === 'dark' ? 'black' : 'white';
     if (enabled) return '#70f';
     return '#cabcff';
   })();
 
   const checkColor = (() => {
     if (selected) return 'white';
-    if (enabled) return 'black';
+    if (enabled) return appThemeName === 'dark' ? 'white' : 'black';
     return '#bcbcbc';
   })();
 

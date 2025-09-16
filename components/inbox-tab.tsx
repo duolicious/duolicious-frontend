@@ -293,7 +293,6 @@ const styles = StyleSheet.create({
   },
   endText: {
     fontFamily: 'TruenoBold',
-    color: '#000',
     fontSize: 16,
     textAlign: 'center',
     alignSelf: 'center',

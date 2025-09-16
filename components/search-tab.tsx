@@ -495,6 +495,8 @@ const ListHeaderComponent = ({
   selectedClub,
   setSelectedClub,
 }) => {
+  const { appTheme } = useAppTheme();
+
   if (hasClubs) {
     return <ClubSelector
       selectedClub={selectedClub}
@@ -509,12 +511,12 @@ const ListHeaderComponent = ({
         marginTop: 10,
       }}
     >
-      <DefaultText style={{color: '#70f'}} >
+      <DefaultText style={{ color: appTheme.brandColor }}>
         Get better matches by playing Q&A{' '}
       </DefaultText>
       <QAndADevice
-        color="#70f"
-        backgroundColor="#f1e5ff"
+        color={appTheme.brandColor}
+        backgroundColor={appTheme.avatarBackgroundColor}
       />
     </Notice>
   );

@@ -74,9 +74,19 @@ const Avatar = ({
       {...link}
     >
       {!Boolean(photoUuid || photoBlurhash) &&
-        <View style={styles.imageStyle}>
+        <View
+          style={[
+            styles.imageStyle,
+            {
+              backgroundColor: appTheme.avatarBackgroundColor,
+            },
+          ]}
+        >
           <Ionicons
-            style={{fontSize: 40, color: 'rgba(119, 0, 255, 0.2)'}}
+            style={{
+              fontSize: 40,
+              color: appTheme.avatarColor,
+            }}
             name={'person'}
           />
         </View>
@@ -221,7 +231,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     margin: 4,
-    backgroundColor: '#f1e5ff',
   },
 });
 

@@ -21,6 +21,8 @@ type AppTheme = {
   speechBubbleOtherUserBackgroundColor: string
   speechBubbleOtherUserColor: string
   brandColor: string
+  avatarBackgroundColor: string
+  avatarColor: string
 };
 
 type AppThemes = Record<AppThemeName, AppTheme>;
@@ -43,23 +45,27 @@ const APP_THEME: AppThemes = {
     speechBubbleOtherUserBackgroundColor: '#eeeeee',
     speechBubbleOtherUserColor: '#000000',
     brandColor: '#7700ff',
+    avatarBackgroundColor: '#f1e5ff',
+    avatarColor: 'rgba(119, 0, 255, 0.2)',
   },
   dark: {
-    primaryColor: '#121214',
+    primaryColor: '#1a1a1e',
     secondaryColor: '#ffffff',
     inputColor: '#222327',
     card: {
-      borderTopColor: '#555555',
-      borderLeftColor: '#3c3c3c',
-      borderRightColor: '#3c3c3c',
-      borderBottomColor: '#3c3c3c',
+      borderTopColor: '#000000',
+      borderLeftColor: '#000000',
+      borderRightColor: '#000000',
+      borderBottomColor: '#000000',
     },
-    interactiveBorderColor: '#524068',
+    interactiveBorderColor: '#000000',
     quizCardBackgroundColor: '#2c2c33',
     quizCardColor: '#000000',
     speechBubbleOtherUserBackgroundColor: '#333333',
     speechBubbleOtherUserColor: '#ffffff',
     brandColor: '#ffffff',
+    avatarBackgroundColor: '#716e7d',
+    avatarColor: '#ffffff',
   }
 };
 

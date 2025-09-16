@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useRef,
+  useState,
 } from 'react';
 import {
   Animated,
@@ -62,6 +63,8 @@ const Logo = () => {
 const NavigationItems = ({state, navigation, descriptors}) => {
   const { appThemeName } = useAppTheme();
 
+  const [hoveredKey, setHoveredKey] = useState<string | null>(null);
+
   const unreadIndicatorOpacity = useRef(new Animated.Value(0)).current;
 
   const hideIndicator = useCallback(() => {
@@ -113,6 +116,17 @@ const NavigationItems = ({state, navigation, descriptors}) => {
           }
         })();
 
+        const backgroundColor = (() => {
+          if (isFocused) {
+            return '#ffffff';
+          }
+          if (hoveredKey === route.key) {
+            return '#ffffff4d';
+          }
+
+          return appThemeName === 'dark' ? '#000000' : '#7700ff';
+        })();
+
         return (
           <Pressable
             key={route.key}
@@ -134,13 +148,22 @@ const NavigationItems = ({state, navigation, descriptors}) => {
                 });
               }
             }}
+            onHoverIn={() => {
+              if (isFocused) return;
+              setHoveredKey(route.key);
+            }}
+            onHoverOut={() => {
+              if (isFocused) return;
+              setHoveredKey(current => (current === route.key ? null : current));
+            }}
             style={{
               padding: 12,
               margin: 4,
               flexDirection: 'row',
               gap: 6,
               borderRadius: 999,
-              backgroundColor: isFocused ? 'white' : 'transparent',
+              position: 'relative',
+              backgroundColor: backgroundColor
             }}
           >
             <View

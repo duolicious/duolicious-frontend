@@ -278,6 +278,7 @@ const ConversationScreenNavBar = ({
   name,
   isOnline,
 }) => {
+  const { appTheme } = useAppTheme();
   const [showMenu, setShowMenu] = useState(false);
 
   const onPressName = useCallback(() => {
@@ -333,7 +334,7 @@ const ConversationScreenNavBar = ({
               width: 30,
               height: 30,
               borderRadius: 9999,
-              backgroundColor: photoUuid ? 'white' : '#f1e5ff',
+              backgroundColor: photoUuid ? 'white' : appTheme.avatarBackgroundColor,
               justifyContent: 'center',
               alignItems: 'center',
               overflow: 'hidden',
@@ -341,7 +342,10 @@ const ConversationScreenNavBar = ({
           >
             {!photoUuid &&
               <Ionicons
-                style={{fontSize: 14, color: 'rgba(119, 0, 255, 0.2)'}}
+                style={{
+                  fontSize: 14,
+                  color: appTheme.avatarColor,
+                }}
                 name={'person'}
               />
             }
@@ -368,7 +372,7 @@ const ConversationScreenNavBar = ({
         </DefaultText>
         <ActivityIndicator
           size="small"
-          color="#70f"
+          color={appTheme.brandColor}
           style={{
             opacity: isOnline ? 0 : 1,
           }}
@@ -395,6 +399,7 @@ const ConversationScreenNavBar = ({
 };
 
 const ConversationScreen = ({navigation, route}) => {
+  const { appTheme } = useAppTheme();
   const [isActive, setIsActive] = useState(AppState.currentState === 'active');
   const [isOnline, setIsOnline] = useState(false);
 
@@ -666,7 +671,7 @@ const ConversationScreen = ({navigation, route}) => {
       />
       {messageIds === null &&
         <View style={{flexGrow: 1, justifyContent: 'center', alignItems: 'center'}}>
-          <ActivityIndicator size="large" color="#70f" />
+          <ActivityIndicator size="large" color={appTheme.brandColor} />
         </View>
       }
       {messageIds !== null &&
@@ -717,7 +722,7 @@ const ConversationScreen = ({navigation, route}) => {
                   margin: 2,
                   borderRadius: 999,
                   borderColor: 'white',
-                  backgroundColor: photoUuid ? 'white' : '#f1e5ff',
+                  backgroundColor: photoUuid ? 'white' : appTheme.avatarBackgroundColor,
                   overflow: 'hidden',
                   justifyContent: 'center',
                   alignItems: 'center',
@@ -726,7 +731,10 @@ const ConversationScreen = ({navigation, route}) => {
               >
                 {!photoUuid &&
                   <Ionicons
-                    style={{fontSize: 40, color: 'rgba(119, 0, 255, 0.2)'}}
+                    style={{
+                      fontSize: 40,
+                      color: appTheme.avatarColor,
+                    }}
                     name={'person'}
                   />
                 }
@@ -802,7 +810,7 @@ const ConversationScreen = ({navigation, route}) => {
             padding: 5,
             paddingTop: 10,
             paddingBottom: 10,
-            backgroundColor: '#eee',
+            backgroundColor: appTheme.interactiveBorderColor,
             fontFamily: 'Trueno',
           }}
         >

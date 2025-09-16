@@ -137,7 +137,6 @@ const Buttons = forwardRef((props: InputProps<OptionGroupButtons>, ref) => {
           marginRight: 20,
           marginBottom: 0,
           borderRadius: 10,
-          backgroundColor: 'white',
         }}
       />
       {props.showSkipButton &&

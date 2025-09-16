@@ -7,13 +7,13 @@ import {
 } from 'react-native';
 import {
   useCallback,
-  useRef,
   useState,
 } from 'react';
 import { DefaultText } from './default-text';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { commonStyles } from '../styles';
 import { useAppTheme } from '../app-theme/app-theme';
+import { usePressableAnimation } from '../animation/animation';
 
 const Chart = ({name1, percentage1, name2, percentage2, ...props}) => {
   const {
@@ -27,17 +27,10 @@ const Chart = ({name1, percentage1, name2, percentage2, ...props}) => {
 
   const { appTheme } = useAppTheme();
   const [expanded, setExpanded] = useState(false);
+  const { backgroundColor, onPressIn, onPressOut } = usePressableAnimation();
 
   const { scaleXY } = LayoutAnimation.Properties;
   const { easeInEaseOut } = LayoutAnimation.Types;
-
-  const animatedBackgroundColor = useRef(new Animated.Value(1)).current;
-
-  const backgroundColor = animatedBackgroundColor.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['rgba(0, 0, 0, 0.3)', `${appTheme.primaryColor}ff`],
-    extrapolate: 'clamp',
-  });
 
   const onPressChart = useCallback(() => {
     LayoutAnimation.configureNext({
@@ -46,22 +39,6 @@ const Chart = ({name1, percentage1, name2, percentage2, ...props}) => {
     });
     setExpanded(expanded => !expanded);
   }, [setExpanded]);
-
-  const onPressInChart = useCallback(() => {
-    Animated.timing(animatedBackgroundColor, {
-      toValue: 0,
-      duration: 100,
-      useNativeDriver: false,
-    }).start();
-  }, []);
-
-  const onPressOutChart = useCallback(() => {
-    Animated.timing(animatedBackgroundColor, {
-      toValue: 1,
-      duration: 150,
-      useNativeDriver: false,
-    }).start();
-  }, []);
 
   if (dimensionName && (minLabel || maxLabel)) {
     throw new Error("dimensionName can't be set at the same time as minLabel or maxLabel");
@@ -192,8 +169,8 @@ const Chart = ({name1, percentage1, name2, percentage2, ...props}) => {
         marginTop: 10,
         marginBottom: 10,
         overflow: 'visible',
-
         ...commonStyles.cardBorders,
+        ...appTheme.card,
       }}
     >
       <Pressable
@@ -201,8 +178,8 @@ const Chart = ({name1, percentage1, name2, percentage2, ...props}) => {
           padding: 10,
         }}
         onPress={onPressChart}
-        onPressIn={onPressInChart}
-        onPressOut={onPressOutChart}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
       >
         <View
           style={{

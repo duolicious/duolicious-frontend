@@ -10,7 +10,7 @@ import { DuoliciousTopNavBar } from './top-nav-bar';
 import { useScrollbar } from './navigation/scroll-bar-hooks';
 import { Avatar } from './avatar';
 import { getShortElapsedTime, isMobile, assertNever, capLuminance } from '../util/util';
-import { GestureResponderEvent, Pressable } from 'react-native';
+import { GestureResponderEvent, Pressable, Animated } from 'react-native';
 import { EnlargeablePhoto } from './enlargeable-image';
 import { commonStyles } from '../styles';
 import { VerificationBadge } from './verification-badge';
@@ -30,6 +30,7 @@ import { faReply } from '@fortawesome/free-solid-svg-icons/faReply';
 import { OnlineIndicator } from './online-indicator';
 import { Flair } from './badges';
 import { useAppTheme } from '../app-theme/app-theme';
+import { usePressableAnimation } from '../animation/animation';
 
 const NAME_ACTION_TIME_GAP_VERTICAL = 16;
 
@@ -343,29 +344,34 @@ const FeedItemJoined = ({ fields }: { fields: JoinedFields }) => {
     fields.photo_blurhash,
   );
 
+  const { backgroundColor, onPressIn, onPressOut } = usePressableAnimation();
+
   return (
     <Pressable
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
       onPress={onPress}
-      style={[styles.cardBorders, appTheme.card]}
     >
-      {fields.photo_uuid &&
-        <Avatar
-          percentage={fields.match_percentage}
+      <Animated.View style={[styles.cardBorders, appTheme.card, { backgroundColor }]}>
+        {fields.photo_uuid &&
+          <Avatar
+            percentage={fields.match_percentage}
+            personUuid={fields.person_uuid}
+            photoUuid={fields.photo_uuid}
+            photoBlurhash={fields.photo_blurhash}
+            doUseOnline={!!fields.photo_uuid}
+          />
+        }
+        <NameActionTime
           personUuid={fields.person_uuid}
-          photoUuid={fields.photo_uuid}
-          photoBlurhash={fields.photo_blurhash}
-          doUseOnline={!!fields.photo_uuid}
+          name={fields.name}
+          isVerified={fields.is_verified}
+          action="joined"
+          time={new Date(fields.time)}
+          doUseOnline={!fields.photo_uuid}
+          flair={fields.flair}
         />
-      }
-      <NameActionTime
-        personUuid={fields.person_uuid}
-        name={fields.name}
-        isVerified={fields.is_verified}
-        action="joined"
-        time={new Date(fields.time)}
-        doUseOnline={!fields.photo_uuid}
-        flair={fields.flair}
-      />
+      </Animated.View>
     </Pressable>
   );
 };
@@ -406,43 +412,48 @@ const FeedItemAddedPhoto = ({
 
   const onPressPhoto = useNavigationToProfileGallery(fields.added_photo_uuid);
 
+  const { backgroundColor, onPressIn, onPressOut } = usePressableAnimation();
+
   return (
     <Pressable
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
       onPress={onPress}
-      style={[styles.cardBorders, appTheme.card]}
     >
-      {fields.photo_uuid &&
-        <Avatar
-          percentage={fields.match_percentage}
-          personUuid={fields.person_uuid}
-          photoUuid={fields.photo_uuid}
-          photoBlurhash={fields.photo_blurhash}
-          doUseOnline={!!fields.photo_uuid}
-        />
-      }
-      <View style={{ flex: 1, gap: NAME_ACTION_TIME_GAP_VERTICAL }}>
-        <NameActionTime
-          personUuid={fields.person_uuid}
-          name={fields.name}
-          isVerified={fields.is_verified}
-          action={action}
-          time={new Date(fields.time)}
-          doUseOnline={!fields.photo_uuid}
-          flair={fields.flair}
-        />
-        <EnlargeablePhoto
-          onPress={onPressPhoto}
-          photoUuid={fields.added_photo_uuid}
-          photoExtraExts={fields.added_photo_extra_exts}
-          photoBlurhash={fields.added_photo_blurhash}
-          isPrimary={true}
-          style={{
-            ...commonStyles.secondaryEnlargeablePhoto,
-            marginTop: 0,
-            marginBottom: 0,
-          }}
-        />
-      </View>
+      <Animated.View style={[styles.cardBorders, appTheme.card, { backgroundColor }]}>
+        {fields.photo_uuid &&
+          <Avatar
+            percentage={fields.match_percentage}
+            personUuid={fields.person_uuid}
+            photoUuid={fields.photo_uuid}
+            photoBlurhash={fields.photo_blurhash}
+            doUseOnline={!!fields.photo_uuid}
+          />
+        }
+        <View style={{ flex: 1, gap: NAME_ACTION_TIME_GAP_VERTICAL }}>
+          <NameActionTime
+            personUuid={fields.person_uuid}
+            name={fields.name}
+            isVerified={fields.is_verified}
+            action={action}
+            time={new Date(fields.time)}
+            doUseOnline={!fields.photo_uuid}
+            flair={fields.flair}
+          />
+          <EnlargeablePhoto
+            onPress={onPressPhoto}
+            photoUuid={fields.added_photo_uuid}
+            photoExtraExts={fields.added_photo_extra_exts}
+            photoBlurhash={fields.added_photo_blurhash}
+            isPrimary={true}
+            style={{
+              ...commonStyles.secondaryEnlargeablePhoto,
+              marginTop: 0,
+              marginBottom: 0,
+            }}
+          />
+        </View>
+      </Animated.View>
     </Pressable>
   );
 };
@@ -461,36 +472,41 @@ const FeedItemAddedVoiceBio = ({
     fields.photo_blurhash,
   );
 
+  const { backgroundColor, onPressIn, onPressOut } = usePressableAnimation();
+
   return (
     <Pressable
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
       onPress={onPress}
-      style={[styles.cardBorders, appTheme.card]}
     >
-      {fields.photo_uuid &&
-        <Avatar
-          percentage={fields.match_percentage}
-          personUuid={fields.person_uuid}
-          photoUuid={fields.photo_uuid}
-          photoBlurhash={fields.photo_blurhash}
-          doUseOnline={!!fields.photo_uuid}
-        />
-      }
-      <View style={{ flex: 1, gap: NAME_ACTION_TIME_GAP_VERTICAL }}>
-        <NameActionTime
-          personUuid={fields.person_uuid}
-          name={fields.name}
-          isVerified={fields.is_verified}
-          action={action}
-          time={new Date(fields.time)}
-          doUseOnline={!fields.photo_uuid}
-          flair={fields.flair}
-        />
-        <AudioPlayer
-          uuid={fields.added_audio_uuid}
-          presentation="feed"
-          style={{ marginTop: 0 }}
-        />
-      </View>
+      <Animated.View style={[styles.cardBorders, appTheme.card, { backgroundColor }]}>
+        {fields.photo_uuid &&
+          <Avatar
+            percentage={fields.match_percentage}
+            personUuid={fields.person_uuid}
+            photoUuid={fields.photo_uuid}
+            photoBlurhash={fields.photo_blurhash}
+            doUseOnline={!!fields.photo_uuid}
+          />
+        }
+        <View style={{ flex: 1, gap: NAME_ACTION_TIME_GAP_VERTICAL }}>
+          <NameActionTime
+            personUuid={fields.person_uuid}
+            name={fields.name}
+            isVerified={fields.is_verified}
+            action={action}
+            time={new Date(fields.time)}
+            doUseOnline={!fields.photo_uuid}
+            flair={fields.flair}
+          />
+          <AudioPlayer
+            uuid={fields.added_audio_uuid}
+            presentation="feed"
+            style={{ marginTop: 0 }}
+          />
+        </View>
+      </Animated.View>
     </Pressable>
   );
 };
@@ -517,74 +533,79 @@ const FeedItemUpdatedBio = ({
     fields.added_text,
   );
 
+  const { backgroundColor, onPressIn, onPressOut } = usePressableAnimation();
+
   return (
     <Pressable
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
       onPress={onPress}
-      style={[styles.cardBorders, appTheme.card]}
     >
-      {fields.photo_uuid &&
-        <Avatar
-          percentage={fields.match_percentage}
-          personUuid={fields.person_uuid}
-          photoUuid={fields.photo_uuid}
-          photoBlurhash={fields.photo_blurhash}
-          doUseOnline={!!fields.photo_uuid}
-        />
-      }
-      <View style={{ flex: 1, gap: isMobile() ? 8 : 10 }}>
-        <View style={{ flex: 1, gap: NAME_ACTION_TIME_GAP_VERTICAL }}>
-          <NameActionTime
+      <Animated.View style={[styles.cardBorders, appTheme.card, { backgroundColor }]}>
+        {fields.photo_uuid &&
+          <Avatar
+            percentage={fields.match_percentage}
             personUuid={fields.person_uuid}
-            name={fields.name}
-            isVerified={fields.is_verified}
-            action={
-              fields.added_text.trim()
-                ? action
-                : "erased their bio"
-            }
-            time={new Date(fields.time)}
-            doUseOnline={!fields.photo_uuid}
-            flair={fields.flair}
-            style={{
-              paddingHorizontal: 10,
-            }}
+            photoUuid={fields.photo_uuid}
+            photoBlurhash={fields.photo_blurhash}
+            doUseOnline={!!fields.photo_uuid}
           />
-          <DefaultText
-            style={{
-              backgroundColor: capLuminance(fields.background_color),
-              color: fields.body_color,
-              borderRadius: 10,
-              padding: 10,
-            }}
-          >
-            {fields.added_text}
-          </DefaultText>
-        </View>
-        <View style={{ alignItems: 'flex-end' }} >
-          <Pressable
-            style={{
-              flexDirection: 'row',
-              gap: 6,
-              paddingRight: 5,
-            }}
-            hitSlop={20}
-            onPress={onPressReply}
-          >
-            <DefaultText style={{ fontWeight: 700 }}>
-              Reply
-            </DefaultText>
-            <FontAwesomeIcon
-              icon={faReply}
-              size={16}
-              color={appTheme.secondaryColor}
+        }
+        <View style={{ flex: 1, gap: isMobile() ? 8 : 10 }}>
+          <View style={{ flex: 1, gap: NAME_ACTION_TIME_GAP_VERTICAL }}>
+            <NameActionTime
+              personUuid={fields.person_uuid}
+              name={fields.name}
+              isVerified={fields.is_verified}
+              action={
+                fields.added_text.trim()
+                  ? action
+                  : "erased their bio"
+              }
+              time={new Date(fields.time)}
+              doUseOnline={!fields.photo_uuid}
+              flair={fields.flair}
               style={{
-                /* @ts-ignore */
-                outline: 'none',
+                paddingHorizontal: 10,
               }}
             />
-          </Pressable>
+            <DefaultText
+              style={{
+                backgroundColor: capLuminance(fields.background_color),
+                color: fields.body_color,
+                borderRadius: 10,
+                padding: 10,
+              }}
+            >
+              {fields.added_text}
+            </DefaultText>
+          </View>
+          <View style={{ alignItems: 'flex-end' }} >
+            <Pressable
+              style={{
+                flexDirection: 'row',
+                gap: 6,
+                paddingRight: 5,
+              }}
+              hitSlop={20}
+              onPress={onPressReply}
+            >
+              <DefaultText style={{ fontWeight: 700 }}>
+                Reply
+              </DefaultText>
+              <FontAwesomeIcon
+                icon={faReply}
+                size={16}
+                color={appTheme.secondaryColor}
+                style={{
+                  /* @ts-ignore */
+                  outline: 'none',
+                }}
+              />
+            </Pressable>
+          </View>
         </View>
-      </View>
+      </Animated.View>
     </Pressable>
   );
 };
