@@ -1317,6 +1317,7 @@ const searchTwoWayBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
 
           if (gender.length) {
             searchQueue.addTask(go);
+            this.values = newCheckChipValues(this.values, gender);
             return true;
           } else {
             return await searchQueue.addTask(go);
@@ -1353,10 +1354,10 @@ const searchTwoWayBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
                 { furthest_distance: furthestDistance }
               )
             ).ok;
-            if (ok) this.currentValue = furthestDistance;
             return ok;
           };
           searchQueue.addTask(go);
+          this.currentValue = furthestDistance;
           return true;
         },
       },
@@ -1391,13 +1392,11 @@ const searchTwoWayBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
                 }
               )
             ).ok;
-            if (ok) {
-              this.currentMin = sliderMin;
-              this.currentMax = sliderMax;
-            }
             return ok;
           };
           searchQueue.addTask(go);
+          this.currentMin = sliderMin;
+          this.currentMax = sliderMax;
           return true;
         },
       }
@@ -1424,6 +1423,7 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
           };
           if (orientation.length) {
             searchQueue.addTask(go);
+            this.values = newCheckChipValues(this.values, orientation);
             return true;
           } else {
             return await searchQueue.addTask(go);
@@ -1451,6 +1451,7 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
 
           if (ethnicity.length) {
             searchQueue.addTask(go);
+            this.values = newCheckChipValues(this.values, ethnicity);
             return true;
           } else {
             return await searchQueue.addTask(go);
@@ -1488,13 +1489,11 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
                 }
               )
             ).ok;
-            if (ok) {
-              this.currentMin = sliderMin;
-              this.currentMax = sliderMax;
-            }
             return ok;
           };
           searchQueue.addTask(go);
+          this.currentMin = sliderMin;
+          this.currentMax = sliderMax;
           return true;
         },
       },
@@ -1527,6 +1526,7 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
           };
           if (hasAProfilePicture.length) {
             searchQueue.addTask(go);
+            this.values = newCheckChipValues(this.values, hasAProfilePicture);
             return true;
           } else {
             return await searchQueue.addTask(go);
@@ -1557,6 +1557,7 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
           };
           if (lookingFor.length) {
             searchQueue.addTask(go);
+            this.values = newCheckChipValues(this.values, lookingFor);
             return true;
           } else {
             return await searchQueue.addTask(go);
@@ -1593,6 +1594,7 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
           };
           if (smoking.length) {
             searchQueue.addTask(go);
+            this.values = newCheckChipValues(this.values, smoking);
             return true;
           } else {
             return await searchQueue.addTask(go);
@@ -1623,6 +1625,7 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
           };
           if (drinking.length) {
             searchQueue.addTask(go);
+            this.values = newCheckChipValues(this.values, drinking);
             return true;
           } else {
             return await searchQueue.addTask(go);
@@ -1659,6 +1662,7 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
           };
           if (drugs.length) {
             searchQueue.addTask(go);
+            this.values = newCheckChipValues(this.values, drugs);
             return true;
           } else {
             return await searchQueue.addTask(go);
@@ -1689,6 +1693,7 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
           };
           if (longDistance.length) {
             searchQueue.addTask(go);
+            this.values = newCheckChipValues(this.values, longDistance);
             return true;
           } else {
             return await searchQueue.addTask(go);
@@ -1719,6 +1724,7 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
           };
           if (relationshipStatus.length) {
             searchQueue.addTask(go);
+            this.values = newCheckChipValues(this.values, relationshipStatus);
             return true;
           } else {
             return await searchQueue.addTask(go);
@@ -1749,6 +1755,7 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
           };
           if (hasKids.length) {
             searchQueue.addTask(go);
+            this.values = newCheckChipValues(this.values, hasKids);
             return true;
           } else {
             return await searchQueue.addTask(go);
@@ -1779,6 +1786,7 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
           };
           if (wantsKids.length) {
             searchQueue.addTask(go);
+            this.values = newCheckChipValues(this.values, wantsKids);
             return true;
           } else {
             return await searchQueue.addTask(go);
@@ -1809,6 +1817,7 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
           };
           if (exercise.length) {
             searchQueue.addTask(go);
+            this.values = newCheckChipValues(this.values, exercise);
             return true;
           } else {
             return await searchQueue.addTask(go);
@@ -1845,6 +1854,7 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
           };
           if (religion.length) {
             searchQueue.addTask(go);
+            this.values = newCheckChipValues(this.values, religion);
             return true;
           } else {
             return await searchQueue.addTask(go);
@@ -1875,6 +1885,7 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
           };
           if (starSign.length) {
             searchQueue.addTask(go);
+            this.values = newCheckChipValues(this.values, starSign);
             return true;
           } else {
             return await searchQueue.addTask(go);
@@ -1906,10 +1917,10 @@ const searchInteractionsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
               '/search-filter',
               { people_you_messaged: peopleMessaged }
             )).ok;
-            if (ok) this.currentValue = peopleMessaged;
             return ok;
           };
           searchQueue.addTask(go);
+          this.currentValue = peopleMessaged;
           return true;
         }
       }
@@ -1936,10 +1947,10 @@ const searchInteractionsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
               '/search-filter',
               { people_you_skipped: peopleSkipped }
             )).ok;
-            if (ok) this.currentValue = peopleSkipped;
             return ok;
           };
           searchQueue.addTask(go);
+          this.currentValue = peopleSkipped;
           return true;
         }
       }
