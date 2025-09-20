@@ -60,10 +60,10 @@ const APP_THEME: AppThemes = {
     interactiveBorderColor: '#000000',
     quizCardBackgroundColor: '#2c2c33',
     quizCardColor: '#000000',
-    speechBubbleOtherUserBackgroundColor: '#333333',
+    speechBubbleOtherUserBackgroundColor: '#2a2b35',
     speechBubbleOtherUserColor: '#ffffff',
     brandColor: '#ffffff',
-    avatarBackgroundColor: '#716e7d',
+    avatarBackgroundColor: '#2a2b35',
     avatarColor: '#ffffff',
   }
 };
