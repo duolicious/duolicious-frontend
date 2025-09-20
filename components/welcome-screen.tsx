@@ -412,8 +412,8 @@ const WelcomeScreen_ = ({navigation, route}) => {
           showCloseButton: false,
           showBackButton: true,
           buttonBorderWidth: 0,
-          backgroundColor: '#70f',
-          color: 'white',
+          backgroundColor: '#7700ff',
+          color: '#ffffff',
         },
       );
     } else {

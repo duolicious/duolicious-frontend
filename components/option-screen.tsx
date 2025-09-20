@@ -1331,13 +1331,12 @@ const OptionScreen = ({navigation, route}) => {
   const showCloseButton: boolean = route?.params?.showCloseButton ?? true;
   const showBackButton: boolean = route?.params?.showBackButton ?? false;
   const onSubmitSuccess: any | undefined = route?.params?.onSubmitSuccess;
-  const theme: any | undefined = route?.params?.theme;
 
   // TODO: Ensure onboarding still looks okay
-  const backgroundColor = appTheme.primaryColor;
-  const color = appTheme.secondaryColor;
+  const backgroundColor = route?.params?.backgroundColor ?? appTheme.primaryColor;
+  const color = route?.params?.color ?? appTheme.secondaryColor;
 
-  const transparentBackgroundColor = backgroundColor === 'white' ? '#ffffff00' : '#7700ff00';
+  const transparentBackgroundColor = `${backgroundColor}00`;
 
   const thisOptionGroup = optionGroups[0];
 
@@ -1474,6 +1473,7 @@ const OptionScreen = ({navigation, route}) => {
             </Pressable>
           }
           <DefaultText
+            disableTheme
             style={{
               textAlign: 'center',
               fontWeight: '700',
@@ -1486,9 +1486,10 @@ const OptionScreen = ({navigation, route}) => {
             {title}
           </DefaultText>
           {typeof Description === 'string' && <DefaultText
+            disableTheme
             style={{
               ...descriptionStyle.style,
-              color: color || descriptionStyle.style.color
+              color: color ?? descriptionStyle.style.color
             }}
           >
             {Description}
@@ -1512,7 +1513,6 @@ const OptionScreen = ({navigation, route}) => {
               onSubmitSuccess={_onSubmitSuccess}
               title={title}
               showSkipButton={showSkipButton}
-              theme={theme}
             />
           }
           {scrollView !== false && <>
@@ -1536,7 +1536,6 @@ const OptionScreen = ({navigation, route}) => {
                   onSubmitSuccess={_onSubmitSuccess}
                   title={title}
                   showSkipButton={showSkipButton}
-                  theme={theme}
                 />
                 <View style={{height: 20}}/>
               </ScrollView>
@@ -1578,7 +1577,7 @@ const OptionScreen = ({navigation, route}) => {
           }}
         >
           <ButtonWithCenteredText
-            secondary={theme !== 'light'}
+            secondary={backgroundColor !== '#ff00ff'}
             onPress={showSkipButton ? onPressSkip : onPressContinue}
             loading={isLoading}
             containerStyle={{

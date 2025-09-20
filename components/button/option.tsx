@@ -113,7 +113,7 @@ const ButtonForOption = (props) => {
               right: 15,
             }}
             size="small"
-            color="#70f"
+            color={appTheme.brandColor}
           />
         }
         {!loading &&
