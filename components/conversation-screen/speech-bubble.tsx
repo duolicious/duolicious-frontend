@@ -609,7 +609,13 @@ const TypingSpeechBubble = ({
     const animatedStyle = useAnimatedStyle(() => ({
       opacity: 0.5 + 0.5 * Math.sin(2 * Math.PI * (phaseOffset - progress.value))
     }));
-    return <Animated.View style={[styles.dot, animatedStyle]} />;
+    return <Animated.View
+      style={[
+        styles.dot,
+        { backgroundColor: appTheme.speechBubbleOtherUserColor },
+        animatedStyle
+      ]}
+    />;
   };
 
   return (
@@ -666,7 +672,6 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 999,
-    backgroundColor: '#333',
   },
   hyperlink: {
     textDecorationLine: 'underline',
