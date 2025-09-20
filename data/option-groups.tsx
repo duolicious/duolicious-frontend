@@ -516,7 +516,7 @@ const FinishOnboardingDescription = () => (
 const DeletionDescription = () => (
   <DefaultText style={descriptionStyle.style} >
     Are you sure you want to delete your account? {}
-    <DefaultText style={{ fontWeight: '700' }}>
+    <DefaultText disableTheme style={{ fontWeight: '700' }}>
       This will
       permanently delete your account data and
       immediately log you out.
@@ -528,7 +528,7 @@ const DeletionDescription = () => (
 const DeactivationDescription = () => (
   <DefaultText style={descriptionStyle.style} >
     Are you sure you want to deactivate your account? {}
-    <DefaultText style={{ fontWeight: '700' }}>
+    <DefaultText disableTheme style={{ fontWeight: '700' }}>
       This will hide you from other users and log you out.
     </DefaultText> {}
     The next time you sign in, your account will be reactivated. Press
