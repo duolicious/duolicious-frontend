@@ -27,7 +27,6 @@ type AppTheme = {
 
 type AppThemes = Record<AppThemeName, AppTheme>;
 
-// TODO: Can some more purple be added, maybe to feed items?
 const APP_THEME: AppThemes = {
   light: {
     primaryColor: '#ffffff',

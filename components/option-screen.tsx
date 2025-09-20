@@ -1332,7 +1332,6 @@ const OptionScreen = ({navigation, route}) => {
   const showBackButton: boolean = route?.params?.showBackButton ?? false;
   const onSubmitSuccess: any | undefined = route?.params?.onSubmitSuccess;
 
-  // TODO: Ensure onboarding still looks okay
   const backgroundColor = route?.params?.backgroundColor ?? appTheme.primaryColor;
   const color = route?.params?.color ?? appTheme.secondaryColor;
 
