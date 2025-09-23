@@ -1,7 +1,6 @@
 import {
   Animated,
   Platform,
-  StatusBar,
   UIManager,
 } from 'react-native';
 import {
@@ -147,7 +146,7 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [serverStatus, setServerStatus] = useState<ServerStatus>("ok");
   const [signedInUser] = useSignedInUser();
-  const { appThemeName, appTheme } = useAppTheme();
+  const { appTheme } = useAppTheme();
 
   const loadFonts = useCallback(async () => {
     await Font.loadAsync({
