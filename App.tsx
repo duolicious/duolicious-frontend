@@ -147,7 +147,7 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [serverStatus, setServerStatus] = useState<ServerStatus>("ok");
   const [signedInUser] = useSignedInUser();
-  const { appTheme } = useAppTheme();
+  const { appThemeName, appTheme } = useAppTheme();
 
   const loadFonts = useCallback(async () => {
     await Font.loadAsync({
@@ -480,15 +480,11 @@ const App = () => {
                   (numUnread ? `(${numUnread}) ` : '') + 'Duolicious'
               }}
             >
-              <StatusBar
-                translucent={true}
-                backgroundColor="transparent"
-                barStyle="dark-content"
-              />
               <Stack.Navigator
                 screenOptions={{
                   headerShown: false,
                   presentation: 'card',
+                  navigationBarColor: appTheme.primaryColor,
                 }}
               >
                 <Tab.Screen

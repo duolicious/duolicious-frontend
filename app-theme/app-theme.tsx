@@ -80,6 +80,8 @@ const setAppBarStyle = (appThemeName: AppThemeName) => {
   } else {
     assertNever(appThemeName);
   }
+  StatusBar.setTranslucent(true);
+  StatusBar.setBackgroundColor('transparent');
 };
 
 const setAppThemeName = (appThemeName: AppThemeName) => {
