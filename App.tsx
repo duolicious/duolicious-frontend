@@ -25,6 +25,7 @@ import { QuizTab } from './components/quiz-tab';
 import { ProfileTab } from './components/profile-tab';
 import { InboxTab } from './components/inbox-tab';
 import { FeedTab } from './components/feed-tab';
+import { VisitorsTab, fetchVisitors } from './components/visitors-tab';
 import { ConversationScreen } from './components/conversation-screen/conversation-screen';
 import { ServerStatus, UtilityScreen } from './components/utility-screen';
 import { ProspectProfileScreen } from './components/prospect-profile-screen';
@@ -91,6 +92,7 @@ const HomeTabs = () => {
       <Tab.Screen name="Q&A" component={QuizTab} />
       <Tab.Screen name="Search" component={SearchTab} />
       <Tab.Screen name="Feed" component={FeedTab} />
+      <Tab.Screen name="Visitors" component={VisitorsTab} />
       <Tab.Screen name="Inbox" component={InboxTab} />
       <Tab.Screen name="Profile" component={ProfileTab} />
     </Tab.Navigator>
@@ -264,6 +266,8 @@ const App = () => {
       name: response?.json?.name,
       hasGold: response?.json?.has_gold,
     });
+
+    fetchVisitors();
 
     notify<ClubItem[]>('updated-clubs', clubs);
 
