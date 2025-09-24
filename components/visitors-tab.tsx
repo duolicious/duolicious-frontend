@@ -6,12 +6,11 @@ import {
 } from 'react-native';
 import { useCallback, useEffect, useState, useRef } from 'react';
 import { DefaultText } from './default-text';
-import { DuoliciousTopNavBar } from './top-nav-bar';
+import { TopNavBar } from './top-nav-bar';
 import { useScrollbar } from './navigation/scroll-bar-hooks';
 import { Avatar } from './avatar';
-import { getShortElapsedTime, isMobile, assertNever, capLuminance } from '../util/util';
-import { GestureResponderEvent, Pressable, Animated } from 'react-native';
-import { EnlargeablePhoto } from './enlargeable-image';
+import { friendlyTimestamp } from '../util/util';
+import { Pressable, Animated } from 'react-native';
 import { commonStyles } from '../styles';
 import { VerificationBadge } from './verification-badge';
 import { useNavigation } from '@react-navigation/native';
@@ -19,18 +18,11 @@ import { japi } from '../api/api';
 import { DefaultFlatList, DefaultFlashList } from './default-flat-list';
 import { z } from 'zod';
 import { listen, notify, lastEvent } from '../events/events';
-import { ReportModalInitialData } from './modal/report-modal';
-import { Flag } from "react-native-feather";
-import { AudioPlayer } from './audio-player';
 import { useSkipped } from '../hide-and-block/hide-and-block';
-import { TopNavBarButton } from './top-nav-bar-button';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faReply } from '@fortawesome/free-solid-svg-icons/faReply';
-import { OnlineIndicator } from './online-indicator';
-import { Flair } from './badges';
 import { useAppTheme } from '../app-theme/app-theme';
 import { usePressableAnimation } from '../animation/animation';
 import { useFocusEffect } from '@react-navigation/native';
+import { ButtonGroup } from './button-group';
 
 
 
@@ -39,8 +31,8 @@ import { useFocusEffect } from '@react-navigation/native';
 // TODO: Endpoint: /visitors
 // TODO: Endpoint: /mark-visitors-checked
 // TODO: Add to mobile and web nav bars
-
-const NAME_ACTION_TIME_GAP_VERTICAL = 16;
+// TODO: Include "Today" at the top of the list
+// TODO: Add the refresh button back in?
 
 const DefaultList = Platform.OS === 'web' ? DefaultFlatList : DefaultFlashList;
 
@@ -55,9 +47,16 @@ const DataItemSchema = z.object({
   location: z.string().nullable(),
   is_verified: z.boolean(),
   match_percentage: z.number(),
+  is_new: z.boolean(),
+});
+
+const DataSchema = z.object({
+  visited_you: z.array(DataItemSchema),
+  you_visited: z.array(DataItemSchema),
 });
 
 type DataItem = z.infer<typeof DataItemSchema>;
+type Data = z.infer<typeof DataSchema>;
 
 const EVENT_NUM_VISITORS = 'num-visitors';
 
@@ -70,14 +69,14 @@ const useNumVisitors = () => {
   const [numVisitors, setNumVisitors] = useState(initialNumVisitors);
 
   useEffect(() => {
-    listen<number>(EVENT_NUM_VISITORS, setNumVisitors);
+    listen<number>(EVENT_NUM_VISITORS, x => { if(x) setNumVisitors(x); });
   }, []);
 
   return numVisitors;
 };
 
-const isValidDataItem = (item: unknown): item is DataItem => {
-  const result = DataItemSchema.safeParse(item);
+const isValidData = (item: unknown): item is Data => {
+  const result = DataSchema.safeParse(item);
 
   if (!result.success) {
     console.warn(result.error);
@@ -86,24 +85,50 @@ const isValidDataItem = (item: unknown): item is DataItem => {
   return result.success;
 };
 
-const fetchVisitors = async (pageNumber: number = 1): Promise<DataItem[] | null> => {
-  if (pageNumber !== 1) {
-    return [];
-  }
-
+// TODO: memoize? Otherwise i'll get called each time the user switches between
+//       'you visited' and 'visited you'. Maybe there should be two endpoints
+const fetchVisitors = async (): Promise<Data | null> => {
   const response = await japi('get', '/visitors');
 
   if (!response.ok) {
     return null
   }
 
-  if (!Array.isArray(response.json)) {
+  if (!isValidData(response.json)) {
     return null;
   }
 
-  setNumVisitors(response.json.length);
+  setNumVisitors(response.json.visited_you.filter(d => d.is_new).length);
 
-  return response.json.filter(isValidDataItem);
+  return response.json;
+};
+
+const fetchVisitedYou = async (pageNumber: number = 1): Promise<DataItem[] | null> => {
+  if (pageNumber !== 1) {
+    return [];
+  }
+
+  const fetched = await fetchVisitors();
+
+  if (fetched) {
+    return fetched.visited_you;
+  } else {
+    return null;
+  }
+};
+
+const fetchYouVisited = async (pageNumber: number = 1): Promise<DataItem[] | null> => {
+  if (pageNumber !== 1) {
+    return [];
+  }
+
+  const fetched = await fetchVisitors();
+
+  if (fetched) {
+    return fetched.you_visited;
+  } else {
+    return null;
+  }
 };
 
 const markVisitorsChecked = () => {
@@ -127,393 +152,83 @@ const useNavigationToProfile = (
   }, [personUuid, photoBlurhash]);
 };
 
-// const NameActionTime = ({
-//   personUuid,
-//   name,
-//   isVerified,
-//   action,
-//   time,
-//   doUseOnline,
-//   flair,
-//   style,
-// }: {
-//   personUuid: string
-//   name: string
-//   isVerified: boolean
-//   action: Action
-//   time: Date
-//   doUseOnline: boolean
-//   flair: string[]
-//   style?: any
-// }) => {
-//   const { appTheme } = useAppTheme();
-// 
-//   const onPress = useCallback((event: GestureResponderEvent) => {
-//     event.stopPropagation();
-// 
-//     const data: ReportModalInitialData = {
-//       name,
-//       personUuid,
-//       context: 'Feed',
-//     };
-//     notify('open-report-modal', data);
-//   }, [notify, name, personUuid]);
-// 
-//   return (
-//     <View
-//       style={{
-//         flex: 1,
-//         flexDirection: 'row',
-//       }}
-//     >
-//       <View
-//         style={{
-//           flex: 1,
-//           flexWrap: 'wrap',
-//           justifyContent: 'center',
-//           gap: 2,
-//           ...style,
-//         }}
-//       >
-//         <View
-//           style={{
-//             width: '100%',
-//             flexDirection: 'row',
-//             gap: 5,
-//             alignItems: 'center',
-//           }}
-//         >
-//           {doUseOnline &&
-//             <OnlineIndicator
-//               personUuid={personUuid}
-//               size={12}
-//               borderWidth={0}
-//             />
-//           }
-//           <DefaultText
-//             style={{
-//               fontWeight: '700',
-//               flexShrink: 1,
-//             }}
-//           >
-//             {name}
-//           </DefaultText>
-//           {isVerified &&
-//             <VerificationBadge size={14} />
-//           }
-//         </View>
-//         <DefaultText
-//           style={{
-//             color: '#999',
-//             width: '100%',
-//           }}
-//         >
-//           {action} • {getShortElapsedTime(time)}
-//         </DefaultText>
-//         <Flair flair={flair} />
-//       </View>
-//       <Flag
-//         hitSlop={20}
-//         onPress={onPress}
-//         stroke={`${appTheme.secondaryColor}80`}
-//         strokeWidth={2}
-//         height={18}
-//         width={18}
-//         style={{
-//           marginLeft: 10,
-//         }}
-//       />
-//     </View>
-//   );
-// };
-// 
-// const FeedItemJoined = ({ fields }: { fields: JoinedFields }) => {
-//   const { appTheme } = useAppTheme();
-// 
-//   const onPress = useNavigationToProfile(
-//     fields.person_uuid,
-//     fields.photo_blurhash,
-//   );
-// 
-//   const { backgroundColor, onPressIn, onPressOut } = usePressableAnimation();
-// 
-//   return (
-//     <Pressable
-//       onPressIn={onPressIn}
-//       onPressOut={onPressOut}
-//       onPress={onPress}
-//     >
-//       <Animated.View style={[styles.cardBorders, appTheme.card, { backgroundColor }]}>
-//         {fields.photo_uuid &&
-//           <Avatar
-//             percentage={fields.match_percentage}
-//             personUuid={fields.person_uuid}
-//             photoUuid={fields.photo_uuid}
-//             photoBlurhash={fields.photo_blurhash}
-//             doUseOnline={!!fields.photo_uuid}
-//           />
-//         }
-//         <NameActionTime
-//           personUuid={fields.person_uuid}
-//           name={fields.name}
-//           isVerified={fields.is_verified}
-//           action="joined"
-//           time={new Date(fields.time)}
-//           doUseOnline={!fields.photo_uuid}
-//           flair={fields.flair}
-//         />
-//       </Animated.View>
-//     </Pressable>
-//   );
-// };
-// 
-// const FeedItemWasRecentlyOnline = ({
-//   dataItem
-// }: {
-//   dataItem:
-//     | DataItemWasRecentlyOnlineWithBio
-//     | DataItemWasRecentlyOnlineWithPhoto
-//     | DataItemWasRecentlyOnlineWithVoiceBio
-// }) => {
-//   switch (dataItem.type) {
-//     case 'recently-online-with-bio':
-//       return <FeedItemUpdatedBio fields={dataItem} action="recently online" />;
-//     case 'recently-online-with-photo':
-//       return <FeedItemAddedPhoto fields={dataItem} action="recently online" />;
-//     case 'recently-online-with-voice-bio':
-//       return <FeedItemAddedVoiceBio fields={dataItem} action="recently online" />;
-//     default:
-//       return assertNever(dataItem);
-//   }
-// };
-// 
-// const FeedItemAddedPhoto = ({
-//   fields,
-//   action = "added a photo",
-// }: {
-//   fields: AddedPhotoFields,
-//   action?: Action,
-// }) => {
-//   const { appTheme } = useAppTheme();
-// 
-//   const onPress = useNavigationToProfile(
-//     fields.person_uuid,
-//     fields.photo_blurhash,
-//   );
-// 
-//   const onPressPhoto = useNavigationToProfileGallery(fields.added_photo_uuid);
-// 
-//   const { backgroundColor, onPressIn, onPressOut } = usePressableAnimation();
-// 
-//   return (
-//     <Pressable
-//       onPressIn={onPressIn}
-//       onPressOut={onPressOut}
-//       onPress={onPress}
-//     >
-//       <Animated.View style={[styles.cardBorders, appTheme.card, { backgroundColor }]}>
-//         {fields.photo_uuid &&
-//           <Avatar
-//             percentage={fields.match_percentage}
-//             personUuid={fields.person_uuid}
-//             photoUuid={fields.photo_uuid}
-//             photoBlurhash={fields.photo_blurhash}
-//             doUseOnline={!!fields.photo_uuid}
-//           />
-//         }
-//         <View style={{ flex: 1, gap: NAME_ACTION_TIME_GAP_VERTICAL }}>
-//           <NameActionTime
-//             personUuid={fields.person_uuid}
-//             name={fields.name}
-//             isVerified={fields.is_verified}
-//             action={action}
-//             time={new Date(fields.time)}
-//             doUseOnline={!fields.photo_uuid}
-//             flair={fields.flair}
-//           />
-//           <EnlargeablePhoto
-//             onPress={onPressPhoto}
-//             photoUuid={fields.added_photo_uuid}
-//             photoExtraExts={fields.added_photo_extra_exts}
-//             photoBlurhash={fields.added_photo_blurhash}
-//             isPrimary={true}
-//             style={{
-//               ...commonStyles.secondaryEnlargeablePhoto,
-//               marginTop: 0,
-//               marginBottom: 0,
-//             }}
-//           />
-//         </View>
-//       </Animated.View>
-//     </Pressable>
-//   );
-// };
-// 
-// const FeedItemAddedVoiceBio = ({
-//   fields,
-//   action = "added a voice bio"
-// }: {
-//   fields: AddedVoiceBioFields
-//   action?: Action
-// }) => {
-//   const { appTheme } = useAppTheme();
-// 
-//   const onPress = useNavigationToProfile(
-//     fields.person_uuid,
-//     fields.photo_blurhash,
-//   );
-// 
-//   const { backgroundColor, onPressIn, onPressOut } = usePressableAnimation();
-// 
-//   return (
-//     <Pressable
-//       onPressIn={onPressIn}
-//       onPressOut={onPressOut}
-//       onPress={onPress}
-//     >
-//       <Animated.View style={[styles.cardBorders, appTheme.card, { backgroundColor }]}>
-//         {fields.photo_uuid &&
-//           <Avatar
-//             percentage={fields.match_percentage}
-//             personUuid={fields.person_uuid}
-//             photoUuid={fields.photo_uuid}
-//             photoBlurhash={fields.photo_blurhash}
-//             doUseOnline={!!fields.photo_uuid}
-//           />
-//         }
-//         <View style={{ flex: 1, gap: NAME_ACTION_TIME_GAP_VERTICAL }}>
-//           <NameActionTime
-//             personUuid={fields.person_uuid}
-//             name={fields.name}
-//             isVerified={fields.is_verified}
-//             action={action}
-//             time={new Date(fields.time)}
-//             doUseOnline={!fields.photo_uuid}
-//             flair={fields.flair}
-//           />
-//           <AudioPlayer
-//             uuid={fields.added_audio_uuid}
-//             presentation="feed"
-//             style={{ marginTop: 0 }}
-//           />
-//         </View>
-//       </Animated.View>
-//     </Pressable>
-//   );
-// };
-// 
-// const FeedItemUpdatedBio = ({
-//   fields,
-//   action = "updated their bio"
-// }: {
-//   fields: UpdatedBioFields,
-//   action?: Action,
-// }) => {
-//   const { appThemeName, appTheme } = useAppTheme();
-// 
-//   const onPress = useNavigationToProfile(
-//     fields.person_uuid,
-//     fields.photo_blurhash,
-//   );
-// 
-//   const onPressReply = useNavigationToConversation(
-//     fields.person_uuid,
-//     fields.name,
-//     fields.photo_uuid,
-//     fields.photo_blurhash,
-//     fields.added_text,
-//   );
-// 
-//   const { backgroundColor, onPressIn, onPressOut } = usePressableAnimation();
-// 
-//   return (
-//     <Pressable
-//       onPressIn={onPressIn}
-//       onPressOut={onPressOut}
-//       onPress={onPress}
-//     >
-//       <Animated.View style={[styles.cardBorders, appTheme.card, { backgroundColor }]}>
-//         {fields.photo_uuid &&
-//           <Avatar
-//             percentage={fields.match_percentage}
-//             personUuid={fields.person_uuid}
-//             photoUuid={fields.photo_uuid}
-//             photoBlurhash={fields.photo_blurhash}
-//             doUseOnline={!!fields.photo_uuid}
-//           />
-//         }
-//         <View style={{ flex: 1, gap: isMobile() ? 8 : 10 }}>
-//           <View style={{ flex: 1, gap: NAME_ACTION_TIME_GAP_VERTICAL }}>
-//             <NameActionTime
-//               personUuid={fields.person_uuid}
-//               name={fields.name}
-//               isVerified={fields.is_verified}
-//               action={
-//                 fields.added_text.trim()
-//                   ? action
-//                   : "erased their bio"
-//               }
-//               time={new Date(fields.time)}
-//               doUseOnline={!fields.photo_uuid}
-//               flair={fields.flair}
-//               style={{
-//                 paddingHorizontal: 10,
-//               }}
-//             />
-//             <DefaultText
-//               style={{
-//                 backgroundColor:
-//                   appThemeName === 'dark'
-//                     ? capLuminance(fields.background_color)
-//                     : fields.background_color,
-//                 color: fields.body_color,
-//                 borderRadius: 10,
-//                 padding: 10,
-//               }}
-//             >
-//               {fields.added_text}
-//             </DefaultText>
-//           </View>
-//           <View style={{ alignItems: 'flex-end' }} >
-//             <Pressable
-//               style={{
-//                 flexDirection: 'row',
-//                 gap: 6,
-//                 paddingRight: 5,
-//               }}
-//               hitSlop={20}
-//               onPress={onPressReply}
-//             >
-//               <DefaultText style={{ fontWeight: 700 }}>
-//                 Reply
-//               </DefaultText>
-//               <FontAwesomeIcon
-//                 icon={faReply}
-//                 size={16}
-//                 color={appTheme.secondaryColor}
-//                 style={{
-//                   /* @ts-ignore */
-//                   outline: 'none',
-//                 }}
-//               />
-//             </Pressable>
-//           </View>
-//         </View>
-//       </Animated.View>
-//     </Pressable>
-//   );
-// };
-
 const FeedItem = ({ dataItem }: { dataItem: DataItem }) => {
+  const { appTheme } = useAppTheme();
   const { isSkipped } = useSkipped(dataItem.person_uuid);
+  const { backgroundColor, onPressIn, onPressOut } = usePressableAnimation();
+  const onPress = useNavigationToProfile(
+    dataItem.person_uuid,
+    dataItem.photo_blurhash,
+  );
 
   if (isSkipped) {
     return <></>;
   }
 
-  // TODO
-  console.log(dataItem);
-  return <></>;
+  return (
+    <Pressable
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
+      onPress={onPress}
+     >
+       <Animated.View style={[styles.cardBorders, appTheme.card, { backgroundColor }]}>
+         <Avatar
+           percentage={dataItem.match_percentage}
+           personUuid={dataItem.person_uuid}
+           photoUuid={dataItem.photo_uuid}
+           photoBlurhash={dataItem.photo_blurhash}
+         />
+         <View>
+           <View
+             style={{
+               width: '100%',
+               flexDirection: 'row',
+               gap: 5,
+               alignItems: 'center',
+             }}
+           >
+             <DefaultText
+               style={{
+                 fontWeight: '700',
+                 flexShrink: 1,
+               }}
+             >
+               {dataItem.name}
+             </DefaultText>
+             {dataItem.is_verified &&
+               <VerificationBadge size={14} />
+             }
+           </View>
+          <DefaultText>
+            {dataItem.age}
+            •
+            {dataItem.gender}
+            •
+            {dataItem.location}
+          </DefaultText>
+          <DefaultText>
+            {friendlyTimestamp(new Date(dataItem.time))}
+          </DefaultText>
+         </View>
+         <View
+          style={{
+            height: 40,
+            aspectRatio: 1,
+          }}
+         >
+          {dataItem.is_new &&
+            <View
+              style={{
+                backgroundColor: appTheme.brandColor,
+                height: '50%',
+                aspectRatio: 1,
+              }}
+            />
+          }
+         </View>
+       </Animated.View>
+     </Pressable>
+  );
 };
 
 const VisitorsTab = () => {
@@ -525,37 +240,46 @@ const VisitorsTab = () => {
     observeListRef,
   } = useScrollbar('visitors');
 
+  const [sectionIndex, setSectionIndex] = useState(0);
+
   const listRef = useRef<any>(undefined);
 
-  const onPressRefresh = useCallback(() => {
-    const refresh = listRef?.current?.refresh;
-    refresh && refresh() && markVisitorsChecked();
-  }, []);
-
+  // TODO: tabs for visited you and you visited
   useFocusEffect(markVisitorsChecked);
 
   return (
     <SafeAreaView style={styles.safeAreaView}>
-      <DuoliciousTopNavBar>
-        {Platform.OS === 'web' &&
-          <TopNavBarButton
-            onPress={onPressRefresh}
-            iconName="refresh"
-            position="left"
-            secondary={true}
-            label="Refresh"
-          />
-        }
-      </DuoliciousTopNavBar>
+      <TopNavBar>
+        <DefaultText
+          style={{
+            fontWeight: '700',
+            fontSize: 20,
+          }}
+        >
+          Visitors
+        </DefaultText>
+      </TopNavBar>
       <DefaultList
         ref={listRef}
         innerRef={observeListRef}
         emptyText={
-          "Nobody’s visited yet. Try answering more Q&A or updating your profile."
+          sectionIndex === 0 ? (
+            "Nobody’s visited yet. Try answering more Q&A questions or " +
+            "updating your profile."
+          ) : (
+            "You haven’t visited anybody lately"
+          )
         }
         errorText={"Something went wrong while fetching visitors\xa0😵‍💫"}
-        endText={"That’s everyone who's visited for now"}
-        fetchPage={fetchVisitors}
+        endText={
+          sectionIndex === 0 ? (
+            "That’s everybody who’s visited you for now"
+          ) : (
+            "That’s everybody you’ve visited recently"
+          )
+        }
+        fetchPage={sectionIndex === 0 ? fetchVisitedYou : fetchYouVisited}
+        dataKey={String(sectionIndex)}
         contentContainerStyle={styles.listContentContainerStyle}
         renderItem={({ item }: { item: DataItem }) =>
           <FeedItem dataItem={item} />
@@ -565,6 +289,21 @@ const VisitorsTab = () => {
         onContentSizeChange={onContentSizeChange}
         onScroll={onScroll}
         showsVerticalScrollIndicator={showsVerticalScrollIndicator}
+        ListHeaderComponent={
+          <ButtonGroup
+            buttons={[
+              'Visited You',
+              'You Visited',
+            ]}
+            selectedIndex={sectionIndex}
+            onPress={setSectionIndex}
+            containerStyle={{
+              marginTop: 5,
+              marginLeft: 20,
+              marginRight: 20,
+            }}
+          />
+        }
       />
     </SafeAreaView>
   );
