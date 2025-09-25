@@ -87,6 +87,8 @@ const isValidData = (item: unknown): item is Data => {
 
 // TODO: memoize? Otherwise i'll get called each time the user switches between
 //       'you visited' and 'visited you'. Maybe there should be two endpoints
+//
+//        Another strategy is to refresh every minute or so
 const fetchVisitors = async (): Promise<Data | null> => {
   const response = await japi('get', '/visitors');
 
@@ -200,11 +202,15 @@ const FeedItem = ({ dataItem }: { dataItem: DataItem }) => {
              }
            </View>
           <DefaultText>
-            {dataItem.age}
-            •
-            {dataItem.gender}
-            •
-            {dataItem.location}
+            {
+              [
+                dataItem.age,
+                dataItem.gender,
+                dataItem.location
+              ]
+                .filter(Boolean)
+                .join(' • ')
+            }
           </DefaultText>
           <DefaultText>
             {friendlyTimestamp(new Date(dataItem.time))}
