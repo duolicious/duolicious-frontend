@@ -267,8 +267,6 @@ const App = () => {
       hasGold: response?.json?.has_gold,
     });
 
-    fetchVisitors();
-
     notify<ClubItem[]>('updated-clubs', clubs);
 
     if (parsedUrl?.left === 'profile') {
@@ -394,6 +392,24 @@ const App = () => {
 
     return () => { doBreak = true; };
   }, [fetchServerStatusState]);
+
+  useEffect(() => {
+    if (!signedInUser) {
+      return;
+    }
+
+    let doBreak = false;
+
+    (async () => {
+      while (true) {
+        await fetchVisitors();
+        await delay(60_000);
+        if (doBreak) break;
+      }
+    })();
+
+    return () => { doBreak = true; };
+  }, [signedInUser]);
 
   const onError = useCallback(async () => {
     await clearAllKv();

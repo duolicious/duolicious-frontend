@@ -34,9 +34,6 @@ import { GestureResponderEvent } from 'react-native';
 import { ReportModalInitialData } from './modal/report-modal';
 import { Flag } from "react-native-feather";
 
-// TODO: Periodically update visitors. This is important for users who leave the
-//       app open for long periods
-
 const friendlyTimestamp = (date: Date): string => {
   if (isToday(date)) {
     // Format as 'hh:mm'
@@ -150,8 +147,22 @@ const useVisitorKeys = (sectionKey: SectionKey): string[] | null => {
   return visitorKeys;
 };
 
-const setVisitorDataItem = (key: string, dataItem: DataItem) => {
-  notify<DataItem>(key, dataItem);
+const setVisitorDataItem = (
+  key: string,
+  dataItem: DataItem,
+  ignoreEarlierVisit: boolean
+) => {
+  if (!ignoreEarlierVisit) {
+    notify<DataItem>(key, dataItem);
+    return;
+  }
+
+  const lastVisitTime = new Date(lastEvent<DataItem>(key)?.time ?? 0);
+  const thisVisitTime = new Date(dataItem.time);
+
+  if (thisVisitTime > lastVisitTime) {
+    notify<DataItem>(key, dataItem);
+  }
 };
 
 const useVisitorDataItem = (key: string): DataItem => {
@@ -182,34 +193,38 @@ const useVisitorDataItem = (key: string): DataItem => {
 // Notify updates to the visitors store
 const setData = (data: Data) => {
   for (let dataItem of data.visited_you) {
-    setVisitorDataItem(`visited_you-${dataItem.person_uuid}`, dataItem);
+    setVisitorDataItem(`visited_you-${dataItem.person_uuid}`, dataItem, true);
   }
 
   for (let dataItem of data.you_visited) {
-    setVisitorDataItem(`you_visited-${dataItem.person_uuid}`, dataItem);
+    setVisitorDataItem(`you_visited-${dataItem.person_uuid}`, dataItem, true);
   }
 
-  setVisitorKeys('visited_you', data.visited_you.map(d => `visited_you-${d.person_uuid}`));
+  setVisitorKeys(
+    'visited_you',
+    data.visited_you.map(d => `visited_you-${d.person_uuid}`)
+  );
 
-  setVisitorKeys('you_visited', data.you_visited.map(d => `you_visited-${d.person_uuid}`));
+  setVisitorKeys(
+    'you_visited',
+    data.you_visited.map(d => `you_visited-${d.person_uuid}`)
+  );
 
   setNumVisitors(data.visited_you.filter(d => d.is_new).length);
 };
 
-const fetchVisitors = async (): Promise<Data | null> => {
-  const response = await japi('get', '/visitors');
+const fetchVisitors = async (): Promise<void> => {
+  const response = await japi('get', '/visitors', undefined, { maxRetries: 0 });
 
   if (!response.ok) {
-    return null
+    return;
   }
 
   if (!isValidData(response.json)) {
-    return null;
+    return;
   }
 
   setData(response.json);
-
-  return response.json;
 };
 
 const markVisitorsCheckedAsync = async () => {
@@ -230,7 +245,7 @@ const markVisitorChecked = (personUuid: string) => {
     return;
   }
 
-  setVisitorDataItem(key, { ...dataItem, is_new: false });
+  setVisitorDataItem(key, { ...dataItem, is_new: false }, false);
 };
 
 const useNavigationToProfile = (
@@ -404,9 +419,12 @@ const VisitorsTab = () => {
 
   const [sectionIndex, setSectionIndex] = useState(0);
 
-  // Load visitors on mount/focus
-  useEffect(() => { fetchVisitors(); }, []);
-  useFocusEffect(markVisitorsChecked);
+  useFocusEffect(
+    useCallback(() => {
+      markVisitorsChecked();
+      return markVisitorsChecked;
+    }, [])
+  );
 
   const keys = useVisitorKeys(sectionFromIndex(sectionIndex));
 
