@@ -92,8 +92,8 @@ const HomeTabs = () => {
       <Tab.Screen name="Q&A" component={QuizTab} />
       <Tab.Screen name="Search" component={SearchTab} />
       <Tab.Screen name="Feed" component={FeedTab} />
-      <Tab.Screen name="Visitors" component={VisitorsTab} />
       <Tab.Screen name="Inbox" component={InboxTab} />
+      <Tab.Screen name="Visitors" component={VisitorsTab} />
       <Tab.Screen name="Profile" component={ProfileTab} />
     </Tab.Navigator>
   );

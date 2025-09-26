@@ -30,9 +30,7 @@ import { ButtonGroup } from './button-group';
 //       last checked
 // TODO: Endpoint: /visitors
 // TODO: Endpoint: /mark-visitors-checked - should update store
-// TODO: Add to mobile and web nav bars
 // TODO: Include "Today" at the top of the list
-// TODO: Add the refresh button back in?
 
 const DefaultList = Platform.OS === 'web' ? DefaultFlatList : DefaultFlashList;
 
@@ -268,7 +266,6 @@ const VisitorsTab = () => {
 
   const listRef = useRef<any>(undefined);
 
-  // TODO: tabs for visited you and you visited
   useFocusEffect(markVisitorsChecked);
 
   return (
@@ -355,7 +352,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   pressableStyle: {
-    marginBottom: 20,
+    marginTop: 20,
     width: '100%',
   },
 });
