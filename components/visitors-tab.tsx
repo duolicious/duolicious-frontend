@@ -11,7 +11,7 @@ import { DefaultText } from './default-text';
 import { TopNavBar } from './top-nav-bar';
 import { useScrollbar } from './navigation/scroll-bar-hooks';
 import { Avatar } from './avatar';
-import { longFriendlyTimestamp } from '../util/util';
+import { friendlyDate } from '../util/util';
 import { commonStyles } from '../styles';
 import { VerificationBadge } from './verification-badge';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -24,10 +24,35 @@ import Animated from 'react-native-reanimated';
 import * as _ from 'lodash';
 import { z } from 'zod';
 import { listen, notify, lastEvent } from '../events/events';
+import {
+  format,
+  isThisWeek,
+  isThisYear,
+  isToday,
+  isYesterday,
+} from 'date-fns'
 
-// TODO: Include "Today" at the top of the list
 // TODO: Periodically update visitors. This is important for users who leave the
 //       app open for long periods
+
+const friendlyTimestamp = (date: Date): string => {
+  if (isToday(date)) {
+    // Format as 'hh:mm'
+    return 'Today, ' + format(date, 'h:mm aaa')
+  } else if (isYesterday(date)) {
+    // Format as 'hh:mm'
+    return 'Yesterday, ' + format(date, 'h:mm aaa')
+  } else if (isThisWeek(date)) {
+    // Format as 'eeee' (day of the week)
+    return format(date, 'eeee, h:mm aaa')
+  } else if (isThisYear(date)) {
+    // Format as 'd MMM' (date and month)
+    return format(date, 'd MMM, h:mm aaa')
+  } else {
+    // Format as 'd MMM yyyy' (date, month and year)
+    return format(date, 'd MMM yyyy, h:mm aaa')
+  }
+};
 
 // Event keys
 const EVENT_NUM_VISITORS = 'num-visitors';
@@ -300,8 +325,8 @@ const VisitorsItem = ({ itemKey }: { itemKey: string }) => {
               {dataItem.location}
             </DefaultText>
           }
-          <DefaultText style={{ marginTop: 14, color: appTheme.hintColor }}>
-            {longFriendlyTimestamp(new Date(dataItem.time))}
+          <DefaultText style={{ marginTop: 20, color: appTheme.hintColor }}>
+            {friendlyTimestamp(new Date(dataItem.time))}
           </DefaultText>
         </View>
         <View
