@@ -1,10 +1,10 @@
 import {
+  ActivityIndicator,
+  Animated as RNAnimated,
+  Pressable,
   SafeAreaView,
   StyleSheet,
   View,
-  ActivityIndicator,
-  Pressable,
-  Animated as RNAnimated,
 } from 'react-native';
 import { memo, useCallback, useEffect, useState } from 'react';
 import { DefaultText } from './default-text';
@@ -30,6 +30,9 @@ import {
   isToday,
   isYesterday,
 } from 'date-fns'
+import { GestureResponderEvent } from 'react-native';
+import { ReportModalInitialData } from './modal/report-modal';
+import { Flag } from "react-native-feather";
 
 // TODO: Periodically update visitors. This is important for users who leave the
 //       app open for long periods
@@ -274,6 +277,18 @@ const VisitorsItem = ({ itemKey }: { itemKey: string }) => {
     dataItem.verification_required_to_view !== null,
   );
 
+  const onPressReport = useCallback((event: GestureResponderEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const data: ReportModalInitialData = {
+      name: dataItem.name,
+      personUuid: dataItem.person_uuid,
+      context: 'Visitors',
+    };
+    notify('open-report-modal', data);
+  }, [dataItem.name, dataItem.person_uuid]);
+
   if (isSkipped) {
     return <></>;
   }
@@ -337,7 +352,7 @@ const VisitorsItem = ({ itemKey }: { itemKey: string }) => {
           style={{
             flexGrow: 1,
             alignItems: 'flex-end',
-            marginRight: 10,
+            marginRight: 5,
           }}
         >
           {dataItem.is_new &&
@@ -351,6 +366,19 @@ const VisitorsItem = ({ itemKey }: { itemKey: string }) => {
             />
           }
         </View>
+        <Flag
+          hitSlop={20}
+          onPress={onPressReport}
+          stroke={`${appTheme.secondaryColor}80`}
+          strokeWidth={2}
+          height={18}
+          width={18}
+          style={{
+            position: 'absolute',
+            top: 10,
+            right: 10,
+          }}
+        />
       </RNAnimated.View>
     </Pressable>
   );
