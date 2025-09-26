@@ -11,7 +11,6 @@ import { DefaultText } from './default-text';
 import { TopNavBar } from './top-nav-bar';
 import { useScrollbar } from './navigation/scroll-bar-hooks';
 import { Avatar } from './avatar';
-import { friendlyDate } from '../util/util';
 import { commonStyles } from '../styles';
 import { VerificationBadge } from './verification-badge';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
