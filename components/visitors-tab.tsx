@@ -1,28 +1,29 @@
 import {
-  Platform,
   SafeAreaView,
   StyleSheet,
   View,
+  ActivityIndicator,
+  Pressable,
+  Animated as RNAnimated,
 } from 'react-native';
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 import { DefaultText } from './default-text';
 import { TopNavBar } from './top-nav-bar';
 import { useScrollbar } from './navigation/scroll-bar-hooks';
 import { Avatar } from './avatar';
 import { friendlyTimestamp } from '../util/util';
-import { Pressable, Animated } from 'react-native';
 import { commonStyles } from '../styles';
 import { VerificationBadge } from './verification-badge';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { japi } from '../api/api';
-import { DefaultFlatList, DefaultFlashList } from './default-flat-list';
-import { z } from 'zod';
-import { listen, notify, lastEvent } from '../events/events';
 import { useSkipped } from '../hide-and-block/hide-and-block';
 import { useAppTheme } from '../app-theme/app-theme';
 import { usePressableAnimation } from '../animation/animation';
-import { useFocusEffect } from '@react-navigation/native';
 import { ButtonGroup } from './button-group';
+import Animated from 'react-native-reanimated';
+import * as _ from 'lodash';
+import { z } from 'zod';
+import { listen, notify, lastEvent } from '../events/events';
 
 
 
@@ -32,7 +33,25 @@ import { ButtonGroup } from './button-group';
 // TODO: Endpoint: /mark-visitors-checked - should update store
 // TODO: Include "Today" at the top of the list
 
-const DefaultList = Platform.OS === 'web' ? DefaultFlatList : DefaultFlashList;
+// Event keys
+const EVENT_VISITORS = 'visitors';
+const EVENT_NUM_VISITORS = 'num-visitors';
+
+// Keep public setter for badge count
+const setNumVisitors = (num: number) => {
+  notify<number>(EVENT_NUM_VISITORS, num);
+};
+
+const useNumVisitors = () => {
+  const initialNumVisitors = lastEvent<number>(EVENT_NUM_VISITORS) ?? 0;
+  const [numVisitors, setNumVisitors_] = useState(initialNumVisitors);
+
+  useEffect(() => {
+    listen<number>(EVENT_NUM_VISITORS, x => { if(x) setNumVisitors_(x); });
+  }, []);
+
+  return numVisitors;
+};
 
 const DataItemSchema = z.object({
   person_uuid: z.string(),
@@ -61,23 +80,6 @@ const DataSchema = z.object({
 type DataItem = z.infer<typeof DataItemSchema>;
 type Data = z.infer<typeof DataSchema>;
 
-const EVENT_NUM_VISITORS = 'num-visitors';
-
-const setNumVisitors = (num: number) => {
-  notify<number>(EVENT_NUM_VISITORS, num);
-};
-
-const useNumVisitors = () => {
-  const initialNumVisitors = lastEvent<number>(EVENT_NUM_VISITORS) ?? 0;
-  const [numVisitors, setNumVisitors] = useState(initialNumVisitors);
-
-  useEffect(() => {
-    listen<number>(EVENT_NUM_VISITORS, x => { if(x) setNumVisitors(x); });
-  }, []);
-
-  return numVisitors;
-};
-
 const isValidData = (item: unknown): item is Data => {
   const result = DataSchema.safeParse(item);
 
@@ -87,6 +89,90 @@ const isValidData = (item: unknown): item is Data => {
 
   return result.success;
 };
+
+// Helpers for keys/sections
+
+type SectionKey = 'visited-you' | 'you-visited';
+
+const sectionFromIndex = (sectionIndex: number): SectionKey =>
+  sectionIndex === 0 ? 'visited-you' : 'you-visited';
+
+const makeKey = (section: SectionKey, personUuid: string): string =>
+  `${section}-${personUuid}`;
+
+const parseKey = (key: string): { section: SectionKey, personUuid: string } | null => {
+  if (key.startsWith('visited-you-')) {
+    return { section: 'visited-you', personUuid: key.slice('visited-you-'.length) };
+  } else if (key.startsWith('you-visited-')) {
+    return { section: 'you-visited', personUuid: key.slice('you-visited-'.length) };
+  }
+  return null;
+};
+
+const computeKeys = (data: Data | null, section: SectionKey): string[] => {
+  if (!data) return [];
+  const arr = section === 'visited-you' ? data.visited_you : data.you_visited;
+  return arr.map(d => makeKey(section, d.person_uuid));
+};
+
+// Hook: list of item keys (minimises re-renders by only updating on membership/order changes)
+const useVisitorItemKeys = (sectionIndex: number): string[] | null => {
+  const section = sectionFromIndex(sectionIndex);
+  const initialData = lastEvent<Data | null>(EVENT_VISITORS) ?? null;
+  const initialKeys = initialData ? computeKeys(initialData, section) : null;
+  const [keys, setKeys] = useState<string[] | null>(initialKeys);
+
+  useEffect(() => {
+    // Recompute immediately for new section based on last known data
+    setKeys(() => computeKeys(lastEvent<Data | null>(EVENT_VISITORS) ?? null, section));
+
+    return listen<Data | null>(
+      EVENT_VISITORS,
+      (newData) => {
+        const newKeys = computeKeys(newData ?? null, section);
+        setKeys((prev) => _.isEqual(prev, newKeys) ? prev : newKeys);
+      },
+      true,
+    );
+  }, [section]);
+
+  return keys;
+};
+
+// Hook: subscribe to a specific item by key
+const getItemByKey = (data: Data | null, key: string): DataItem | null => {
+  if (!data) return null;
+  const parsed = parseKey(key);
+  if (!parsed) return null;
+  const { section, personUuid } = parsed;
+  const list = section === 'visited-you' ? data.visited_you : data.you_visited;
+  return list.find(d => d.person_uuid === personUuid) ?? null;
+};
+
+const useVisitorItem = (key: string): DataItem => {
+  const initial = getItemByKey(lastEvent<Data | null>(EVENT_VISITORS) ?? null, key);
+  const [item, setItem] = useState<DataItem | null>(initial);
+
+  useEffect(() => {
+    return listen<Data | null>(
+      EVENT_VISITORS,
+      (newData) => {
+        const newItem = getItemByKey(newData ?? null, key);
+        setItem((prev) => _.isEqual(prev, newItem) ? prev : newItem);
+      },
+      true,
+    );
+  }, [key]);
+
+  if (!item) {
+    throw new Error('item key not found');
+  }
+
+  return item;
+};
+
+// Notify updates to the visitors store
+const notifyVisitors = (data: Data) => notify<Data>(EVENT_VISITORS, data);
 
 // TODO: memoize? Otherwise i'll get called each time the user switches between
 //       'you visited' and 'visited you'. Maybe there should be two endpoints
@@ -103,41 +189,27 @@ const fetchVisitors = async (): Promise<Data | null> => {
     return null;
   }
 
+  // Update badge count and push data to subscribers
   setNumVisitors(response.json.visited_you.filter(d => d.is_new).length);
+  notifyVisitors(response.json);
 
   return response.json;
 };
 
-const fetchVisitedYou = async (pageNumber: number = 1): Promise<DataItem[] | null> => {
-  if (pageNumber !== 1) {
-    return [];
-  }
-
-  const fetched = await fetchVisitors();
-
-  if (fetched) {
-    return fetched.visited_you;
-  } else {
-    return null;
-  }
-};
-
-const fetchYouVisited = async (pageNumber: number = 1): Promise<DataItem[] | null> => {
-  if (pageNumber !== 1) {
-    return [];
-  }
-
-  const fetched = await fetchVisitors();
-
-  if (fetched) {
-    return fetched.you_visited;
-  } else {
-    return null;
-  }
-};
-
 const markVisitorsChecked = () => {
-  // japi('post', '/mark-visitors-checked');
+  // Optimistically update local store to clear "new" indicators
+  const current = lastEvent<Data | null>(EVENT_VISITORS) ?? null;
+  if (current) {
+    const updated: Data = {
+      visited_you: current.visited_you.map(d => ({ ...d, is_new: false })),
+      you_visited: current.you_visited,
+    };
+    notifyVisitors(updated);
+    setNumVisitors(0);
+  }
+
+  // Fire-and-forget server update
+  japi('post', '/mark-visitors-checked');
 }
 
 const useNavigationToProfile = (
@@ -165,8 +237,10 @@ const useNavigationToProfile = (
   }, [personUuid, photoBlurhash, verificationRequired]);
 };
 
-const VisitorsItem = ({ dataItem }: { dataItem: DataItem }) => {
+const VisitorsItem = ({ itemKey }: { itemKey: string }) => {
+  const dataItem = useVisitorItem(itemKey);
   const { appTheme } = useAppTheme();
+
   const { isSkipped } = useSkipped(dataItem.person_uuid);
   const { backgroundColor, onPressIn, onPressOut } = usePressableAnimation();
   const onPress = useNavigationToProfile(
@@ -186,7 +260,7 @@ const VisitorsItem = ({ dataItem }: { dataItem: DataItem }) => {
       onPressOut={onPressOut}
       onPress={onPress}
     >
-      <Animated.View style={[styles.cardBorders, appTheme.card, { backgroundColor }]}>
+      <RNAnimated.View style={[styles.cardBorders, appTheme.card, { backgroundColor }]}>
         <Avatar
           percentage={dataItem.match_percentage}
           personUuid={dataItem.person_uuid}
@@ -248,12 +322,21 @@ const VisitorsItem = ({ dataItem }: { dataItem: DataItem }) => {
             />
           }
         </View>
-      </Animated.View>
+      </RNAnimated.View>
     </Pressable>
   );
 };
 
+const VisitorsItemMemo = memo(VisitorsItem);
+
+const RenderItem = ({ item }: { item: string }) => {
+  return <VisitorsItemMemo itemKey={item} />
+};
+
+const keyExtractor = (id: string) => id;
+
 const VisitorsTab = () => {
+  const { appTheme } = useAppTheme();
   const {
     onLayout,
     onContentSizeChange,
@@ -264,9 +347,24 @@ const VisitorsTab = () => {
 
   const [sectionIndex, setSectionIndex] = useState(0);
 
-  const listRef = useRef<any>(undefined);
-
+  // Load visitors on mount/focus
+  useEffect(() => { fetchVisitors(); }, []);
   useFocusEffect(markVisitorsChecked);
+
+  const itemKeys = useVisitorItemKeys(sectionIndex);
+
+  const emptyText = sectionIndex === 0 ? (
+    "Nobody’s visited yet. Try answering more Q&A questions or " +
+    "updating your profile."
+  ) : (
+    "You haven’t visited anybody lately"
+  );
+
+  const endText = sectionIndex === 0 ? (
+    "That’s everybody who’s visited you for now"
+  ) : (
+    "That’s everybody you’ve visited recently"
+  );
 
   return (
     <SafeAreaView style={styles.safeAreaView}>
@@ -280,52 +378,50 @@ const VisitorsTab = () => {
           Visitors
         </DefaultText>
       </TopNavBar>
-      <DefaultList
-        ref={listRef}
-        innerRef={observeListRef}
-        emptyText={
-          sectionIndex === 0 ? (
-            "Nobody’s visited yet. Try answering more Q&A questions or " +
-            "updating your profile."
-          ) : (
-            "You haven’t visited anybody lately"
-          )
-        }
-        errorText={"Something went wrong while fetching visitors\xa0😵‍💫"}
-        endText={
-          sectionIndex === 0 ? (
-            "That’s everybody who’s visited you for now"
-          ) : (
-            "That’s everybody you’ve visited recently"
-          )
-        }
-        fetchPage={sectionIndex === 0 ? fetchVisitedYou : fetchYouVisited}
-        dataKey={String(sectionIndex)}
-        contentContainerStyle={styles.listContentContainerStyle}
-        renderItem={({ item }: { item: DataItem }) =>
-          <VisitorsItem dataItem={item} />
-        }
-        keyExtractor={(item: DataItem) => item.person_uuid}
-        onLayout={onLayout}
-        onContentSizeChange={onContentSizeChange}
-        onScroll={onScroll}
-        showsVerticalScrollIndicator={showsVerticalScrollIndicator}
-        ListHeaderComponent={
-          <ButtonGroup
-            buttons={[
-              'Visited You',
-              'You Visited',
-            ]}
-            selectedIndex={sectionIndex}
-            onPress={setSectionIndex}
-            containerStyle={{
-              marginTop: 5,
-              marginLeft: 20,
-              marginRight: 20,
-            }}
+      {itemKeys === null &&
+        <View style={{height: '100%', justifyContent: 'center', alignItems: 'center'}}>
+          <ActivityIndicator size="large" color={appTheme.brandColor} />
+        </View>
+      }
+      {itemKeys !== null &&
+        <View style={styles.flatListContainer} onLayout={onLayout}>
+          <Animated.FlatList<string>
+            ref={observeListRef}
+            data={itemKeys}
+            ListHeaderComponent={
+              <ButtonGroup
+                buttons={[
+                  'Visited You',
+                  'You Visited',
+                ]}
+                selectedIndex={sectionIndex}
+                onPress={setSectionIndex}
+                containerStyle={{
+                  marginTop: 5,
+                  marginLeft: 20,
+                  marginRight: 20,
+                }}
+              />
+            }
+            ListEmptyComponent={
+              <DefaultText style={styles.emptyText}>
+                {emptyText}
+              </DefaultText>
+            }
+            ListFooterComponent={
+              itemKeys.length > 0 ?
+                <DefaultText style={styles.endText}>{endText}</DefaultText> :
+                null
+            }
+            renderItem={RenderItem}
+            keyExtractor={keyExtractor}
+            onContentSizeChange={onContentSizeChange}
+            onScroll={onScroll}
+            showsVerticalScrollIndicator={showsVerticalScrollIndicator}
+            contentContainerStyle={styles.listContentContainerStyle}
           />
-        }
-      />
+        </View>
+      }
     </SafeAreaView>
   );
 };
@@ -355,6 +451,24 @@ const styles = StyleSheet.create({
     marginTop: 20,
     width: '100%',
   },
+  flatListContainer: {
+    flex: 1,
+  },
+  emptyText: {
+    fontFamily: 'Trueno',
+    margin: '20%',
+    textAlign: 'center',
+  },
+  endText: {
+    fontFamily: 'TruenoBold',
+    fontSize: 16,
+    textAlign: 'center',
+    alignSelf: 'center',
+    marginTop: 30,
+    marginBottom: 30,
+    marginLeft: '15%',
+    marginRight: '15%',
+  }
 });
 
 export {
