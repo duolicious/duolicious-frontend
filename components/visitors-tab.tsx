@@ -237,7 +237,7 @@ const useNavigationToProfile = (
 ) => {
   const navigation = useNavigation<any>();
 
-  return useCallback((e) => {
+  const onPress = useCallback((e) => {
     e.preventDefault();
 
     if (verificationRequired) {
@@ -255,6 +255,11 @@ const useNavigationToProfile = (
     }
 
   }, [personUuid, photoBlurhash, verificationRequired]);
+
+  return {
+    onPress,
+    href: verificationRequired ? undefined : `/profile/${personUuid}`
+  };
 };
 
 const VisitorsItem = ({ itemKey }: { itemKey: string }) => {
@@ -263,7 +268,7 @@ const VisitorsItem = ({ itemKey }: { itemKey: string }) => {
 
   const { isSkipped } = useSkipped(dataItem.person_uuid);
   const { backgroundColor, onPressIn, onPressOut } = usePressableAnimation();
-  const onPress = useNavigationToProfile(
+  const navigationProps = useNavigationToProfile(
     dataItem.person_uuid,
     dataItem.photo_blurhash,
     dataItem.verification_required_to_view !== null,
@@ -278,7 +283,7 @@ const VisitorsItem = ({ itemKey }: { itemKey: string }) => {
       style={styles.pressableStyle}
       onPressIn={onPressIn}
       onPressOut={onPressOut}
-      onPress={onPress}
+      {...navigationProps}
     >
       <RNAnimated.View style={[styles.cardBorders, appTheme.card, { backgroundColor }]}>
         <Avatar
@@ -288,7 +293,7 @@ const VisitorsItem = ({ itemKey }: { itemKey: string }) => {
           photoBlurhash={dataItem.photo_blurhash}
           verificationRequired={dataItem.verification_required_to_view}
         />
-        <View style={{ flexShrink: 1 }} >
+        <View style={{ flexShrink: 1, gap: 2 }} >
           <View
             style={{
               width: '100%',
