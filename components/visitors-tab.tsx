@@ -29,7 +29,7 @@ import { ButtonGroup } from './button-group';
 // TODO: Upon loading the app, it should show the number of new visitors since
 //       last checked
 // TODO: Endpoint: /visitors
-// TODO: Endpoint: /mark-visitors-checked
+// TODO: Endpoint: /mark-visitors-checked - should update store
 // TODO: Add to mobile and web nav bars
 // TODO: Include "Today" at the top of the list
 // TODO: Add the refresh button back in?
@@ -47,6 +47,11 @@ const DataItemSchema = z.object({
   location: z.string().nullable(),
   is_verified: z.boolean(),
   match_percentage: z.number(),
+  verification_required_to_view: z.union([
+    z.literal('photos'),
+    z.literal('basics'),
+    z.null(),
+  ]),
   is_new: z.boolean(),
 });
 
@@ -134,7 +139,7 @@ const fetchYouVisited = async (pageNumber: number = 1): Promise<DataItem[] | nul
 };
 
 const markVisitorsChecked = () => {
-  japi('get', '/mark-visitors-checked');
+  // japi('post', '/mark-visitors-checked');
 }
 
 const useNavigationToProfile = (
@@ -154,7 +159,7 @@ const useNavigationToProfile = (
   }, [personUuid, photoBlurhash]);
 };
 
-const FeedItem = ({ dataItem }: { dataItem: DataItem }) => {
+const VisitorsItem = ({ dataItem }: { dataItem: DataItem }) => {
   const { appTheme } = useAppTheme();
   const { isSkipped } = useSkipped(dataItem.person_uuid);
   const { backgroundColor, onPressIn, onPressOut } = usePressableAnimation();
@@ -169,39 +174,40 @@ const FeedItem = ({ dataItem }: { dataItem: DataItem }) => {
 
   return (
     <Pressable
+      style={styles.pressableStyle}
       onPressIn={onPressIn}
       onPressOut={onPressOut}
       onPress={onPress}
-     >
-       <Animated.View style={[styles.cardBorders, appTheme.card, { backgroundColor }]}>
-         <Avatar
-           percentage={dataItem.match_percentage}
-           personUuid={dataItem.person_uuid}
-           photoUuid={dataItem.photo_uuid}
-           photoBlurhash={dataItem.photo_blurhash}
-         />
-         <View>
-           <View
-             style={{
-               width: '100%',
-               flexDirection: 'row',
-               gap: 5,
-               alignItems: 'center',
-             }}
-           >
-             <DefaultText
-               style={{
-                 fontWeight: '700',
-                 flexShrink: 1,
-               }}
-             >
-               {dataItem.name}
-             </DefaultText>
-             {dataItem.is_verified &&
-               <VerificationBadge size={14} />
-             }
-           </View>
-          <DefaultText>
+    >
+      <Animated.View style={[styles.cardBorders, appTheme.card, { backgroundColor }]}>
+        <Avatar
+          percentage={dataItem.match_percentage}
+          personUuid={dataItem.person_uuid}
+          photoUuid={dataItem.photo_uuid}
+          photoBlurhash={dataItem.photo_blurhash}
+        />
+        <View style={{ flexShrink: 1 }} >
+          <View
+            style={{
+              width: '100%',
+              flexDirection: 'row',
+              gap: 5,
+              alignItems: 'center',
+            }}
+          >
+            <DefaultText
+              style={{
+                fontWeight: '700',
+                flexShrink: 1,
+              }}
+            >
+              {dataItem.name}
+            </DefaultText>
+            {dataItem.is_verified &&
+              <VerificationBadge size={14} />
+            }
+          </View>
+          <DefaultText style={{ color: appTheme.hintColor }}>
             {
               [
                 dataItem.age,
@@ -212,28 +218,30 @@ const FeedItem = ({ dataItem }: { dataItem: DataItem }) => {
                 .join(' • ')
             }
           </DefaultText>
-          <DefaultText>
+          <DefaultText style={{ color: appTheme.hintColor }}>
             {friendlyTimestamp(new Date(dataItem.time))}
           </DefaultText>
-         </View>
-         <View
+        </View>
+        <View
           style={{
-            height: 40,
-            aspectRatio: 1,
+            flexGrow: 1,
+            alignItems: 'flex-end',
+            marginRight: 10,
           }}
-         >
+        >
           {dataItem.is_new &&
             <View
               style={{
                 backgroundColor: appTheme.brandColor,
-                height: '50%',
-                aspectRatio: 1,
+                height: 12,
+                width: 12,
+                borderRadius: 999,
               }}
             />
           }
-         </View>
-       </Animated.View>
-     </Pressable>
+        </View>
+      </Animated.View>
+    </Pressable>
   );
 };
 
@@ -288,7 +296,7 @@ const VisitorsTab = () => {
         dataKey={String(sectionIndex)}
         contentContainerStyle={styles.listContentContainerStyle}
         renderItem={({ item }: { item: DataItem }) =>
-          <FeedItem dataItem={item} />
+          <VisitorsItem dataItem={item} />
         }
         keyExtractor={(item: DataItem) => item.person_uuid}
         onLayout={onLayout}
@@ -333,7 +341,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
     padding: 10,
+    alignItems: 'center',
+    width: '100%',
+  },
+  pressableStyle: {
     marginBottom: 20,
+    width: '100%',
   },
 });
 
