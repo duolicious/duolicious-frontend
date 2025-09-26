@@ -37,7 +37,7 @@ const Avatar = ({
   personId?: number
   navigation?: any
   isSkipped?: boolean
-  verificationRequired?: boolean | null
+  verificationRequired?: 'basics' | 'photos' | null
   doUseOnline?: boolean
 }) => {
   const Element = navigation ? Pressable : View;

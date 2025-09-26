@@ -144,19 +144,27 @@ const markVisitorsChecked = () => {
 
 const useNavigationToProfile = (
   personUuid: string,
-  photoBlurhash: string | null
+  photoBlurhash: string | null,
+  verificationRequired: boolean
 ) => {
   const navigation = useNavigation<any>();
 
-  return useCallback(() => {
-    navigation.navigate(
-      'Prospect Profile Screen',
-      {
-        screen: 'Prospect Profile',
-        params: { personUuid, photoBlurhash },
-      }
-    );
-  }, [personUuid, photoBlurhash]);
+  return useCallback((e) => {
+    e.preventDefault();
+
+    if (verificationRequired) {
+      return navigation.navigate('Profile');
+    } else if (personUuid) {
+      return navigation.navigate(
+        'Prospect Profile Screen',
+        {
+          screen: 'Prospect Profile',
+          params: { personUuid, photoBlurhash },
+        }
+      );
+    }
+
+  }, [personUuid, photoBlurhash, verificationRequired]);
 };
 
 const VisitorsItem = ({ dataItem }: { dataItem: DataItem }) => {
@@ -166,6 +174,7 @@ const VisitorsItem = ({ dataItem }: { dataItem: DataItem }) => {
   const onPress = useNavigationToProfile(
     dataItem.person_uuid,
     dataItem.photo_blurhash,
+    dataItem.verification_required_to_view !== null,
   );
 
   if (isSkipped) {
@@ -185,6 +194,7 @@ const VisitorsItem = ({ dataItem }: { dataItem: DataItem }) => {
           personUuid={dataItem.person_uuid}
           photoUuid={dataItem.photo_uuid}
           photoBlurhash={dataItem.photo_blurhash}
+          verificationRequired={dataItem.verification_required_to_view}
         />
         <View style={{ flexShrink: 1 }} >
           <View
