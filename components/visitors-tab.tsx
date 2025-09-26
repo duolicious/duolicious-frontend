@@ -11,7 +11,7 @@ import { DefaultText } from './default-text';
 import { TopNavBar } from './top-nav-bar';
 import { useScrollbar } from './navigation/scroll-bar-hooks';
 import { Avatar } from './avatar';
-import { friendlyTimestamp } from '../util/util';
+import { longFriendlyTimestamp } from '../util/util';
 import { commonStyles } from '../styles';
 import { VerificationBadge } from './verification-badge';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -25,16 +25,11 @@ import * as _ from 'lodash';
 import { z } from 'zod';
 import { listen, notify, lastEvent } from '../events/events';
 
-
-
-// TODO: Upon loading the app, it should show the number of new visitors since
-//       last checked
-// TODO: Endpoint: /visitors
-// TODO: Endpoint: /mark-visitors-checked - should update store
 // TODO: Include "Today" at the top of the list
+// TODO: Periodically update visitors. This is important for users who leave the
+//       app open for long periods
 
 // Event keys
-const EVENT_VISITORS = 'visitors';
 const EVENT_NUM_VISITORS = 'num-visitors';
 
 // Keep public setter for badge count
@@ -47,7 +42,14 @@ const useNumVisitors = () => {
   const [numVisitors, setNumVisitors_] = useState(initialNumVisitors);
 
   useEffect(() => {
-    listen<number>(EVENT_NUM_VISITORS, x => { if(x) setNumVisitors_(x); });
+    listen<number>(
+      EVENT_NUM_VISITORS,
+      (x) => {
+        if(x !== undefined) {
+          setNumVisitors_(x);
+        }
+      }
+    );
   }, []);
 
   return numVisitors;
@@ -90,94 +92,83 @@ const isValidData = (item: unknown): item is Data => {
   return result.success;
 };
 
-// Helpers for keys/sections
-
-type SectionKey = 'visited-you' | 'you-visited';
+type SectionKey = 'visited_you' | 'you_visited';
 
 const sectionFromIndex = (sectionIndex: number): SectionKey =>
-  sectionIndex === 0 ? 'visited-you' : 'you-visited';
+  sectionIndex === 0 ? 'visited_you' : 'you_visited';
 
-const makeKey = (section: SectionKey, personUuid: string): string =>
-  `${section}-${personUuid}`;
-
-const parseKey = (key: string): { section: SectionKey, personUuid: string } | null => {
-  if (key.startsWith('visited-you-')) {
-    return { section: 'visited-you', personUuid: key.slice('visited-you-'.length) };
-  } else if (key.startsWith('you-visited-')) {
-    return { section: 'you-visited', personUuid: key.slice('you-visited-'.length) };
-  }
-  return null;
+const setVisitorKeys = (sectionKey: SectionKey, visitorKeys: string[]) => {
+  notify<string[]>(sectionKey, visitorKeys);
 };
 
-const computeKeys = (data: Data | null, section: SectionKey): string[] => {
-  if (!data) return [];
-  const arr = section === 'visited-you' ? data.visited_you : data.you_visited;
-  return arr.map(d => makeKey(section, d.person_uuid));
-};
+const useVisitorKeys = (sectionKey: SectionKey): string[] | null => {
+  const initial = lastEvent<string[]>(sectionKey) ?? null;
 
-// Hook: list of item keys (minimises re-renders by only updating on membership/order changes)
-const useVisitorItemKeys = (sectionIndex: number): string[] | null => {
-  const section = sectionFromIndex(sectionIndex);
-  const initialData = lastEvent<Data | null>(EVENT_VISITORS) ?? null;
-  const initialKeys = initialData ? computeKeys(initialData, section) : null;
-  const [keys, setKeys] = useState<string[] | null>(initialKeys);
+  const [visitorKeys, setVisitorKeys] = useState<string[] | null>(initial);
 
   useEffect(() => {
-    // Recompute immediately for new section based on last known data
-    setKeys(() => computeKeys(lastEvent<Data | null>(EVENT_VISITORS) ?? null, section));
+    return listen<string[]>(
+      sectionKey,
+      (newItem) => {
+        if (!newItem) {
+          return;
+        }
 
-    return listen<Data | null>(
-      EVENT_VISITORS,
-      (newData) => {
-        const newKeys = computeKeys(newData ?? null, section);
-        setKeys((prev) => _.isEqual(prev, newKeys) ? prev : newKeys);
+        setVisitorKeys((prev) => _.isEqual(prev, newItem) ? prev : newItem);
       },
       true,
     );
-  }, [section]);
+  }, [sectionKey]);
 
-  return keys;
+  return visitorKeys;
 };
 
-// Hook: subscribe to a specific item by key
-const getItemByKey = (data: Data | null, key: string): DataItem | null => {
-  if (!data) return null;
-  const parsed = parseKey(key);
-  if (!parsed) return null;
-  const { section, personUuid } = parsed;
-  const list = section === 'visited-you' ? data.visited_you : data.you_visited;
-  return list.find(d => d.person_uuid === personUuid) ?? null;
+const setVisitorDataItem = (key: string, dataItem: DataItem) => {
+  notify<DataItem>(key, dataItem);
 };
 
-const useVisitorItem = (key: string): DataItem => {
-  const initial = getItemByKey(lastEvent<Data | null>(EVENT_VISITORS) ?? null, key);
-  const [item, setItem] = useState<DataItem | null>(initial);
+const useVisitorDataItem = (key: string): DataItem => {
+  const initial = lastEvent<DataItem>(key);
 
-  useEffect(() => {
-    return listen<Data | null>(
-      EVENT_VISITORS,
-      (newData) => {
-        const newItem = getItemByKey(newData ?? null, key);
-        setItem((prev) => _.isEqual(prev, newItem) ? prev : newItem);
-      },
-      true,
-    );
-  }, [key]);
-
-  if (!item) {
+  if (!initial) {
     throw new Error('item key not found');
   }
+
+  const [item, setItem] = useState<DataItem>(initial);
+
+  useEffect(() => {
+    return listen<DataItem>(
+      key,
+      (newItem) => {
+        if (!newItem) {
+          return;
+        }
+
+        setItem((prev) => _.isEqual(prev, newItem) ? prev : newItem);
+      },
+    );
+  }, [key]);
 
   return item;
 };
 
 // Notify updates to the visitors store
-const notifyVisitors = (data: Data) => notify<Data>(EVENT_VISITORS, data);
+const setData = (data: Data) => {
+  for (let dataItem of data.visited_you) {
+    setVisitorDataItem(`visited_you-${dataItem.person_uuid}`, dataItem);
+  }
 
-// TODO: memoize? Otherwise i'll get called each time the user switches between
-//       'you visited' and 'visited you'. Maybe there should be two endpoints
-//
-//        Another strategy is to refresh every minute or so
+  for (let dataItem of data.you_visited) {
+    setVisitorDataItem(`you_visited-${dataItem.person_uuid}`, dataItem);
+  }
+
+  setVisitorKeys('visited_you', data.visited_you.map(d => `visited_you-${d.person_uuid}`));
+
+  setVisitorKeys('you_visited', data.you_visited.map(d => `you_visited-${d.person_uuid}`));
+
+  setNumVisitors(data.visited_you.filter(d => d.is_new).length);
+};
+
 const fetchVisitors = async (): Promise<Data | null> => {
   const response = await japi('get', '/visitors');
 
@@ -189,28 +180,31 @@ const fetchVisitors = async (): Promise<Data | null> => {
     return null;
   }
 
-  // Update badge count and push data to subscribers
-  setNumVisitors(response.json.visited_you.filter(d => d.is_new).length);
-  notifyVisitors(response.json);
+  setData(response.json);
 
   return response.json;
 };
 
+const markVisitorsCheckedAsync = async () => {
+  await japi('post', '/mark-visitors-checked');
+  setNumVisitors(0);
+};
+
 const markVisitorsChecked = () => {
-  // Optimistically update local store to clear "new" indicators
-  const current = lastEvent<Data | null>(EVENT_VISITORS) ?? null;
-  if (current) {
-    const updated: Data = {
-      visited_you: current.visited_you.map(d => ({ ...d, is_new: false })),
-      you_visited: current.you_visited,
-    };
-    notifyVisitors(updated);
-    setNumVisitors(0);
+  markVisitorsCheckedAsync();
+};
+
+const markVisitorChecked = (personUuid: string) => {
+  const key = `visited_you-${personUuid}`;
+
+  const dataItem = lastEvent<DataItem>(key);
+
+  if (!dataItem) {
+    return;
   }
 
-  // Fire-and-forget server update
-  japi('post', '/mark-visitors-checked');
-}
+  setVisitorDataItem(key, { ...dataItem, is_new: false });
+};
 
 const useNavigationToProfile = (
   personUuid: string,
@@ -225,6 +219,8 @@ const useNavigationToProfile = (
     if (verificationRequired) {
       return navigation.navigate('Profile');
     } else if (personUuid) {
+      markVisitorChecked(personUuid);
+
       return navigation.navigate(
         'Prospect Profile Screen',
         {
@@ -238,7 +234,7 @@ const useNavigationToProfile = (
 };
 
 const VisitorsItem = ({ itemKey }: { itemKey: string }) => {
-  const dataItem = useVisitorItem(itemKey);
+  const dataItem = useVisitorDataItem(itemKey);
   const { appTheme } = useAppTheme();
 
   const { isSkipped } = useSkipped(dataItem.person_uuid);
@@ -294,14 +290,18 @@ const VisitorsItem = ({ itemKey }: { itemKey: string }) => {
               [
                 dataItem.age,
                 dataItem.gender,
-                dataItem.location
               ]
                 .filter(Boolean)
                 .join(' • ')
             }
           </DefaultText>
-          <DefaultText style={{ color: appTheme.hintColor }}>
-            {friendlyTimestamp(new Date(dataItem.time))}
+          {dataItem.location &&
+            <DefaultText style={{ color: appTheme.hintColor }}>
+              {dataItem.location}
+            </DefaultText>
+          }
+          <DefaultText style={{ marginTop: 14, color: appTheme.hintColor }}>
+            {longFriendlyTimestamp(new Date(dataItem.time))}
           </DefaultText>
         </View>
         <View
@@ -351,7 +351,7 @@ const VisitorsTab = () => {
   useEffect(() => { fetchVisitors(); }, []);
   useFocusEffect(markVisitorsChecked);
 
-  const itemKeys = useVisitorItemKeys(sectionIndex);
+  const keys = useVisitorKeys(sectionFromIndex(sectionIndex));
 
   const emptyText = sectionIndex === 0 ? (
     "Nobody’s visited yet. Try answering more Q&A questions or " +
@@ -378,16 +378,16 @@ const VisitorsTab = () => {
           Visitors
         </DefaultText>
       </TopNavBar>
-      {itemKeys === null &&
+      {!keys &&
         <View style={{height: '100%', justifyContent: 'center', alignItems: 'center'}}>
           <ActivityIndicator size="large" color={appTheme.brandColor} />
         </View>
       }
-      {itemKeys !== null &&
+      {!!keys &&
         <View style={styles.flatListContainer} onLayout={onLayout}>
           <Animated.FlatList<string>
             ref={observeListRef}
-            data={itemKeys}
+            data={keys}
             ListHeaderComponent={
               <ButtonGroup
                 buttons={[
@@ -409,7 +409,7 @@ const VisitorsTab = () => {
               </DefaultText>
             }
             ListFooterComponent={
-              itemKeys.length > 0 ?
+              keys.length > 0 ?
                 <DefaultText style={styles.endText}>{endText}</DefaultText> :
                 null
             }
