@@ -110,7 +110,7 @@ const Avatar = ({
               style={{
                 ...StyleSheet.absoluteFillObject,
                 zIndex: 999,
-                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                backgroundColor: `${appTheme.primaryColor}B3`,
               }}
             />
           }
@@ -160,7 +160,7 @@ const Avatar = ({
               style={{
                 ...StyleSheet.absoluteFillObject,
                 zIndex: 999,
-                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                backgroundColor: `${appTheme.primaryColor}B3`,
               }}
             >
             </View>
@@ -201,7 +201,7 @@ const Avatar = ({
           <FontAwesomeIcon
             icon={faLock}
             size={18}
-            style={{color: 'black'}}
+            style={{color: appTheme.secondaryColor }}
           />
           <DefaultText
             style={{
