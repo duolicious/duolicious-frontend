@@ -38,6 +38,7 @@ import { showPointOfSale } from './modal/point-of-sale-modal';
 import { useSignedInUser } from '../events/signed-in-user';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faGhost } from '@fortawesome/free-solid-svg-icons/faGhost';
+import { useTooltip } from './tooltip';
 
 const friendlyTimestamp = (date: Date): string => {
   if (isToday(date)) {
@@ -101,6 +102,7 @@ const DataItemSchema = z.object({
     z.null(),
   ]),
   is_new: z.boolean(),
+  was_invisible: z.boolean(),
 });
 
 const DataSchema = z.object({
@@ -296,6 +298,7 @@ const VisitorsItem = ({ itemKey }: { itemKey: string }) => {
     dataItem.photo_blurhash,
     dataItem.verification_required_to_view !== null,
   );
+  const { viewRef, props } = useTooltip('You visited invisibly', 'left');
 
   const onPressReport = useCallback((event: GestureResponderEvent) => {
     event.preventDefault();
@@ -384,6 +387,18 @@ const VisitorsItem = ({ itemKey }: { itemKey: string }) => {
                 borderRadius: 999,
               }}
             />
+          }
+          {dataItem.was_invisible &&
+            <View
+              ref={viewRef}
+              {...props}
+            >
+              <FontAwesomeIcon
+                icon={faGhost}
+                size={22}
+                style={{ color: appTheme.brandColor }}
+              />
+            </View>
           }
         </View>
         <Flag
@@ -491,11 +506,11 @@ const VisitorsTab = () => {
                       marginTop: 10,
                     }}
                   >
-                     <FontAwesomeIcon
-                       icon={faGhost}
-                       size={22}
-                       style={{ color: appTheme.brandColor }}
-                     />
+                    <FontAwesomeIcon
+                      icon={faGhost}
+                      size={22}
+                      style={{ color: appTheme.brandColor }}
+                    />
                     <DefaultText
                       style={{
                         marginLeft: 8,

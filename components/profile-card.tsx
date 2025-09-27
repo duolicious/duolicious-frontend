@@ -320,6 +320,7 @@ const ProfileCard = ({
           bottom: -4,
           right: -4,
         }}
+        tooltipDirection="left"
       />
       {isSkipped && wasPostSkipFiredInThisSession &&
         <View

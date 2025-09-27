@@ -26,6 +26,7 @@ const OnlineIndicator = ({
   borderWidth,
   innerSize,
   style,
+  tooltipDirection,
 }: {
   personUuid: string | null | undefined;
   /** Total diameter, in logical points. */
@@ -36,10 +37,11 @@ const OnlineIndicator = ({
   innerSize?: number;
   /** Extra container styles. */
   style?: object,
+  tooltipDirection?: 'left' | 'right'
 }) => {
   const { appTheme } = useAppTheme();
   const onlineStatus = useOnline(personUuid);
-  const { viewRef, props } = useTooltip(friendlyOnlineStatus(onlineStatus));
+  const { viewRef, props } = useTooltip(friendlyOnlineStatus(onlineStatus), tooltipDirection);
 
   /**
    * Snap all dimensions to the physical pixel‑grid.

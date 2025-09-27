@@ -2025,7 +2025,7 @@ const privacySettingsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
         name="chatbubble"
       />
     ),
-    description: "With this option set to ‘Yes’, people won’t see you anywhere in Duolicious until you message them first.",
+    description: "With this option set to ‘Yes’, people won’t see you in the feed, search, or anywhere else in Duolicious until you message them first.",
     input: {
       buttons: {
         values: yesNo,
