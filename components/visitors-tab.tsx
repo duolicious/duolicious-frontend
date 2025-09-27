@@ -25,7 +25,6 @@ import { z } from 'zod';
 import { listen, notify, lastEvent } from '../events/events';
 import {
   format,
-  isThisWeek,
   isThisYear,
   isToday,
   isYesterday,
@@ -39,6 +38,7 @@ import { useSignedInUser } from '../events/signed-in-user';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faGhost } from '@fortawesome/free-solid-svg-icons/faGhost';
 import { useTooltip } from './tooltip';
+import { happenedInLast7Days } from '../util/util';
 
 const friendlyTimestamp = (date: Date): string => {
   if (isToday(date)) {
@@ -47,7 +47,7 @@ const friendlyTimestamp = (date: Date): string => {
   } else if (isYesterday(date)) {
     // Format as 'hh:mm'
     return 'Yesterday, ' + format(date, 'h:mm aaa')
-  } else if (isThisWeek(date)) {
+  } else if (happenedInLast7Days(date)) {
     // Format as 'eeee' (day of the week)
     return format(date, 'eeee, h:mm aaa')
   } else if (isThisYear(date)) {
@@ -298,7 +298,7 @@ const VisitorsItem = ({ itemKey }: { itemKey: string }) => {
     dataItem.photo_blurhash,
     dataItem.verification_required_to_view !== null,
   );
-  const { viewRef, props } = useTooltip('You visited invisibly');
+  const { viewRef, props } = useTooltip('You were invisible');
 
   const onPressReport = useCallback((event: GestureResponderEvent) => {
     event.preventDefault();
