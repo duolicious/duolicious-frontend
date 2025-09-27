@@ -453,7 +453,7 @@ const VisitorsTab = () => {
     "Nobody’s visited your profile yet. Try answering more Q&A questions or " +
     "updating your profile"
   ) : (
-    "You haven’t visited anybody’s profile lately"
+    "You haven’t visited anybody’s profile recently"
   );
 
   const endText = sectionIndex === 0 ? (

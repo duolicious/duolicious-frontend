@@ -18,6 +18,8 @@ import { faLocationDot } from '@fortawesome/free-solid-svg-icons/faLocationDot'
 import { faImage } from '@fortawesome/free-solid-svg-icons/faImage'
 import { faCalendar } from '@fortawesome/free-solid-svg-icons/faCalendar'
 import { faGhost } from '@fortawesome/free-solid-svg-icons/faGhost'
+import { faChild } from '@fortawesome/free-solid-svg-icons/faChild'
+import { faChildren } from '@fortawesome/free-solid-svg-icons/faChildren'
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { NonNullImageCropperOutput } from '../components/image-cropper';
 import { login, logout } from '../chat/application-layer';
@@ -807,7 +809,13 @@ const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
   },
   {
     title: 'Has Kids',
-    Icon: ({ color = 'black' }) => <Ionicons style={{fontSize: 16, color}} name="people" />,
+    Icon: ({ color = 'black' }) => (
+      <FontAwesomeIcon
+        icon={faChild}
+        size={14}
+        style={{ color }}
+      />
+    ),
     description: 'Do you have kids?',
     input: {
       buttons: {
@@ -822,7 +830,13 @@ const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
   },
   {
     title: 'Wants Kids',
-    Icon: ({ color = 'black' }) => <Ionicons style={{fontSize: 16, color}} name="people" />,
+    Icon: ({ color = 'black' }) => (
+      <FontAwesomeIcon
+        icon={faChildren}
+        size={14}
+        style={{ color }}
+      />
+    ),
     description: 'Do you want kids?',
     input: {
       buttons: {
@@ -1738,7 +1752,13 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
   },
   {
     title: "Has Kids",
-    Icon: ({ color = 'black' }) => <Ionicons style={{fontSize: 16, color}} name="people" />,
+    Icon: ({ color = 'black' }) => (
+      <FontAwesomeIcon
+        icon={faChild}
+        size={14}
+        style={{ color }}
+      />
+    ),
     description: "Do you want search results to include people who had kids?",
     input: {
       checkChips: {
@@ -1769,7 +1789,13 @@ const searchOtherBasicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
   },
   {
     title: "Wants Kids",
-    Icon: ({ color = 'black' }) => <Ionicons style={{fontSize: 16, color}} name="people" />,
+    Icon: ({ color = 'black' }) => (
+      <FontAwesomeIcon
+        icon={faChildren}
+        size={14}
+        style={{ color }}
+      />
+    ),
     description: "Do you want search results to include people who want kids?",
     input: {
       checkChips: {
