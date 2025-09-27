@@ -6,6 +6,7 @@ import { sessionToken, sessionPersonUuid } from '../kv-storage/session-token';
 import { X } from "react-native-feather";
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { faPalette } from '@fortawesome/free-solid-svg-icons/faPalette'
+import { faMoon } from '@fortawesome/free-solid-svg-icons/faMoon'
 import { faRulerVertical } from '@fortawesome/free-solid-svg-icons/faRulerVertical'
 import { faRuler } from '@fortawesome/free-solid-svg-icons/faRuler'
 import { faHandsPraying } from '@fortawesome/free-solid-svg-icons/faHandsPraying'
@@ -16,6 +17,7 @@ import { faPaperPlane } from '@fortawesome/free-solid-svg-icons/faPaperPlane'
 import { faLocationDot } from '@fortawesome/free-solid-svg-icons/faLocationDot'
 import { faImage } from '@fortawesome/free-solid-svg-icons/faImage'
 import { faCalendar } from '@fortawesome/free-solid-svg-icons/faCalendar'
+import { faGhost } from '@fortawesome/free-solid-svg-icons/faGhost'
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { NonNullImageCropperOutput } from '../components/image-cropper';
 import { login, logout } from '../chat/application-layer';
@@ -924,7 +926,7 @@ const appThemePickerOptionGroups: OptionGroup<OptionGroupButtons>[] = [
     title: 'Dark Mode',
     Icon: ({ color = 'black' }) => (
       <FontAwesomeIcon
-        icon={faPalette}
+        icon={faMoon}
         size={14}
         style={{ color }}
       />
@@ -1985,27 +1987,57 @@ const privacySettingsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
     },
   },
   {
-    title: 'Show My Location',
+    title: 'Browse Invisibly',
     Icon: ({ color = 'black' }) => (
       <FontAwesomeIcon
-        icon={faLocationDot}
+        icon={faGhost}
         size={14}
         style={{ color }}
       />
     ),
-    description: "Would you like your location to appear on your profile? Note that if you set this option to ‘No’, other people will still be able to filter your profile by distance when searching.",
+    description: "With this option set to ‘Yes’, people won’t see that you visited their profile.",
     input: {
       buttons: {
         values: yesNo,
-        submit: async function(showMyLocation: string) {
+        submit: async function(browseInvisibly: string) {
           const ok = (
             await japi(
               'patch',
               '/profile-info',
-              { show_my_location: showMyLocation }
+              { browse_invisibly: browseInvisibly }
             )
           ).ok;
-          if (ok) this.currentValue = showMyLocation;
+          if (ok) this.currentValue = browseInvisibly;
+          return ok;
+        },
+      }
+    },
+  },
+  {
+    title: 'Hide Me From Strangers',
+    Icon: ({ color = 'black' }) => (
+      <Ionicons
+        style={{
+          transform: [ { scaleX: -1 } ],
+          fontSize: 16,
+          color,
+        }}
+        name="chatbubble"
+      />
+    ),
+    description: "With this option set to ‘Yes’, people won’t see you anywhere in Duolicious until you message them first.",
+    input: {
+      buttons: {
+        values: yesNo,
+        submit: async function(hideMeFromStrangers: string) {
+          const ok = (
+            await japi(
+              'patch',
+              '/profile-info',
+              { hide_me_from_strangers: hideMeFromStrangers }
+            )
+          ).ok;
+          if (ok) this.currentValue = hideMeFromStrangers;
           return ok;
         },
       }
@@ -2039,30 +2071,27 @@ const privacySettingsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
     },
   },
   {
-    title: 'Hide Me From Strangers',
+    title: 'Show My Location',
     Icon: ({ color = 'black' }) => (
-      <Ionicons
-        style={{
-          transform: [ { scaleX: -1 } ],
-          fontSize: 16,
-          color,
-        }}
-        name="chatbubble"
+      <FontAwesomeIcon
+        icon={faLocationDot}
+        size={14}
+        style={{ color }}
       />
     ),
-    description: "With this option set to ‘Yes’, people won’t see you anywhere in Duolicious until you message them first.",
+    description: "Would you like your location to appear on your profile? Note that if you set this option to ‘No’, other people will still be able to filter your profile by distance when searching.",
     input: {
       buttons: {
         values: yesNo,
-        submit: async function(hideMeFromStrangers: string) {
+        submit: async function(showMyLocation: string) {
           const ok = (
             await japi(
               'patch',
               '/profile-info',
-              { hide_me_from_strangers: hideMeFromStrangers }
+              { show_my_location: showMyLocation }
             )
           ).ok;
-          if (ok) this.currentValue = hideMeFromStrangers;
+          if (ok) this.currentValue = showMyLocation;
           return ok;
         },
       }
