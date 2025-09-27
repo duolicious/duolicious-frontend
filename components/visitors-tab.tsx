@@ -447,7 +447,9 @@ const VisitorsTab = () => {
     }, [])
   );
 
-  const keys = useVisitorKeys(sectionFromIndex(sectionIndex));
+  const section = sectionFromIndex(sectionIndex);
+
+  const keys = useVisitorKeys(section);
 
   const emptyText = sectionIndex === 0 ? (
     "Nobody’s visited your profile yet. Try answering more Q&A questions or " +
@@ -499,7 +501,7 @@ const VisitorsTab = () => {
                     marginRight: 20,
                   }}
                 />
-                {!signedInUser?.hasGold &&
+                {section === 'you_visited' && !signedInUser?.hasGold &&
                   <Notice
                     onPress={() => showPointOfSale('inquiry')}
                     style={{
