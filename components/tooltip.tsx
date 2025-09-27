@@ -6,7 +6,6 @@ import { isMobile } from '../util/util';
 
 type TooltipState = {
   text: string
-  direction: 'left' | 'right'
   measurement: {
     x: number
     y: number
@@ -51,7 +50,7 @@ const Tooltip = ({
 
 const TooltipListener = () => {
   const [state, setState] = useState<TooltipState>(null);
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
 
   useEffect(() => {
     listen<TooltipState>(EVENT_KEY, setState);
@@ -72,6 +71,16 @@ const TooltipListener = () => {
     }
   };
 
+  const horizontalDirection: 'left' | 'right' =
+    state.measurement.pageX > windowWidth / 2
+    ? 'left'
+    : 'right';
+
+  const verticalDirection: 'up' | 'down' =
+    state.measurement.pageY > windowHeight / 2
+    ? 'up'
+    : 'down';
+
   return (
     <View
       style={{
@@ -87,7 +96,7 @@ const TooltipListener = () => {
         style={{
           position: 'absolute',
 
-          ...(state.direction === 'right' ? {
+          ...(horizontalDirection === 'right' ? {
             left: state.measurement.pageX,
             paddingLeft: Math.max(0, state.measurement.width - 4),
           } : {
@@ -95,8 +104,13 @@ const TooltipListener = () => {
             paddingRight: Math.max(0, state.measurement.width - 4),
           }),
 
-          top: state.measurement.pageY,
-          paddingTop: Math.max(0, state.measurement.height - 4),
+          ...(verticalDirection === 'down' ? {
+            top: state.measurement.pageY,
+            paddingTop: Math.max(0, state.measurement.height - 4),
+          } : {
+            bottom: windowHeight - state.measurement.pageY - state.measurement.height,
+            paddingBottom: Math.max(0, state.measurement.height - 4),
+          }),
         }}
       >
         <Tooltip>{state.text}</Tooltip>
@@ -105,14 +119,13 @@ const TooltipListener = () => {
   );
 };
 
-const useTooltip = (text: string, direction: 'left' | 'right' = 'right') => {
+const useTooltip = (text: string) => {
   const viewRef = useRef<View>(null);
 
   const showTooltip = useCallback(() => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
       setTooltip({
         text,
-        direction,
         measurement: {
           x,
           y,

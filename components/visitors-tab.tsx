@@ -298,7 +298,7 @@ const VisitorsItem = ({ itemKey }: { itemKey: string }) => {
     dataItem.photo_blurhash,
     dataItem.verification_required_to_view !== null,
   );
-  const { viewRef, props } = useTooltip('You visited invisibly', 'left');
+  const { viewRef, props } = useTooltip('You visited invisibly');
 
   const onPressReport = useCallback((event: GestureResponderEvent) => {
     event.preventDefault();
@@ -499,7 +499,7 @@ const VisitorsTab = () => {
                     marginRight: 20,
                   }}
                 />
-                {!!signedInUser?.hasGold &&
+                {!signedInUser?.hasGold &&
                   <Notice
                     onPress={() => showPointOfSale('inquiry')}
                     style={{
