@@ -1,7 +1,7 @@
 import * as _ from "lodash";
 import { japi, ApiResponse } from '../api/api';
 import { navigationContainerRef } from '../App';
-import { setSignedInUser } from '../events/signed-in-user';
+import { setSignedInUser, getSignedInUser } from '../events/signed-in-user';
 import { sessionToken, sessionPersonUuid } from '../kv-storage/session-token';
 import { X } from "react-native-feather";
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
@@ -39,6 +39,7 @@ import { showVerificationCamera } from '../components/verification-camera';
 import { notifyUpdatedVerification } from '../verification/verification';
 import { searchQueue } from '../api/queue';
 import { setAppThemeName } from '../app-theme/app-theme';
+import { showPointOfSale } from '../components/modal/point-of-sale-modal';
 
 const noneFontSize = 16;
 
@@ -902,7 +903,7 @@ const basicsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
   },
 ];
 
-const themePickerOptionGroups: OptionGroup<OptionGroupThemePicker>[] = [
+const themePickerOptionGroups: OptionGroup<OptionGroupThemePicker | OptionGroupButtons>[] = [
   {
     title: 'Profile Theme',
     Icon: ({ color = 'black' }) => (
@@ -916,6 +917,12 @@ const themePickerOptionGroups: OptionGroup<OptionGroupThemePicker>[] = [
     input: {
       themePicker: {
         submit: async function (titleColor, bodyColor, backgroundColor) {
+          const { hasGold = false, personId = 0 } = getSignedInUser() ?? {};
+          if (!hasGold && personId >= 305200) {
+            showPointOfSale('blocked');
+            return false;
+          }
+
           const theme = {
             title_color: titleColor,
             body_color: bodyColor,
@@ -932,10 +939,7 @@ const themePickerOptionGroups: OptionGroup<OptionGroupThemePicker>[] = [
         },
       },
     },
-  }
-];
-
-const appThemePickerOptionGroups: OptionGroup<OptionGroupButtons>[] = [
+  },
   {
     title: 'Dark Mode',
     Icon: ({ color = 'black' }) => (
@@ -953,6 +957,12 @@ const appThemePickerOptionGroups: OptionGroup<OptionGroupButtons>[] = [
       buttons: {
         values: offOn,
         submit: async function(input: 'On' | 'Off') {
+          const { hasGold = false, personId = 0 } = getSignedInUser() ?? {};
+          if (!hasGold && personId >= 305200) {
+            showPointOfSale('blocked');
+            return false;
+          }
+
           if (input === 'On') {
             setAppThemeName('dark');
           } else {
@@ -2026,6 +2036,12 @@ const privacySettingsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
       buttons: {
         values: yesNo,
         submit: async function(browseInvisibly: string) {
+          const { hasGold = false, personId = 0 } = getSignedInUser() ?? {};
+          if (!hasGold && personId >= 305200) {
+            showPointOfSale('blocked');
+            return false;
+          }
+
           const ok = (
             await japi(
               'patch',
@@ -2056,6 +2072,12 @@ const privacySettingsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
       buttons: {
         values: yesNo,
         submit: async function(hideMeFromStrangers: string) {
+          const { hasGold = false, personId = 0 } = getSignedInUser() ?? {};
+          if (!hasGold && personId >= 305200) {
+            showPointOfSale('blocked');
+            return false;
+          }
+
           const ok = (
             await japi(
               'patch',
@@ -2083,6 +2105,12 @@ const privacySettingsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
       buttons: {
         values: yesNo,
         submit: async function(showMyAge: string) {
+          const { hasGold = false, personId = 0 } = getSignedInUser() ?? {};
+          if (!hasGold && personId >= 305200) {
+            showPointOfSale('blocked');
+            return false;
+          }
+
           const ok = (
             await japi(
               'patch',
@@ -2110,6 +2138,12 @@ const privacySettingsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
       buttons: {
         values: yesNo,
         submit: async function(showMyLocation: string) {
+          const { hasGold = false, personId = 0 } = getSignedInUser() ?? {};
+          if (!hasGold && personId >= 305200) {
+            showPointOfSale('blocked');
+            return false;
+          }
+
           const ok = (
             await japi(
               'patch',
@@ -2196,6 +2230,5 @@ export {
   searchOtherBasicsOptionGroups,
   searchTwoWayBasicsOptionGroups,
   themePickerOptionGroups,
-  appThemePickerOptionGroups,
   verificationOptionGroups,
 };

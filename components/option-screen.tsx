@@ -91,6 +91,8 @@ import {
 import { notifyUpdatedVerification } from '../verification/verification';
 import { useNavigation } from '@react-navigation/native';
 import { useAppTheme } from '../app-theme/app-theme';
+import { getSignedInUser } from '../events/signed-in-user';
+import { showPointOfSale } from './modal/point-of-sale-modal';
 
 type InputProps<T extends OptionGroupInputs> = {
   input: T,
@@ -1094,6 +1096,12 @@ const ColorPickerButton = ({
   }, []);
 
   const onPress = useCallback(() => {
+    const { hasGold = false, personId = 0 } = getSignedInUser() ?? {};
+    if (!hasGold && personId >= 305200) {
+      showPointOfSale('blocked');
+      return;
+    }
+
     lastSetter.current = setColor;
     notify<ShowColorPickerEvent>('show-color-picker', currentColor);
   }, [setColor, currentColor]);

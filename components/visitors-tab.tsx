@@ -32,8 +32,6 @@ import {
 import { GestureResponderEvent } from 'react-native';
 import { ReportModalInitialData } from './modal/report-modal';
 import { Flag } from "react-native-feather";
-import { Notice } from './notice';
-import { showPointOfSale } from './modal/point-of-sale-modal';
 import { useSignedInUser } from '../events/signed-in-user';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faGhost } from '@fortawesome/free-solid-svg-icons/faGhost';
@@ -533,43 +531,19 @@ const VisitorsTab = () => {
             ref={observeListRef}
             data={keys}
             ListHeaderComponent={
-              <>
-                <ButtonGroup
-                  buttons={[
-                    'Visited You',
-                    'You Visited',
-                  ]}
-                  selectedIndex={sectionIndex}
-                  onPress={setSectionIndex}
-                  containerStyle={{
-                    marginTop: 5,
-                    marginLeft: 20,
-                    marginRight: 20,
-                  }}
-                />
-                {!(signedInUser?.hasGold || (signedInUser?.personId ?? 0) < 305200) &&
-                  <Notice
-                    onPress={() => showPointOfSale('inquiry')}
-                    style={{
-                      marginTop: 10,
-                    }}
-                  >
-                    <FontAwesomeIcon
-                      icon={faGhost}
-                      size={22}
-                      style={{ color: appTheme.brandColor }}
-                    />
-                    <DefaultText
-                      style={{
-                        marginLeft: 8,
-                        color: appTheme.brandColor,
-                      }}
-                    >
-                      Browse invisibly by supporting Duolicious
-                    </DefaultText>
-                  </Notice>
-                }
-              </>
+              <ButtonGroup
+                buttons={[
+                  'Visited You',
+                  'You Visited',
+                ]}
+                selectedIndex={sectionIndex}
+                onPress={setSectionIndex}
+                containerStyle={{
+                  marginTop: 5,
+                  marginLeft: 20,
+                  marginRight: 20,
+                }}
+              />
             }
             ListEmptyComponent={
               <DefaultText style={styles.emptyText}>

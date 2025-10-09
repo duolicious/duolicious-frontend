@@ -37,7 +37,6 @@ import {
   notificationSettingsOptionGroups,
   privacySettingsOptionGroups,
   themePickerOptionGroups,
-  appThemePickerOptionGroups,
   verificationOptionGroups,
 } from '../data/option-groups';
 import { Images } from './images/images';
@@ -474,7 +473,6 @@ const Options = ({ navigation, data }) => {
     _notificationSettingsOptionGroups,
     _privacySettingsOptionGroups,
     _themePickerOptionGroups,
-    _appThemePickerOptionGroups,
   ] = useMemo(
     () => [
       addCurrentValue(basicsOptionGroups),
@@ -482,7 +480,6 @@ const Options = ({ navigation, data }) => {
       addCurrentValue(notificationSettingsOptionGroups),
       addCurrentValue(privacySettingsOptionGroups),
       addCurrentValue(themePickerOptionGroups),
-      addCurrentValue(appThemePickerOptionGroups),
     ],
     [data, appThemeName]
   );
@@ -673,35 +670,20 @@ const Options = ({ navigation, data }) => {
       <InviteEntrypoint navigation={navigation}/>
 
       <Title>Themes</Title>
-      {signedInUser?.hasGold ? (
-        <Button_
-          setting=""
-          optionGroups={_themePickerOptionGroups}
-          showSkipButton={false}
-        />
-      ) : (
-        <ButtonForOption
-          onPress={() => showPointOfSale('blocked')}
-          label={_themePickerOptionGroups.at(0)?.title}
-          icon={_themePickerOptionGroups.at(0)?.Icon}
-          setting=""
-        />
-      )}
-
-      {signedInUser?.hasGold ? (
-        <Button_
-          setting={getCurrentValue(_appThemePickerOptionGroups[0].input)}
-          optionGroups={_appThemePickerOptionGroups}
-          showSkipButton={false}
-        />
-      ) : (
-        <ButtonForOption
-          onPress={() => showPointOfSale('blocked')}
-          label={_appThemePickerOptionGroups.at(0)?.title}
-          icon={_appThemePickerOptionGroups.at(0)?.Icon}
-          setting=""
-        />
-      )}
+      {
+        _themePickerOptionGroups.map((og, i) =>
+          <Button_
+            key={i}
+            setting={
+              og.title === 'Profile Theme'
+                ? ""
+                : getCurrentValue(og.input)
+            }
+            showSkipButton={og.title !== 'Profile Theme'}
+            optionGroups={_themePickerOptionGroups.slice(i)}
+          />
+        )
+      }
 
       <ButtonWithCenteredText
         onPress={() => navigation.navigate(
@@ -747,7 +729,7 @@ const Options = ({ navigation, data }) => {
         )
       }
       <Title>Privacy Settings</Title>
-      {signedInUser?.hasGold || (signedInUser?.personId ?? 0) < 305200 ? (
+      {
         _privacySettingsOptionGroups.map((og, i) =>
           <Button_
             key={i}
@@ -755,24 +737,8 @@ const Options = ({ navigation, data }) => {
             optionGroups={_privacySettingsOptionGroups.slice(i)}
           />
         )
-      ) : (
-        _privacySettingsOptionGroups.map((og, i) => {
-          if (i === 0) {
-            return <Button_
-              key={i}
-              setting={getCurrentValue(og.input)}
-              optionGroups={_privacySettingsOptionGroups.slice(i, i+1)}
-            />
-          } else {
-            return <ButtonForOption
-              onPress={() => showPointOfSale('blocked')}
-              label={og.title}
-              icon={og.Icon}
-              setting={getCurrentValue(og.input)}
-            />
-          }
-        })
-      )}
+      }
+
       <Title>General Settings</Title>
       {
         _generalSettingsOptionGroups.map((og, i) =>
