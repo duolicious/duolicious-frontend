@@ -203,6 +203,7 @@ type OptionGroup<T extends OptionGroupInputs> = {
   input: T,
   scrollView?: boolean,
   buttonLabel?: string,
+  requiresGold?: boolean,
 };
 
 const hasExactKeys = (obj, keys) => {
@@ -914,11 +915,12 @@ const themePickerOptionGroups: OptionGroup<OptionGroupThemePicker | OptionGroupB
       />
     ),
     description: "Customize how your profile appears to other members",
+    requiresGold: true,
     input: {
       themePicker: {
         submit: async function (titleColor, bodyColor, backgroundColor) {
-          const { hasGold = false, personId = 0 } = getSignedInUser() ?? {};
-          if (!hasGold && personId >= 305200) {
+          const { hasGold = false } = getSignedInUser() ?? {};
+          if (!hasGold) {
             showPointOfSale('blocked');
             return false;
           }
@@ -953,12 +955,13 @@ const themePickerOptionGroups: OptionGroup<OptionGroupThemePicker | OptionGroupB
       "Customize your app’s appearance. (Other users’ profile themes might " +
       "appear darker than they intended when you’re in dark mode.)"
     ),
+    requiresGold: true,
     input: {
       buttons: {
         values: offOn,
         submit: async function(input: 'On' | 'Off') {
-          const { hasGold = false, personId = 0 } = getSignedInUser() ?? {};
-          if (!hasGold && personId >= 305200) {
+          const { hasGold = false } = getSignedInUser() ?? {};
+          if (!hasGold) {
             showPointOfSale('blocked');
             return false;
           }
@@ -2032,12 +2035,13 @@ const privacySettingsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
       />
     ),
     description: "With this option set to ‘Yes’, people won’t see that you visited their profile.",
+    requiresGold: true,
     input: {
       buttons: {
         values: yesNo,
         submit: async function(browseInvisibly: string) {
-          const { hasGold = false, personId = 0 } = getSignedInUser() ?? {};
-          if (!hasGold && personId >= 305200) {
+          const { hasGold = false } = getSignedInUser() ?? {};
+          if (!hasGold) {
             showPointOfSale('blocked');
             return false;
           }
@@ -2068,12 +2072,13 @@ const privacySettingsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
       />
     ),
     description: "With this option set to ‘Yes’, people won’t see you in the feed, search, or anywhere else in Duolicious until you message them first.",
+    requiresGold: true,
     input: {
       buttons: {
         values: yesNo,
         submit: async function(hideMeFromStrangers: string) {
-          const { hasGold = false, personId = 0 } = getSignedInUser() ?? {};
-          if (!hasGold && personId >= 305200) {
+          const { hasGold = false } = getSignedInUser() ?? {};
+          if (!hasGold) {
             showPointOfSale('blocked');
             return false;
           }
@@ -2100,13 +2105,14 @@ const privacySettingsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
         style={{ color }}
       />
     ),
+    requiresGold: true,
     description: "Would you like your age to appear on your profile? Note that if you set this option to ‘No’, other people will still be able to filter your profile by age when searching.",
     input: {
       buttons: {
         values: yesNo,
         submit: async function(showMyAge: string) {
-          const { hasGold = false, personId = 0 } = getSignedInUser() ?? {};
-          if (!hasGold && personId >= 305200) {
+          const { hasGold = false } = getSignedInUser() ?? {};
+          if (!hasGold) {
             showPointOfSale('blocked');
             return false;
           }
@@ -2134,12 +2140,13 @@ const privacySettingsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
       />
     ),
     description: "Would you like your location to appear on your profile? Note that if you set this option to ‘No’, other people will still be able to filter your profile by distance when searching.",
+    requiresGold: true,
     input: {
       buttons: {
         values: yesNo,
         submit: async function(showMyLocation: string) {
-          const { hasGold = false, personId = 0 } = getSignedInUser() ?? {};
-          if (!hasGold && personId >= 305200) {
+          const { hasGold = false } = getSignedInUser() ?? {};
+          if (!hasGold) {
             showPointOfSale('blocked');
             return false;
           }

@@ -8,6 +8,9 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { DefaultText } from '../default-text';
 import { useAppTheme } from '../../app-theme/app-theme';
 import { usePressableAnimation } from '../../animation/animation';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
+import { faLock } from '@fortawesome/free-solid-svg-icons/faLock'
+import { useSignedInUser } from '../../events/signed-in-user';
 
 const ButtonForOption = (props) => {
   const {
@@ -38,8 +41,10 @@ const ButtonForOption = (props) => {
 
   const Icon_ = icon ?? (optionGroups ? optionGroups[0]?.Icon : undefined);
   const label_ = label ?? optionGroups[0].title
+  const requiresGold = optionGroups?.at(0)?.requiresGold ?? false;
 
   const { appTheme } = useAppTheme();
+  const [signedInUser] = useSignedInUser();
   const { backgroundColor, onPressIn, onPressOut } = usePressableAnimation();
 
   const onPress_ = useCallback(onPress ?? (() => {
@@ -91,6 +96,16 @@ const ButtonForOption = (props) => {
         >
           {label_}
         </DefaultText>
+        {requiresGold && !signedInUser?.hasGold &&
+          <FontAwesomeIcon
+            icon={faLock}
+            size={12}
+            style={{
+              marginLeft: 6,
+              color: appTheme.secondaryColor
+            }}
+          />
+        }
         <DefaultText
           style={{
             paddingLeft: 20,
