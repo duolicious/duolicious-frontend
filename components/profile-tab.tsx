@@ -210,6 +210,7 @@ const ProfileTab_ = ({navigation}) => {
       notifyUpdatedVerification({ photos: response.json.photo_verification });
 
       notify<string>('updated-name', response.json.name);
+      notify<string>('updated-flair', response.json.flair);
     })();
   }, []);
 
