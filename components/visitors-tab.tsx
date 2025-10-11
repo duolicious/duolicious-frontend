@@ -32,7 +32,6 @@ import {
 import { GestureResponderEvent } from 'react-native';
 import { ReportModalInitialData } from './modal/report-modal';
 import { Flag } from "react-native-feather";
-import { useSignedInUser } from '../events/signed-in-user';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faGhost } from '@fortawesome/free-solid-svg-icons/faGhost';
 import { useTooltip } from './tooltip';
@@ -458,7 +457,6 @@ const keyExtractor = (id: string) => id;
 
 const VisitorsTab = () => {
   const { appTheme } = useAppTheme();
-  const [signedInUser] = useSignedInUser();
   const {
     onLayout,
     onContentSizeChange,

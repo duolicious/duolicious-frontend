@@ -958,7 +958,7 @@ const FirstSlotRow = ({
         style={{
           flex: 2,
           justifyContent: 'center',
-          gap: 5,
+          gap: 8,
         }}
       >
         <DefaultText

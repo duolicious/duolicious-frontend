@@ -196,6 +196,7 @@ const Images_ = ({data}) => {
 
 const ProfileTab_ = ({navigation}) => {
   const { appTheme } = useAppTheme();
+  const [signedInUser] = useSignedInUser();
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
@@ -212,7 +213,7 @@ const ProfileTab_ = ({navigation}) => {
       notify<string>('updated-name', response.json.name);
       notify<string>('updated-flair', response.json.flair);
     })();
-  }, []);
+  }, [signedInUser?.hasGold === true]);
 
   const {
     onLayout,

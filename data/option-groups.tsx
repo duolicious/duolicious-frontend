@@ -1,7 +1,11 @@
 import * as _ from "lodash";
 import { japi, ApiResponse } from '../api/api';
 import { navigationContainerRef } from '../App';
-import { setSignedInUser, getSignedInUser } from '../events/signed-in-user';
+import {
+  getSignedInUser,
+  setSignedInUser,
+  useSignedInUser,
+} from '../events/signed-in-user';
 import { sessionToken, sessionPersonUuid } from '../kv-storage/session-token';
 import { X } from "react-native-feather";
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
@@ -40,20 +44,11 @@ import { notifyUpdatedVerification } from '../verification/verification';
 import { searchQueue } from '../api/queue';
 import { setAppThemeName } from '../app-theme/app-theme';
 import { showPointOfSale } from '../components/modal/point-of-sale-modal';
+import { descriptionStyle } from '../components/option-screen';
 
 const noneFontSize = 16;
 
 const maxDailySelfies = 'eight';
-
-const descriptionStyle = StyleSheet.create({
-  style: {
-    color: '#777',
-    textAlign: 'center',
-    paddingLeft: 20,
-    paddingRight: 20,
-    paddingTop: 10,
-  }
-});
 
 type OptionGroupButtons = {
   buttons: {
@@ -203,7 +198,6 @@ type OptionGroup<T extends OptionGroupInputs> = {
   input: T,
   scrollView?: boolean,
   buttonLabel?: string,
-  requiresGold?: boolean,
 };
 
 const hasExactKeys = (obj, keys) => {
@@ -914,8 +908,17 @@ const themePickerOptionGroups: OptionGroup<OptionGroupThemePicker | OptionGroupB
         style={{ color }}
       />
     ),
-    description: "Customize how your profile appears to other members",
-    requiresGold: true,
+    description: () => {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      const [signedInUser] = useSignedInUser();
+
+      return (
+        <DefaultText style={descriptionStyle.style}>
+          Customize how your profile appears to other members.
+          {!signedInUser?.hasGold && ' Unlock this feature with Gold.'}
+        </DefaultText>
+      )
+    },
     input: {
       themePicker: {
         submit: async function (titleColor, bodyColor, backgroundColor) {
@@ -951,11 +954,18 @@ const themePickerOptionGroups: OptionGroup<OptionGroupThemePicker | OptionGroupB
         style={{ color }}
       />
     ),
-    description: (
-      "Customize your app’s appearance. (Other users’ profile themes might " +
-      "appear darker than they intended when you’re in dark mode.)"
-    ),
-    requiresGold: true,
+    description: () => {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      const [signedInUser] = useSignedInUser();
+
+      return (
+        <DefaultText style={descriptionStyle.style}>
+          Customize your app’s appearance. (Other users’ profile themes might
+          appear darker than they intended when you’re in dark mode.)
+          {!signedInUser?.hasGold && ' Unlock this feature with Gold.'}
+        </DefaultText>
+      )
+    },
     input: {
       buttons: {
         values: offOn,
@@ -2034,8 +2044,18 @@ const privacySettingsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
         style={{ color }}
       />
     ),
-    description: "With this option set to ‘Yes’, people won’t see that you visited their profile.",
-    requiresGold: true,
+    description: () => {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      const [signedInUser] = useSignedInUser();
+
+      return (
+        <DefaultText style={descriptionStyle.style}>
+          With this option set to ‘Yes’, people won’t see that you visited their
+          profile.
+          {!signedInUser?.hasGold && ' Unlock this feature with Gold.'}
+        </DefaultText>
+      )
+    },
     input: {
       buttons: {
         values: yesNo,
@@ -2071,8 +2091,18 @@ const privacySettingsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
         name="chatbubble"
       />
     ),
-    description: "With this option set to ‘Yes’, people won’t see you in the feed, search, or anywhere else in Duolicious until you message them first.",
-    requiresGold: true,
+    description: () => {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      const [signedInUser] = useSignedInUser();
+
+      return (
+        <DefaultText style={descriptionStyle.style}>
+          With this option set to ‘Yes’, people won’t see you in the feed,
+          search, or anywhere else in Duolicious until you message them first.
+          {!signedInUser?.hasGold && ' Unlock this feature with Gold.'}
+        </DefaultText>
+      )
+    },
     input: {
       buttons: {
         values: yesNo,
@@ -2105,8 +2135,19 @@ const privacySettingsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
         style={{ color }}
       />
     ),
-    requiresGold: true,
-    description: "Would you like your age to appear on your profile? Note that if you set this option to ‘No’, other people will still be able to filter your profile by age when searching.",
+    description: () => {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      const [signedInUser] = useSignedInUser();
+
+      return (
+        <DefaultText style={descriptionStyle.style}>
+          Would you like your age to appear on your profile? Note that if you
+          set this option to ‘No’, other people will still be able to filter
+          your profile by age when searching.
+          {!signedInUser?.hasGold && ' Unlock this feature with Gold.'}
+        </DefaultText>
+      )
+    },
     input: {
       buttons: {
         values: yesNo,
@@ -2139,8 +2180,19 @@ const privacySettingsOptionGroups: OptionGroup<OptionGroupInputs>[] = [
         style={{ color }}
       />
     ),
-    description: "Would you like your location to appear on your profile? Note that if you set this option to ‘No’, other people will still be able to filter your profile by distance when searching.",
-    requiresGold: true,
+    description: () => {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      const [signedInUser] = useSignedInUser();
+
+      return (
+        <DefaultText style={descriptionStyle.style}>
+          Would you like your location to appear on your profile? Note that if
+          you set this option to ‘No’, other people will still be able to filter
+          your profile by distance when searching.
+          {!signedInUser?.hasGold && ' Unlock this feature with Gold.'}
+        </DefaultText>
+      )
+    },
     input: {
       buttons: {
         values: yesNo,

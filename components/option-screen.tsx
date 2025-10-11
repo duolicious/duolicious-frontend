@@ -4,6 +4,7 @@ import {
   Pressable,
   SafeAreaView,
   ScrollView,
+  StyleSheet,
   View,
 } from 'react-native';
 import {
@@ -47,7 +48,6 @@ import {
   OptionGroupTextShort,
   OptionGroupThemePicker,
   OptionGroupVerificationChecker,
-  descriptionStyle,
   isOptionGroupButtons,
   isOptionGroupCheckChips,
   isOptionGroupDate,
@@ -93,6 +93,15 @@ import { useNavigation } from '@react-navigation/native';
 import { useAppTheme } from '../app-theme/app-theme';
 import { getSignedInUser } from '../events/signed-in-user';
 import { showPointOfSale } from './modal/point-of-sale-modal';
+
+const descriptionStyle = StyleSheet.create({
+  style: {
+    textAlign: 'center',
+    paddingLeft: 20,
+    paddingRight: 20,
+    paddingTop: 10,
+  }
+});
 
 type InputProps<T extends OptionGroupInputs> = {
   input: T,
@@ -1491,7 +1500,7 @@ const OptionScreen = ({navigation, route}) => {
             disableTheme
             style={{
               ...descriptionStyle.style,
-              color: color ?? descriptionStyle.style.color
+              ...(color ? { color } : { }),
             }}
           >
             {Description}
@@ -1597,4 +1606,5 @@ const OptionScreen = ({navigation, route}) => {
 export {
   OptionScreen,
   noneFontSize,
+  descriptionStyle,
 };
