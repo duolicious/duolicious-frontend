@@ -76,6 +76,9 @@ const api = async (
       {
         method: method.toUpperCase(),
         cache: 'no-store',
+        // Ensure cookies (including the Adsense auth cookie) are sent and
+        // accepted for cross-origin API requests.
+        credentials: 'include' as RequestCredentials,
       },
       (
         existingSessionToken ? {
