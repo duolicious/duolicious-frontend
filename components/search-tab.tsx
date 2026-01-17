@@ -553,10 +553,13 @@ const SearchScreen_ = ({navigation}) => {
     refresh && refresh();
   }, []);
 
+  useEffect(() => {
+    return listen('search-refresh-requested', onPressRefresh);
+  }, [onPressRefresh]);
+
   const onPressOptions = useCallback(() => {
     navigation.navigate('Search Filter Screen', {
       screen: 'Search Filter Tab',
-      params: { onPressRefresh },
     });
   }, [selectedClub]);
 

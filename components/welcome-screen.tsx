@@ -29,6 +29,7 @@ import { otpDestination } from '../App';
 import { useSignedInUser } from '../events/signed-in-user';
 import { joinClub } from '../club/club';
 import { isMobile } from '../util/util';
+import { setOptionScreenPayload } from '../navigation/option-screen-store';
 
 const activeMembersText = (
   numActiveMembers: number,
@@ -115,6 +116,11 @@ const Stack = createNativeStackNavigator();
 const WelcomeScreen = () => {
   const { width: windowWidth } = useWindowDimensions();
 
+  // Note: the "logged-in user lands on Welcome" redirect is handled centrally
+  // by App.tsx's post-login effect (which runs on `signedInUser` changes and
+  // also covers the deep-link-then-sign-in case). Doing it here too would
+  // race with that effect.
+
   return (
     <View
       style={{
@@ -195,10 +201,6 @@ const InviteScreen = ({navigation, route}) => {
       await joinClub(clubName, numUsers ?? 0, true);
 
       setLoading(false);
-
-      if (Platform.OS === 'web') {
-        history.pushState((history?.state ?? 0) + 1, "", "/#");
-      }
 
       navigation.reset({
         routes: [
@@ -451,22 +453,15 @@ const WelcomeScreen_ = ({navigation, route}) => {
     if (response.ok) {
       await sessionToken(response.json.session_token);
 
-      if (Platform.OS === 'web') {
-        history.pushState((history?.state ?? 0) + 1, "", "/#");
-      }
-
-      navigation.navigate(
-        'Create Account Or Sign In Screen',
-        {
-          optionGroups: createAccountOptionGroups,
-          showSkipButton: false,
-          showCloseButton: false,
-          showBackButton: true,
-          buttonBorderWidth: 0,
-          backgroundColor: '#7700ff',
-          color: '#ffffff',
-        },
-      );
+      setOptionScreenPayload('Create Account Or Sign In Screen', {
+        optionGroups: createAccountOptionGroups,
+        showSkipButton: false,
+        showCloseButton: false,
+        showBackButton: true,
+        backgroundColor: '#7700ff',
+        color: '#ffffff',
+      });
+      navigation.navigate('Create Account Or Sign In Screen');
     } else {
       setLoginStatus(
         response.status === 400 ? 'We don’t support that email provider' :
