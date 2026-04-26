@@ -16,6 +16,7 @@ import {
   Fragment,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -704,6 +705,15 @@ const CurriedContent = ({navigationRef, navigation, route}) => {
   const personId = data?.person_id;
   const [notFound, setNotFound] = useState(false);
   useSkipped(personUuid, () => navigation.popToTop());
+
+  // Surface the prospect's name in the browser tab. We prefer the freshly
+  // fetched name but fall back to the optimistic hint while the API is in
+  // flight so the title doesn't briefly read "Duolicious" before snapping
+  // to the name. App.tsx's `documentTitle.formatter` reads `options.title`.
+  const screenTitle = data?.name ?? getProspectHint(personUuid)?.name;
+  useLayoutEffect(() => {
+    navigation.setOptions({ title: screenTitle });
+  }, [navigation, screenTitle]);
 
   const { width } = useWindowDimensions();
 

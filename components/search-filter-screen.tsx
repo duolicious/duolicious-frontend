@@ -137,9 +137,21 @@ const SearchFilterScreen = () => {
         animation: 'slide_from_right',
       }}
     >
-      <Stack.Screen name="Search Filter Tab" component={SearchFilterScreen_} />
-      <Stack.Screen name="Search Filter Option Screen" component={OptionScreen} />
-      <Stack.Screen name="Q&A Filter Screen" component={QandQFilterScreen} />
+      <Stack.Screen
+        name="Search Filter Tab"
+        component={SearchFilterScreen_}
+        options={{ title: 'Search filters' }}
+      />
+      <Stack.Screen
+        name="Search Filter Option Screen"
+        component={OptionScreen}
+        options={{ title: 'Edit search filter' }}
+      />
+      <Stack.Screen
+        name="Q&A Filter Screen"
+        component={QandQFilterScreen}
+        options={{ title: 'Q&A filters' }}
+      />
     </Stack.Navigator>
   );
 };

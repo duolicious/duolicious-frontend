@@ -5,6 +5,7 @@ import {
 import {
   memo,
   useEffect,
+  useLayoutEffect,
   useState,
 } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -300,6 +301,14 @@ const CurredInDepthScreen = ({navigationRef, navigation, route}) => {
     })();
     return () => { cancelled = true; };
   }, [personUuid]);
+
+  // Surface the prospect's name in the browser tab. App.tsx's
+  // `documentTitle.formatter` reads `options.title` from the focused screen.
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: name ? `You + ${name}` : undefined,
+    });
+  }, [navigation, name]);
 
   const [idx1, setIdx1] = useState(0);
   const [idx2, setIdx2] = useState(0);

@@ -99,7 +99,11 @@ const SearchTab = () => {
         presentation: 'card'
       }}
     >
-      <Stack.Screen name="Search Screen" component={SearchScreen_} />
+      <Stack.Screen
+        name="Search Screen"
+        component={SearchScreen_}
+        options={{ title: 'Search' }}
+      />
       <Stack.Screen name="Search Filter Screen" component={SearchFilterScreen} />
     </Stack.Navigator>
   );

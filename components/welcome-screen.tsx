@@ -176,7 +176,11 @@ const WelcomeScreen = () => {
           }}
         >
           <Stack.Screen name="Welcome Screen" component={WelcomeScreen_} />
-          <Stack.Screen name="Create Account Or Sign In Screen" component={OptionScreen} />
+          <Stack.Screen
+            name="Create Account Or Sign In Screen"
+            component={OptionScreen}
+            options={{ title: 'Sign in' }}
+          />
         </Stack.Navigator>
       </View>
     </View>

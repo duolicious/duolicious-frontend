@@ -92,12 +92,12 @@ const HomeTabs = () => {
       }}
       tabBar={props => <TabBar {...props} />}
     >
-      <Tab.Screen name="Q&A" component={QuizTab} />
-      <Tab.Screen name="Search" component={SearchTab} />
-      <Tab.Screen name="Feed" component={FeedTab} />
-      <Tab.Screen name="Inbox" component={InboxTab} />
-      <Tab.Screen name="Visitors" component={VisitorsTab} />
-      <Tab.Screen name="Profile" component={ProfileTab} />
+      <Tab.Screen name="Q&A" component={QuizTab} options={{ title: 'Q&A' }} />
+      <Tab.Screen name="Search" component={SearchTab} options={{ title: 'Search' }} />
+      <Tab.Screen name="Feed" component={FeedTab} options={{ title: 'Feed' }} />
+      <Tab.Screen name="Inbox" component={InboxTab} options={{ title: 'Inbox' }} />
+      <Tab.Screen name="Visitors" component={VisitorsTab} options={{ title: 'Visitors' }} />
+      <Tab.Screen name="Profile" component={ProfileTab} options={{ title: 'Profile' }} />
     </Tab.Navigator>
   );
 };
@@ -262,7 +262,7 @@ const App = () => {
             },
           },
         },
-        'Conversation Screen': `conversation/:personUuid(${UUID_REGEX_SOURCE})`,
+        'Conversation Screen': `chat/:personUuid(${UUID_REGEX_SOURCE})`,
         'Prospect Profile Screen': {
           // NOTE: No `path` here. If we set `path: 'profile'`, it conflicts with
           // the Profile tab's `/profile` route (React Navigation requires unique patterns).
@@ -682,8 +682,18 @@ const App = () => {
                 },
               }}
               documentTitle={{
-                formatter: () =>
-                  (numUnread ? `(${numUnread}) ` : '') + 'Duolicious'
+                // The focused screen can set its own `title` option (e.g. the
+                // prospect profile sets it to the prospect's name once the
+                // API resolves) and we splice it in front of "Duolicious".
+                // Screens that don't set a title fall through to the bare
+                // app name.
+                formatter: (options) => {
+                  const prefix = numUnread ? `(${numUnread}) ` : '';
+                  const screenTitle = options?.title;
+                  return prefix + (
+                    screenTitle ? `${screenTitle} - Duolicious` : 'Duolicious'
+                  );
+                },
               }}
             >
               <Stack.Navigator
@@ -707,7 +717,8 @@ const App = () => {
                   component={ProspectProfileScreen} />
                 <Stack.Screen
                   name="Invite Screen"
-                  component={InviteScreen} />
+                  component={InviteScreen}
+                  options={{ title: 'Invitation' }} />
               </Stack.Navigator>
             </NavigationContainer>
             <TooltipListener/>

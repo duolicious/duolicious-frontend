@@ -40,7 +40,7 @@ import { api } from '../../api/api';
 import { TopNavBarButton } from '../top-nav-bar-button';
 import { RotateCcw, Flag, X } from "react-native-feather";
 import { postSkipped } from '../../hide-and-block/hide-and-block';
-import { delay } from '../../util/util';
+import { delay, possessive } from '../../util/util';
 import { ReportModalInitialData } from '../modal/report-modal';
 import { listen, notify } from '../../events/events';
 import { ImageBackground } from 'expo-image';
@@ -451,7 +451,7 @@ const ConversationScreen = ({navigation, route}) => {
       if (!response.ok) {
         // Hard-deleted prospects 404 here. Mark them unavailable so the
         // "this user is no longer reachable" UI renders on a cold-start
-        // deep-link to `/conversation/<uuid>` (where there's no inbox-item
+        // deep-link to `/chat/<uuid>` (where there's no inbox-item
         // hint to seed `isAvailableUser` from).
         setIsAvailableUser(false);
         setProspectHint(personUuid, { isAvailableUser: false });
@@ -483,6 +483,17 @@ const ConversationScreen = ({navigation, route}) => {
     })();
     return () => { cancelled = true; };
   }, [personUuid]);
+
+  // Surface the other person's name in the browser tab. App.tsx's
+  // `documentTitle.formatter` reads `options.title` from the focused screen
+  // and prepends it to "Duolicious". `name` is already seeded optimistically
+  // from prospect-cache and refined once the API resolves, so we just track
+  // whatever it currently holds.
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: name ? `${possessive(name)} chat` : undefined,
+    });
+  }, [navigation, name]);
 
   // Load & persist draft message for this conversation (after personUuid available)
   const [draft, saveDraft] = useDraftMessage(personUuid);
