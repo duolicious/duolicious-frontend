@@ -22,6 +22,15 @@ import { ButtonWithCenteredText } from './button/centered-text';
 import { createAccountOptionGroups } from '../data/option-groups';
 import { OptionScreen } from './option-screen';
 import { japi } from '../api/api';
+import {
+  isAppleSignInSupported,
+  signInWithApple,
+  useGoogleSignIn,
+} from '../api/social-auth';
+import {
+  applyAuthenticatedResponse,
+  socialAccountOptionGroups,
+} from '../data/option-groups';
 import { sessionToken } from '../kv-storage/session-token';
 import { Logo16 } from './logo';
 import { KeyboardDismissingView } from './keyboard-dismissing-view';
@@ -416,6 +425,8 @@ const InviteScreen = ({navigation, route}) => {
   );
 };
 
+type SocialProvider = 'google' | 'apple';
+
 const WelcomeScreen_ = ({navigation, route}) => {
   const clubName_ = (route.params?.clubName) as string | undefined;
   const [numUsers, setNumUsers] = useState<number | undefined>(route.params?.numUsers);
@@ -423,6 +434,10 @@ const WelcomeScreen_ = ({navigation, route}) => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [loginStatus, setLoginStatus] = useState("")
+  const [socialLoading, setSocialLoading] = useState<SocialProvider | null>(null);
+
+  const googleSignIn = useGoogleSignIn();
+  const showAppleButton = isAppleSignInSupported();
 
   const { height: windowHeight } = useWindowDimensions();
 
@@ -474,6 +489,99 @@ const WelcomeScreen_ = ({navigation, route}) => {
         response.status === 461 ? 'Your account is banned' :
         'We couldn’t connect to Duolicious'
       );
+    }
+  };
+
+  // Handles the post-token half of social sign-in: forwards the
+  // provider's ID token to the backend, stores the returned session
+  // token, and then either resets the nav stack to Home (existing
+  // user) or hands off to the onboarding wizard (new user).
+  const finishSocialSignIn = async (
+    endpoint: '/sign-in-with-google' | '/sign-in-with-apple',
+    body: Record<string, any>,
+  ) => {
+    const response = await japi(
+      'post',
+      endpoint,
+      {
+        ...body,
+        ...(clubName_ && { pending_club_name: clubName_ }),
+      },
+      { timeout: 9999 * 1000 },
+    );
+
+    if (!response.ok) {
+      setLoginStatus(
+        response.status === 401 ? 'Sign-in token couldn’t be verified' :
+        response.status === 429 ? 'You’re doing that too much' :
+        response.status === 460 ? 'Network blocked. Are you using a VPN?' :
+        response.status === 461 ? 'Your account is banned' :
+        'We couldn’t connect to Duolicious'
+      );
+      return;
+    }
+
+    const newSessionToken: string | undefined =
+      response.json?.session_token;
+    if (typeof newSessionToken !== 'string') {
+      setLoginStatus('Server didn’t return a session token');
+      return;
+    }
+    await sessionToken(newSessionToken);
+
+    const needsOnboarding = await applyAuthenticatedResponse(
+      response.json, newSessionToken);
+
+    if (needsOnboarding) {
+      setOptionScreenPayload('Create Account Or Sign In Screen', {
+        optionGroups: socialAccountOptionGroups,
+        showSkipButton: false,
+        showCloseButton: false,
+        showBackButton: true,
+        backgroundColor: '#7700ff',
+        color: '#ffffff',
+      });
+      navigation.navigate('Create Account Or Sign In Screen');
+    }
+  };
+
+  const onPressGoogle = async () => {
+    if (socialLoading || !googleSignIn) return;
+    setLoginStatus("");
+    setSocialLoading('google');
+    try {
+      const result = await googleSignIn.promptForIdToken();
+      if (!result.ok) {
+        if (!result.cancelled) {
+          setLoginStatus(result.reason ?? 'Google sign-in failed');
+        }
+        return;
+      }
+      await finishSocialSignIn(
+        '/sign-in-with-google', { id_token: result.idToken });
+    } finally {
+      setSocialLoading(null);
+    }
+  };
+
+  const onPressApple = async () => {
+    if (socialLoading) return;
+    setLoginStatus("");
+    setSocialLoading('apple');
+    try {
+      const result = await signInWithApple();
+      if (!result.ok) {
+        if (!result.cancelled) {
+          setLoginStatus(result.reason ?? 'Apple sign-in failed');
+        }
+        return;
+      }
+      await finishSocialSignIn(
+        '/sign-in-with-apple',
+        { identity_token: result.identityToken },
+      );
+    } finally {
+      setSocialLoading(null);
     }
   };
 
@@ -589,6 +697,57 @@ const WelcomeScreen_ = ({navigation, route}) => {
           justifyContent: 'flex-start',
           flex: 1,
         }}>
+          {(googleSignIn || showAppleButton) && (
+            <View
+              style={{
+                flexDirection: 'row',
+                gap: 10,
+                marginHorizontal: 20,
+                marginBottom: 6,
+              }}
+            >
+              {googleSignIn && (
+                <ButtonWithCenteredText
+                  onPress={onPressGoogle}
+                  loading={socialLoading === 'google'}
+                  backgroundColor="#ffffff"
+                  textColor="#202124"
+                  containerStyle={{ flex: 1, marginTop: 0, marginBottom: 0 }}
+                  borderColor="#dadce0"
+                  borderWidth={1}
+                  fontSize={15}
+                >
+                  Continue with Google
+                </ButtonWithCenteredText>
+              )}
+              {showAppleButton && (
+                <ButtonWithCenteredText
+                  onPress={onPressApple}
+                  loading={socialLoading === 'apple'}
+                  backgroundColor="#000000"
+                  textColor="#ffffff"
+                  containerStyle={{ flex: 1, marginTop: 0, marginBottom: 0 }}
+                  borderWidth={0}
+                  fontSize={15}
+                >
+                  Continue with Apple
+                </ButtonWithCenteredText>
+              )}
+            </View>
+          )}
+          {(googleSignIn || showAppleButton) && (
+            <DefaultText
+              style={{
+                color: 'white',
+                textAlign: 'center',
+                marginBottom: 6,
+                opacity: 0.85,
+                fontSize: 12,
+              }}
+            >
+              Already use Duolicious? Sign in below with the email you used.
+            </DefaultText>
+          )}
           <DefaultTextInput
             placeholder="Enter your email to begin"
             keyboardType="email-address"

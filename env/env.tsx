@@ -39,3 +39,13 @@ export const NOTIFICATION_ICON_URL = Constants.expoConfig?.extra?.notificationIc
 
 export const NOTIFICATION_SOUND_URL = Constants.expoConfig?.extra?.notificationSoundUrl
   ?? 'https://duolicious.app/assets/desktop-notification.wav';
+
+// OAuth client IDs for Google Sign-In. Each platform gets a different ID
+// from Google Cloud Console; the web ID is also used as the audience the
+// backend verifies against during native flows.
+export const GOOGLE_IOS_CLIENT_ID: string | undefined =
+  Constants.expoConfig?.extra?.googleIosClientId;
+export const GOOGLE_ANDROID_CLIENT_ID: string | undefined =
+  Constants.expoConfig?.extra?.googleAndroidClientId;
+export const GOOGLE_WEB_CLIENT_ID: string | undefined =
+  Constants.expoConfig?.extra?.googleWebClientId;
