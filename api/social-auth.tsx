@@ -31,8 +31,13 @@ export const useGoogleSignIn = (): {
   ready: boolean;
   promptForIdToken: () => Promise<SocialSignInResult>;
 } | null => {
-  const haveAnyClientId =
-    GOOGLE_IOS_CLIENT_ID || GOOGLE_ANDROID_CLIENT_ID || GOOGLE_WEB_CLIENT_ID;
+  // Each platform needs its own OAuth client ID. Checking only "any
+  // client ID is set" would render a non-functional button on platforms
+  // whose ID is missing, so we gate per-platform.
+  const hasClientIdForPlatform =
+    Platform.OS === 'ios' ? !!GOOGLE_IOS_CLIENT_ID :
+    Platform.OS === 'android' ? !!GOOGLE_ANDROID_CLIENT_ID :
+    !!GOOGLE_WEB_CLIENT_ID;
 
   // `useAuthRequest` is a hook so it must be called unconditionally; the
   // returned `request` is null until the discovery doc loads.
@@ -47,40 +52,49 @@ export const useGoogleSignIn = (): {
     scopes: ['openid', 'profile', 'email'],
   });
 
-  // The current `useAuthRequest` resolves `promptAsync()` only with a
-  // shape describing the dismissal — the actual params land on
-  // `response`. We bridge the two with a deferred promise so callers can
-  // `await promptForIdToken()`.
+  // `useAuthRequest` resolves `promptAsync()` with a result object that
+  // describes how the prompt was dismissed; for a successful sign-in the
+  // id_token only lands on the separate `response` state. We bridge the
+  // two with a deferred resolver and dedup so whichever signal arrives
+  // first (the response effect for success, the promptAsync return for
+  // cancel/error) settles the promise.
+  //
+  // Each `promptForIdToken()` call gets its own monotonically-increasing
+  // id; settle() refuses to resolve unless the caller's id matches the
+  // current pending id. That protects against a cross-talk hazard where
+  // a stale `response` (or one re-emitted with the same data) could
+  // settle a *later* prompt with a *prior* prompt's token.
   const pendingResolveRef = useRef<
     ((r: SocialSignInResult) => void) | null
   >(null);
+  const pendingPromptIdRef = useRef<number | null>(null);
+  const promptCounterRef = useRef(0);
+
+  const settle = (id: number, r: SocialSignInResult) => {
+    if (pendingPromptIdRef.current !== id) return;
+    const resolve = pendingResolveRef.current;
+    pendingPromptIdRef.current = null;
+    pendingResolveRef.current = null;
+    if (resolve) resolve(r);
+  };
 
   useEffect(() => {
-    const resolve = pendingResolveRef.current;
-    if (!response || !resolve) return;
+    if (!response) return;
+    // Only handle success here; cancel/error are settled by the
+    // promptAsync return below so we don't double-resolve.
+    if (response.type !== 'success') return;
+    const id = pendingPromptIdRef.current;
+    if (id === null) return;
 
-    if (response.type === 'success') {
-      const idToken = (response.params as Record<string, string>).id_token;
-      if (idToken) {
-        resolve({ ok: true, idToken });
-      } else {
-        resolve({ ok: false, cancelled: false, reason: 'No id_token in response' });
-      }
-    } else if (response.type === 'cancel' || response.type === 'dismiss') {
-      resolve({ ok: false, cancelled: true });
+    const idToken = (response.params as Record<string, string>).id_token;
+    if (idToken) {
+      settle(id, { ok: true, idToken });
     } else {
-      // 'error' | 'locked' | 'opened' — treat as failure with a reason
-      const errorReason =
-        response.type === 'error'
-          ? (response.error?.message ?? 'Google sign-in error')
-          : `Google sign-in ${response.type}`;
-      resolve({ ok: false, cancelled: false, reason: errorReason });
+      settle(id, { ok: false, cancelled: false, reason: 'No id_token in response' });
     }
-
-    pendingResolveRef.current = null;
   }, [response]);
 
-  if (!haveAnyClientId) return null;
+  if (!hasClientIdForPlatform) return null;
 
   const promptForIdToken = (): Promise<SocialSignInResult> => {
     if (!request) {
@@ -91,15 +105,30 @@ export const useGoogleSignIn = (): {
       });
     }
     return new Promise<SocialSignInResult>((resolve) => {
+      const id = ++promptCounterRef.current;
+      pendingPromptIdRef.current = id;
       pendingResolveRef.current = resolve;
-      promptAsync().catch((err) => {
-        pendingResolveRef.current = null;
-        resolve({
-          ok: false,
-          cancelled: false,
-          reason: (err as Error).message ?? 'Google sign-in failed',
+      promptAsync()
+        .then((result) => {
+          if (result?.type === 'cancel' || result?.type === 'dismiss') {
+            settle(id, { ok: false, cancelled: true });
+          } else if (result?.type === 'error') {
+            settle(id, {
+              ok: false,
+              cancelled: false,
+              reason: result.error?.message ?? 'Google sign-in error',
+            });
+          }
+          // `success` is intentionally left to the response effect so we
+          // wait for the id_token to land on `response.params`.
+        })
+        .catch((err) => {
+          settle(id, {
+            ok: false,
+            cancelled: false,
+            reason: (err as Error).message ?? 'Google sign-in failed',
+          });
         });
-      });
     });
   };
 

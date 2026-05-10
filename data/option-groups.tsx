@@ -2260,8 +2260,10 @@ const verificationOptionGroups: OptionGroup<OptionGroupInputs>[] = [
 // Same wizard as `createAccountOptionGroups`, minus the OTP step. Used by
 // social sign-in: the social endpoint already mints a signed-in session,
 // so the new user goes straight into the onboarding wizard at "Display Name".
+// Filters by input shape rather than by index so a future reorder of
+// `createAccountOptionGroups` can't silently skip the wrong step.
 const socialAccountOptionGroups: OptionGroup<OptionGroupInputs>[] =
-  createAccountOptionGroups.slice(1);
+  createAccountOptionGroups.filter(g => !('otp' in g.input));
 
 export {
   OptionGroup,

@@ -546,7 +546,10 @@ const WelcomeScreen_ = ({navigation, route}) => {
   };
 
   const onPressGoogle = async () => {
-    if (socialLoading || !googleSignIn) return;
+    // Silently ignore taps before the OAuth request has loaded — the user
+    // would otherwise get a confusing "Google sign-in not ready" toast for
+    // a state that resolves on its own within milliseconds.
+    if (socialLoading || !googleSignIn?.ready) return;
     setLoginStatus("");
     setSocialLoading('google');
     try {
