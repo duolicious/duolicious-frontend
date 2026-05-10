@@ -39,6 +39,9 @@ const config: ExpoConfig = {
     googleIosClientId: process.env.DUO_GOOGLE_IOS_CLIENT_ID,
     googleAndroidClientId: process.env.DUO_GOOGLE_ANDROID_CLIENT_ID,
     googleWebClientId: process.env.DUO_GOOGLE_WEB_CLIENT_ID,
+    appleWebClientId: process.env.DUO_APPLE_WEB_CLIENT_ID,
+    appleRedirectUri: process.env.DUO_APPLE_REDIRECT_URI,
+    appleAndroidReturnUrl: process.env.DUO_APPLE_ANDROID_RETURN_URL,
   },
   web: {
     favicon: "./assets/favicon.png"

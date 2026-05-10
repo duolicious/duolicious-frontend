@@ -23,6 +23,7 @@ import { createAccountOptionGroups } from '../data/option-groups';
 import { OptionScreen } from './option-screen';
 import { japi } from '../api/api';
 import {
+  consumeAppleWebReturn,
   isAppleSignInSupported,
   signInWithApple,
   useGoogleSignIn,
@@ -574,7 +575,11 @@ const WelcomeScreen_ = ({navigation, route}) => {
     try {
       const result = await signInWithApple();
       if (!result.ok) {
-        if (!result.cancelled) {
+        // The web-redirect path returns a never-resolving promise, so
+        // landing here means we're on iOS/Android (or web is
+        // misconfigured). Suppress the cancel-by-user case; surface
+        // anything else as a status message.
+        if (!result.cancelled && !result.redirected) {
           setLoginStatus(result.reason ?? 'Apple sign-in failed');
         }
         return;
@@ -587,6 +592,37 @@ const WelcomeScreen_ = ({navigation, route}) => {
       setSocialLoading(null);
     }
   };
+
+  // Web only: when the user lands back here after the Apple OAuth
+  // redirect, the URL carries `?apple_id_token=...&apple_state=...`.
+  // Pick those up, finish the sign-in, and route the user onward.
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    let cancelled = false;
+    (async () => {
+      const result = await consumeAppleWebReturn();
+      if (!result || cancelled) return;
+      if (!result.ok) {
+        if (!result.cancelled) {
+          setLoginStatus(result.reason ?? 'Apple sign-in failed');
+        }
+        return;
+      }
+      setSocialLoading('apple');
+      try {
+        await finishSocialSignIn(
+          '/sign-in-with-apple',
+          { identity_token: result.identityToken },
+        );
+      } finally {
+        if (!cancelled) setSocialLoading(null);
+      }
+    })();
+    return () => { cancelled = true; };
+    // Run once on mount; finishSocialSignIn closes over `clubName_` and
+    // `navigation`, which are stable for the lifetime of this screen.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const updateNumUsers = async () => {
