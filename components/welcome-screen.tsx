@@ -24,7 +24,6 @@ import { OptionScreen } from './option-screen';
 import { japi } from '../api/api';
 import {
   consumeAppleWebReturn,
-  isAppleSignInSupported,
   signInWithApple,
   useGoogleSignIn,
 } from '../api/social-auth';
@@ -438,7 +437,6 @@ const WelcomeScreen_ = ({navigation, route}) => {
   const [socialLoading, setSocialLoading] = useState<SocialProvider | null>(null);
 
   const googleSignIn = useGoogleSignIn();
-  const showAppleButton = isAppleSignInSupported();
 
   const { height: windowHeight } = useWindowDimensions();
 
@@ -550,7 +548,7 @@ const WelcomeScreen_ = ({navigation, route}) => {
     // Silently ignore taps before the OAuth request has loaded — the user
     // would otherwise get a confusing "Google sign-in not ready" toast for
     // a state that resolves on its own within milliseconds.
-    if (socialLoading || !googleSignIn?.ready) return;
+    if (socialLoading || !googleSignIn.ready) return;
     setLoginStatus("");
     setSocialLoading('google');
     try {
@@ -573,13 +571,11 @@ const WelcomeScreen_ = ({navigation, route}) => {
     setLoginStatus("");
     setSocialLoading('apple');
     try {
+      // On web, signInWithApple() never resolves — the page is
+      // navigating to Apple. iOS/Android resolve normally.
       const result = await signInWithApple();
       if (!result.ok) {
-        // The web-redirect path returns a never-resolving promise, so
-        // landing here means we're on iOS/Android (or web is
-        // misconfigured). Suppress the cancel-by-user case; surface
-        // anything else as a status message.
-        if (!result.cancelled && !result.redirected) {
+        if (!result.cancelled) {
           setLoginStatus(result.reason ?? 'Apple sign-in failed');
         }
         return;
@@ -736,57 +732,49 @@ const WelcomeScreen_ = ({navigation, route}) => {
           justifyContent: 'flex-start',
           flex: 1,
         }}>
-          {(googleSignIn || showAppleButton) && (
-            <View
-              style={{
-                flexDirection: 'row',
-                gap: 10,
-                marginHorizontal: 20,
-                marginBottom: 6,
-              }}
+          <View
+            style={{
+              flexDirection: 'row',
+              gap: 10,
+              marginHorizontal: 20,
+              marginBottom: 6,
+            }}
+          >
+            <ButtonWithCenteredText
+              onPress={onPressGoogle}
+              loading={socialLoading === 'google'}
+              backgroundColor="#ffffff"
+              textColor="#202124"
+              containerStyle={{ flex: 1, marginTop: 0, marginBottom: 0 }}
+              borderColor="#dadce0"
+              borderWidth={1}
+              fontSize={15}
             >
-              {googleSignIn && (
-                <ButtonWithCenteredText
-                  onPress={onPressGoogle}
-                  loading={socialLoading === 'google'}
-                  backgroundColor="#ffffff"
-                  textColor="#202124"
-                  containerStyle={{ flex: 1, marginTop: 0, marginBottom: 0 }}
-                  borderColor="#dadce0"
-                  borderWidth={1}
-                  fontSize={15}
-                >
-                  Continue with Google
-                </ButtonWithCenteredText>
-              )}
-              {showAppleButton && (
-                <ButtonWithCenteredText
-                  onPress={onPressApple}
-                  loading={socialLoading === 'apple'}
-                  backgroundColor="#000000"
-                  textColor="#ffffff"
-                  containerStyle={{ flex: 1, marginTop: 0, marginBottom: 0 }}
-                  borderWidth={0}
-                  fontSize={15}
-                >
-                  Continue with Apple
-                </ButtonWithCenteredText>
-              )}
-            </View>
-          )}
-          {(googleSignIn || showAppleButton) && (
-            <DefaultText
-              style={{
-                color: 'white',
-                textAlign: 'center',
-                marginBottom: 6,
-                opacity: 0.85,
-                fontSize: 12,
-              }}
+              Continue with Google
+            </ButtonWithCenteredText>
+            <ButtonWithCenteredText
+              onPress={onPressApple}
+              loading={socialLoading === 'apple'}
+              backgroundColor="#000000"
+              textColor="#ffffff"
+              containerStyle={{ flex: 1, marginTop: 0, marginBottom: 0 }}
+              borderWidth={0}
+              fontSize={15}
             >
-              Already use Duolicious? Sign in below with the email you used.
-            </DefaultText>
-          )}
+              Continue with Apple
+            </ButtonWithCenteredText>
+          </View>
+          <DefaultText
+            style={{
+              color: 'white',
+              textAlign: 'center',
+              marginBottom: 6,
+              opacity: 0.85,
+              fontSize: 12,
+            }}
+          >
+            Or sign up / sign in with your email below
+          </DefaultText>
           <DefaultTextInput
             placeholder="Enter your email to begin"
             keyboardType="email-address"

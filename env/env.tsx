@@ -43,31 +43,37 @@ export const NOTIFICATION_SOUND_URL = Constants.expoConfig?.extra?.notificationS
 // OAuth client IDs for Google Sign-In. Each platform gets a different ID
 // from Google Cloud Console; the web ID is also used as the audience the
 // backend verifies against during native flows.
-export const GOOGLE_IOS_CLIENT_ID: string | undefined =
-  Constants.expoConfig?.extra?.googleIosClientId;
-export const GOOGLE_ANDROID_CLIENT_ID: string | undefined =
-  Constants.expoConfig?.extra?.googleAndroidClientId;
-export const GOOGLE_WEB_CLIENT_ID: string | undefined =
-  Constants.expoConfig?.extra?.googleWebClientId;
+//
+// All five social-auth env vars below are required at build time. We
+// fall back to '' rather than `undefined` so consumers don't need
+// null-guards — a missing build-time value will surface as a malformed
+// OAuth request from Google/Apple, which is the correct "fail loudly"
+// behavior for a misconfigured build.
+export const GOOGLE_IOS_CLIENT_ID: string =
+  Constants.expoConfig?.extra?.googleIosClientId ?? '';
+export const GOOGLE_ANDROID_CLIENT_ID: string =
+  Constants.expoConfig?.extra?.googleAndroidClientId ?? '';
+export const GOOGLE_WEB_CLIENT_ID: string =
+  Constants.expoConfig?.extra?.googleWebClientId ?? '';
 
 // Apple Services ID (e.g. `app.duolicious.web`) used as `client_id` for
 // the web/Android Sign In with Apple OAuth flow. Distinct from the iOS
 // bundle ID, which the native flow uses automatically; this one has to
 // be registered separately in the Apple Developer portal with a
 // verified domain and a Return URL.
-export const APPLE_WEB_CLIENT_ID: string | undefined =
-  Constants.expoConfig?.extra?.appleWebClientId;
+export const APPLE_WEB_CLIENT_ID: string =
+  Constants.expoConfig?.extra?.appleWebClientId ?? '';
 
 // The Apple `redirect_uri`. Must match the Return URL configured on the
 // Services ID *exactly*. Points at the backend's
 // `/auth/apple/callback`, which 302s the user back to the SPA / native
 // app with the id_token in a query parameter.
-export const APPLE_REDIRECT_URI: string | undefined =
-  Constants.expoConfig?.extra?.appleRedirectUri;
+export const APPLE_REDIRECT_URI: string =
+  Constants.expoConfig?.extra?.appleRedirectUri ?? '';
 
 // The Universal Link / App Link the Android client passes to
 // expo-web-browser as `returnUrl`. The backend's Apple callback 302s
 // the user here once Apple has POSTed the id_token. Must match the
 // backend's `DUO_APPLE_ANDROID_REDIRECT_URL` env var.
-export const APPLE_ANDROID_RETURN_URL: string | undefined =
-  Constants.expoConfig?.extra?.appleAndroidReturnUrl;
+export const APPLE_ANDROID_RETURN_URL: string =
+  Constants.expoConfig?.extra?.appleAndroidReturnUrl ?? '';

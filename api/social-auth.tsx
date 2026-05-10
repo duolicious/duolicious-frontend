@@ -28,24 +28,12 @@ export type SocialSignInResult =
  * async `promptForIdToken()` instead of the request/response/promptAsync
  * tuple. Configures the request to return an `id_token` directly, which
  * is what the backend's `/sign-in-with-google` endpoint expects.
- *
- * Returns `null` if the OAuth client IDs are not configured for the
- * current platform — caller should hide the Google button in that case.
  */
 export const useGoogleSignIn = (): {
   ready: boolean;
   promptForIdToken: () => Promise<SocialSignInResult>;
-} | null => {
-  // Each platform needs its own OAuth client ID. Checking only "any
-  // client ID is set" would render a non-functional button on platforms
-  // whose ID is missing, so we gate per-platform.
-  const hasClientIdForPlatform =
-    Platform.OS === 'ios' ? !!GOOGLE_IOS_CLIENT_ID :
-    Platform.OS === 'android' ? !!GOOGLE_ANDROID_CLIENT_ID :
-    !!GOOGLE_WEB_CLIENT_ID;
-
-  // `useAuthRequest` is a hook so it must be called unconditionally; the
-  // returned `request` is null until the discovery doc loads.
+} => {
+  // The returned `request` is null until the discovery doc loads.
   const [request, response, promptAsync] = Google.useAuthRequest({
     iosClientId: GOOGLE_IOS_CLIENT_ID,
     androidClientId: GOOGLE_ANDROID_CLIENT_ID,
@@ -99,8 +87,6 @@ export const useGoogleSignIn = (): {
     }
   }, [response]);
 
-  if (!hasClientIdForPlatform) return null;
-
   const promptForIdToken = (): Promise<SocialSignInResult> => {
     if (!request) {
       return Promise.resolve({
@@ -145,35 +131,7 @@ export const useGoogleSignIn = (): {
 
 export type AppleSignInResult =
   | { ok: true; identityToken: string }
-  // `redirected` is set on web's full-page-redirect path. The promise
-  // never actually resolves there — the caller should bail out, and
-  // the welcome screen picks up the result from the URL on remount via
-  // `consumeAppleWebReturn()`.
-  | { ok: false; cancelled: boolean; reason?: string; redirected?: boolean };
-
-/**
- * Sign In with Apple across iOS, Android, and web.
- *
- * - iOS uses the native ASAuthorizationAppleIDProvider via
- *   `expo-apple-authentication`. The token's `aud` is the iOS bundle ID.
- * - Android and web use Apple's OAuth web flow against a Services ID.
- *   Apple POSTs the result to the backend's `/auth/apple/callback`,
- *   which 302s back to the originating client with the id_token in a
- *   query parameter. On Android the in-app browser captures that
- *   redirect; on web it's a full-page navigation.
- *
- * We deliberately don't request the FULL_NAME scope: the user picks
- * their display name in the onboarding wizard, so asking Apple for it
- * is just an extra data ask we don't need.
- */
-export const isAppleSignInSupported = (): boolean => {
-  if (Platform.OS === 'ios') return true;
-  // Web/Android need the Services ID + redirect URI configured at build
-  // time. Without them the OAuth flow can't run, so hide the button.
-  return !!APPLE_WEB_CLIENT_ID && !!APPLE_REDIRECT_URI && (
-    Platform.OS === 'web' || (Platform.OS === 'android' && !!APPLE_ANDROID_RETURN_URL)
-  );
-};
+  | { ok: false; cancelled: boolean; reason?: string };
 
 const _APPLE_AUTHORIZE_URL = 'https://appleid.apple.com/auth/authorize';
 
@@ -202,43 +160,38 @@ const _buildAppleAuthorizeUrl = (params: {
   return u.toString();
 };
 
+/**
+ * Sign In with Apple across iOS, Android, and web.
+ *
+ * - iOS uses the native ASAuthorizationAppleIDProvider via
+ *   `expo-apple-authentication`. The token's `aud` is the iOS bundle ID.
+ * - Android and web use Apple's OAuth web flow against a Services ID.
+ *   Apple POSTs the result to the backend's `/auth/apple/callback`,
+ *   which 302s back to the originating client with the id_token in a
+ *   query parameter. On Android the in-app browser captures that
+ *   redirect; on web it's a full-page navigation.
+ *
+ * We deliberately don't request the FULL_NAME scope: the user picks
+ * their display name in the onboarding wizard, so asking Apple for it
+ * is just an extra data ask we don't need.
+ */
 export const signInWithApple = async (): Promise<AppleSignInResult> => {
-  if (Platform.OS === 'ios') {
-    return signInWithAppleNative();
-  }
-  if (Platform.OS === 'android') {
-    return signInWithAppleAndroid();
-  }
-  if (Platform.OS === 'web') {
-    return signInWithAppleWeb();
-  }
-  return { ok: false, cancelled: false, reason: 'Apple sign-in unsupported on this platform' };
+  if (Platform.OS === 'ios') return signInWithAppleNative();
+  if (Platform.OS === 'android') return signInWithAppleAndroid();
+  return signInWithAppleWeb();
 };
 
 const signInWithAppleNative = async (): Promise<AppleSignInResult> => {
   try {
-    const isAvailable = await AppleAuthentication.isAvailableAsync();
-    if (!isAvailable) {
-      return {
-        ok: false,
-        cancelled: false,
-        reason: 'Sign In with Apple is unavailable on this device',
-      };
-    }
-
     const credential = await AppleAuthentication.signInAsync({
       requestedScopes: [
         AppleAuthentication.AppleAuthenticationScope.EMAIL,
       ],
     });
 
-    if (!credential.identityToken) {
-      return { ok: false, cancelled: false, reason: 'No identityToken from Apple' };
-    }
-
     return {
       ok: true,
-      identityToken: credential.identityToken,
+      identityToken: credential.identityToken ?? '',
     };
   } catch (e: any) {
     // ERR_REQUEST_CANCELED is the documented code for the user dismissing
@@ -251,10 +204,6 @@ const signInWithAppleNative = async (): Promise<AppleSignInResult> => {
 };
 
 const signInWithAppleAndroid = async (): Promise<AppleSignInResult> => {
-  if (!APPLE_WEB_CLIENT_ID || !APPLE_REDIRECT_URI || !APPLE_ANDROID_RETURN_URL) {
-    return { ok: false, cancelled: false, reason: 'Apple sign-in not configured' };
-  }
-
   const nonce = await _generateNonce();
   const state = `${nonce}.android`;
   await storeKv('apple_oauth_nonce', nonce);
@@ -297,10 +246,6 @@ const signInWithAppleAndroid = async (): Promise<AppleSignInResult> => {
 };
 
 const signInWithAppleWeb = async (): Promise<AppleSignInResult> => {
-  if (!APPLE_WEB_CLIENT_ID || !APPLE_REDIRECT_URI) {
-    return { ok: false, cancelled: false, reason: 'Apple sign-in not configured' };
-  }
-
   const nonce = await _generateNonce();
   const state = `${nonce}.web`;
   await storeKv('apple_oauth_nonce', nonce);
@@ -314,9 +259,7 @@ const signInWithAppleWeb = async (): Promise<AppleSignInResult> => {
   // Full page redirect; the browser navigates away. The welcome screen
   // calls `consumeAppleWebReturn()` on remount to finish the sign-in.
   // The promise we return is intentionally never resolved.
-  if (typeof window !== 'undefined') {
-    window.location.href = authUrl;
-  }
+  window.location.href = authUrl;
   return new Promise<AppleSignInResult>(() => {});
 };
 
@@ -338,8 +281,6 @@ const _parseQueryParams = (url: string): URLSearchParams => {
  * contains no Apple callback params (the common case on a fresh visit).
  */
 export const consumeAppleWebReturn = async (): Promise<AppleSignInResult | null> => {
-  if (Platform.OS !== 'web' || typeof window === 'undefined') return null;
-
   const params = new URLSearchParams(window.location.search);
   const idToken = params.get('apple_id_token');
   const error = params.get('apple_error');
