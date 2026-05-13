@@ -28,7 +28,6 @@ import { createAccountOptionGroups } from '../data/option-groups';
 import { OptionScreen } from './option-screen';
 import { japi } from '../api/api';
 import {
-  consumeAppleWebReturn,
   signInWithApple,
   useGoogleSignIn,
 } from '../api/social-auth';
@@ -750,39 +749,6 @@ const WelcomeScreen_ = ({navigation, route}) => {
     }
   };
 
-  // Web only: when the user lands back here after the Apple OAuth
-  // redirect, the URL carries `?apple_id_token=...&apple_state=...`.
-  // Pick those up, finish the sign-in, and route the user onward.
-  useEffect(() => {
-    if (Platform.OS !== 'web') return;
-    let cancelled = false;
-    (async () => {
-      const result = await consumeAppleWebReturn();
-      if (!result || cancelled) return;
-      if (!result.ok) {
-        if (!result.cancelled) {
-          setLoginStatus(result.reason ?? 'Apple sign-in failed');
-        }
-        return;
-      }
-      setSocialLoading('apple');
-      try {
-        await finishSocialSignIn({
-          endpoint: '/sign-in-with-apple',
-          body: { identity_token: result.identityToken },
-          clubName: clubName_,
-          navigation,
-          setLoginStatus,
-        });
-      } finally {
-        if (!cancelled) setSocialLoading(null);
-      }
-    })();
-    return () => { cancelled = true; };
-    // Run once on mount.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   return (
     <SafeAreaView
       style={{
@@ -1016,7 +982,7 @@ const EmailScreen_ = ({navigation, route}) => {
               paddingRight: 40,
             }}
           >
-            Email
+            Continue with email
           </DefaultText>
           <DefaultText
             disableTheme
@@ -1025,7 +991,8 @@ const EmailScreen_ = ({navigation, route}) => {
               color: 'white',
             }}
           >
-            We’ll send you a one-time password to confirm it
+            Enter your email address to join or sign in. We’ll send you a
+            one-time password to confirm it.
           </DefaultText>
         </View>
         <View

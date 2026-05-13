@@ -12,12 +12,40 @@ import {
   GOOGLE_IOS_CLIENT_ID,
   GOOGLE_WEB_CLIENT_ID,
 } from '../env/env';
-import { storeKv } from '../kv-storage/kv-storage';
 
 // Required so that the OAuth redirect dismisses the in-app browser
 // session on iOS / Android. Calling this once at module load is the
 // pattern documented by Expo.
 WebBrowser.maybeCompleteAuthSession();
+
+// If we're loaded inside the Apple sign-in popup, forward the OAuth
+// result back to the opener via postMessage and close immediately —
+// before React even tries to render the SPA. The parent's
+// `signInWithAppleWeb()` listens for this message and resolves its
+// pending Promise from it.
+//
+// Identified by `window.name === 'apple-signin'` (the value we pass to
+// `window.open`, which is preserved across the navigation from Apple →
+// backend → SPA). `window.opener` confirms we have a parent to talk to.
+(() => {
+  if (typeof window === 'undefined') return;
+  if (!window.opener || window.name !== 'apple-signin') return;
+
+  const params = new URLSearchParams(window.location.search);
+  const idToken = params.get('apple_id_token');
+  const error = params.get('apple_error');
+  const state = params.get('apple_state');
+  if (!idToken && !error) return;
+
+  try {
+    window.opener.postMessage(
+      { type: 'apple-signin-result', idToken, error, state },
+      window.location.origin,
+    );
+  } finally {
+    window.close();
+  }
+})();
 
 export type SocialSignInResult =
   | { ok: true; idToken: string }
@@ -206,7 +234,6 @@ const signInWithAppleNative = async (): Promise<AppleSignInResult> => {
 const signInWithAppleAndroid = async (): Promise<AppleSignInResult> => {
   const nonce = await _generateNonce();
   const state = `${nonce}.android`;
-  await storeKv('apple_oauth_nonce', nonce);
 
   const authUrl = _buildAppleAuthorizeUrl({
     clientId: APPLE_WEB_CLIENT_ID,
@@ -245,10 +272,15 @@ const signInWithAppleAndroid = async (): Promise<AppleSignInResult> => {
   return { ok: true, identityToken: idToken };
 };
 
+// Open Apple's sign-in in a popup and wait for the popup to postMessage
+// the result back. Mirrors the popup-based UX of
+// `expo-auth-session/providers/google` on web: parent never navigates,
+// popup handles the OAuth dance and closes itself when done. The CSRF
+// nonce stays in this closure — no kv-storage round-trip needed since
+// neither end leaves its window.
 const signInWithAppleWeb = async (): Promise<AppleSignInResult> => {
   const nonce = await _generateNonce();
   const state = `${nonce}.web`;
-  await storeKv('apple_oauth_nonce', nonce);
 
   const authUrl = _buildAppleAuthorizeUrl({
     clientId: APPLE_WEB_CLIENT_ID,
@@ -256,11 +288,61 @@ const signInWithAppleWeb = async (): Promise<AppleSignInResult> => {
     state,
   });
 
-  // Full page redirect; the browser navigates away. The welcome screen
-  // calls `consumeAppleWebReturn()` on remount to finish the sign-in.
-  // The promise we return is intentionally never resolved.
-  window.location.href = authUrl;
-  return new Promise<AppleSignInResult>(() => {});
+  const w = 600;
+  const h = 700;
+  const top = Math.max(0, Math.floor((window.innerHeight - h) / 2 + (window.screenY ?? 0)));
+  const left = Math.max(0, Math.floor((window.innerWidth - w) / 2 + (window.screenX ?? 0)));
+  const popup = window.open(
+    authUrl,
+    'apple-signin',
+    `width=${w},height=${h},top=${top},left=${left},resizable,scrollbars`,
+  );
+
+  if (!popup) {
+    return { ok: false, cancelled: false, reason: 'Apple sign-in popup was blocked' };
+  }
+
+  return new Promise<AppleSignInResult>((resolve) => {
+    let settled = false;
+    const settle = (r: AppleSignInResult) => {
+      if (settled) return;
+      settled = true;
+      window.removeEventListener('message', onMessage);
+      clearInterval(poller);
+      if (!popup.closed) popup.close();
+      resolve(r);
+    };
+
+    const onMessage = (event: MessageEvent) => {
+      // Only trust messages from our own origin (the popup loads the
+      // SPA after the backend's 302, so its origin matches ours).
+      if (event.origin !== window.location.origin) return;
+      const data = event.data;
+      if (!data || data.type !== 'apple-signin-result') return;
+
+      if (data.error) {
+        settle({ ok: false, cancelled: false, reason: `Apple: ${data.error}` });
+        return;
+      }
+      const returnedState = typeof data.state === 'string' ? data.state : '';
+      if (!returnedState.startsWith(`${nonce}.`)) {
+        settle({ ok: false, cancelled: false, reason: 'Apple sign-in: invalid state' });
+        return;
+      }
+      const idToken = data.idToken;
+      if (typeof idToken !== 'string' || !idToken) {
+        settle({ ok: false, cancelled: false, reason: 'Apple sign-in: no id_token in callback' });
+        return;
+      }
+      settle({ ok: true, identityToken: idToken });
+    };
+    window.addEventListener('message', onMessage);
+
+    // Detect the user dismissing the popup before posting a message.
+    const poller = setInterval(() => {
+      if (popup.closed) settle({ ok: false, cancelled: true });
+    }, 500);
+  });
 };
 
 const _parseQueryParams = (url: string): URLSearchParams => {
@@ -272,37 +354,4 @@ const _parseQueryParams = (url: string): URLSearchParams => {
     const q = url.split('?')[1] ?? '';
     return new URLSearchParams(q.split('#')[0]);
   }
-};
-
-/**
- * Web-only. Read an Apple sign-in return from the current URL, verify
- * the CSRF nonce against what we stored before redirecting, and clear
- * both the URL params and the stored nonce. Returns null when the URL
- * contains no Apple callback params (the common case on a fresh visit).
- */
-export const consumeAppleWebReturn = async (): Promise<AppleSignInResult | null> => {
-  const params = new URLSearchParams(window.location.search);
-  const idToken = params.get('apple_id_token');
-  const error = params.get('apple_error');
-  const state = params.get('apple_state') ?? '';
-  if (!idToken && !error) return null;
-
-  // Strip the params from the URL bar before doing anything async, so a
-  // refresh / re-open mid-flow can't replay the token.
-  window.history.replaceState({}, '', window.location.pathname);
-
-  const expectedNonce = await storeKv('apple_oauth_nonce');
-  await storeKv('apple_oauth_nonce', null);
-
-  if (error) {
-    return { ok: false, cancelled: false, reason: `Apple: ${error}` };
-  }
-  if (typeof expectedNonce !== 'string' || !state.startsWith(`${expectedNonce}.`)) {
-    return { ok: false, cancelled: false, reason: 'Apple sign-in: invalid state' };
-  }
-  if (!idToken) {
-    return { ok: false, cancelled: false, reason: 'Apple sign-in: no id_token in callback' };
-  }
-
-  return { ok: true, identityToken: idToken };
 };
