@@ -451,8 +451,6 @@ const PrimaryAuthButton = ({
   icon,
   backgroundColor,
   textColor,
-  borderColor,
-  borderWidth = 0,
   children,
 }: {
   onPress: () => void,
@@ -460,7 +458,6 @@ const PrimaryAuthButton = ({
   icon: React.ReactNode,
   backgroundColor: string,
   textColor: string,
-  borderColor?: string,
   borderWidth?: number,
   children: React.ReactNode,
 }) => (
@@ -469,8 +466,8 @@ const PrimaryAuthButton = ({
     loading={loading}
     backgroundColor={backgroundColor}
     textColor={textColor}
-    borderColor={borderColor}
-    borderWidth={borderWidth}
+    borderColor="#000"
+    borderWidth={1}
     containerStyle={{ marginTop: 0, marginBottom: 10 }}
     fontSize={16}
     textStyle={{ fontWeight: '700' }}
@@ -798,22 +795,18 @@ const WelcomeScreen_ = ({navigation, route}) => {
           <PrimaryAuthButton
             onPress={onPressUseEmail}
             loading={false}
-            icon={<Ionicons name="mail-outline" size={22} color="#202124" />}
+            icon={<Ionicons name="mail-outline" size={22} color="#000000" />}
             backgroundColor="#ffffff"
-            textColor="#202124"
-            borderColor="#dadce0"
-            borderWidth={1}
+            textColor="#000000"
           >
             Use email
           </PrimaryAuthButton>
           <PrimaryAuthButton
             onPress={onPressGoogle}
             loading={socialLoading === 'google'}
-            icon={<Ionicons name="logo-google" size={22} color="#202124" />}
-            backgroundColor="#ffffff"
-            textColor="#202124"
-            borderColor="#dadce0"
-            borderWidth={1}
+            icon={<Ionicons name="logo-google" size={22} color="#ffffff" />}
+            backgroundColor="#000000"
+            textColor="#ffffff"
           >
             Continue with Google
           </PrimaryAuthButton>
