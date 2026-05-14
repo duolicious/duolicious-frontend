@@ -158,7 +158,7 @@ export const useGoogleSignIn = (): {
 };
 
 export type AppleSignInResult =
-  | { ok: true; identityToken: string }
+  | { ok: true; identityToken: string; nonce: string }
   | { ok: false; cancelled: boolean; reason?: string };
 
 const _APPLE_AUTHORIZE_URL = 'https://appleid.apple.com/auth/authorize';
@@ -174,6 +174,7 @@ const _buildAppleAuthorizeUrl = (params: {
   clientId: string;
   redirectUri: string;
   state: string;
+  nonce: string;
 }): string => {
   const u = new URL(_APPLE_AUTHORIZE_URL);
   u.searchParams.set('client_id', params.clientId);
@@ -185,6 +186,10 @@ const _buildAppleAuthorizeUrl = (params: {
   u.searchParams.set('response_mode', 'form_post');
   u.searchParams.set('scope', 'email');
   u.searchParams.set('state', params.state);
+  // Echoed verbatim into the issued JWT's `nonce` claim. The backend
+  // compares this against the value the client passes alongside the
+  // token to bind the JWT to this specific sign-in session.
+  u.searchParams.set('nonce', params.nonce);
   return u.toString();
 };
 
@@ -210,16 +215,22 @@ export const signInWithApple = async (): Promise<AppleSignInResult> => {
 };
 
 const signInWithAppleNative = async (): Promise<AppleSignInResult> => {
+  // Apple echoes this nonce verbatim into the JWT's `nonce` claim. The
+  // backend compares it to the value we send alongside the token to bind
+  // the token to this client session.
+  const nonce = await _generateNonce();
   try {
     const credential = await AppleAuthentication.signInAsync({
       requestedScopes: [
         AppleAuthentication.AppleAuthenticationScope.EMAIL,
       ],
+      nonce,
     });
 
     return {
       ok: true,
       identityToken: credential.identityToken ?? '',
+      nonce,
     };
   } catch (e: any) {
     // ERR_REQUEST_CANCELED is the documented code for the user dismissing
@@ -232,6 +243,9 @@ const signInWithAppleNative = async (): Promise<AppleSignInResult> => {
 };
 
 const signInWithAppleAndroid = async (): Promise<AppleSignInResult> => {
+  // The same random nonce serves two purposes:
+  //   1. Bound CSRF check on the redirect (prefix of `state`).
+  //   2. Bound JWT check on the server (`nonce` URL param → JWT.nonce claim).
   const nonce = await _generateNonce();
   const state = `${nonce}.android`;
 
@@ -239,6 +253,7 @@ const signInWithAppleAndroid = async (): Promise<AppleSignInResult> => {
     clientId: APPLE_WEB_CLIENT_ID,
     redirectUri: APPLE_REDIRECT_URI,
     state,
+    nonce,
   });
 
   let result: WebBrowser.WebBrowserAuthSessionResult;
@@ -269,7 +284,7 @@ const signInWithAppleAndroid = async (): Promise<AppleSignInResult> => {
     return { ok: false, cancelled: false, reason: 'Apple sign-in: invalid state' };
   }
 
-  return { ok: true, identityToken: idToken };
+  return { ok: true, identityToken: idToken, nonce };
 };
 
 // Open Apple's sign-in in a popup and wait for the popup to postMessage
@@ -279,6 +294,8 @@ const signInWithAppleAndroid = async (): Promise<AppleSignInResult> => {
 // nonce stays in this closure — no kv-storage round-trip needed since
 // neither end leaves its window.
 const signInWithAppleWeb = async (): Promise<AppleSignInResult> => {
+  // See `signInWithAppleAndroid` — same nonce binds the redirect-time
+  // CSRF check and the server-side JWT.nonce verification.
   const nonce = await _generateNonce();
   const state = `${nonce}.web`;
 
@@ -286,6 +303,7 @@ const signInWithAppleWeb = async (): Promise<AppleSignInResult> => {
     clientId: APPLE_WEB_CLIENT_ID,
     redirectUri: APPLE_REDIRECT_URI,
     state,
+    nonce,
   });
 
   const w = 600;
@@ -334,7 +352,7 @@ const signInWithAppleWeb = async (): Promise<AppleSignInResult> => {
         settle({ ok: false, cancelled: false, reason: 'Apple sign-in: no id_token in callback' });
         return;
       }
-      settle({ ok: true, identityToken: idToken });
+      settle({ ok: true, identityToken: idToken, nonce });
     };
     window.addEventListener('message', onMessage);
 
