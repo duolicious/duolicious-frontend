@@ -732,6 +732,8 @@ const WelcomeScreen_ = ({navigation, route}) => {
     setLoginStatus("");
     setSocialLoading('apple');
     try {
+      // On web, signInWithApple() never resolves — the page is
+      // navigating to Apple. iOS/Android resolve normally.
       const result = await signInWithApple();
       if (!result.ok && !result.cancelled) {
         setLoginStatus(result.reason ?? 'Apple sign-in failed');
