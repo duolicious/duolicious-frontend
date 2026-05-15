@@ -710,12 +710,11 @@ const WelcomeScreen_ = ({navigation, route}) => {
     setSocialLoading('google');
     try {
       const result = await googleSignIn.promptForIdToken();
-      if (!result.ok) {
-        if (!result.cancelled) {
-          setLoginStatus(result.reason ?? 'Google sign-in failed');
-        }
+      if (!result.ok && !result.cancelled) {
+        setLoginStatus(result.reason ?? 'Google sign-in failed');
         return;
       }
+      if (!result.ok) return;
       await finishSocialSignIn({
         endpoint: '/sign-in-with-google',
         body: { id_token: result.idToken },
@@ -736,12 +735,11 @@ const WelcomeScreen_ = ({navigation, route}) => {
       // On web, signInWithApple() never resolves — the page is
       // navigating to Apple. iOS/Android resolve normally.
       const result = await signInWithApple();
-      if (!result.ok) {
-        if (!result.cancelled) {
-          setLoginStatus(result.reason ?? 'Apple sign-in failed');
-        }
+      if (!result.ok && !result.cancelled) {
+        setLoginStatus(result.reason ?? 'Apple sign-in failed');
         return;
       }
+      if (!result.ok) return;
       await finishSocialSignIn({
         endpoint: '/sign-in-with-apple',
         body: { identity_token: result.identityToken, nonce: result.nonce },

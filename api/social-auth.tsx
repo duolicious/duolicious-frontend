@@ -70,7 +70,7 @@ export const useGoogleSignIn = (): {
     // verifies its signature against Google's JWKS. We don't need an
     // access token (we never call Google APIs on behalf of the user).
     responseType: 'id_token',
-    scopes: ['openid', 'profile', 'email'],
+    scopes: ['openid', 'email'],
   });
 
   // `useAuthRequest` resolves `promptAsync()` with a result object that

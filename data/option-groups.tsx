@@ -1116,20 +1116,11 @@ const applyAuthenticatedResponse = async (
   }
 
   if (navigationContainerRef.current) {
-    if (pendingClub) {
-      navigationContainerRef.reset({
-        routes: [
-          {
-            name: "Home",
-            state: { routes: [ { name: "Search" } ] }
-          }
-        ]
-      });
-    } else {
-      navigationContainerRef.reset({
-        routes: [ { name: 'Home' } ]
-      });
-    }
+    navigationContainerRef.reset({
+      routes: pendingClub
+        ? [ { name: "Home", state: { routes: [ { name: "Search" } ] } } ]
+        : [ { name: 'Home' } ]
+    });
   }
 
   login(personUuid, existingSessionToken);
