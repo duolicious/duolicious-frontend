@@ -318,7 +318,7 @@ const signInWithAppleWeb = async (
   try {
     const pending: _ApplePending = { nonce, context };
     sessionStorage.setItem(_APPLE_PENDING_KEY, JSON.stringify(pending));
-  } catch (e: any) {
+  } catch {
     return {
       ok: false,
       cancelled: false,
