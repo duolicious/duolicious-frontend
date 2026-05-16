@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import * as AuthSession from 'expo-auth-session';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import * as AppleAuthentication from 'expo-apple-authentication';
@@ -43,6 +44,13 @@ export const useGoogleSignIn = (): {
   ready: boolean;
   promptForIdToken: () => Promise<SocialSignInResult>;
 } => {
+  // Google's Android OAuth client type only permits the authorization
+  // code flow — it rejects `response_type=id_token` with
+  // `unsupported_response_type`. iOS and Web clients accept implicit,
+  // so we keep the cheaper one-hop flow there and pay the extra
+  // token-exchange round trip only on Android.
+  const isAndroid = Platform.OS === 'android';
+
   // The returned `request` is null until the discovery doc loads.
   const [request, response, promptAsync] = Google.useAuthRequest({
     iosClientId: GOOGLE_IOS_CLIENT_ID,
@@ -51,7 +59,9 @@ export const useGoogleSignIn = (): {
     // `id_token` flow returns a JWT directly from Google; the backend
     // verifies its signature against Google's JWKS. We don't need an
     // access token (we never call Google APIs on behalf of the user).
-    responseType: 'id_token',
+    // On Android we fall through to the default `code` + PKCE flow and
+    // exchange the code below.
+    ...(isAndroid ? {} : { responseType: 'id_token' as const }),
     scopes: ['openid', 'email'],
   });
 
@@ -89,12 +99,53 @@ export const useGoogleSignIn = (): {
     const id = pendingPromptIdRef.current;
     if (id === null) return;
 
-    const idToken = (response.params as Record<string, string>).id_token;
-    if (idToken) {
-      settle(id, { ok: true, idToken });
-    } else {
-      settle(id, { ok: false, cancelled: false, reason: 'No id_token in response' });
+    const params = response.params as Record<string, string>;
+
+    // iOS / Web: implicit flow lands the id_token directly on params.
+    if (params.id_token) {
+      settle(id, { ok: true, idToken: params.id_token });
+      return;
     }
+
+    // Android: code + PKCE. Exchange against Google's token endpoint.
+    // Android clients have no secret, so PKCE is the only credential.
+    const code = params.code;
+    if (!code || !request) {
+      settle(id, { ok: false, cancelled: false, reason: 'No id_token or code in response' });
+      return;
+    }
+
+    (async () => {
+      try {
+        const tokenResponse = await AuthSession.exchangeCodeAsync(
+          {
+            clientId: GOOGLE_ANDROID_CLIENT_ID,
+            code,
+            redirectUri: request.redirectUri,
+            extraParams: request.codeVerifier
+              ? { code_verifier: request.codeVerifier }
+              : undefined,
+          },
+          { tokenEndpoint: 'https://oauth2.googleapis.com/token' },
+        );
+        const idToken = tokenResponse.idToken;
+        if (idToken) {
+          settle(id, { ok: true, idToken });
+        } else {
+          settle(id, {
+            ok: false,
+            cancelled: false,
+            reason: 'No id_token in token response',
+          });
+        }
+      } catch (e: any) {
+        settle(id, {
+          ok: false,
+          cancelled: false,
+          reason: e?.message ?? 'Token exchange failed',
+        });
+      }
+    })();
   }, [response]);
 
   const promptForIdToken = (): Promise<SocialSignInResult> => {
