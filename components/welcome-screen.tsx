@@ -5,12 +5,11 @@ import {
   Linking,
   Platform,
   Pressable,
-  SafeAreaView,
-  StatusBar,
   Text,
   View,
   useWindowDimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons/faArrowLeft';
 import { descriptionStyle } from './option-styles';
@@ -28,6 +27,7 @@ import { DefaultTextInput } from './default-text-input';
 import { ButtonWithCenteredText } from './button/centered-text';
 import { createAccountOptionGroups } from '../data/option-groups';
 import { OptionScreen } from './option-screen';
+import { StatusBarSpacer } from './status-bar-spacer';
 import { japi } from '../api/api';
 import {
   consumePendingAppleWebSignIn,
@@ -296,7 +296,7 @@ const InviteScreen = ({navigation, route}) => {
       >
         <View
           style={{
-            marginTop: 10 + (Platform.OS === 'web' ? 0 : StatusBar.currentHeight ?? 0),
+            marginTop: 10,
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'center',
@@ -531,7 +531,7 @@ const TermsBlurb = () => (
 const LogoHeader = () => (
   <View
     style={{
-      marginTop: 10 + (Platform.OS === 'web' ? 0 : StatusBar.currentHeight ?? 0),
+      marginTop: 10,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
@@ -1017,6 +1017,7 @@ const EmailScreen_ = ({navigation, route}) => {
   // step and onboarding wizard that follow it.
   return (
     <SafeAreaView
+      edges={['bottom', 'left', 'right']}
       style={{
         backgroundColor: '#7700ff',
         width: '100%',
@@ -1031,10 +1032,11 @@ const EmailScreen_ = ({navigation, route}) => {
           alignSelf: 'center',
         }}
       >
+        <StatusBarSpacer/>
         <View
           style={{
-            marginTop: 10 + (Platform.OS === 'web' ? 0 : StatusBar.currentHeight ?? 0),
             alignItems: 'center',
+            paddingTop: 10,
             paddingBottom: 20,
           }}
         >
