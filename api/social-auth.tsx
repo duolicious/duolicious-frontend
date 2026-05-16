@@ -44,24 +44,21 @@ export const useGoogleSignIn = (): {
   ready: boolean;
   promptForIdToken: () => Promise<SocialSignInResult>;
 } => {
-  // Google's Android OAuth client type only permits the authorization
-  // code flow — it rejects `response_type=id_token` with
-  // `unsupported_response_type`. iOS and Web clients accept implicit,
-  // so we keep the cheaper one-hop flow there and pay the extra
-  // token-exchange round trip only on Android.
-  const isAndroid = Platform.OS === 'android';
+  // Google's native (iOS and Android) OAuth clients only permit the
+  // authorization code flow — they reject `response_type=id_token` with
+  // `unsupported_response_type`. Web clients still accept implicit, so
+  // we keep the one-hop flow there and pay the extra token-exchange
+  // round trip on native.
+  const isNative = Platform.OS !== 'web';
 
   // The returned `request` is null until the discovery doc loads.
   const [request, response, promptAsync] = Google.useAuthRequest({
     iosClientId: GOOGLE_IOS_CLIENT_ID,
     androidClientId: GOOGLE_ANDROID_CLIENT_ID,
     webClientId: GOOGLE_WEB_CLIENT_ID,
-    // `id_token` flow returns a JWT directly from Google; the backend
-    // verifies its signature against Google's JWKS. We don't need an
-    // access token (we never call Google APIs on behalf of the user).
-    // On Android we fall through to the default `code` + PKCE flow and
-    // exchange the code below.
-    ...(isAndroid ? {} : { responseType: 'id_token' as const }),
+    // Web stays on the cheaper implicit flow; native falls through to
+    // the default `code` + PKCE flow and exchanges the code below.
+    ...(isNative ? {} : { responseType: 'id_token' as const }),
     scopes: ['openid', 'email'],
   });
 
@@ -101,25 +98,31 @@ export const useGoogleSignIn = (): {
 
     const params = response.params as Record<string, string>;
 
-    // iOS / Web: implicit flow lands the id_token directly on params.
+    // Web: implicit flow lands the id_token directly on params.
     if (params.id_token) {
       settle(id, { ok: true, idToken: params.id_token });
       return;
     }
 
-    // Android: code + PKCE. Exchange against Google's token endpoint.
-    // Android clients have no secret, so PKCE is the only credential.
+    // Native (iOS / Android): code + PKCE. Exchange against Google's
+    // token endpoint. Native clients have no secret, so PKCE is the
+    // only credential. The clientId on the exchange must match the one
+    // used on the authorize request, which `useAuthRequest` picks per
+    // platform — mirror that here.
     const code = params.code;
     if (!code || !request) {
       settle(id, { ok: false, cancelled: false, reason: 'No id_token or code in response' });
       return;
     }
 
+    const exchangeClientId =
+      Platform.OS === 'ios' ? GOOGLE_IOS_CLIENT_ID : GOOGLE_ANDROID_CLIENT_ID;
+
     (async () => {
       try {
         const tokenResponse = await AuthSession.exchangeCodeAsync(
           {
-            clientId: GOOGLE_ANDROID_CLIENT_ID,
+            clientId: exchangeClientId,
             code,
             redirectUri: request.redirectUri,
             extraParams: request.codeVerifier
