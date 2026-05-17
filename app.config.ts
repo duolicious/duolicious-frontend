@@ -14,7 +14,6 @@ const config: ExpoConfig = {
   version: "32.1.0",
   orientation: "portrait",
   icon: './assets/icon.png',
-  newArchEnabled: true,
   updates: {
     fallbackToCacheTimeout: 0
   },
@@ -112,7 +111,9 @@ const config: ExpoConfig = {
         image: "./assets/splash.png",
         imageWidth: 300,
       }
-    ]
+    ],
+    "expo-image",
+    "expo-web-browser",
   ],
 };
 
