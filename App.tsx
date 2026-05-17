@@ -91,6 +91,11 @@ const HomeTabs = () => {
         animation: 'shift',
       }}
       tabBar={props => <TabBar {...props} />}
+
+      // Without this, tabs appear blank about 5% of the time when switching
+      // between them. ChatGPT suggests the react-native-screens and
+      // bottom-tabs animation packages are racing to detach the screens.
+      detachInactiveScreens={false}
     >
       <Tab.Screen name="Q&A" component={QuizTab} options={{ title: 'Q&A' }} />
       <Tab.Screen name="Search" component={SearchTab} options={{ title: 'Search' }} />
