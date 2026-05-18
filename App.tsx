@@ -1,7 +1,6 @@
 import {
   Animated,
   Platform,
-  UIManager,
 } from 'react-native';
 import {
   useCallback,
@@ -74,13 +73,6 @@ ExpoSplashScreen.preventAutoHideAsync();
 
 const Stack = createNativeStackNavigator();
 const Tab = isMobile() ? createBottomTabNavigator() : createWebNavigator();
-
-if (
-  Platform.OS === 'android' &&
-  UIManager.setLayoutAnimationEnabledExperimental
-) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 const HomeTabs = () => {
   return (
