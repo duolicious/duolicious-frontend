@@ -7,8 +7,8 @@ import {
 } from 'react';
 import {
   ActivityIndicator,
-  Animated,
   Image,
+  ImageStyle,
   StyleSheet,
   View,
   useWindowDimensions,
@@ -17,13 +17,56 @@ import {
   Gesture,
   GestureDetector,
 } from 'react-native-gesture-handler';
-import {
-  runOnJS,
+import Animated, {
+  AnimatedStyle,
+  runOnUI,
+  useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
 import { IMAGES_URL } from '../env/env';
 
-const FitWithinScreenImage = ({ source, style, onUpdateImageSize }) => {
+const constrainPosition = (
+  currentScale: number,
+  imageWidth: number,
+  imageHeight: number,
+  viewportWidth: number,
+  viewportHeight: number,
+  x: number,
+  y: number,
+  dx: number = 0,
+  dy: number = 0,
+) => {
+  'worklet';
+  const adjustedWidth = imageWidth * currentScale;
+  const adjustedHeight = imageHeight * currentScale;
+
+  const maxTranslateX = (adjustedWidth > viewportWidth) ?
+    (adjustedWidth - viewportWidth) / 2 / currentScale :
+    (viewportWidth - adjustedWidth) / 2 / currentScale;
+
+  const maxTranslateY = (adjustedHeight > viewportHeight) ?
+    (adjustedHeight - viewportHeight) / 2 / currentScale :
+    (viewportHeight - adjustedHeight) / 2 / currentScale;
+
+  return {
+    x: (adjustedWidth > viewportWidth) ?
+       Math.min(maxTranslateX, Math.max(-maxTranslateX, x + dx / currentScale)) :
+       0,
+    y: (adjustedHeight > viewportHeight) ?
+       Math.min(maxTranslateY, Math.max(-maxTranslateY, y + dy / currentScale)) :
+       0,
+  };
+};
+
+const FitWithinScreenImage = ({
+  source,
+  animatedStyle,
+  onUpdateImageSize,
+}: {
+  source: { uri: string };
+  animatedStyle: AnimatedStyle<ImageStyle>;
+  onUpdateImageSize: (size: { imageWidth: number, imageHeight: number }) => void;
+}) => {
   const isFetchingSize = useRef(false);
   const [imageSize, setImageSize] = useState({width: 0, height: 0});
   const [imageWidth, setImageWidth] = useState<number | null>(null);
@@ -36,7 +79,6 @@ const FitWithinScreenImage = ({ source, style, onUpdateImageSize }) => {
     }
 
     isFetchingSize.current = true;
-    // Get the dimensions of the image
     Image.getSize(source.uri, (width, height) => {
       setImageSize({width, height});
       isFetchingSize.current = false;
@@ -44,7 +86,6 @@ const FitWithinScreenImage = ({ source, style, onUpdateImageSize }) => {
   }, [source.uri]);
 
   useEffect(() => {
-    // Check the image dimensions against the screen dimensions
     let newWidth = imageSize.width;
     let newHeight = imageSize.height;
 
@@ -73,7 +114,8 @@ const FitWithinScreenImage = ({ source, style, onUpdateImageSize }) => {
     return (
       <Animated.Image
         source={source}
-        style={[style, { width: imageWidth, height: imageHeight }]}
+        style={[animatedStyle, { width: imageWidth, height: imageHeight }]}
+        resizeMode="contain"
       />
     );
   }
@@ -81,119 +123,80 @@ const FitWithinScreenImage = ({ source, style, onUpdateImageSize }) => {
   return <ActivityIndicator size="large" color="white"/>;
 };
 
-const constrainPosition = (
-  currentScale: number,
-  imageDimensions: { imageWidth: number, imageHeight: number },
-  viewportDimensions: { viewportWidth: number, viewportHeight },
-  position: {x: number, y: number},
-  gestureState?: {dx: number, dy: number},
-) => {
-  const { imageWidth, imageHeight } = imageDimensions;
-  const { viewportWidth, viewportHeight } = viewportDimensions;
-  const { x, y } = position;
-  const { dx = 0, dy = 0 } = gestureState ?? {};
-
-  const adjustedWidth = imageWidth * currentScale;
-  const adjustedHeight = imageHeight * currentScale;
-
-  const maxTranslateX = (adjustedWidth > viewportWidth) ?
-    (adjustedWidth - viewportWidth) / 2 / currentScale :
-    (viewportWidth - adjustedWidth) / 2 / currentScale;
-
-  const maxTranslateY = (adjustedHeight > viewportHeight) ?
-    (adjustedHeight - viewportHeight) / 2 / currentScale :
-    (viewportHeight - adjustedHeight) / 2 / currentScale;
-
-  return {
-    x: (adjustedWidth > viewportWidth) ?
-       Math.min(maxTranslateX, Math.max(-maxTranslateX, x + dx / currentScale)) :
-       0,
-    y: (adjustedHeight > viewportHeight) ?
-       Math.min(maxTranslateY, Math.max(-maxTranslateY, y + dy / currentScale)) :
-       0,
-  };
-};
-
 const Pinchy = ({uuid}: {uuid: string}) => {
   const { width: viewportWidth, height: viewportHeight } = useWindowDimensions();
 
-  const scaleBase = useRef<number | null>(null);
-  const scale = useRef(1);
-  const animatedScale = useRef(new Animated.Value(scale.current));
+  const scale = useSharedValue(1);
+  const positionX = useSharedValue(0);
+  const positionY = useSharedValue(0);
 
-  const positionBase = useRef<{x: number, y: number} | null>(null);
-  const position = useRef({ x: 0, y: 0 });
-  const animatedPosition = useRef(new Animated.ValueXY(position.current));
+  const pinchBaseScale = useSharedValue(1);
+  const panBaseX = useSharedValue(0);
+  const panBaseY = useSharedValue(0);
 
-  const viewportDimensionsRef = useRef({ viewportWidth, viewportHeight });
+  const imageWidth = useSharedValue(0);
+  const imageHeight = useSharedValue(0);
+  const viewportWidthSv = useSharedValue(viewportWidth);
+  const viewportHeightSv = useSharedValue(viewportHeight);
 
-  const renderedImageSize = useRef({imageWidth: 0, imageHeight: 0});
-
-  const scaleSv = useSharedValue(1);
-
-  const setScale = (s: number) => {
-    scale.current = s;
-    scaleSv.value = s;
-    animatedScale.current.setValue(s);
-  };
-
-  const setPosition = (p: {x: number, y: number}) => {
-    position.current = p;
-    animatedPosition.current.setValue(p);
-  };
-
-  const handleDoubleTap = (tapX: number, tapY: number) => {
-    const isZoomed = scale.current > 1 + 1e-5;
-
-    if (isZoomed) {
-      setScale(1);
-      setPosition({ x: 0, y: 0 });
-    } else {
-      const offsetX = renderedImageSize.current.imageWidth / 2 - tapX;
-      const offsetY = renderedImageSize.current.imageHeight / 2 - tapY;
-
-      const newPosition = constrainPosition(
-        2,
-        renderedImageSize.current,
-        viewportDimensionsRef.current,
-        { x: offsetX, y: offsetY }
+  useEffect(() => {
+    runOnUI((vw: number, vh: number) => {
+      'worklet';
+      viewportWidthSv.value = vw;
+      viewportHeightSv.value = vh;
+      const newPos = constrainPosition(
+        scale.value,
+        imageWidth.value,
+        imageHeight.value,
+        vw,
+        vh,
+        positionX.value,
+        positionY.value,
       );
+      positionX.value = newPos.x;
+      positionY.value = newPos.y;
+    })(viewportWidth, viewportHeight);
+  }, [viewportWidth, viewportHeight]);
 
-      setScale(2);
-      setPosition(newPosition);
-    }
-  };
+  const onUpdateImageSize = useCallback(
+    ({ imageWidth: w, imageHeight: h }: { imageWidth: number, imageHeight: number }) => {
+      imageWidth.value = w;
+      imageHeight.value = h;
+    },
+    [imageWidth, imageHeight],
+  );
 
-  const onUpdateImageSize = useCallback(({ imageWidth, imageHeight }) => {
-    renderedImageSize.current = { imageWidth, imageHeight };
-  }, []);
-
-  const onPanStart = useCallback(() => {
-    positionBase.current = { ...position.current };
-  }, []);
-
-  const onPanUpdate = useCallback((translationX: number, translationY: number) => {
-    if (!positionBase.current) return;
-    const newPosition = constrainPosition(
-      scale.current,
-      renderedImageSize.current,
-      viewportDimensionsRef.current,
-      positionBase.current,
-      { dx: translationX, dy: translationY },
-    );
-    setPosition(newPosition);
-  }, []);
-
-  const onPanEnd = useCallback(() => {
-    positionBase.current = null;
-  }, []);
+  const pinch = useMemo(
+    () => Gesture.Pinch()
+      .onStart(() => {
+        'worklet';
+        pinchBaseScale.value = scale.value;
+      })
+      .onUpdate((e) => {
+        'worklet';
+        const newScale = Math.max(1, e.scale * pinchBaseScale.value);
+        const newPos = constrainPosition(
+          newScale,
+          imageWidth.value,
+          imageHeight.value,
+          viewportWidthSv.value,
+          viewportHeightSv.value,
+          positionX.value,
+          positionY.value,
+        );
+        scale.value = newScale;
+        positionX.value = newPos.x;
+        positionY.value = newPos.y;
+      }),
+    [],
+  );
 
   const pan = useMemo(
     () => Gesture.Pan()
       .manualActivation(true)
       .onTouchesMove((_e, stateManager) => {
         'worklet';
-        if (scaleSv.value > 1 + 1e-5) {
+        if (scale.value > 1 + 1e-5) {
           stateManager.activate();
         } else {
           stateManager.fail();
@@ -201,50 +204,56 @@ const Pinchy = ({uuid}: {uuid: string}) => {
       })
       .onStart(() => {
         'worklet';
-        runOnJS(onPanStart)();
+        panBaseX.value = positionX.value;
+        panBaseY.value = positionY.value;
       })
       .onUpdate((e) => {
         'worklet';
-        runOnJS(onPanUpdate)(e.translationX, e.translationY);
-      })
-      .onEnd(() => {
-        'worklet';
-        runOnJS(onPanEnd)();
-      }),
-    [scaleSv, onPanStart, onPanUpdate, onPanEnd],
-  );
-
-  const pinch = useMemo(
-    () => Gesture.Pinch()
-      .runOnJS(true)
-      .onStart(() => {
-        scaleBase.current = scale.current;
-      })
-      .onUpdate((e) => {
-        if (scaleBase.current == null) return;
-        const newScale = Math.max(1, e.scale * scaleBase.current);
-        const newPosition = constrainPosition(
-          newScale,
-          renderedImageSize.current,
-          viewportDimensionsRef.current,
-          position.current,
+        const newPos = constrainPosition(
+          scale.value,
+          imageWidth.value,
+          imageHeight.value,
+          viewportWidthSv.value,
+          viewportHeightSv.value,
+          panBaseX.value,
+          panBaseY.value,
+          e.translationX,
+          e.translationY,
         );
-        setScale(newScale);
-        setPosition(newPosition);
-      })
-      .onEnd(() => {
-        scaleBase.current = null;
+        positionX.value = newPos.x;
+        positionY.value = newPos.y;
       }),
     [],
   );
 
   const doubleTap = useMemo(
     () => Gesture.Tap()
-      .runOnJS(true)
       .numberOfTaps(2)
       .maxDuration(300)
       .onEnd((e, success) => {
-        if (success) handleDoubleTap(e.x, e.y);
+        'worklet';
+        if (!success) return;
+        const isZoomed = scale.value > 1 + 1e-5;
+        if (isZoomed) {
+          scale.value = 1;
+          positionX.value = 0;
+          positionY.value = 0;
+        } else {
+          const offsetX = imageWidth.value / 2 - e.x;
+          const offsetY = imageHeight.value / 2 - e.y;
+          const newPos = constrainPosition(
+            2,
+            imageWidth.value,
+            imageHeight.value,
+            viewportWidthSv.value,
+            viewportHeightSv.value,
+            offsetX,
+            offsetY,
+          );
+          scale.value = 2;
+          positionX.value = newPos.x;
+          positionY.value = newPos.y;
+        }
       }),
     [],
   );
@@ -254,32 +263,20 @@ const Pinchy = ({uuid}: {uuid: string}) => {
     [pinch, pan, doubleTap],
   );
 
-  useEffect(() => {
-    viewportDimensionsRef.current = { viewportWidth, viewportHeight };
-
-    const newPosition = constrainPosition(
-      scale.current,
-      renderedImageSize.current,
-      viewportDimensionsRef.current,
-      position.current,
-    );
-    setPosition(newPosition);
-  }, [viewportWidth, viewportHeight]);
+  const animatedStyle = useAnimatedStyle<ImageStyle>(() => ({
+    transform: [
+      { scale: scale.value },
+      { translateX: positionX.value },
+      { translateY: positionY.value },
+    ],
+  }));
 
   return (
     <GestureDetector gesture={composed}>
       <View style={styles.container}>
         <FitWithinScreenImage
           source={{ uri: `${IMAGES_URL}/original-${uuid}.jpg` }}
-          style={[
-            {
-              transform: [
-                { scale: animatedScale.current },
-                { translateX: animatedPosition.current.x },
-                { translateY: animatedPosition.current.y },
-              ],
-            },
-          ]}
+          animatedStyle={animatedStyle}
           onUpdateImageSize={onUpdateImageSize}
         />
       </View>
