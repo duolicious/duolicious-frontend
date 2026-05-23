@@ -17,6 +17,10 @@ import {
   Gesture,
   GestureDetector,
 } from 'react-native-gesture-handler';
+import {
+  runOnJS,
+  useSharedValue,
+} from 'react-native-reanimated';
 import { IMAGES_URL } from '../env/env';
 
 const FitWithinScreenImage = ({ source, style, onUpdateImageSize }) => {
@@ -125,12 +129,12 @@ const Pinchy = ({uuid}: {uuid: string}) => {
 
   const renderedImageSize = useRef({imageWidth: 0, imageHeight: 0});
 
-  const [isZoomed, setIsZoomed] = useState(false);
+  const scaleSv = useSharedValue(1);
 
   const setScale = (s: number) => {
     scale.current = s;
+    scaleSv.value = s;
     animatedScale.current.setValue(s);
-    setIsZoomed(s > 1 + 1e-5);
   };
 
   const setPosition = (p: {x: number, y: number}) => {
@@ -164,28 +168,50 @@ const Pinchy = ({uuid}: {uuid: string}) => {
     renderedImageSize.current = { imageWidth, imageHeight };
   }, []);
 
+  const onPanStart = useCallback(() => {
+    positionBase.current = { ...position.current };
+  }, []);
+
+  const onPanUpdate = useCallback((translationX: number, translationY: number) => {
+    if (!positionBase.current) return;
+    const newPosition = constrainPosition(
+      scale.current,
+      renderedImageSize.current,
+      viewportDimensionsRef.current,
+      positionBase.current,
+      { dx: translationX, dy: translationY },
+    );
+    setPosition(newPosition);
+  }, []);
+
+  const onPanEnd = useCallback(() => {
+    positionBase.current = null;
+  }, []);
+
   const pan = useMemo(
     () => Gesture.Pan()
-      .runOnJS(true)
-      .enabled(isZoomed)
+      .manualActivation(true)
+      .onTouchesMove((_e, stateManager) => {
+        'worklet';
+        if (scaleSv.value > 1 + 1e-5) {
+          stateManager.activate();
+        } else {
+          stateManager.fail();
+        }
+      })
       .onStart(() => {
-        positionBase.current = { ...position.current };
+        'worklet';
+        runOnJS(onPanStart)();
       })
       .onUpdate((e) => {
-        if (!positionBase.current) return;
-        const newPosition = constrainPosition(
-          scale.current,
-          renderedImageSize.current,
-          viewportDimensionsRef.current,
-          positionBase.current,
-          { dx: e.translationX, dy: e.translationY },
-        );
-        setPosition(newPosition);
+        'worklet';
+        runOnJS(onPanUpdate)(e.translationX, e.translationY);
       })
       .onEnd(() => {
-        positionBase.current = null;
+        'worklet';
+        runOnJS(onPanEnd)();
       }),
-    [isZoomed],
+    [scaleSv, onPanStart, onPanUpdate, onPanEnd],
   );
 
   const pinch = useMemo(
