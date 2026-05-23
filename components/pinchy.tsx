@@ -230,6 +230,7 @@ const Pinchy = ({uuid}: {uuid: string}) => {
     () => Gesture.Tap()
       .numberOfTaps(2)
       .maxDuration(300)
+      .maxDistance(10)
       .onEnd((e, success) => {
         'worklet';
         if (!success) return;
