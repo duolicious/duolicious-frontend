@@ -649,11 +649,11 @@ const App = () => {
 
   useEffect(() => {
     (async () => {
-      if (!isLoading) {
+      if (!isLoading || serverStatus !== "ok") {
         await ExpoSplashScreen.hideAsync();
       }
     })();
-  }, [isLoading]);
+  }, [isLoading, serverStatus]);
 
   useScrollbarStyle();
 
