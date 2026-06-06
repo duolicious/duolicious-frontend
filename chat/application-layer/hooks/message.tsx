@@ -18,11 +18,9 @@ import {
 import { getRandomString } from '../../../random/string';
 import { assertNever } from '../../../util/util';
 
-type UseMessage = {
-  status: MessageStatus
-  message: Message
-  usedCount?: number
-};
+type UseMessage =
+  | { status: 'not unique', message: Message, usedCount: number }
+  | { status: Exclude<MessageStatus, 'not unique'>, message: Message };
 
 const eventKey = (messageId: string) => {
   return `use-message-${messageId}`;
@@ -114,11 +112,13 @@ const sendMessageAndNotify = (
       config,
     );
 
-    const status = response.status;
     const message = response.message ?? initialMessage;
-    const usedCount = response.usedCount;
 
-    notifyMessage({ status, message, usedCount });
+    if (response.status === 'not unique') {
+      notifyMessage({ status: 'not unique', message, usedCount: response.usedCount });
+    } else {
+      notifyMessage({ status: response.status, message });
+    }
   })();
 
   return id;

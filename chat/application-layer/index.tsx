@@ -474,8 +474,9 @@ const sendMessage = async (
     timeoutMs?: number,
   },
 ): Promise<
-  | { message: Message, status: 'sent', usedCount?: number }
-  | { message: null, status: Exclude<MessageStatus, 'sent' | 'sending'>, usedCount?: number }
+  | { message: Message, status: 'sent' }
+  | { message: null, status: 'not unique', usedCount: number }
+  | { message: null, status: Exclude<MessageStatus, 'sent' | 'sending' | 'not unique'> }
 > => {
   const {
     numTries = 3,
@@ -529,8 +530,9 @@ const sendMessage = async (
   })();
 
   const responseDetector = (doc: any):
-    | { status: Exclude<MessageStatus, 'sent' | 'sending' | 'timeout'>, usedCount?: number }
-    | { status: Extract<MessageStatus, 'sent'>, audioUuid?: string }
+    | { status: 'not unique', usedCount: number }
+    | { status: Exclude<MessageStatus, 'sent' | 'sending' | 'timeout' | 'not unique'> }
+    | { status: 'sent', audioUuid?: string }
     | null =>
   {
     type MappingInput = Exclude<MessageStatus, 'sending' | 'timeout'>;
@@ -597,7 +599,10 @@ const sendMessage = async (
         return {
           status: status as MappingInput,
           ...detectedContent
-        };
+        } as unknown as
+          | { status: 'not unique', usedCount: number }
+          | { status: Exclude<MessageStatus, 'sent' | 'sending' | 'timeout' | 'not unique'> }
+          | { status: 'sent', audioUuid?: string };
       }
     }
 
@@ -658,8 +663,10 @@ const sendMessage = async (
       },
       status: response.status
     };
+  } else if (response.status === 'not unique') {
+    return { message: null, status: 'not unique', usedCount: response.usedCount };
   } else {
-    return { message: null, status: response.status, usedCount: response.usedCount };
+    return { message: null, status: response.status };
   }
 
   // Deal with timeouts. To stop ourselves from sending the same message

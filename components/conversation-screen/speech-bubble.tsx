@@ -553,7 +553,7 @@ const SpeechBubble = ({
       <MessageStatusComponent
         messageStatus={message.status}
         name={name}
-        usedCount={message.usedCount}
+        usedCount={message.status === 'not unique' ? message.usedCount : undefined}
       />
     </View>
   );
