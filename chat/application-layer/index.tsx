@@ -535,7 +535,7 @@ const sendMessage = async (
     | { status: 'sent', audioUuid?: string };
 
   const responseDetector = (doc: any): MessageDetectionResult | null => {
-    const detectors: Array<() => MessageDetectionResult | false> = [
+    const detectors: (() => MessageDetectionResult | false)[] = [
       () => doc.duo_message_delivered?.['@id'] === id &&
         { status: 'sent', audioUuid: doc.duo_message_delivered?.['@audio_uuid'] },
       () => doc.duo_message_blocked?.['@reason'] === 'offensive' &&

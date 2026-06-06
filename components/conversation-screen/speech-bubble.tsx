@@ -195,11 +195,10 @@ const MessageStatusComponent = ({
   messageStatus,
   name: nameRaw,
   usedCount,
-}: {
-  messageStatus: MessageStatus,
-  name: string | undefined,
-  usedCount?: number,
-}) => {
+}:
+  | { name: string | undefined, messageStatus: 'not unique', usedCount: number }
+  | { name: string | undefined, messageStatus: Exclude<MessageStatus, 'not unique'>, usedCount?: never }
+) => {
   // Until the prospect-profile API resolves we may not yet have the recipient's
   // name; fall back to a neutral placeholder so error/info copy doesn't leak
   // the literal string "undefined".
@@ -241,7 +240,7 @@ const MessageStatusComponent = ({
     'offensive': `Intros can’t be too rude. Try sending ${name} a different message.`,
     'age-verification': `Verification is required to chat.` + verificationMessageText,
     'blocked': name + ' is unavailable right now. Try messaging someone else!',
-    'not unique': `${usedCount != null ? usedCount.toLocaleString() + ' people have' : 'Someone has'} already sent that intro! Try sending ${name} a different message.`,
+    'not unique': `${usedCount ? usedCount.toLocaleString() + ' people have' : 'Someone has'} already sent that intro! Try sending ${name} a different message.`,
     'too long': 'That message is too big! 😩',
     'server-error': 'Our server went boom. Please contact support@duolicious.app',
   };
@@ -551,9 +550,11 @@ const SpeechBubble = ({
         </DefaultText>
       }
       <MessageStatusComponent
-        messageStatus={message.status}
         name={name}
-        usedCount={message.status === 'not unique' ? message.usedCount : undefined}
+        {...(message.status === 'not unique'
+          ? { messageStatus: message.status, usedCount: message.usedCount }
+          : { messageStatus: message.status }
+        )}
       />
     </View>
   );
