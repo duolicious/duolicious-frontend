@@ -38,7 +38,7 @@ import { useSignedInUser } from '../../events/signed-in-user';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faReply } from '@fortawesome/free-solid-svg-icons/faReply';
 import { useNavigation } from '@react-navigation/native';
-import { assertNever } from '../../util/util';
+import { assertNever, formatCount } from '../../util/util';
 import { useAppTheme } from '../../app-theme/app-theme';
 
 const currentUserBackgroundColor = '#70f';
@@ -229,7 +229,8 @@ const MessageStatusComponent = (props: MessageStatusProps) => {
 
   const messageText = ((): string => {
     if (props.messageStatus === 'not unique') {
-      return `${props.usedCount.toLocaleString()} people have already sent that intro! Try sending ${name} a different message.`;
+      const n = props.usedCount;
+      return `${formatCount(n)} ${n === 1 ? 'person has' : 'people have'} already sent that intro! Try sending ${name} a different message.`;
     }
 
     const texts: Record<Exclude<MessageStatus, 'not unique'>, string> = {
