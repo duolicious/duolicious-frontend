@@ -191,14 +191,13 @@ const FormattedText = ({
   );
 };
 
-const MessageStatusComponent = ({
-  messageStatus,
-  name: nameRaw,
-  usedCount,
-}:
+type MessageStatusProps =
   | { name: string | undefined, messageStatus: 'not unique', usedCount: number }
-  | { name: string | undefined, messageStatus: Exclude<MessageStatus, 'not unique'>, usedCount?: never }
-) => {
+  | { name: string | undefined, messageStatus: Exclude<MessageStatus, 'not unique'>, usedCount?: never };
+
+const MessageStatusComponent = (props: MessageStatusProps) => {
+  const { messageStatus, name: nameRaw } = props;
+
   // Until the prospect-profile API resolves we may not yet have the recipient's
   // name; fall back to a neutral placeholder so error/info copy doesn't leak
   // the literal string "undefined".
@@ -228,24 +227,29 @@ const MessageStatusComponent = ({
 
   const verificationMessageText = ` Verification is free and takes just a few minutes. Press here to start.`;
 
-  const messageTexts: Record<MessageStatus, string> = {
-    'sending': '',
-    'sent': '',
-    'timeout': 'Message not delivered. Are you online?',
-    'rate-limited-1day-unverified-basics': `You’ve used today’s daily intro limit! Message ${name} tomorrow or unlock extra daily intros by getting verified.` + verificationMessageText,
-    'rate-limited-1day-unverified-photos': `You’ve used today’s daily intro limit! Message ${name} tomorrow or unlock extra daily intros by verifying your photos.` + verificationMessageText,
-    'rate-limited-1day': `You’ve used today’s daily intro limit! Try messaging ${name} tomorrow...`,
-    'voice-intro': `Voice messages aren’t allowed in intros`,
-    'spam': `We think that might be spam. Try sending ${name} a different message.`,
-    'offensive': `Intros can’t be too rude. Try sending ${name} a different message.`,
-    'age-verification': `Verification is required to chat.` + verificationMessageText,
-    'blocked': name + ' is unavailable right now. Try messaging someone else!',
-    'not unique': `${usedCount ? usedCount.toLocaleString() + ' people have' : 'Someone has'} already sent that intro! Try sending ${name} a different message.`,
-    'too long': 'That message is too big! 😩',
-    'server-error': 'Our server went boom. Please contact support@duolicious.app',
-  };
+  const messageText = ((): string => {
+    if (props.messageStatus === 'not unique') {
+      return `${props.usedCount.toLocaleString()} people have already sent that intro! Try sending ${name} a different message.`;
+    }
 
-  const messageText = messageTexts[messageStatus];
+    const texts: Record<Exclude<MessageStatus, 'not unique'>, string> = {
+      'sending': '',
+      'sent': '',
+      'timeout': 'Message not delivered. Are you online?',
+      'rate-limited-1day-unverified-basics': `You've used today's daily intro limit! Message ${name} tomorrow or unlock extra daily intros by getting verified.` + verificationMessageText,
+      'rate-limited-1day-unverified-photos': `You've used today's daily intro limit! Message ${name} tomorrow or unlock extra daily intros by verifying your photos.` + verificationMessageText,
+      'rate-limited-1day': `You've used today's daily intro limit! Try messaging ${name} tomorrow...`,
+      'voice-intro': `Voice messages aren't allowed in intros`,
+      'spam': `We think that might be spam. Try sending ${name} a different message.`,
+      'offensive': `Intros can't be too rude. Try sending ${name} a different message.`,
+      'age-verification': `Verification is required to chat.` + verificationMessageText,
+      'blocked': name + ' is unavailable right now. Try messaging someone else!',
+      'too long': 'That message is too big! 😩',
+      'server-error': 'Our server went boom. Please contact support@duolicious.app',
+    };
+
+    return texts[props.messageStatus];
+  })();
 
   if (messageText === '') {
     return <></>;
