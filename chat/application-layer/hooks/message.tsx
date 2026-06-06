@@ -21,6 +21,7 @@ import { assertNever } from '../../../util/util';
 type UseMessage = {
   status: MessageStatus
   message: Message
+  usedCount?: number
 };
 
 const eventKey = (messageId: string) => {
@@ -115,8 +116,9 @@ const sendMessageAndNotify = (
 
     const status = response.status;
     const message = response.message ?? initialMessage;
+    const usedCount = response.usedCount;
 
-    notifyMessage({ status, message });
+    notifyMessage({ status, message, usedCount });
   })();
 
   return id;

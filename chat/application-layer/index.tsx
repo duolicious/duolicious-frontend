@@ -474,8 +474,8 @@ const sendMessage = async (
     timeoutMs?: number,
   },
 ): Promise<
-  | { message: Message, status: 'sent' }
-  | { message: null, status: Exclude<MessageStatus, 'sent' | 'sending'>}
+  | { message: Message, status: 'sent', usedCount?: number }
+  | { message: null, status: Exclude<MessageStatus, 'sent' | 'sending'>, usedCount?: number }
 > => {
   const {
     numTries = 3,
@@ -529,7 +529,7 @@ const sendMessage = async (
   })();
 
   const responseDetector = (doc: any):
-    | { status: Exclude<MessageStatus, 'sent' | 'sending' | 'timeout'> }
+    | { status: Exclude<MessageStatus, 'sent' | 'sending' | 'timeout'>, usedCount?: number }
     | { status: Extract<MessageStatus, 'sent'>, audioUuid?: string }
     | null =>
   {
@@ -537,7 +537,7 @@ const sendMessage = async (
 
     const messageStatusMapping: Record<
       MappingInput,
-      (doc: any) => false | { audioUuid?: string }
+      (doc: any) => false | { audioUuid?: string, usedCount?: number }
     > = {
       'sent': (doc) =>
         doc.duo_message_delivered?.['@id'] === id &&
@@ -580,7 +580,7 @@ const sendMessage = async (
       'not unique': (doc) =>
         doc.duo_message_not_unique?.['@id'] === id &&
         doc.duo_message_not_unique !== undefined &&
-        {},
+        { usedCount: Number(doc.duo_message_not_unique['@used_count']) },
       'too long': (doc) =>
         doc.duo_message_too_long?.['@id'] === id &&
         doc.duo_message_too_long !== undefined &&
@@ -659,7 +659,7 @@ const sendMessage = async (
       status: response.status
     };
   } else {
-    return { message: null, status: response.status };
+    return { message: null, status: response.status, usedCount: response.usedCount };
   }
 
   // Deal with timeouts. To stop ourselves from sending the same message
