@@ -2,6 +2,7 @@ import { AppState, Platform } from 'react-native';
 import { registerPushToken } from '../chat/application-layer';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
+import { useEffect } from 'react';
 import { notifyOnWeb } from './web';
 
 type MaybeToken = { token: string | null } | null;
@@ -67,10 +68,22 @@ const requestPermissionOnMobile = async (): Promise<MaybeToken> => {
     });
   }
 
-  const projectId = Constants.expoConfig?.extra?.eas.projectId;
-  const token = await Notifications.getExpoPushTokenAsync({ projectId });
+  return { token: await getExpoPushToken() };
+};
 
-  return { token: token.data };
+
+// Passing the rolled `devicePushToken` avoids getExpoPushTokenAsync calling
+// getDevicePushTokenAsync internally, which would re-trigger the push token
+// listener and risk an infinite loop.
+const getExpoPushToken = async (
+  devicePushToken?: Notifications.DevicePushToken,
+): Promise<string> => {
+  const projectId = Constants.expoConfig?.extra?.eas.projectId;
+  const token = await Notifications.getExpoPushTokenAsync(
+    devicePushToken ? { projectId, devicePushToken } : { projectId }
+  );
+
+  return token.data;
 };
 
 
@@ -86,6 +99,28 @@ const getAndRegisterPushToken = async (): Promise<void> => {
   registerPushToken(maybeToken.token);
 };
 
+
+// The push notification service can roll a device's push token while the app is
+// running, invalidating the old one. Re-register the fresh Expo push token with
+// the backend as soon as that happens.
+const usePushTokenListenerOnMobile = () => {
+  if (Platform.OS === 'web') {
+    return;
+  }
+
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => {
+    const subscription = Notifications.addPushTokenListener(
+      async (devicePushToken) => {
+        registerPushToken(await getExpoPushToken(devicePushToken));
+      }
+    );
+
+    return () => subscription.remove();
+  }, []);
+};
+
 export {
   getAndRegisterPushToken,
+  usePushTokenListenerOnMobile,
 };
