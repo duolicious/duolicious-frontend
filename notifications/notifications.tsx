@@ -4,8 +4,11 @@ import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { useEffect } from 'react';
 import { notifyOnWeb } from './web';
+import { delay } from '../util/util';
 
 type MaybeToken = { token: string | null } | null;
+const expoPushTokenMaxAttempts = 3;
+const expoPushTokenInitialRetryDelayMs = 1000;
 
 const requestPermissionOnWeb = async (): Promise<MaybeToken> => {
   if (Platform.OS !== 'web') {
@@ -68,7 +71,8 @@ const requestPermissionOnMobile = async (): Promise<MaybeToken> => {
     });
   }
 
-  return { token: await getExpoPushToken() };
+  const token = await getExpoPushToken();
+  return token ? { token } : null;
 };
 
 
@@ -77,13 +81,25 @@ const requestPermissionOnMobile = async (): Promise<MaybeToken> => {
 // listener and risk an infinite loop.
 const getExpoPushToken = async (
   devicePushToken?: Notifications.DevicePushToken,
-): Promise<string> => {
+): Promise<string | null> => {
   const projectId = Constants.expoConfig?.extra?.eas.projectId;
-  const token = await Notifications.getExpoPushTokenAsync(
-    devicePushToken ? { projectId, devicePushToken } : { projectId }
-  );
+  const options = devicePushToken ? { projectId, devicePushToken } : { projectId };
 
-  return token.data;
+  for (let attempt = 1; attempt <= expoPushTokenMaxAttempts; attempt++) {
+    try {
+      const token = await Notifications.getExpoPushTokenAsync(options);
+      return token.data;
+    } catch (e) {
+      if (attempt === expoPushTokenMaxAttempts) {
+        console.warn('Failed to get Expo push token', e);
+        return null;
+      }
+
+      await delay(expoPushTokenInitialRetryDelayMs * 2 ** (attempt - 1));
+    }
+  }
+
+  return null;
 };
 
 
@@ -112,7 +128,10 @@ const usePushTokenListenerOnMobile = () => {
   useEffect(() => {
     const subscription = Notifications.addPushTokenListener(
       async (devicePushToken) => {
-        registerPushToken(await getExpoPushToken(devicePushToken));
+        const token = await getExpoPushToken(devicePushToken);
+        if (token) {
+          registerPushToken(token);
+        }
       }
     );
 
