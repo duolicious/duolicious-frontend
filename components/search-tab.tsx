@@ -134,8 +134,8 @@ const normalizePublicItem = (item: any): PageItem => ({
   name: item.name,
   age: item.age,
   match_percentage: item.match_percentage,
-  person_messaged_prospect: false,
-  prospect_messaged_person: false,
+  person_messaged_prospect: item.person_messaged_prospect,
+  prospect_messaged_person: item.prospect_messaged_person,
   verified: item.verified,
   verification_required_to_view: null,
 });
@@ -145,25 +145,18 @@ const fetchPageWithoutQueue = async (
   pageNumber: number,
   isPublic: boolean,
 ): Promise<PageItem[] | null> => {
-  if (isPublic) {
-    if (pageNumber > 1) {
-      return [];
-    }
-    const response = await japi('get', '/public-search');
-    return response.ok ? (response.json).map(normalizePublicItem) : null;
-  }
-
   const resultsPerPage = 10;
   const offset = resultsPerPage * (pageNumber - 1);
+
   const response = await japi(
     'get',
-    `/search` +
+    (isPublic ? '/public-search' : '/search') +
     `?n=${resultsPerPage}` +
     `&o=${offset}` +
     `&club=${encodeURIComponent(club === null ? '\0' : club)}`
   );
 
-  return response.ok ? response.json : null;
+  return response.ok ? (response.json).map(normalizePublicItem) : null;
 };
 
 const fetchPage = (
