@@ -126,20 +126,6 @@ type PageItem = {
   verification_required_to_view: string | null
 };
 
-const normalizePublicItem = (item: any): PageItem => ({
-  prospect_person_id: item.prospect_person_id,
-  prospect_uuid: item.prospect_uuid,
-  profile_photo_uuid: item.profile_photo_uuid,
-  profile_photo_blurhash: item.profile_photo_blurhash ?? '',
-  name: item.name,
-  age: item.age,
-  match_percentage: item.match_percentage,
-  person_messaged_prospect: item.person_messaged_prospect,
-  prospect_messaged_person: item.prospect_messaged_person,
-  verified: item.verified,
-  verification_required_to_view: null,
-});
-
 const fetchPageWithoutQueue = async (
   club: string | null,
   pageNumber: number,
@@ -156,7 +142,7 @@ const fetchPageWithoutQueue = async (
     `&club=${encodeURIComponent(club === null ? '\0' : club)}`
   );
 
-  return response.ok ? (response.json).map(normalizePublicItem) : null;
+  return response.ok ? response.json : null;
 };
 
 const fetchPage = (

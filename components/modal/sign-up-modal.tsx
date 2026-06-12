@@ -81,7 +81,7 @@ const SignUpModal = () => {
           }}
         >
           <NavigationIndependentTree>
-            <NavigationContainer>
+            <NavigationContainer documentTitle={{ enabled: false }}>
               <WelcomeScreen />
             </NavigationContainer>
           </NavigationIndependentTree>
