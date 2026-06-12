@@ -42,11 +42,6 @@ const useSignedInUser = () => {
   return [value, setSignedInUser] as const;
 };
 
-// A logged-out visitor on web (desktop or mobile web). These users browse a
-// limited public experience - the Search tab and prospect profiles - and are
-// prompted to sign up via a modal; logged-out mobile-native users get the
-// full-screen Welcome flow instead. `isWebLoggedOut` is the synchronous form
-// for non-React contexts; `useIsWebLoggedOut` subscribes for components.
 const isWebLoggedOut = (): boolean =>
   Platform.OS === 'web' && !getSignedInUser();
 

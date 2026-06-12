@@ -47,10 +47,6 @@ import { setOptionScreenPayload } from '../navigation/option-screen-store';
 import { showSignUp } from './modal/sign-up-modal';
 import { lastEvent } from '../events/events';
 
-// The welcome flow renders both as the full-screen `Welcome` route and inside
-// the sign-up modal; it's "in modal mode" when the modal is open. Captured once
-// at mount (not subscribed) so it stays stable while the modal fades out on
-// close - otherwise the non-modal `<Hero>` would flash in during the fade.
 const useInModal = () =>
   useState(() => lastEvent<boolean>('show-sign-up') ?? false)[0];
 
@@ -830,8 +826,6 @@ const WelcomeScreen_ = ({navigation, route}) => {
           </Pressable>
         }
         <LogoHeader />
-        {/* In modal mode we drop the tagline + active-members hero so the auth
-            UI matches the brief (logo + buttons + disclaimer only). */}
         {!inModal &&
           <Hero
             clubName={clubName_}
@@ -853,9 +847,6 @@ const WelcomeScreen_ = ({navigation, route}) => {
             style={{
               color: 'white',
               textAlign: 'center',
-              // The modal drops the hero, so the heading is enlarged to anchor
-              // the auth UI. The full-screen Welcome (incl. mobile native) keeps
-              // its original size so that flow is unchanged.
               marginBottom: inModal ? 40 : 20,
               fontSize: inModal ? 36 : 20,
               fontWeight: inModal ? 900 : 700,

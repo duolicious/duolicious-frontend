@@ -59,8 +59,6 @@ const withHomeBackStack = (state: any, isAuthenticated: boolean = true): any => 
   if (!backTab) return state;
   // `Home`'s tabs assume an authenticated user. Without one, back from the
   // prospect profile should drop the user on Welcome, not a broken Q&A tab.
-  // The exception is web, where logged-out visitors browse `Home`'s Search tab
-  // directly, so a `Home` back stack is exactly what we want.
   if (!isAuthenticated && Platform.OS !== 'web') return state;
 
   // Prepend a synthetic `Home` parent and keep focus on the original top
@@ -178,8 +176,6 @@ export async function computeStartupNavigationState(args: {
 }): Promise<StartupNavResult> {
   const { linking, isAuthenticated, notification, pendingClub } = args;
 
-  // Logged-out web visitors browse the Search tab (sign-up happens in a modal);
-  // mobile keeps the full-screen Welcome flow.
   const loggedOutInitialState = Platform.OS === 'web'
     ? { routes: [{ name: 'Home', state: { routes: [{ name: 'Search' }] } }] }
     : { routes: [{ name: 'Welcome' }] };
@@ -194,9 +190,7 @@ export async function computeStartupNavigationState(args: {
       };
     }
 
-    // Protected deep-link while logged out. On web we drop the user on the
-    // browsable Search tab (the sign-up modal handles auth and keeps them on
-    // Search); on mobile we park on Welcome and stash the full state (including
+    // Protected deep-link while logged out. Stash the full state (including
     // any synthesized `Home` parent) for after they sign in.
     return {
       initialState: loggedOutInitialState,

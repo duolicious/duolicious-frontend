@@ -486,12 +486,6 @@ export const consumePendingAppleWebSignIn = (): {
   };
 };
 
-/**
- * Non-consuming peek for an in-flight Apple web sign-in return. True when the
- * current URL carries the Apple callback params that `consumePendingAppleWebSignIn`
- * would process. Lets a host (e.g. the sign-up modal) decide to mount the
- * welcome flow that actually consumes them. No side effects.
- */
 export const hasPendingAppleWebSignIn = (): boolean => {
   if (Platform.OS !== 'web') return false;
   if (typeof window === 'undefined') return false;

@@ -79,17 +79,9 @@ ExpoSplashScreen.preventAutoHideAsync();
 const Stack = createNativeStackNavigator();
 const Tab = isMobile() ? createBottomTabNavigator() : createWebNavigator();
 
-// Placeholder for tabs that require an authenticated session. Logged-out web
-// visitors can see every tab in the sidebar (so they know what they're missing)
-// but the gated screens must not actually mount — the web navigator renders all
-// tab screens (just hidden), and the real tabs fire authenticated requests. The
-// sidebar intercepts presses on these tabs to pop the sign-up modal instead.
 const LockedTab = () => null;
 
 const HomeTabs = () => {
-  // Normally only reachable while logged out on web (mobile logged-out users
-  // stay on the Welcome screen and never mount Home), but gate on the full
-  // predicate anyway so a deep-link edge case can't mount a real tab.
   const gated = useIsWebLoggedOut();
 
   return (
@@ -175,19 +167,10 @@ const WIZARD_ROUTE_NAMES = new Set([
   'Search Filter Option Screen',
 ]);
 
-// Tab paths that require an authenticated session. A logged-out web visitor who
-// types one of these directly is bounced to the browsable Search tab (the gated
-// tabs render nothing while logged out). `/profile/:uuid` is unaffected — it's a
-// distinct public route, not this `/profile` tab.
 const GATED_LOGGED_OUT_PATHS = new Set([
   '/qa', '/feed', '/inbox', '/visitors', '/profile',
 ]);
 
-// Whether the app-wide logged-out sign-up banner should show for a given root
-// navigation state. A logged-out web visitor only ever sees it over the Search
-// tab or a prospect profile - the two places they can reach. Rendering one
-// banner at the app root (rather than per-screen) keeps a single instance alive
-// as they navigate between those, so it doesn't remount and re-fetch.
 const isBannerRoute = (state: any): boolean => {
   const root = state?.routes?.[state.index ?? 0];
   if (!root) return false;
@@ -339,9 +322,6 @@ const App = () => {
         // which would let the bottom-tab navigator keep whichever tab was
         // previously focused. Delegate to React Navigation's resolver so
         // this stays in sync with whatever path the Q&A tab is mapped to.
-        // Logged-out web visitors browse the Search tab instead of the
-        // Welcome screen (sign-up is offered via a modal). On mobile, and for
-        // signed-in users, behaviour is unchanged.
         const pathname = normalized.split('?')[0].replace(/\/$/, '') || '/';
         if (pathname === '/' && getSignedInUser()) {
           return rnGetStateFromPath('/qa', options);
@@ -514,9 +494,6 @@ const App = () => {
     }
   }, []);
 
-  // The app-wide logged-out sign-up banner. Computed from the live nav state and
-  // auth so a single `SignUpBanner` instance can stay mounted across the
-  // Search<->profile navigation it spans (rather than remounting per screen).
   const recomputeBannerVisible = useCallback((state?: any) => {
     const rootState = state ?? navigationContainerRef.current?.getRootState?.();
     setBannerVisible(isWebLoggedOut() && isBannerRoute(rootState));
@@ -590,11 +567,6 @@ const App = () => {
     loadApp();
   }, []);
 
-  // Apple web sign-in is a full-page redirect that returns to the SPA root with
-  // the credential in the query string. Logged-out web visitors now land on the
-  // Search tab (not the Welcome screen), so the welcome flow that consumes the
-  // Apple return isn't mounted by default. Detect the return on boot and open
-  // the sign-up modal, which mounts that flow and completes the sign-in.
   useEffect(() => {
     if (isLoading) return;
     if (getSignedInUser()) return;
@@ -647,8 +619,6 @@ const App = () => {
   const onNavigationStateChange = useCallback(async (state) => {
     if (!state) return;
 
-    // Recompute before the signed-in early-return below: the banner is a
-    // logged-out concern.
     recomputeBannerVisible(state);
 
     // URL-bar sync is left entirely to React Navigation's linking integration.

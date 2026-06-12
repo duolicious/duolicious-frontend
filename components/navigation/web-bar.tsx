@@ -99,8 +99,6 @@ const NavigationItems = ({state, navigation, descriptors}) => {
           <Pressable
             key={route.key}
             onPress={() => {
-              // Logged-out web visitors may only browse Search; every other
-              // tab prompts sign-up instead of navigating.
               if (isWebLoggedOut && route.name !== 'Search') {
                 showSignUp(true);
                 return;

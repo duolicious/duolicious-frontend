@@ -126,9 +126,6 @@ type PageItem = {
   verification_required_to_view: string | null
 };
 
-// `/public-search` is unauthenticated and returns a single unpaginated page
-// without the relationship/blurhash fields the card expects. Fill those in
-// with inert defaults so a public item is shape-compatible with `PageItem`.
 const normalizePublicItem = (item: any): PageItem => ({
   prospect_person_id: item.prospect_person_id,
   prospect_uuid: item.prospect_uuid,
@@ -149,7 +146,6 @@ const fetchPageWithoutQueue = async (
   isPublic: boolean,
 ): Promise<PageItem[] | null> => {
   if (isPublic) {
-    // The public endpoint is unpaginated - everything comes back on page 1.
     if (pageNumber > 1) {
       return [];
     }
@@ -538,7 +534,6 @@ const ListHeaderComponent = ({
     />;
   }
 
-  // Logged-out visitors have no clubs and can't play Q&A; skip the nudge.
   if (isPublic) {
     return null;
   }
@@ -562,8 +557,6 @@ const ListHeaderComponent = ({
 };
 
 const SearchScreen_ = ({navigation}) => {
-  // Logged-out web visitors browse public results; the rest of the app (mobile,
-  // and signed-in users everywhere) uses the authenticated `/search` endpoint.
   const isPublic = useIsWebLoggedOut();
 
   const {

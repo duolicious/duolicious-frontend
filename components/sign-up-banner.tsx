@@ -6,11 +6,6 @@ import { useAppTheme } from '../app-theme/app-theme';
 import { showSignUp } from './modal/sign-up-modal';
 import { useNumActiveUsers } from './welcome-screen';
 
-// Persuasive sign-up banner that hovers at the bottom of the page for logged-out
-// web visitors. Rendered once at the app root (in App.tsx) so a single instance
-// stays mounted across the browsable surfaces it spans - the Search tab and
-// prospect profiles. The Duolicious logo and live member count sit on the left
-// half, a "Join or sign in" button on the right half. Opens the sign-up modal.
 const SignUpBanner = () => {
   const { appTheme } = useAppTheme();
   const numActiveUsers = useNumActiveUsers(undefined);
@@ -19,8 +14,6 @@ const SignUpBanner = () => {
     <View
       style={{
         position: 'absolute',
-        // Mobile web has a bottom tab bar (~50px); sit above it. Desktop web
-        // uses the side bar, so a small bottom gap is enough.
         bottom: isMobile() ? 70 : 20,
         left: 0,
         right: 0,

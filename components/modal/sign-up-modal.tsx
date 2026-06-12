@@ -13,9 +13,6 @@ const showSignUp = (isVisible: boolean) => {
 };
 
 const useShowSignUp = () => {
-  // Initialize from the last event (and bind with `notifyOnBind`) so consumers
-  // that mount *after* the modal is opened - e.g. the welcome flow rendered
-  // inside the modal - still observe the current visibility.
   const [isVisible, setIsVisible] = useState<boolean>(
     () => lastEvent<boolean>('show-sign-up') ?? false);
 
@@ -42,10 +39,6 @@ const SignUpModal = () => {
 
   const onPressClose = useCallback(() => showSignUp(false), []);
 
-  // Close the modal once the user is signed in (the welcome flow signals
-  // completion by setting the signed-in user). The flow also resets the outer
-  // navigation container; we send the user to the Search tab so a web visitor
-  // who signed up from Search stays there.
   useEffect(() => {
     if (!isVisible) return;
     if (!signedInUser) return;

@@ -48,8 +48,6 @@ const Tab = ({ navigation, state, route, descriptors, index, numUnread }) => {
     // TODO: Do I even need this?
     // navigation.dispatch(StackActions.popToTop());
 
-    // Logged-out web visitors (mobile web) may only browse Search; every other
-    // tab prompts sign-up instead of navigating to a gated screen.
     if (isWebLoggedOut && route.name !== 'Search') {
       showSignUp(true);
       return;

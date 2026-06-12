@@ -347,8 +347,7 @@ const AnonymousSignInCta = ({navigation, name}) => {
   const insets = useSafeAreaInsets();
 
   // Push Welcome (don't `reset`) so the system back button still points at
-  // the profile and the user can bail out of sign-in. Native only: web renders
-  // the app-wide sign-up banner over the profile instead of this button.
+  // the profile and the user can bail out of sign-in.
   const onPress = useCallback(() => {
     navigation.navigate('Welcome');
   }, [navigation]);
@@ -1000,9 +999,6 @@ const CurriedContent = ({navigationRef, navigation, route}) => {
                   width: '100%',
                   maxWidth: 600,
                   alignSelf: 'center',
-                  // Reserve extra room so the "Share profile" button at the end
-                  // clears the floating sign-up banner shown to logged-out
-                  // viewers on web.
                   paddingBottom:
                     showAnonymousSignInCta && Platform.OS === 'web' ? 200 : 100,
                 }}
@@ -1074,8 +1070,6 @@ const CurriedContent = ({navigationRef, navigation, route}) => {
             </View>
           </View>
         }
-        {/* Web shows the app-wide sign-up banner (rendered in App.tsx) over the
-            profile, so only native needs the personalized in-screen button. */}
         {showAnonymousSignInCta && Platform.OS !== 'web' &&
           <AnonymousSignInCta
             navigation={navigation}
@@ -1083,10 +1077,6 @@ const CurriedContent = ({navigationRef, navigation, route}) => {
           />
         }
       </>}
-      {/* Signed-in viewers always get a back button. Logged-out viewers do too
-          on web, where they reach profiles by navigating from the Search tab
-          (and deep-links get a synthesized Home/Search parent), so there's
-          always somewhere to go back to. */}
       {(!isAnonymousViewer || Platform.OS === 'web') &&
         <View
           style={{
