@@ -9,9 +9,12 @@ import { useInboxStats } from '../../chat/application-layer/hooks/inbox-stats';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LabelToIcon } from './util';
 import { useAppTheme } from '../../app-theme/app-theme';
+import { useIsWebLoggedOut } from '../../events/signed-in-user';
+import { showSignUp } from '../modal/sign-up-modal';
 
 const Tab = ({ navigation, state, route, descriptors, index, numUnread }) => {
   const { appThemeName, appTheme } = useAppTheme();
+  const isWebLoggedOut = useIsWebLoggedOut();
 
   const animated = useRef(new Animated.Value(1)).current;
 
@@ -44,6 +47,13 @@ const Tab = ({ navigation, state, route, descriptors, index, numUnread }) => {
   const onPress = () => {
     // TODO: Do I even need this?
     // navigation.dispatch(StackActions.popToTop());
+
+    // Logged-out web visitors (mobile web) may only browse Search; every other
+    // tab prompts sign-up instead of navigating to a gated screen.
+    if (isWebLoggedOut && route.name !== 'Search') {
+      showSignUp(true);
+      return;
+    }
 
     const event = navigation.emit({
       type: 'tabPress',

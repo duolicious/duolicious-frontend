@@ -31,6 +31,8 @@ import { searchQueue } from '../api/queue';
 import { useScrollbar } from './navigation/scroll-bar-hooks';
 import { onPressInvite } from '../components/invite';
 import { useAppTheme } from '../app-theme/app-theme';
+import { useIsWebLoggedOut } from '../events/signed-in-user';
+import { showSignUp } from './modal/sign-up-modal';
 
 const styles = StyleSheet.create({
   safeAreaView: {
@@ -124,10 +126,37 @@ type PageItem = {
   verification_required_to_view: string | null
 };
 
+// `/public-search` is unauthenticated and returns a single unpaginated page
+// without the relationship/blurhash fields the card expects. Fill those in
+// with inert defaults so a public item is shape-compatible with `PageItem`.
+const normalizePublicItem = (item: any): PageItem => ({
+  prospect_person_id: item.prospect_person_id,
+  prospect_uuid: item.prospect_uuid,
+  profile_photo_uuid: item.profile_photo_uuid,
+  profile_photo_blurhash: item.profile_photo_blurhash ?? '',
+  name: item.name,
+  age: item.age,
+  match_percentage: item.match_percentage,
+  person_messaged_prospect: false,
+  prospect_messaged_person: false,
+  verified: item.verified,
+  verification_required_to_view: null,
+});
+
 const fetchPageWithoutQueue = async (
   club: string | null,
-  pageNumber: number
+  pageNumber: number,
+  isPublic: boolean,
 ): Promise<PageItem[] | null> => {
+  if (isPublic) {
+    // The public endpoint is unpaginated - everything comes back on page 1.
+    if (pageNumber > 1) {
+      return [];
+    }
+    const response = await japi('get', '/public-search');
+    return response.ok ? (response.json).map(normalizePublicItem) : null;
+  }
+
   const resultsPerPage = 10;
   const offset = resultsPerPage * (pageNumber - 1);
   const response = await japi(
@@ -142,12 +171,13 @@ const fetchPageWithoutQueue = async (
 };
 
 const fetchPage = (
-  club: string | null
+  club: string | null,
+  isPublic: boolean,
 ) => async (
   pageNumber: number
 ): Promise<PageItem[] | null> => {
   return searchQueue.addTask(
-    async () => fetchPageWithoutQueue(club, pageNumber));
+    async () => fetchPageWithoutQueue(club, pageNumber, isPublic));
 };
 
 type ClubSelectorProps = {
@@ -497,6 +527,7 @@ const ListHeaderComponent = ({
   hasClubs,
   selectedClub,
   setSelectedClub,
+  isPublic,
 }) => {
   const { appTheme } = useAppTheme();
 
@@ -505,6 +536,11 @@ const ListHeaderComponent = ({
       selectedClub={selectedClub}
       onChangeSelectedClub={setSelectedClub}
     />;
+  }
+
+  // Logged-out visitors have no clubs and can't play Q&A; skip the nudge.
+  if (isPublic) {
+    return null;
   }
 
   return (
@@ -526,6 +562,10 @@ const ListHeaderComponent = ({
 };
 
 const SearchScreen_ = ({navigation}) => {
+  // Logged-out web visitors browse public results; the rest of the app (mobile,
+  // and signed-in users everywhere) uses the authenticated `/search` endpoint.
+  const isPublic = useIsWebLoggedOut();
+
   const {
     hasClubs: initialHasClubs,
     selectedClub: initialSelectedClub,
@@ -561,10 +601,14 @@ const SearchScreen_ = ({navigation}) => {
   }, [onPressRefresh]);
 
   const onPressOptions = useCallback(() => {
+    if (isPublic) {
+      showSignUp(true);
+      return;
+    }
     navigation.navigate('Search Filter Screen', {
       screen: 'Search Filter Tab',
     });
-  }, [selectedClub]);
+  }, [selectedClub, isPublic]);
 
   useEffect(() => {
     const refresh = listRef?.current?.refresh;
@@ -648,8 +692,8 @@ const SearchScreen_ = ({navigation}) => {
         endText={
           "No more matches to show"
         }
-        fetchPage={fetchPage(selectedClub)}
-        dataKey={JSON.stringify(selectedClub)}
+        fetchPage={fetchPage(selectedClub, isPublic)}
+        dataKey={JSON.stringify([selectedClub, isPublic])}
         hideListHeaderComponentWhenEmpty={!hasClubs}
         hideListHeaderComponentWhenLoading={!hasClubs}
         numColumns={2}
@@ -660,6 +704,7 @@ const SearchScreen_ = ({navigation}) => {
             hasClubs={hasClubs}
             selectedClub={selectedClub}
             setSelectedClub={setSelectedClub}
+            isPublic={isPublic}
           />
         }
         renderItem={({item}: any) => <ProfileCardMemo item={item} />}

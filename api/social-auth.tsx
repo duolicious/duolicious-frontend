@@ -486,6 +486,23 @@ export const consumePendingAppleWebSignIn = (): {
   };
 };
 
+/**
+ * Non-consuming peek for an in-flight Apple web sign-in return. True when the
+ * current URL carries the Apple callback params that `consumePendingAppleWebSignIn`
+ * would process. Lets a host (e.g. the sign-up modal) decide to mount the
+ * welcome flow that actually consumes them. No side effects.
+ */
+export const hasPendingAppleWebSignIn = (): boolean => {
+  if (Platform.OS !== 'web') return false;
+  if (typeof window === 'undefined') return false;
+  const params = new URLSearchParams(window.location.search);
+  return (
+    params.has('apple_id_token') ||
+    params.has('apple_error') ||
+    params.has('apple_state')
+  );
+};
+
 const _parseQueryParams = (url: string): URLSearchParams => {
   // Some browsers/env may not populate URL.searchParams from a relative-ish
   // string; parse the query manually as a fallback.
