@@ -65,7 +65,7 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { ClubItem, joinClub, leaveClub } from '../club/club';
 import * as _ from 'lodash';
-import { friendlyTimeAgo, possessive, bestTextOn, capLuminance } from '../util/util';
+import { friendlyTimeAgo, possessive, bestTextOn, capLuminance, isUuid } from '../util/util';
 import { useOnline } from '../chat/application-layer/hooks/online';
 import { HeartBackground } from './heart-background';
 import { AudioPlayer } from './audio-player';
@@ -120,11 +120,6 @@ const GalleryScreen = ({navigation, route}) => {
 
 // Path here must match the `Prospect Profile` route in App.tsx's linking config
 // (profiles live at the top level: /<username>).
-const UUID_REGEX =
-  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
-
-const isUuid = (s: string | undefined): boolean => !!s && UUID_REGEX.test(s);
-
 const buildShareableProfileUrl = (handle: string) =>
   `${INVITE_URL}/${encodeURIComponent(handle)}`;
 

@@ -235,23 +235,23 @@ const GivenName = forwardRef((props: InputProps<OptionGroupGivenName>, ref) => {
   const [slugPreview, setSlugPreview] = useState('');
   const [slugTaken, setSlugTaken] = useState(false);
   const inputValueRef = useRef<string>('');
-  const checkSeqRef = useRef(0);
 
   // The backend is the source of truth for the slug and its availability (the
   // app deliberately doesn't recompute slug_base() here, so the two can't drift
   // apart). Debounce a best-effort check; it upserts the onboardee's name,
   // which is harmless before finish-onboarding. Routed through onboardingQueue
-  // (same as submit()) so the writes stay ordered, and a sequence guard drops
-  // responses superseded by a newer keystroke.
+  // (same as submit()) so the writes stay ordered.
   const checkAvailability = useCallback(_.debounce(async (name: string) => {
     // Nothing typed yet — no feedback (an empty name is "invalid" server-side,
     // but we don't want to nag before the user has entered anything).
     if (!name.trim()) return;
 
-    const seq = ++checkSeqRef.current;
     const response = await onboardingQueue.addTask(
       () => japi('patch', '/onboardee-info', { name }));
-    if (seq !== checkSeqRef.current) return;
+    // Drop a response the user has already typed past: if the input no longer
+    // matches the name we checked, a newer check is (or will be) in flight for
+    // the current value.
+    if (name !== inputValueRef.current) return;
     // Same response drives both the validity error and the slug preview: an
     // invalid name (too short/long, not a real name) comes back !ok, so we can
     // surface "not a real name" as the user types instead of only on submit.

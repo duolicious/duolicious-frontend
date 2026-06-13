@@ -316,6 +316,8 @@ const DisplayNameAndAboutPerson = ({data}) => {
     (stateSetter: (state: State) => void) =>
     (r: ApiResponse): boolean =>
   {
+    if (r.json?.url_slug) setNameSlug(r.json.url_slug);
+
     if (r.ok && r.validationErrors === null) {
       stateSetter('saved');
       return true;
@@ -328,6 +330,8 @@ const DisplayNameAndAboutPerson = ({data}) => {
     } else if (r.text === 'Requires gold') {
       showPointOfSale(true);
       stateSetter('needs gold');
+    } else if (r.json?.is_random) {
+      stateSetter('saved-random');
     } else {
       stateSetter('error');
     }
@@ -352,18 +356,10 @@ const DisplayNameAndAboutPerson = ({data}) => {
       if (name.length <  1) { setNameState('too short'); return; }
       if (name.length > 64) { setNameState('too long'); return; }
 
-      if (r.ok && r.validationErrors === null) {
-        if (r.json?.url_slug) {
-          setNameSlug(r.json.url_slug);
-        }
-        setNameState(r.json?.is_random ? 'saved-random' : 'saved');
+      if (responseHandler(setNameState)(r)) {
         setName(name);
-
         notify<string>('updated-name', name);
-        return;
       }
-
-      responseHandler(setNameState)(r);
     };
 
     await debouncedOnChangeNameText(name, handleResponse);
