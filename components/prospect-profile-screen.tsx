@@ -118,9 +118,10 @@ const GalleryScreen = ({navigation, route}) => {
   );
 };
 
-// Path here must match the `Prospect Profile` route in App.tsx's linking config.
+// Path here must match the `Prospect Profile` route in App.tsx's linking config
+// (profiles live at the top level: /<username>).
 const buildShareableProfileUrl = (personUuid: string) =>
-  `${INVITE_URL}/profile/${encodeURIComponent(personUuid)}`;
+  `${INVITE_URL}/${encodeURIComponent(personUuid)}`;
 
 const onPressShareProfile = async (personUuid: string | undefined) => {
   if (!personUuid) return;
@@ -662,6 +663,7 @@ const AllClubs = ({
 
 type UserData = {
   name: string,
+  url_slug: string | null,
   about: string,
   mutual_clubs: string[],
   other_clubs: string[],
@@ -783,7 +785,7 @@ const CurriedContent = ({navigationRef, navigation, route}) => {
   // the former is derived from who's signed in (plus an optional one-shot
   // hint from the caller), the latter is an optimistic rendering hint stashed
   // in prospect-cache by the navigating caller. This keeps URLs clean
-  // (`/profile/:uuid`) and navigation state serializable.
+  // (`/:username`) and navigation state serializable.
   const [signedInUser] = useSignedInUser();
   const hint = getProspectHint(personUuid);
   const isViewingSelf =
@@ -1549,7 +1551,7 @@ const Body = ({
             personUuid={personUuid}
             name={data?.name}
           />}
-        <ShareButton personUuid={personUuid}/>
+        <ShareButton personUuid={data?.url_slug ?? personUuid}/>
         {!isViewingSelf && !!signedInUser &&
           <BlockButton
             name={data?.name}

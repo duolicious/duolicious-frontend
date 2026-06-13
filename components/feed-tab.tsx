@@ -280,7 +280,7 @@ const AgeGenderLocation = ({
     photoBlurhash,
   );
 
-  const link = makeLinkProps(`/profile/${personUuid}`);
+  const link = makeLinkProps(`/${personUuid}`);
 
   return (
     <View

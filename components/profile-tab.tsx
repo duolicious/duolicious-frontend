@@ -50,9 +50,7 @@ import { resetUserScopedClientState } from '../navigation/reset-client-state';
 import { api, japi, ApiResponse } from '../api/api';
 import { useSignedInUser, setSignedInUser, getSignedInUser } from '../events/signed-in-user';
 import { cmToFeetInchesStr } from '../units/units';
-import {
-  IMAGES_URL,
-} from '../env/env';
+import { IMAGES_URL } from '../env/env';
 import * as _ from "lodash";
 import { aboutQueue, nameQueue } from '../api/queue';
 import { ClubSelector } from './club-selector';
@@ -285,11 +283,13 @@ const ProfileTab_ = ({navigation}) => {
 
 const DisplayNameAndAboutPerson = ({data}) => {
   const [name, setName] = useState<string>(data.name ?? '');
+  const { appTheme } = useAppTheme();
 
   type State
     = 'unchanged'
     | 'saving...'
     | 'saved'
+    | 'saved-random'
     | 'error'
     | 'too rude'
     | 'needs gold'
@@ -298,6 +298,8 @@ const DisplayNameAndAboutPerson = ({data}) => {
     | 'too long';
 
   const [nameState, setNameState] = useState<State>('unchanged');
+
+  const [nameSlug, setNameSlug] = useState<string | null>(data?.url_slug ?? null);
 
   const [aboutState, setAboutState] = useState<State>('unchanged');
 
@@ -350,11 +352,18 @@ const DisplayNameAndAboutPerson = ({data}) => {
       if (name.length <  1) { setNameState('too short'); return; }
       if (name.length > 64) { setNameState('too long'); return; }
 
-      if (responseHandler(setNameState)(r)) {
+      if (r.ok && r.validationErrors === null) {
+        if (r.json?.url_slug) {
+          setNameSlug(r.json.url_slug);
+        }
+        setNameState(r.json?.is_random ? 'saved-random' : 'saved');
         setName(name);
 
         notify<string>('updated-name', name);
+        return;
       }
+
+      responseHandler(setNameState)(r);
     };
 
     await debouncedOnChangeNameText(name, handleResponse);
@@ -382,7 +391,7 @@ const DisplayNameAndAboutPerson = ({data}) => {
                 errorStates.includes(nameState) ? 'red' : '#777'),
             }}
           >
-            ({nameState})
+            ({nameState === 'saved-random' ? 'saved' : nameState})
           </DefaultText>
         }
       </Title>
@@ -395,6 +404,23 @@ const DisplayNameAndAboutPerson = ({data}) => {
           marginRight: 0,
         }}
       />
+      {!!nameSlug &&
+        <DefaultText
+          style={{
+            fontSize: 14,
+            color: appTheme.hintColor,
+            marginTop: 10,
+            textAlign: 'center',
+          }}
+        >
+          Changing your display name changes your username – Your current
+          username is {}
+          <DefaultText style={{ fontWeight: 700 }} disableTheme={true}>
+            {nameSlug}
+          </DefaultText>
+          {nameState === 'saved-random' && ` (${name} is taken)`}
+        </DefaultText>
+      }
 
       <Title>
         About {name} {}

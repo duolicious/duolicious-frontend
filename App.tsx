@@ -158,6 +158,22 @@ const navigationContainerRef = createNavigationContainerRef<any>();
 const UUID_REGEX_SOURCE =
   '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
 
+// Custom profile URLs live at the top level: /<url_slug>, derived from the
+// display name. The backend never mints a slug equal to one of the app's
+// top-level routes, and React Navigation matches static segments before param
+// segments, so those routes stay reachable.
+//
+// COUPLING: the backend's RESERVED_SLUGS (urlslug/__init__.py) is the
+// authoritative list of slugs that must never be minted, and it must mirror
+// every top-level route below. Adding a new top-level route here means adding
+// it there too, or that route becomes shadowable by a user's slug.
+const SLUG_REGEX_SOURCE = '[a-z0-9_-]+';
+
+// Nested routes under /profile (see the Profile navigator in the linking
+// config). The legacy /profile/<x> redirect must leave these alone, so they're
+// named once here rather than re-listed inline.
+const PROFILE_SUBROUTES = ['settings', 'clubs', 'invites'];
+
 // Route names that render the generic OptionScreen-driven wizard. These
 // rely on an in-memory payload that's not URL-serializable, so we don't
 // persist their paths in `last_path` (see `onNavigationStateChange`).
@@ -279,18 +295,21 @@ const App = () => {
         },
         'Conversation Screen': `chat/:personUuid(${UUID_REGEX_SOURCE})`,
         'Prospect Profile Screen': {
-          // NOTE: No `path` here. If we set `path: 'profile'`, it conflicts with
-          // the Profile tab's `/profile` route (React Navigation requires unique patterns).
-          // We deliberately do NOT set `initialRouteName: 'Prospect Profile'`
-          // either, because every child route here is parameterised by the
-          // same `personUuid` and there's no way to forward that param down
-          // to the synthesised parent. A direct deep-link to `/in-depth/:uuid`
-          // therefore mounts In-Depth alone, and back navigation falls
-          // through to the synthesised `Home/Search` set up by
-          // `withHomeBackStack` in `navigation/startup.ts`.
+          // NOTE: No `path` here. We deliberately do NOT set
+          // `initialRouteName: 'Prospect Profile'` either, because every child
+          // route here is parameterised by the same `personUuid` and there's no
+          // way to forward that param down to the synthesised parent. A direct
+          // deep-link to `/in-depth/:uuid` therefore mounts In-Depth alone, and
+          // back navigation falls through to the synthesised `Home/Search` set
+          // up by `withHomeBackStack` in `navigation/startup.ts`.
           screens: {
-            // Avoid conflicts with `/profile/settings` etc
-            'Prospect Profile': `profile/:personUuid(${UUID_REGEX_SOURCE})`,
+            // Profiles live at the top level: /<username>. The param accepts a
+            // uuid (legacy/shared links) or a url_slug. The backend never mints
+            // a slug equal to a top-level route, and React Navigation matches
+            // static segments (feed, inbox, profile, ...) before this param, so
+            // those routes stay reachable. Legacy /profile/<x> links are
+            // rewritten to /<x> in getStateFromPath below.
+            'Prospect Profile': `:personUuid(${UUID_REGEX_SOURCE}|${SLUG_REGEX_SOURCE})`,
             'Gallery Screen': 'gallery/:photoUuid',
             'In-Depth': `in-depth/:personUuid(${UUID_REGEX_SOURCE})`,
           },
@@ -315,6 +334,18 @@ const App = () => {
         let normalized = path;
         if (normalized === '/me' || normalized.startsWith('/me/')) normalized = '/';
         if (normalized === '/welcome' || normalized.startsWith('/welcome/')) normalized = '/';
+
+        // Profiles used to live at /profile/<uuid-or-slug>; they're now at the
+        // top level (/<username>). Rewrite legacy links so shared URLs keep
+        // working, but leave the real /profile, /profile/settings,
+        // /profile/clubs and /profile/invites routes alone. Rewriting up front
+        // (rather than resolving here) lets the path flow through the same
+        // logged-out gating below as a native /<username> URL.
+        const legacyProfile = normalized.match(/^\/profile\/([^/?]+)(\?.*)?$/);
+        if (legacyProfile &&
+            !PROFILE_SUBROUTES.includes(legacyProfile[1])) {
+          normalized = `/${legacyProfile[1]}${legacyProfile[2] ?? ''}`;
+        }
 
         // The app root `/` is shared between the logged-out Welcome screen
         // and the logged-in Home tabs. We want `/` to land on the default

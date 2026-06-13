@@ -256,7 +256,7 @@ const ProfileCard = ({
     [personUuid, onMessageTo]
   );
 
-  const link = navigation && !verificationRequired && personUuid ? makeLinkProps(`/profile/${personUuid}`)
+  const link = navigation && !verificationRequired && personUuid ? makeLinkProps(`/${personUuid}`)
                                                                  : {};
 
   return (

@@ -69,7 +69,7 @@ const Avatar = ({
 
   const link =
     isLinkToProfile
-      ? makeLinkProps(`/profile/${personUuid}`)
+      ? makeLinkProps(`/${personUuid}`)
       : {};
 
   return (

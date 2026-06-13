@@ -311,7 +311,7 @@ const useNavigationToProfile = (
 
   return {
     onPress,
-    href: verificationRequired ? undefined : `/profile/${personUuid}`
+    href: verificationRequired ? undefined : `/${personUuid}`
   };
 };
 
