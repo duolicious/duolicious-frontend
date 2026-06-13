@@ -289,7 +289,6 @@ const DisplayNameAndAboutPerson = ({data}) => {
     = 'unchanged'
     | 'saving...'
     | 'saved'
-    | 'saved-random'
     | 'error'
     | 'too rude'
     | 'needs gold'
@@ -300,6 +299,11 @@ const DisplayNameAndAboutPerson = ({data}) => {
   const [nameState, setNameState] = useState<State>('unchanged');
 
   const [nameSlug, setNameSlug] = useState<string | null>(data?.url_slug ?? null);
+
+  // Whether the current slug needed a random suffix because the name collided.
+  // Tracked separately from `nameState` because a successful rename is always
+  // `'saved'` (r.ok), so the random case can't be a state of its own.
+  const [nameSlugTaken, setNameSlugTaken] = useState<boolean>(false);
 
   const [aboutState, setAboutState] = useState<State>('unchanged');
 
@@ -316,7 +320,10 @@ const DisplayNameAndAboutPerson = ({data}) => {
     (stateSetter: (state: State) => void) =>
     (r: ApiResponse): boolean =>
   {
-    if (r.json?.url_slug) setNameSlug(r.json.url_slug);
+    if (r.json?.url_slug) {
+      setNameSlug(r.json.url_slug);
+      setNameSlugTaken(!!r.json.is_random);
+    }
 
     if (r.ok && r.validationErrors === null) {
       stateSetter('saved');
@@ -330,8 +337,6 @@ const DisplayNameAndAboutPerson = ({data}) => {
     } else if (r.text === 'Requires gold') {
       showPointOfSale(true);
       stateSetter('needs gold');
-    } else if (r.json?.is_random) {
-      stateSetter('saved-random');
     } else {
       stateSetter('error');
     }
@@ -387,7 +392,7 @@ const DisplayNameAndAboutPerson = ({data}) => {
                 errorStates.includes(nameState) ? 'red' : '#777'),
             }}
           >
-            ({nameState === 'saved-random' ? 'saved' : nameState})
+            ({nameState})
           </DefaultText>
         }
       </Title>
@@ -414,7 +419,7 @@ const DisplayNameAndAboutPerson = ({data}) => {
           <DefaultText style={{ fontWeight: 700 }} disableTheme={true}>
             {nameSlug}
           </DefaultText>
-          {nameState === 'saved-random' && ` (${name} is taken)`}
+          {nameSlugTaken && ` (${name} is taken)`}
         </DefaultText>
       }
 
