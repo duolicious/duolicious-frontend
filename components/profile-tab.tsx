@@ -690,7 +690,11 @@ const Options = ({ navigation, data }) => {
           'Prospect Profile Screen',
           {
             screen: 'Prospect Profile',
-            params: { personUuid: signedInUser?.personUuid },
+            // Prefer the username (url_slug) so the previewed URL matches what
+            // others see; fall back to the uuid until the slug is backfilled.
+            params: {
+              personUuid: data?.url_slug ?? signedInUser?.personUuid,
+            },
           }
         )}
         containerStyle={{
