@@ -29,6 +29,22 @@ import { quizQueue } from '../api/queue';
 import * as _ from "lodash";
 import { useSkipped } from '../hide-and-block/hide-and-block';
 import { useAppTheme } from '../app-theme/app-theme';
+import { useIsWebLoggedOut } from '../events/signed-in-user';
+import { showSignUp } from './modal/sign-up-modal';
+import {
+  AnonymousAnswer,
+  addAnonymousAnswer,
+  loadAnonymousAnswers,
+  removeAnonymousAnswer,
+} from '../kv-storage/anonymous-answers';
+
+// How many questions an unauthenticated web user may answer before we ask them
+// to sign up.
+const PUBLIC_ANSWER_LIMIT = 10;
+
+const SIGN_UP_MESSAGE = 'Join to view more matches';
+
+const ALL_SWIPE_DIRECTIONS: Direction[] = ['up', 'down', 'left', 'right'];
 
 const styles = StyleSheet.create({
   stackContainerStyle: {
@@ -59,14 +75,23 @@ const getRandomArbitrary = (min: number, max: number) => {
 
 const getRandomInt = (max) => Math.floor(Math.random() * max);
 
-const fetchNextQuestions = async (n: number = 10, o: number = 0): Promise<{
+const fetchNextQuestions = async (
+  n: number = 10,
+  o: number = 0,
+  isPublic: boolean = false,
+): Promise<{
   id: number,
   question: string,
   topic: string,
   yesCount: number,
   noCount: number
 }[]> => {
-  const response = await api('GET', `/next-questions?n=${n}&o=${o}`);
+  const endpoint = isPublic ? '/public-next-questions' : '/next-questions';
+  const response = await api('GET', `${endpoint}?n=${n}&o=${o}`);
+
+  if (!response.ok) {
+    return [];
+  }
 
   return response.json.map(q => ({
     id: q.id,
@@ -136,8 +161,17 @@ const prospectState = (
 const fetchNBestProspects = async (
   n: number,
   refreshNeighborhood: boolean,
+  isPublic: boolean = false,
+  answers: AnonymousAnswer[] = [],
 ): Promise<ProspectState[]> => {
-  const response = refreshNeighborhood || n > 1 ?
+  const response = isPublic ?
+    await japi(
+      'get',
+      `/public-search?answers=${
+        encodeURIComponent(JSON.stringify(answers))
+      }&n=${n}&o=0`,
+    ) :
+    refreshNeighborhood || n > 1 ?
     await japi('get', `/search?n=${n}&o=0`) :
     await japi('get', '/search');
 
@@ -247,6 +281,7 @@ const numRemainingCards = (state: StackState): number => {
 
 const addNextCardsInPlace = async (
   state: StackState,
+  isPublic: boolean,
   onAddCallback?: () => void,
   onFetchCallback?: () => void,
   onTopCardChangedCallback?: () => void,
@@ -269,8 +304,10 @@ const addNextCardsInPlace = async (
 
   numRemainingCards_ < 2 && onAddCallback && onAddCallback();
 
+  const offset = isPublic ? state.questionNumbers.size : numRemainingCards_;
+
   const nextQuestions = await fetchNextQuestions(
-    unfetchedCards.length, numRemainingCards_);
+    unfetchedCards.length, offset, isPublic);
 
   // Pop the unfetched cards off the stack in case the server is running out of
   // questions and can't give us enough cards to meet the target.
@@ -301,6 +338,8 @@ const addNextCardsInPlace = async (
 
 const addNextProspectsInPlace = async (
   state: StackState,
+  isPublic: boolean,
+  answers: AnonymousAnswer[],
   callback?: () => void,
   n: number = 1,
 ) => {
@@ -312,7 +351,9 @@ const addNextProspectsInPlace = async (
 
   prospects.push(...await fetchNBestProspects(
     n,
-    [4, 8, 16, 32, 64].includes(topCardQuestionNumber)
+    [4, 8, 16, 32, 64].includes(topCardQuestionNumber),
+    isPublic,
+    answers,
   ));
 
   callback && callback();
@@ -554,15 +595,19 @@ const QuizCardStack_ = ({
   card1,
   card2,
   card3,
+  locked,
   triggerRender,
   onSwipe,
+  onSwipePrevented,
   onCardLeftScreen,
 }: {
   card1: CardState,
   card2: CardState,
   card3: CardState,
+  locked: boolean,
   triggerRender: () => void,
   onSwipe: (direction: Direction) => Promise<void>,
+  onSwipePrevented: (direction: Direction) => void,
   onCardLeftScreen: () => void,
 }) => {
   const cards: CardState[] = [card1, card2, card3].filter(Boolean);
@@ -597,9 +642,14 @@ const QuizCardStack_ = ({
             return <QuizCardMemo
               key={`${card.questionNumber}-quiz-card`}
               initialPosition={card.swipeDirection}
-              preventSwipe={card.preventSwipe}
+              preventSwipe={
+                locked && card === card2
+                  ? ALL_SWIPE_DIRECTIONS
+                  : card.preventSwipe
+              }
               innerRef={card.ref}
               onSwipe={onSwipe}
+              onSwipePrevented={onSwipePrevented}
               onCardLeftScreen={onCardLeftScreen}
               nonInteractiveContainerStyle={card.style}
               questionNumber={card.questionNumber}
@@ -632,10 +682,19 @@ const QuizCardStack = (props) => {
     onSwipe,
   } = props;
 
+  const isPublic = useIsWebLoggedOut();
+
   const stateRef = useRef<StackState>(initialState()).current;
+
+  const answersRef = useRef<AnonymousAnswer[]>([]);
 
   const [, triggerRender_] = useState({});
   const triggerRender = () => triggerRender_({});
+
+  const isAtAnswerLimit = (card: CardState): boolean =>
+    isPublic &&
+    answersRef.current.length >= PUBLIC_ANSWER_LIMIT &&
+    !answersRef.current.some(a => a.question_id === card?.questionNumber);
 
   class Api implements ApiInterface {
     async swipe(direction) {
@@ -643,6 +702,10 @@ const QuizCardStack = (props) => {
       const topCardIndex = stateRef.topCardIndex;
       const topCard = cards[topCardIndex];
       if (topCard === undefined) {
+        return;
+      }
+      if (isAtAnswerLimit(topCard)) {
+        showSignUp(true, SIGN_UP_MESSAGE);
         return;
       }
       const topCardRef = topCard.ref.current;
@@ -673,11 +736,17 @@ const QuizCardStack = (props) => {
 
       quizQueue.addTask(
         async () => {
-          await japi(
-            'delete',
-            '/answer',
-            { question_id: previouslySwipedCard.questionNumber }
-          );
+          if (isPublic) {
+            answersRef.current = removeAnonymousAnswer(
+              previouslySwipedCard.questionNumber as number
+            );
+          } else {
+            await japi(
+              'delete',
+              '/answer',
+              { question_id: previouslySwipedCard.questionNumber }
+            );
+          }
 
           if (
             previousSwipeDirection === 'left' ||
@@ -721,6 +790,12 @@ const QuizCardStack = (props) => {
   const onSwipe_ = useCallback(async (direction: Direction) => {
     const swipedCard = stateRef.cards[stateRef.topCardIndex];
 
+    if (isAtAnswerLimit(swipedCard)) {
+      swipedCard.ref.current?.restoreCard();
+      showSignUp(true, SIGN_UP_MESSAGE);
+      return;
+    }
+
     swipedCard.swipeDirection = direction;
 
     quizQueue.addTask(
@@ -731,22 +806,42 @@ const QuizCardStack = (props) => {
           if (direction === 'down') return null;
         })();
 
-        await japi(
-          'post',
-          '/answer',
-          {
-            question_id: swipedCard.questionNumber,
-            answer: answer,
-            public: swipedCard.answerPublicly
+        if (isPublic) {
+          const previousCount = answersRef.current.length;
+
+          answersRef.current = addAnonymousAnswer({
+            question_id: swipedCard.questionNumber as number,
+            answer: answer ?? null,
+            public: swipedCard.answerPublicly,
+          });
+
+          if (
+            previousCount < PUBLIC_ANSWER_LIMIT &&
+            answersRef.current.length >= PUBLIC_ANSWER_LIMIT
+          ) {
+            triggerRender();
+            showSignUp(true, SIGN_UP_MESSAGE);
           }
-        );
+        } else {
+          await japi(
+            'post',
+            '/answer',
+            {
+              question_id: swipedCard.questionNumber,
+              answer: answer,
+              public: swipedCard.answerPublicly
+            }
+          );
+        }
 
         if (direction === 'left' || direction === 'right') {
-          await addNextProspectsInPlace(stateRef, triggerRender);
+          await addNextProspectsInPlace(
+            stateRef, isPublic, answersRef.current, triggerRender);
         }
 
         addNextCardsInPlace(
           stateRef,
+          isPublic,
           undefined,
           triggerRender,
           onTopCardChanged
@@ -761,19 +856,35 @@ const QuizCardStack = (props) => {
     onSwipe(direction);
   }, []);
 
+  const onSwipePrevented = useCallback(() => {
+    const topCard = stateRef.cards[stateRef.topCardIndex];
+    if (isAtAnswerLimit(topCard)) {
+      showSignUp(true, SIGN_UP_MESSAGE);
+    }
+  }, []);
+
   const onCardLeftScreen = useCallback(() => {
     triggerRender();
   }, []);
 
   useEffect(() => {
-    addNextProspectsInPlace(stateRef, triggerRender, 3);
+    (async () => {
+      if (isPublic) {
+        answersRef.current = loadAnonymousAnswers();
+        answersRef.current.forEach(a => stateRef.questionNumbers.add(a.question_id));
+      }
 
-    addNextCardsInPlace(
-      stateRef,
-      triggerRender,
-      triggerRender,
-      onTopCardChanged
-    );
+      await addNextProspectsInPlace(
+        stateRef, isPublic, answersRef.current, triggerRender, 3);
+
+      addNextCardsInPlace(
+        stateRef,
+        isPublic,
+        triggerRender,
+        triggerRender,
+        onTopCardChanged
+      );
+    })();
   }, []);
 
   return (
@@ -789,8 +900,10 @@ const QuizCardStack = (props) => {
         card1={stateRef.cards[stateRef.topCardIndex + 1]}
         card2={stateRef.cards[stateRef.topCardIndex + 0]}
         card3={stateRef.cards[stateRef.topCardIndex - 1]}
+        locked={isAtAnswerLimit(stateRef.cards[stateRef.topCardIndex])}
         triggerRender={triggerRender}
         onSwipe={onSwipe_}
+        onSwipePrevented={onSwipePrevented}
         onCardLeftScreen={onCardLeftScreen}
       />
     </>
