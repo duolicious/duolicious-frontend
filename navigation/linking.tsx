@@ -35,6 +35,17 @@ const GATED_LOGGED_OUT_PATHS = new Set([
   '/qa', '/feed', '/inbox', '/visitors', '/profile',
 ]);
 
+// The handle (uuid or slug) of the prospect whose profile is currently
+// focused, or undefined when the focused route isn't a prospect profile. The
+// signed-out banner uses this to decide whether to show a "Message {name}"
+// CTA, so the answer is derived from the route rather than tracked by hand.
+const focusedProspectHandle = (state: any): string | undefined => {
+  const root = state?.routes?.[state.index ?? 0];
+  if (root?.name !== 'Prospect Profile Screen') return undefined;
+  const nested = root.state?.routes?.[root.state.index ?? 0];
+  return nested?.params?.personUuid;
+};
+
 const isBannerRoute = (state: any): boolean => {
   const root = state?.routes?.[state.index ?? 0];
   if (!root) return false;
@@ -222,4 +233,4 @@ const createLinking = () => {
   };
 };
 
-export { createLinking, isBannerRoute, focusedRouteIsWizard };
+export { createLinking, isBannerRoute, focusedProspectHandle, focusedRouteIsWizard };
