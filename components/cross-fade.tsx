@@ -9,9 +9,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-// Shared rendering for both crossfades below: a `front` layer whose opacity
-// tracks `progress` (0 -> 1) stacked over a `back` layer whose opacity is the
-// inverse. The two public components differ only in how they drive `progress`.
 type FadeLayersProps = {
   progress: SharedValue<number>
   front: ReactNode
@@ -43,9 +40,6 @@ const FadeLayers = ({ progress, front, back, style }: FadeLayersProps) => {
   );
 };
 
-// Controlled, one-shot reveal between two fixed slots: shows `back` until
-// `showFront` turns true, then crossfades to `front` (optionally lingering on
-// `back` for at least `minBackMs` first).
 type CrossFadeProps = {
   showFront: boolean
   front: ReactNode
@@ -81,10 +75,6 @@ const CrossFade = ({
   );
 };
 
-// Uncontrolled crossfade that re-animates whenever `triggerKey` changes: the
-// previous children fade out while the new ones fade in. Suits content that
-// toggles back and forth (e.g. a button label), where `CrossFade`'s one-shot
-// reveal doesn't fit.
 type CrossFadeTextProps = {
   triggerKey: string
   children: ReactNode
@@ -98,21 +88,13 @@ const CrossFadeText = ({
   duration = 300,
   style,
 }: CrossFadeTextProps) => {
-  // 0 = mid-swap (outgoing fully shown), 1 = settled (incoming fully shown).
   const progress = useSharedValue(1);
-  // `key` is the key currently rendered as the incoming layer; `outgoing` holds
-  // the previous children while they fade out.
   const [tx, setTx] = useState<{ key: string, outgoing: ReactNode }>({
     key: triggerKey,
     outgoing: null,
   });
   const lastChildren = useRef(children);
 
-  // Stage the swap during render (not an effect) and reset progress in the same
-  // tick, so the outgoing layer mounts already-opaque in the *same* commit as
-  // the new incoming layer. Staging in an effect would leave a frame where the
-  // incoming layer is hidden but the outgoing one hasn't mounted yet — the
-  // button would blink empty before the fade began.
   if (tx.key !== triggerKey) {
     setTx({ key: triggerKey, outgoing: lastChildren.current });
     progress.value = 0;
