@@ -3,7 +3,7 @@ import { navigateAfterAuth } from '../navigation/navigate-after-auth';
 import { login } from '../chat/application-layer';
 import { setSignedInUser } from '../events/signed-in-user';
 import { sessionPersonUuid } from '../kv-storage/session-token';
-import { clearAnonymousAnswers } from '../kv-storage/anonymous-answers';
+import { clearAnonymousAnswers } from '../events/anonymous-answers';
 import { notify } from '../events/events';
 import { ClubItem } from '../club/club';
 

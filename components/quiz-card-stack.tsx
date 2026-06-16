@@ -34,15 +34,16 @@ import { showSignUp } from './modal/sign-up-modal';
 import {
   AnonymousAnswer,
   addAnonymousAnswer,
-  loadAnonymousAnswers,
+  anonymousAnswers,
   removeAnonymousAnswer,
-} from '../kv-storage/anonymous-answers';
+} from '../events/anonymous-answers';
+import { markSearchResultsStale } from '../events/stale-search-results';
 
 // How many questions an unauthenticated web user may answer before we ask them
 // to sign up.
 const PUBLIC_ANSWER_LIMIT = 10;
 
-const SIGN_UP_MESSAGE = 'Join to view more matches';
+const SIGN_UP_MESSAGE = 'Join to save your answers';
 
 const ALL_SWIPE_DIRECTIONS: Direction[] = ['up', 'down', 'left', 'right'];
 
@@ -382,6 +383,112 @@ const removeNextProspectInPlace = async (
   });
 };
 
+const deleteAnswer = async (
+  questionNumber: number,
+  isPublic: boolean,
+) => {
+  if (isPublic) {
+    removeAnonymousAnswer(questionNumber);
+  } else {
+    await japi('delete', '/answer', { question_id: questionNumber });
+  }
+
+  markSearchResultsStale();
+};
+
+const removePreviousAnswerInPlace = async (
+  card: CardState,
+  swipeDirection: Direction | undefined,
+  isPublic: boolean,
+  state: StackState,
+  triggerRender: () => void,
+) => {
+  if (card.questionNumber === undefined) {
+    return;
+  }
+
+  await deleteAnswer(card.questionNumber, isPublic);
+
+  if (swipeDirection === 'left' || swipeDirection === 'right') {
+    removeNextProspectInPlace(state, triggerRender);
+  }
+};
+
+const directionToAnswer = (
+  direction: Direction,
+): boolean | null | undefined => {
+  if (direction === 'left') return false;
+  if (direction === 'right') return true;
+  if (direction === 'down') return null;
+};
+
+const saveAnswer = async (
+  questionNumber: number,
+  answer: boolean | null | undefined,
+  answerPublicly: boolean,
+  isPublic: boolean,
+  triggerRender: () => void,
+) => {
+  if (!isPublic) {
+    await japi('post', '/answer', {
+      question_id: questionNumber,
+      answer: answer,
+      public: answerPublicly,
+    });
+  } else {
+    const previousCount = anonymousAnswers.length;
+
+    addAnonymousAnswer({
+      question_id: questionNumber,
+      answer: answer ?? null,
+      public: answerPublicly,
+    });
+
+    const reachedLimit =
+      previousCount < PUBLIC_ANSWER_LIMIT &&
+      anonymousAnswers.length >= PUBLIC_ANSWER_LIMIT;
+
+    if (reachedLimit) {
+      triggerRender();
+      showSignUp(true, SIGN_UP_MESSAGE);
+    }
+  }
+
+  markSearchResultsStale();
+};
+
+const addAnswerInPlace = async (
+  direction: Direction,
+  swipedCard: CardState,
+  isPublic: boolean,
+  state: StackState,
+  triggerRender: () => void,
+  onTopCardChanged?: () => void,
+) => {
+  if (swipedCard.questionNumber !== undefined) {
+    await saveAnswer(
+      swipedCard.questionNumber,
+      directionToAnswer(direction),
+      swipedCard.answerPublicly,
+      isPublic,
+      triggerRender,
+    );
+  }
+
+  if (direction === 'left' || direction === 'right') {
+    await addNextProspectsInPlace(
+      state, isPublic, anonymousAnswers, triggerRender);
+  }
+
+  addNextCardsInPlace(
+    state,
+    isPublic,
+    undefined,
+    triggerRender,
+    onTopCardChanged,
+  );
+};
+
 const getBestProspects = (prospects: ProspectState[]) => {
   return [
     prospects[prospects.length - 1],
@@ -686,15 +793,13 @@ const QuizCardStack = (props) => {
 
   const stateRef = useRef<StackState>(initialState()).current;
 
-  const answersRef = useRef<AnonymousAnswer[]>([]);
-
   const [, triggerRender_] = useState({});
   const triggerRender = () => triggerRender_({});
 
   const isAtAnswerLimit = (card: CardState): boolean =>
     isPublic &&
-    answersRef.current.length >= PUBLIC_ANSWER_LIMIT &&
-    !answersRef.current.some(a => a.question_id === card?.questionNumber);
+    anonymousAnswers.length >= PUBLIC_ANSWER_LIMIT &&
+    !anonymousAnswers.some(a => a.question_id === card?.questionNumber);
 
   class Api implements ApiInterface {
     async swipe(direction) {
@@ -734,28 +839,13 @@ const QuizCardStack = (props) => {
 
       const previousSwipeDirection = previouslySwipedCard.swipeDirection;
 
-      quizQueue.addTask(
-        async () => {
-          if (isPublic) {
-            answersRef.current = removeAnonymousAnswer(
-              previouslySwipedCard.questionNumber as number
-            );
-          } else {
-            await japi(
-              'delete',
-              '/answer',
-              { question_id: previouslySwipedCard.questionNumber }
-            );
-          }
-
-          if (
-            previousSwipeDirection === 'left' ||
-            previousSwipeDirection === 'right'
-          ) {
-            removeNextProspectInPlace(stateRef, triggerRender);
-          }
-        }
-      );
+      quizQueue.addTask(() => removePreviousAnswerInPlace(
+        previouslySwipedCard,
+        previousSwipeDirection,
+        isPublic,
+        stateRef,
+        triggerRender,
+      ));
 
       previouslySwipedCard.swipeDirection = undefined;
 
@@ -798,56 +888,14 @@ const QuizCardStack = (props) => {
 
     swipedCard.swipeDirection = direction;
 
-    quizQueue.addTask(
-      async () => {
-        const answer = (() => {
-          if (direction === 'left') return false;
-          if (direction === 'right') return true;
-          if (direction === 'down') return null;
-        })();
-
-        if (isPublic) {
-          const previousCount = answersRef.current.length;
-
-          answersRef.current = addAnonymousAnswer({
-            question_id: swipedCard.questionNumber as number,
-            answer: answer ?? null,
-            public: swipedCard.answerPublicly,
-          });
-
-          if (
-            previousCount < PUBLIC_ANSWER_LIMIT &&
-            answersRef.current.length >= PUBLIC_ANSWER_LIMIT
-          ) {
-            triggerRender();
-            showSignUp(true, SIGN_UP_MESSAGE);
-          }
-        } else {
-          await japi(
-            'post',
-            '/answer',
-            {
-              question_id: swipedCard.questionNumber,
-              answer: answer,
-              public: swipedCard.answerPublicly
-            }
-          );
-        }
-
-        if (direction === 'left' || direction === 'right') {
-          await addNextProspectsInPlace(
-            stateRef, isPublic, answersRef.current, triggerRender);
-        }
-
-        addNextCardsInPlace(
-          stateRef,
-          isPublic,
-          undefined,
-          triggerRender,
-          onTopCardChanged
-        );
-      }
-    );
+    quizQueue.addTask(() => addAnswerInPlace(
+      direction,
+      swipedCard,
+      isPublic,
+      stateRef,
+      triggerRender,
+      onTopCardChanged,
+    ));
 
     stateRef.topCardIndex++;
 
@@ -870,12 +918,12 @@ const QuizCardStack = (props) => {
   useEffect(() => {
     (async () => {
       if (isPublic) {
-        answersRef.current = loadAnonymousAnswers();
-        answersRef.current.forEach(a => stateRef.questionNumbers.add(a.question_id));
+        anonymousAnswers.forEach(
+          a => stateRef.questionNumbers.add(a.question_id));
       }
 
       await addNextProspectsInPlace(
-        stateRef, isPublic, answersRef.current, triggerRender, 3);
+        stateRef, isPublic, anonymousAnswers, triggerRender, 3);
 
       addNextCardsInPlace(
         stateRef,

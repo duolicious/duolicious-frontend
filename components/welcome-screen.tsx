@@ -44,7 +44,7 @@ import { isMobile } from '../util/util';
 import { setOptionScreenPayload } from '../navigation/option-screen-store';
 import { showSignUp } from './modal/sign-up-modal';
 import { lastEvent, listen } from '../events/events';
-import { loadAnonymousAnswers } from '../kv-storage/anonymous-answers';
+import { anonymousAnswers } from '../events/anonymous-answers';
 
 const useInModal = () =>
   useState(() => lastEvent<boolean>('show-sign-up') ?? false)[0];
@@ -946,8 +946,6 @@ const EmailScreen_ = ({navigation, route}) => {
     otpDestination.value = email_;
 
     Keyboard.dismiss();
-
-    const anonymousAnswers = loadAnonymousAnswers();
 
     const response = await japi(
       'post',
