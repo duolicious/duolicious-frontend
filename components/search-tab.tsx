@@ -515,7 +515,6 @@ const ListHeaderComponent = ({
   hasClubs,
   selectedClub,
   setSelectedClub,
-  isPublic,
 }) => {
   const { appTheme } = useAppTheme();
 
@@ -524,10 +523,6 @@ const ListHeaderComponent = ({
       selectedClub={selectedClub}
       onChangeSelectedClub={setSelectedClub}
     />;
-  }
-
-  if (isPublic) {
-    return null;
   }
 
   return (
@@ -700,7 +695,6 @@ const SearchScreen_ = ({navigation}) => {
             hasClubs={hasClubs}
             selectedClub={selectedClub}
             setSelectedClub={setSelectedClub}
-            isPublic={isPublic}
           />
         }
         renderItem={({item}: any) => <ProfileCardMemo item={item} />}
