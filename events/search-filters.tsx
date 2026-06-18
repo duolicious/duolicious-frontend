@@ -1,5 +1,6 @@
 import { useLayoutEffect, useState } from 'react';
 import { listen, notify, lastEvent } from './events';
+import { markSearchResultsStale } from './stale-search-results';
 import type { SearchFilterAnswer } from '../navigation/search-filter-state';
 
 type SearchFilters = Record<string, any> & {
@@ -19,6 +20,7 @@ const setSearchFilters = (next: SearchFilters | undefined) => {
 const patchSearchFilters = (partial: SearchFilters) => {
   const prev = getSearchFilters();
   if (!prev) return;
+  markSearchResultsStale();
   notify<SearchFilters>(EVENT_KEY, { ...prev, ...partial });
 };
 
