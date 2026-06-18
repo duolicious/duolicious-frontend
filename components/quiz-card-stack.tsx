@@ -462,7 +462,7 @@ const addAnswerInPlace = async (
   addNextCardsInPlace(
     state,
     isPublic,
-    undefined,
+    triggerRender,
     triggerRender,
     onTopCardChanged,
   );
@@ -914,7 +914,7 @@ const QuizCardStack = (props) => {
           a => stateRef.questionNumbers.add(a.question_id));
       }
 
-      await addNextProspectsInPlace(
+      addNextProspectsInPlace(
         stateRef, isPublic, anonymousAnswers, triggerRender, 3);
 
       addNextCardsInPlace(
