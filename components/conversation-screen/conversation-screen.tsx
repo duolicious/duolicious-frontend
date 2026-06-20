@@ -2,6 +2,8 @@ import {
   ActivityIndicator,
   AppState,
   AppStateStatus,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   Platform,
   Pressable,
   ScrollView,
@@ -12,7 +14,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
+  Dispatch,
   Fragment,
+  SetStateAction,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -92,7 +96,21 @@ const maybeRequestReview = async (delayMs: number = 0) => {
 };
 
 
-const Menu = ({navigation, name, personUuid, isSkipped, setIsSkipped, closeFn}) => {
+const Menu = ({
+  navigation,
+  name,
+  personUuid,
+  isSkipped,
+  setIsSkipped,
+  closeFn,
+}: {
+  navigation: any,
+  name: string | undefined,
+  personUuid: string,
+  isSkipped: boolean | undefined,
+  setIsSkipped: Dispatch<SetStateAction<boolean | undefined>>,
+  closeFn: () => void,
+}) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const { appTheme } = useAppTheme();
 
@@ -121,7 +139,7 @@ const Menu = ({navigation, name, personUuid, isSkipped, setIsSkipped, closeFn}) 
     closeFn();
 
     const data: ReportModalInitialData = {
-      name,
+      name: name as string,
       personUuid,
       context: 'Conversation Screen'
     };
@@ -273,6 +291,17 @@ const ConversationScreenNavBar = ({
   isOnline,
   isSkipped,
   setIsSkipped,
+}: {
+  navigation: any,
+  personUuid: string,
+  urlSlug: string | null,
+  isAvailableUser: boolean,
+  photoUuid: string | null | undefined,
+  photoBlurhash: string | null | undefined,
+  name: string | undefined,
+  isOnline: boolean,
+  isSkipped: boolean | undefined,
+  setIsSkipped: Dispatch<SetStateAction<boolean | undefined>>,
 }) => {
   const { appTheme } = useAppTheme();
   const [showMenu, setShowMenu] = useState(false);
@@ -406,7 +435,7 @@ const ConversationScreenNavBar = ({
   );
 };
 
-const ConversationScreen = ({navigation, route}) => {
+const ConversationScreen = ({navigation, route}: {navigation: any, route: any}) => {
   const { appTheme } = useAppTheme();
   const [isActive, setIsActive] = useState(AppState.currentState === 'active');
   const [isOnline, setIsOnline] = useState(false);
@@ -592,9 +621,9 @@ const ConversationScreen = ({navigation, route}) => {
     }
   }, [messageIds]);
 
-  const isCloseToTop = ({contentOffset}) => contentOffset.y < 1;
+  const isCloseToTop = ({contentOffset}: NativeScrollEvent) => contentOffset.y < 1;
 
-  const isAtBottom = ({layoutMeasurement, contentOffset, contentSize}) => {
+  const isAtBottom = ({layoutMeasurement, contentOffset, contentSize}: NativeScrollEvent) => {
     const epsilon = 1;
 
     return Math.abs(
@@ -603,7 +632,7 @@ const ConversationScreen = ({navigation, route}) => {
     ) >= epsilon;
   };
 
-  const onScroll = useCallback(({nativeEvent}) => {
+  const onScroll = useCallback(({nativeEvent}: NativeSyntheticEvent<NativeScrollEvent>) => {
     scrollOffsetRef.current = nativeEvent.contentOffset.y;
     layoutMeasurementRef.current = nativeEvent.layoutMeasurement;
 
@@ -640,7 +669,7 @@ const ConversationScreen = ({navigation, route}) => {
 
   // Fetch the first page of messages when the conversation is first opened
   // while online
-  const fetchFirstPage = useCallback(async (personUuid) => {
+  const fetchFirstPage = useCallback(async (personUuid: string) => {
     const fetchedMessageIds = await fetchConversationAndNotify(personUuid);
 
     if (fetchedMessageIds === 'timeout') {

@@ -8,6 +8,7 @@ import {
 import {
   Platform,
   StyleSheet,
+  TextInputProps,
   View,
   useWindowDimensions,
 } from 'react-native';
@@ -234,7 +235,7 @@ const useRecorder = () => {
   return { startRecording, stopRecording, duration };
 };
 
-const AutoResizingTextInput = (props) => {
+const AutoResizingTextInput = (props: TextInputProps) => {
   const { height } = useWindowDimensions();
 
   return (
@@ -255,14 +256,14 @@ const AutoResizingTextInput = (props) => {
       <DefaultLongTextInput
         {...props}
         style={{
-          ...props.style,
+          ...(props.style as object),
           outline: 'none',
           position: 'absolute',
           top: Platform.OS === 'web' ? 5 : 4,
           bottom: 0,
           left: 0,
           right: 0,
-        }}
+        } as any}
       />
     </View>
   );
@@ -557,7 +558,7 @@ const Input = ({
   }, []);
 
   // Helper to format seconds as mm:ss.
-  const formatTime = (seconds) => {
+  const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
@@ -702,12 +703,12 @@ const Input = ({
     }
   };
 
-  const handleTextChange = (newText) => {
+  const handleTextChange = (newText: string) => {
     setText(newText);
     onChange(newText);
   };
 
-  const handleKeyPress = (event) => {
+  const handleKeyPress = (event: any) => {
     if (
       !isMobile() &&
       event.key === 'Enter' &&

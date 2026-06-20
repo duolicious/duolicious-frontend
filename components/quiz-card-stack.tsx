@@ -6,6 +6,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import {
+  MutableRefObject,
   createRef,
   memo,
   useCallback,
@@ -74,7 +75,7 @@ const getRandomArbitrary = (min: number, max: number) => {
   return Math.random() * (max - min) + min;
 }
 
-const getRandomInt = (max) => Math.floor(Math.random() * max);
+const getRandomInt = (max: number) => Math.floor(Math.random() * max);
 
 const fetchNextQuestions = async (
   n: number = 10,
@@ -94,7 +95,7 @@ const fetchNextQuestions = async (
     return [];
   }
 
-  return response.json.map(q => ({
+  return response.json.map((q: any) => ({
     id: q.id,
     question: q.question,
     topic: q.topic,
@@ -181,7 +182,7 @@ const fetchNBestProspects = async (
   }
 
   response.json.reverse();
-  return response.json.map(x => prospectState(
+  return response.json.map((x: any) => prospectState(
     x.prospect_person_id,
     x.prospect_uuid,
     x.url_slug,
@@ -476,6 +477,14 @@ const Prospect = ({
   photoBlurhash,
   matchPercentage,
   verificationRequired,
+}: {
+  style: ProspectState['style'],
+  personUuid: string,
+  urlSlug: string | null,
+  photoUuid: string,
+  photoBlurhash: string,
+  matchPercentage: number,
+  verificationRequired: 'photos' | 'basics' | null,
 }) => {
   const { isSkipped, wasPostSkipFiredInThisSession } = useSkipped(personUuid);
 
@@ -500,7 +509,10 @@ const Prospect = ({
   </Animated.View>
 };
 
-const ProspectDonutPercentage = ({ donutOpacity, matchPercentage }) => {
+const ProspectDonutPercentage = ({ donutOpacity, matchPercentage }: {
+  donutOpacity: ProspectState['donutOpacity'],
+  matchPercentage: number,
+}) => {
   const { appTheme } = useAppTheme();
 
   return (
@@ -731,8 +743,8 @@ const QuizCardStack_ = ({
               nonInteractiveContainerStyle={card.style}
               questionNumber={card.questionNumber}
               topic={card.topic}
-              noCount={card.noCount}
-              yesCount={card.yesCount}
+              noCount={card.noCount!}
+              yesCount={card.yesCount!}
               answerPubliclyValue={card.answerPublicly}
               onChangeAnswerPublicly={card.onChangeAnswerPublicly}
             >
@@ -752,7 +764,11 @@ const QuizCardStack_ = ({
 
 const QuizCardStackMemo = memo(QuizCardStack_);
 
-const QuizCardStack = (props) => {
+const QuizCardStack = (props: {
+  innerRef: MutableRefObject<ApiInterface>,
+  onTopCardChanged?: () => void,
+  onSwipe: (direction: Direction) => void,
+}) => {
   const {
     innerRef,
     onTopCardChanged,
@@ -770,7 +786,7 @@ const QuizCardStack = (props) => {
     isPublic && anonymousAnswers.length >= PUBLIC_ANSWER_LIMIT;
 
   class Api implements ApiInterface {
-    async swipe(direction) {
+    async swipe(direction: Direction) {
       const cards = stateRef.cards;
       const topCardIndex = stateRef.topCardIndex;
       const topCard = cards[topCardIndex];
