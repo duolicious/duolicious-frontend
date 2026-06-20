@@ -136,10 +136,14 @@ const Menu = ({
   }, [navigation, isSkipped, setIsSkipped, closeFn, personUuid]);
 
   const onPressReport = useCallback(async () => {
+    if (name === undefined) {
+      return;
+    }
+
     closeFn();
 
     const data: ReportModalInitialData = {
-      name: name as string,
+      name,
       personUuid,
       context: 'Conversation Screen'
     };

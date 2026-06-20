@@ -302,12 +302,12 @@ const FloatingSkipButton = ({personUuid}: {
   const { appTheme } = useAppTheme();
 
   const onPress = useCallback(async () => {
-    if (personUuid === undefined) return;
+    if (personUuid == null) return;
     if (isLoading) return;
 
     const nextIsSkippedState = !isSkipped;
 
-    await postSkipped(personUuid!, nextIsSkippedState);
+    await postSkipped(personUuid, nextIsSkippedState);
   }, [isLoading, isSkipped, personUuid]);
 
   return (
@@ -352,9 +352,10 @@ const FloatingSendIntroButton = ({
   const { appTheme } = useAppTheme();
 
   const onPress = useCallback(() => {
+    if (personUuid == null) return;
     if (name === undefined) return;
 
-    setProspectHint(personUuid!, { name, photoUuid, photoBlurhash });
+    setProspectHint(personUuid, { name, photoUuid, photoBlurhash });
     navigation.navigate('Conversation Screen', { personUuid });
   }, [navigation, personUuid, name, photoUuid, photoBlurhash]);
 
@@ -501,12 +502,16 @@ const BlockButton = ({name, personUuid}: {
   const { isSkipped, isLoading, isPosting } = useSkipped(personUuid);
 
   const onPress = useCallback(async () => {
+    if (personUuid == null) return;
+
     if (isSkipped) {
-      await postSkipped(personUuid!, false);
+      await postSkipped(personUuid, false);
     } else {
+      if (name === undefined) return;
+
       const data: ReportModalInitialData = {
-        name: name!,
-        personUuid: personUuid!,
+        name,
+        personUuid,
         context: 'Prospect Profile Screen',
       };
       notify('open-report-modal', data);

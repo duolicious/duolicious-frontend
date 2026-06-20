@@ -7,7 +7,9 @@ import {
 } from 'react';
 import {
   Platform,
+  StyleProp,
   StyleSheet,
+  TextStyle,
   TextInputProps,
   View,
   useWindowDimensions,
@@ -238,6 +240,20 @@ const useRecorder = () => {
 const AutoResizingTextInput = (props: TextInputProps) => {
   const { height } = useWindowDimensions();
 
+  type WebTextInputStyle = TextStyle & {
+    outline?: string;
+  };
+
+  const inputOverlayStyle: StyleProp<WebTextInputStyle> = {
+    outline: 'none',
+    position: 'absolute',
+    top: Platform.OS === 'web' ? 5 : 4,
+    bottom: 0,
+    left: 0,
+    right: 0,
+  };
+  const inputStyle = StyleSheet.compose(props.style, inputOverlayStyle);
+
   return (
     <View style={{ flex: 1, maxHeight: height / 4 }}>
       <DefaultText
@@ -255,15 +271,7 @@ const AutoResizingTextInput = (props: TextInputProps) => {
       </DefaultText>
       <DefaultLongTextInput
         {...props}
-        style={{
-          ...(props.style as object),
-          outline: 'none',
-          position: 'absolute',
-          top: Platform.OS === 'web' ? 5 : 4,
-          bottom: 0,
-          left: 0,
-          right: 0,
-        } as any}
+        style={inputStyle}
       />
     </View>
   );

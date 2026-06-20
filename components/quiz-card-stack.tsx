@@ -77,17 +77,19 @@ const getRandomArbitrary = (min: number, max: number) => {
 
 const getRandomInt = (max: number) => Math.floor(Math.random() * max);
 
+type QuestionCardData = {
+  id: number
+  question: string
+  topic: string
+  yesCount: number
+  noCount: number
+};
+
 const fetchNextQuestions = async (
   n: number = 10,
   o: number = 0,
   isPublic: boolean = false,
-): Promise<{
-  id: number,
-  question: string,
-  topic: string,
-  yesCount: number,
-  noCount: number
-}[]> => {
+): Promise<QuestionCardData[]> => {
   const endpoint = isPublic ? '/public-next-questions' : '/next-questions';
   const response = await api('GET', `${endpoint}?n=${n}&o=${o}`);
 
@@ -200,13 +202,7 @@ type StackState = {
   questionNumbers: Set<number>
 };
 
-type CardState = {
-  isFetched: boolean
-  questionNumber: number | undefined
-  questionText: string | undefined
-  topic: string | undefined
-  noCount: number | undefined
-  yesCount: number | undefined
+type BaseCardState = {
   style: {
     transform: [
       { rotate: string },
@@ -220,6 +216,26 @@ type CardState = {
   scale: Animated.Value
   ref: any
 };
+
+type UnfetchedCardState = BaseCardState & {
+  isFetched: false
+  questionNumber: undefined
+  questionText: undefined
+  topic: undefined
+  noCount: number
+  yesCount: number
+};
+
+type FetchedCardState = BaseCardState & {
+  isFetched: true
+  questionNumber: number
+  questionText: string
+  topic: string
+  noCount: number
+  yesCount: number
+};
+
+type CardState = UnfetchedCardState | FetchedCardState;
 
 type ProspectState = {
   personId: number
@@ -247,7 +263,7 @@ const initialState = (): StackState => ({
   questionNumbers: new Set<number>(),
 });
 
-const unfetchedCard = (): CardState => {
+const unfetchedCard = (): UnfetchedCardState => {
   const scale = new Animated.Value(0);
 
   const interpolatedScale = scale.interpolate({
@@ -276,6 +292,19 @@ const unfetchedCard = (): CardState => {
     ref: createRef(),
   };
 };
+
+const fetchedCard = (
+  card: UnfetchedCardState,
+  question: QuestionCardData,
+): FetchedCardState => ({
+  ...card,
+  isFetched: true,
+  questionNumber: question.id,
+  questionText: question.question,
+  topic: question.topic,
+  yesCount: question.yesCount,
+  noCount: question.noCount,
+});
 
 const numRemainingCards = (state: StackState): number => {
   return state.cards.length - state.topCardIndex;
@@ -315,20 +344,16 @@ const addNextCardsInPlace = async (
   // questions and can't give us enough cards to meet the target.
   unfetchedCards.forEach(() => state.cards.pop());
 
-  _.zip(unfetchedCards, nextQuestions).forEach(([u, q]) => {
+  const fetchedCards: FetchedCardState[] = _.zip(unfetchedCards, nextQuestions).flatMap(([u, q]) => {
     if (u && q && !state.questionNumbers.has(q.id)) {
       state.questionNumbers.add(q.id);
 
-      u.questionNumber = q.id;
-      u.questionText = q.question;
-      u.topic = q.topic;
-      u.yesCount = q.yesCount;
-      u.noCount = q.noCount;
-      u.isFetched = true;
+      return [fetchedCard(u, q)];
     }
+
+    return [];
   });
 
-  const fetchedCards = unfetchedCards.filter(c => c.isFetched);
   state.cards.push(...fetchedCards);
 
   numRemainingCards_ < 2 && onFetchCallback && onFetchCallback();
@@ -690,16 +715,16 @@ const QuizCardStack_ = ({
   onSwipePrevented,
   onCardLeftScreen,
 }: {
-  card1: CardState,
-  card2: CardState,
-  card3: CardState,
+  card1: CardState | undefined,
+  card2: CardState | undefined,
+  card3: CardState | undefined,
   locked: boolean,
   triggerRender: () => void,
   onSwipe: (direction: Direction) => Promise<void>,
   onSwipePrevented: (direction: Direction) => void,
   onCardLeftScreen: () => void,
 }) => {
-  const cards: CardState[] = [card1, card2, card3].filter(Boolean);
+  const cards = [card1, card2, card3].flatMap(card => card ? [card] : []);
 
   const onScreenCards = cards.filter(c => c.isFetched && !c.swipeDirection);
 
@@ -743,8 +768,8 @@ const QuizCardStack_ = ({
               nonInteractiveContainerStyle={card.style}
               questionNumber={card.questionNumber}
               topic={card.topic}
-              noCount={card.noCount!}
-              yesCount={card.yesCount!}
+              noCount={card.noCount}
+              yesCount={card.yesCount}
               answerPubliclyValue={card.answerPublicly}
               onChangeAnswerPublicly={card.onChangeAnswerPublicly}
             >
