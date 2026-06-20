@@ -18,6 +18,9 @@ import { Chart } from './chart';
 import { api } from '../api/api';
 import { StatusBarSpacer } from './status-bar-spacer';
 import { FloatingBackButton } from './prospect-profile-screen';
+import type { ProspectNavigationRef } from './prospect-profile-screen';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { ProspectParamList } from '../navigation/linking';
 import { CardState } from './quiz-card';
 import { useSignedInUser } from '../events/signed-in-user';
 import { getProspectHint, setProspectHint } from '../navigation/prospect-cache';
@@ -26,11 +29,27 @@ type CompareAnswer = {
   question_id: number,
   topic: string,
   prospect_name: string,
-  prospect_answer: string | null,
-  person_answer: string | null,
+  prospect_answer: boolean | null,
+  person_answer: boolean | null,
   person_public_: boolean | null,
   question: string,
 };
+
+type TraitData = {
+  trait_name?: string,
+  trait_min_label?: string,
+  trait_max_label?: string,
+  trait_description?: string,
+  prospect_name?: string | null,
+  prospect_percentage?: number | null,
+  person_percentage?: number | null,
+};
+
+type PersonalityTopic = 'mbti' | 'big5' | 'attachment' | 'politics' | 'other';
+
+type InDepthListItem =
+  | { kind: 'answer', item: CompareAnswer }
+  | { kind: PersonalityTopic, data: TraitData[] };
 
 type ProspectProfileResponse = {
   person_id: number,
@@ -184,7 +203,7 @@ const fetchAnswersPage = (
   topic: string,
 ) => async (
   pageNumber: number,
-): Promise<any[]> => {
+): Promise<InDepthListItem[]> => {
   const resultsPerPage = 10;
   const offset = resultsPerPage * (pageNumber - 1);
 
@@ -199,18 +218,18 @@ const fetchAnswersPage = (
 
   const responseList = response.ok ? response.json : [];
 
-  return responseList.map((item: any) => ({
+  return responseList.map((item) => ({
     kind: 'answer',
     item: item,
   }));
 };
 
-const fetchPersonalityPage = (personId: number, m: number) => async (n: number): Promise<any[]> => {
-  const topics = ['mbti', 'big5', 'attachment', 'politics', 'other'];
+const fetchPersonalityPage = (personId: number, m: number) => async (n: number): Promise<InDepthListItem[]> => {
+  const topics = ['mbti', 'big5', 'attachment', 'politics', 'other'] as const;
   const topic = topics[m];
 
   if (n === 1) {
-    const response = await api('get', `/compare-personalities/${personId}/${topic}`);
+    const response = await api<TraitData[]>('get', `/compare-personalities/${personId}/${topic}`);
 
     if (response.json === undefined) return [];
 
@@ -222,20 +241,21 @@ const fetchPersonalityPage = (personId: number, m: number) => async (n: number):
   return [];
 };
 
-const InDepthScreen = (navigationRef: any) => {
-  return (props: any) => <CurredInDepthScreen
+const InDepthScreen = (navigationRef: ProspectNavigationRef) => {
+  return (props: NativeStackScreenProps<ProspectParamList, 'In-Depth'>) => <CurredInDepthScreen
      navigationRef={navigationRef}
      {...props}
   />;
 }
 
-const InDepthItem = ({personId, item}: {personId: number, item: any}) => {
+const InDepthItem = ({personId, item}: {personId: number, item: InDepthListItem}) => {
   const [signedInUser] = useSignedInUser();
   const isViewingSelf = personId === signedInUser?.personId;
 
   const [, triggerRender] = useState({});
 
   const onStateChange = (state: CardState) => {
+    if (item.kind !== 'answer') return;
     item.item.person_public_ = state.public_;
     item.item.person_answer = state.answer;
     if (isViewingSelf) {
@@ -271,10 +291,8 @@ const InDepthItem = ({personId, item}: {personId: number, item: any}) => {
 
 const InDepthItemMemo = memo(InDepthItem);
 
-const CurredInDepthScreen = ({navigationRef, navigation, route}: {
-  navigationRef: any,
-  navigation: any,
-  route: any,
+const CurredInDepthScreen = ({navigationRef, navigation, route}: NativeStackScreenProps<ProspectParamList, 'In-Depth'> & {
+  navigationRef: ProspectNavigationRef,
 }) => {
   if (navigationRef)
     navigationRef.current = navigation;
@@ -435,10 +453,10 @@ const CurredInDepthScreen = ({navigationRef, navigation, route}: {
   );
 };
 
-const Charts = ({data}: {data: any[]}) => {
+const Charts = ({data}: {data: TraitData[]}) => {
   return (
     <View style={sideMargins}>
-      {data.map((trait: any) =>
+      {data.map((trait) =>
         <Chart
           key={JSON.stringify(trait)}
           dimensionName={trait.trait_min_label ? undefined : trait.trait_name}

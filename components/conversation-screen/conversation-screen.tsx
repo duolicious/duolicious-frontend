@@ -55,6 +55,11 @@ import { askedForReviewBefore } from '../../kv-storage/asked-for-review-before';
 import { MessageDivider }  from './message-divider';
 import * as _ from 'lodash';
 import { Input } from './input';
+import {
+  NativeStackNavigationProp,
+  NativeStackScreenProps,
+} from '@react-navigation/native-stack';
+import type { RootParamList } from '../../navigation/linking';
 import { useDraftMessage } from '../../chat/application-layer/hooks/draft-message';
 import { GifPickedEvent } from '../../components/modal/gif-picker-modal';
 import { useSkipped } from '../../hide-and-block/hide-and-block';
@@ -113,7 +118,7 @@ const Menu = ({
   setIsSkipped,
   closeFn,
 }: {
-  navigation: any,
+  navigation: NativeStackNavigationProp<RootParamList>,
   name: string | undefined,
   personUuid: string,
   isSkipped: boolean | undefined,
@@ -305,7 +310,7 @@ const ConversationScreenNavBar = ({
   isSkipped,
   setIsSkipped,
 }: {
-  navigation: any,
+  navigation: NativeStackNavigationProp<RootParamList>,
   personUuid: string,
   urlSlug: string | null,
   isAvailableUser: boolean,
@@ -448,7 +453,7 @@ const ConversationScreenNavBar = ({
   );
 };
 
-const ConversationScreen = ({navigation, route}: {navigation: any, route: any}) => {
+const ConversationScreen = ({navigation, route}: NativeStackScreenProps<RootParamList, 'Conversation Screen'>) => {
   const { appTheme } = useAppTheme();
   const [isActive, setIsActive] = useState(AppState.currentState === 'active');
   const [isOnline, setIsOnline] = useState(false);

@@ -16,8 +16,19 @@ import {
   useRef,
   useState,
 } from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { useFocusEffect } from '@react-navigation/native';
+import {
+  NativeStackScreenProps,
+  createNativeStackNavigator,
+} from '@react-navigation/native-stack';
+import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
+import type { ListRenderItemInfo } from 'react-native';
+import type { HomeParamList, SearchParamList } from '../navigation/linking';
+
+type SearchScreenProps = CompositeScreenProps<
+  NativeStackScreenProps<SearchParamList, 'Search Screen'>,
+  BottomTabScreenProps<HomeParamList>
+>;
 import { ProfileCard }  from './profile-card';
 import { DuoliciousTopNavBar } from './top-nav-bar';
 import { SearchFilterScreen } from './search-filter-screen';
@@ -173,7 +184,7 @@ const fetchPage = (
 
 type ClubSelectorProps = {
   selectedClub: string | null;
-  onChangeSelectedClub: (s: string | null) => any;
+  onChangeSelectedClub: (s: string | null) => void;
 };
 
 const LeftContinuation = ({scrollLeft}: {scrollLeft: () => void}) => {
@@ -520,7 +531,7 @@ const ListHeaderComponent = ({
   setSelectedClub,
   isPublic,
 }: {
-  navigation: any,
+  navigation: SearchScreenProps['navigation'],
   hasClubs: boolean,
   selectedClub: string | null,
   setSelectedClub: Dispatch<SetStateAction<string | null>>,
@@ -557,7 +568,7 @@ const ListHeaderComponent = ({
   );
 };
 
-const SearchScreen_ = ({navigation}: {navigation: any}) => {
+const SearchScreen_ = ({navigation}: SearchScreenProps) => {
   const isPublic = useIsWebLoggedOut();
 
   const {
@@ -565,7 +576,7 @@ const SearchScreen_ = ({navigation}: {navigation: any}) => {
     selectedClub: initialSelectedClub,
   } = getStateFromClubItems(lastEvent<ClubItem[]>('updated-clubs'));
 
-  const listRef = useRef<any>(undefined);
+  const listRef = useRef<{ refresh: () => void } | null>(null);
 
   const {
     onLayout,
@@ -705,7 +716,7 @@ const SearchScreen_ = ({navigation}: {navigation: any}) => {
             isPublic={isPublic}
           />
         }
-        renderItem={({item}: any) => <ProfileCardMemo item={item} />}
+        renderItem={({item}: ListRenderItemInfo<PageItem>) => <ProfileCardMemo item={item} />}
         scrollIndicatorInsets={scrollIndicatorInsets}
         onLayout={onLayout}
         onContentSizeChange={onContentSizeChange}

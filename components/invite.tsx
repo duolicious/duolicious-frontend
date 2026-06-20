@@ -8,6 +8,11 @@ import {
 import { LogoActivityIndicator } from './logo/logo-activity-indicator';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
+  NativeStackNavigationProp,
+  NativeStackScreenProps,
+} from '@react-navigation/native-stack';
+import type { ProfileParamList } from '../navigation/linking';
+import {
   useCallback,
   useEffect,
   useRef,
@@ -37,7 +42,7 @@ const onPressInvite = (clubName: string) => async () => {
   notifyLinkCopiedToast('Invite Link Copied!');
 };
 
-const InvitePicker = ({navigation}: {navigation: any}) => {
+const InvitePicker = ({navigation}: NativeStackScreenProps<ProfileParamList, 'Invite Picker'>) => {
   const [clubs, setClubs] = useState(lastEvent<ClubItem[]>('updated-clubs'));
 
   useEffect(() => {
@@ -137,7 +142,7 @@ const InvitePicker = ({navigation}: {navigation: any}) => {
   );
 };
 
-const InviteEntrypoint = ({navigation}: {navigation: any}) => {
+const InviteEntrypoint = ({navigation}: {navigation: NativeStackNavigationProp<ProfileParamList>}) => {
   const { appTheme } = useAppTheme();
 
   const opacityLo = 0.2;

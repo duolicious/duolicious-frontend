@@ -18,7 +18,12 @@ import {
   useRef,
   useState,
 } from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import {
+  NativeStackNavigationProp,
+  NativeStackScreenProps,
+  createNativeStackNavigator,
+} from '@react-navigation/native-stack';
+import type { RootParamList, WelcomeParamList } from '../navigation/linking';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DefaultText } from './default-text';
 import { DefaultTextInput } from './default-text-input';
@@ -234,7 +239,7 @@ const WelcomeScreen = () => {
   );
 };
 
-const InviteScreen = ({navigation, route}: {navigation: any, route: any}) => {
+const InviteScreen = ({navigation, route}: NativeStackScreenProps<RootParamList, 'Invite Screen'>) => {
   const [loading, setLoading] = useState(false);
   const [signedInUser] = useSignedInUser();
 
@@ -651,9 +656,9 @@ const finishSocialSignIn = async ({
   setLoginStatus,
 }: {
   endpoint: '/sign-in-with-google' | '/sign-in-with-apple',
-  body: Record<string, any>,
+  body: Record<string, unknown>,
   clubName: string | undefined,
-  navigation: any,
+  navigation: NativeStackNavigationProp<WelcomeParamList>,
   setLoginStatus: (s: string) => void,
 }) => {
   const response = await japi<SessionTokenResponse>(
@@ -707,7 +712,7 @@ const finishSocialSignIn = async ({
   }
 };
 
-const WelcomeScreen_ = ({navigation, route}: {navigation: any, route: any}) => {
+const WelcomeScreen_ = ({navigation, route}: NativeStackScreenProps<WelcomeParamList, 'Welcome Screen'>) => {
   const clubName_ = (route.params?.clubName) as string | undefined;
   const numUsers = useNumActiveUsers(route.params?.numUsers);
   const inModal = useInModal();
@@ -931,7 +936,7 @@ const WelcomeScreen_ = ({navigation, route}: {navigation: any, route: any}) => {
   );
 };
 
-const EmailScreen_ = ({navigation, route}: {navigation: any, route: any}) => {
+const EmailScreen_ = ({navigation, route}: NativeStackScreenProps<WelcomeParamList, 'Welcome Email Screen'>) => {
   const clubName_ = (route.params?.clubName) as string | undefined;
 
   const [email, setEmail] = useState("");

@@ -1,7 +1,9 @@
 import { Platform } from 'react-native';
 import {
   LinkingOptions,
+  NavigationState,
   NavigatorScreenParams,
+  PartialState,
   PathConfig,
   getPathFromState as rnGetPathFromState,
   getStateFromPath as rnGetStateFromPath,
@@ -10,8 +12,8 @@ import { UUID_REGEX_SOURCE } from '../util/util';
 import { getSignedInUser, isWebLoggedOut } from '../events/signed-in-user';
 
 type WelcomeParamList = {
-  'Welcome Screen': undefined;
-  'Welcome Email Screen': undefined;
+  'Welcome Screen': { clubName?: string; numUsers?: number } | undefined;
+  'Welcome Email Screen': { clubName?: string } | undefined;
   'Create Account Or Sign In Screen': undefined;
 };
 
@@ -23,7 +25,7 @@ type SearchFilterParamList = {
 
 type SearchParamList = {
   'Search Screen': undefined;
-  'Search Filter Screen': NavigatorScreenParams<SearchFilterParamList>;
+  'Search Filter Screen': NavigatorScreenParams<SearchFilterParamList> | undefined;
 };
 
 type ProfileParamList = {
@@ -35,11 +37,11 @@ type ProfileParamList = {
 
 type HomeParamList = {
   'Q&A': undefined;
-  Search: NavigatorScreenParams<SearchParamList>;
+  Search: NavigatorScreenParams<SearchParamList> | undefined;
   Feed: undefined;
   Inbox: undefined;
   Visitors: undefined;
-  Profile: NavigatorScreenParams<ProfileParamList>;
+  Profile: NavigatorScreenParams<ProfileParamList> | undefined;
 };
 
 type ProspectParamList = {
@@ -49,10 +51,10 @@ type ProspectParamList = {
 };
 
 type RootParamList = {
-  Welcome: NavigatorScreenParams<WelcomeParamList>;
-  Home: NavigatorScreenParams<HomeParamList>;
+  Welcome: NavigatorScreenParams<WelcomeParamList> | undefined;
+  Home: NavigatorScreenParams<HomeParamList> | undefined;
   'Conversation Screen': { personUuid: string };
-  'Prospect Profile Screen': NavigatorScreenParams<ProspectParamList>;
+  'Prospect Profile Screen': NavigatorScreenParams<ProspectParamList> | undefined;
   'Invite Screen': { clubName: string };
 };
 
@@ -70,29 +72,40 @@ const GATED_LOGGED_OUT_PATHS = new Set([
   '/feed', '/inbox', '/visitors', '/profile',
 ]);
 
-const getTopRouteName = (state: any): string | undefined =>
+// A hydrated root state (from `getRootState`/`onStateChange`) or any of the
+// partial child states nested under it.
+type RouteState = NavigationState | PartialState<NavigationState>;
+
+// Route params are typed `object` by React Navigation; read `personUuid` off
+// them without an assertion (a literal `in` check narrows the object type).
+const readPersonUuid = (params: object | undefined): string | undefined =>
+  params && 'personUuid' in params && typeof params.personUuid === 'string'
+    ? params.personUuid
+    : undefined;
+
+const getTopRouteName = (state: RouteState | undefined): string | undefined =>
   state?.routes?.[state?.index ?? 0]?.name;
 
-const focusedProspectHandle = (state: any): string | undefined => {
-  const root = state?.routes?.[state.index ?? 0];
+const focusedProspectHandle = (state: RouteState | undefined): string | undefined => {
+  const root = state?.routes?.[state?.index ?? 0];
   if (root?.name !== 'Prospect Profile Screen') return undefined;
-  const nested = root.state?.routes?.[root.state.index ?? 0];
-  return nested?.params?.personUuid;
+  const nested = root.state?.routes?.[root.state?.index ?? 0];
+  return readPersonUuid(nested?.params);
 };
 
-const isBannerRoute = (state: any): boolean => {
-  const root = state?.routes?.[state.index ?? 0];
+const isBannerRoute = (state: RouteState | undefined): boolean => {
+  const root = state?.routes?.[state?.index ?? 0];
   if (!root) return false;
   if (root.name === 'Prospect Profile Screen') return true;
   if (root.name === 'Home') {
-    const tab = root.state?.routes?.[root.state.index ?? 0]?.name;
+    const tab = root.state?.routes?.[root.state?.index ?? 0]?.name;
     return tab === 'Search';
   }
   return false;
 };
 
-const focusedRouteIsWizard = (state: any): boolean => {
-  let node: any = state;
+const focusedRouteIsWizard = (state: RouteState | undefined): boolean => {
+  let node: RouteState | undefined = state;
   while (node && Array.isArray(node.routes)) {
     const idx = typeof node.index === 'number' ? node.index : 0;
     const route = node.routes[idx];
@@ -182,38 +195,43 @@ const createLinking = () => {
       ? [window.location.origin]
       : [];
 
+  // Typed as the upstream `getStateFromPath` so the returned object stays a
+  // valid `LinkingOptions['getStateFromPath']`; `options` is contextually typed
+  // from that signature.
+  const getStateFromPath: typeof rnGetStateFromPath = (path, options) => {
+    let normalized = path.replace(/\/{2,}/g, '/');
+
+    if (normalized === '/me' || normalized.startsWith('/me/')) normalized = '/';
+    if (normalized === '/welcome' || normalized.startsWith('/welcome/')) normalized = '/';
+
+    const legacyProfile = normalized.match(/^\/profile\/([^/?]+)(\?.*)?$/);
+    if (legacyProfile &&
+        !PROFILE_SUBROUTES.includes(legacyProfile[1])) {
+      normalized = `/${legacyProfile[1]}${legacyProfile[2] ?? ''}`;
+    }
+
+    const pathname = normalized.split('?')[0].replace(/\/$/, '') || '/';
+    if (pathname === '/' && getSignedInUser()) {
+      return rnGetStateFromPath('/qa', options);
+    }
+    if (pathname === '/' && isWebLoggedOut()) {
+      return rnGetStateFromPath('/search', options);
+    }
+    if (isWebLoggedOut() && GATED_LOGGED_OUT_PATHS.has(pathname)) {
+      return rnGetStateFromPath('/search', options);
+    }
+
+    const state = rnGetStateFromPath(normalized, options);
+    if (state) return state;
+    if (getSignedInUser()) return rnGetStateFromPath('/qa', options);
+    if (isWebLoggedOut()) return rnGetStateFromPath('/search', options);
+    return { routes: [{ name: 'Welcome' }] };
+  };
+
   return {
     prefixes,
     config: linkingConfig,
-    getStateFromPath: (path: string, options: any) => {
-      let normalized = path.replace(/\/{2,}/g, '/');
-
-      if (normalized === '/me' || normalized.startsWith('/me/')) normalized = '/';
-      if (normalized === '/welcome' || normalized.startsWith('/welcome/')) normalized = '/';
-
-      const legacyProfile = normalized.match(/^\/profile\/([^/?]+)(\?.*)?$/);
-      if (legacyProfile &&
-          !PROFILE_SUBROUTES.includes(legacyProfile[1])) {
-        normalized = `/${legacyProfile[1]}${legacyProfile[2] ?? ''}`;
-      }
-
-      const pathname = normalized.split('?')[0].replace(/\/$/, '') || '/';
-      if (pathname === '/' && getSignedInUser()) {
-        return rnGetStateFromPath('/qa', options);
-      }
-      if (pathname === '/' && isWebLoggedOut()) {
-        return rnGetStateFromPath('/search', options);
-      }
-      if (isWebLoggedOut() && GATED_LOGGED_OUT_PATHS.has(pathname)) {
-        return rnGetStateFromPath('/search', options);
-      }
-
-      const state = rnGetStateFromPath(normalized, options);
-      if (state) return state;
-      if (getSignedInUser()) return rnGetStateFromPath('/qa', options);
-      if (isWebLoggedOut()) return rnGetStateFromPath('/search', options);
-      return { routes: [{ name: 'Welcome' }] };
-    },
+    getStateFromPath,
     getPathFromState: rnGetPathFromState,
   };
 };
@@ -221,4 +239,13 @@ const createLinking = () => {
 type Linking = ReturnType<typeof createLinking>;
 
 export { createLinking, isBannerRoute, focusedProspectHandle, focusedRouteIsWizard, getTopRouteName };
-export type { Linking };
+export type {
+  Linking,
+  RootParamList,
+  WelcomeParamList,
+  HomeParamList,
+  SearchParamList,
+  SearchFilterParamList,
+  ProfileParamList,
+  ProspectParamList,
+};

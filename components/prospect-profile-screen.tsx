@@ -13,6 +13,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Fragment,
+  MutableRefObject,
   ReactNode,
   useCallback,
   useEffect,
@@ -21,7 +22,18 @@ import {
   useRef,
   useState,
 } from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import {
+  NativeStackNavigationProp,
+  NativeStackScreenProps,
+  createNativeStackNavigator,
+} from '@react-navigation/native-stack';
+import type { ProspectParamList } from '../navigation/linking';
+
+// The navigation of whichever ProspectParamList screen is focused, stashed in
+// a ref so the shared FloatingBackButton can call `goBack` without being a
+// screen itself.
+type ProspectNavigation = NativeStackNavigationProp<ProspectParamList>;
+type ProspectNavigationRef = MutableRefObject<ProspectNavigation | undefined>;
 import { StatusBarSpacer } from './status-bar-spacer';
 import { LogoActivityIndicator } from './logo/logo-activity-indicator';
 import { DefaultText } from './default-text';
@@ -100,7 +112,7 @@ const SIDE_AD_SLOTS_RIGHT = [
 const Stack = createNativeStackNavigator();
 
 const ProspectProfileScreen = () => {
-  const navigationRef = useRef(undefined);
+  const navigationRef = useRef<ProspectNavigation | undefined>(undefined);
 
   const ProspectProfileScreen_ = useMemo(() => {
     return Content(navigationRef);
@@ -125,7 +137,7 @@ const ProspectProfileScreen = () => {
   );
 };
 
-const GalleryScreen = ({navigation, route}: {navigation: any, route: any}) => {
+const GalleryScreen = ({navigation, route}: NativeStackScreenProps<ProspectParamList, 'Gallery Screen'>) => {
   const { photoUuid } = route.params;
 
   return (
@@ -191,8 +203,8 @@ const ShareButton = ({personUuid}: {personUuid: string | undefined}) => {
 
 const FloatingBackButton = (props: {
   onPress?: () => void,
-  navigationRef?: any,
-  navigation?: any,
+  navigationRef?: ProspectNavigationRef,
+  navigation?: ProspectNavigation,
 }) => {
   const {
     onPress,
@@ -217,7 +229,7 @@ const FloatingBackButton = (props: {
         borderWidth: 1,
         borderColor: appTheme.secondaryColor,
       }}
-      onPress={onPress ?? (navigationRef?.current || navigation).goBack}
+      onPress={onPress ?? (navigationRef?.current || navigation)?.goBack}
     >
       <FontAwesomeIcon
         icon={faArrowLeft}
@@ -823,8 +835,8 @@ const hasAnyStats = (data: UserData | null | undefined): boolean => {
   );
 };
 
-const Content = (navigationRef: any) =>  {
-  return (props: any) => <CurriedContent
+const Content = (navigationRef: ProspectNavigationRef) =>  {
+  return (props: NativeStackScreenProps<ProspectParamList, 'Prospect Profile'>) => <CurriedContent
     navigationRef={navigationRef}
     {...props}
   />;
@@ -873,10 +885,8 @@ const ProspectProfileSideAds = ({
   );
 };
 
-const CurriedContent = ({navigationRef, navigation, route}: {
-  navigationRef: any,
-  navigation: any,
-  route: any,
+const CurriedContent = ({navigationRef, navigation, route}: NativeStackScreenProps<ProspectParamList, 'Prospect Profile'> & {
+  navigationRef: ProspectNavigationRef,
 }) => {
   navigationRef.current = navigation;
 
@@ -1357,7 +1367,7 @@ const Body = ({
   data,
 }: {
   navigation: any,
-  personUuid: string,
+  personUuid: string | undefined,
   data: UserData | undefined,
 }) => {
   const { appThemeName, appTheme } = useAppTheme();
@@ -1711,3 +1721,4 @@ export {
   InDepthScreen,
   ProspectProfileScreen,
 };
+export type { ProspectNavigationRef };
