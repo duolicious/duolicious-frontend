@@ -62,6 +62,15 @@ import { OnlineIndicator } from '../online-indicator';
 import { useAppTheme } from '../../app-theme/app-theme';
 import { getProspectHint, setProspectHint } from '../../navigation/prospect-cache';
 
+type ConversationProspectResponse = {
+  name?: string,
+  photo_uuid?: string | null,
+  photo_blurhash?: string | null,
+  is_available?: boolean,
+  is_skipped?: boolean,
+  url_slug?: string | null,
+};
+
 const firstMamId = (messageIds: string[] | null): string => {
   if (!messageIds) {
     return ''
@@ -491,7 +500,7 @@ const ConversationScreen = ({navigation, route}: {navigation: any, route: any}) 
 
     let cancelled = false;
     (async () => {
-      const response = await api('get', `/conversation-prospect/${personUuid}`);
+      const response = await api<ConversationProspectResponse>('get', `/conversation-prospect/${personUuid}`);
       if (cancelled) return;
       if (!response.ok) {
         // Hard-deleted prospects 404 here. Mark them unavailable so the

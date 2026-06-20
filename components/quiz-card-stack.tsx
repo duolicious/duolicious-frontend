@@ -85,19 +85,27 @@ type QuestionCardData = {
   noCount: number
 };
 
+type NextQuestion = {
+  id: number
+  question: string
+  topic: string
+  count_yes: number
+  count_no: number
+};
+
 const fetchNextQuestions = async (
   n: number = 10,
   o: number = 0,
   isPublic: boolean = false,
 ): Promise<QuestionCardData[]> => {
   const endpoint = isPublic ? '/public-next-questions' : '/next-questions';
-  const response = await api('GET', `${endpoint}?n=${n}&o=${o}`);
+  const response = await api<NextQuestion[]>('GET', `${endpoint}?n=${n}&o=${o}`);
 
   if (!response.ok) {
     return [];
   }
 
-  return response.json.map((q: any) => ({
+  return response.json.map((q) => ({
     id: q.id,
     question: q.question,
     topic: q.topic,
@@ -162,6 +170,16 @@ const prospectState = (
   };
 };
 
+type SearchResult = {
+  prospect_person_id: number
+  prospect_uuid: string
+  url_slug: string | null
+  profile_photo_uuid: string
+  profile_photo_blurhash: string
+  match_percentage: number
+  verification_required_to_view: 'photos' | 'basics' | null
+};
+
 const fetchNBestProspects = async (
   n: number,
   refreshNeighborhood: boolean,
@@ -169,22 +187,22 @@ const fetchNBestProspects = async (
   answers: AnonymousAnswer[] = [],
 ): Promise<ProspectState[]> => {
   const response = isPublic ?
-    await japi(
+    await japi<SearchResult[]>(
       'get',
       `/public-search?answers=${
         encodeURIComponent(JSON.stringify(answers))
       }&n=${n}&o=0`,
     ) :
     refreshNeighborhood || n > 1 ?
-    await japi('get', `/search?n=${n}&o=0`) :
-    await japi('get', '/search');
+    await japi<SearchResult[]>('get', `/search?n=${n}&o=0`) :
+    await japi<SearchResult[]>('get', '/search');
 
   if (!response.ok) {
     return [];
   }
 
   response.json.reverse();
-  return response.json.map((x: any) => prospectState(
+  return response.json.map((x) => prospectState(
     x.prospect_person_id,
     x.prospect_uuid,
     x.url_slug,

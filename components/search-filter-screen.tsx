@@ -123,7 +123,7 @@ const fetchQuestionSearch = async (q: string): Promise<AnswerItem[]> => {
   const resultsPerPage = 25;
   const offset = 0;
 
-  const response = await api(
+  const response = await api<SearchFilterAnswer[]>(
     'get',
     `/search-filter-questions` +
     `?q=${encodeURIComponent(q)}&n=${resultsPerPage}&o=${offset}`,
@@ -413,7 +413,8 @@ const QandQFilterScreen = ({navigation}: {navigation: any}) => {
     if (getSearchFilterAnswers().length > 0) return;
     let cancelled = false;
     (async () => {
-      const response = await api('get', '/search-filters');
+      const response = await api<{ answer?: SearchFilterAnswer[] }>(
+        'get', '/search-filters');
       const fetched: AnswerItem[] = response?.json?.answer ?? [];
       if (cancelled || fetched.length === 0) return;
       setSearchFilterAnswers(fetched);

@@ -150,7 +150,7 @@ const fetchClubItems = async (q: string): Promise<ClubItem[]> => {
     .replace(/\u201C/g, `"`)
     .replace(/\u201D/g, `"`);
 
-  const response = await api(
+  const response = await api<ClubItem[]>(
     'get',
     `/search-clubs?q=${encodeURIComponent(cleanQ)}`
   );

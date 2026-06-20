@@ -14,10 +14,10 @@ const SUPPORTED_API_VERSIONS = [
   800_000,
 ];
 
-type ApiResponse = {
+type ApiResponse<T = unknown> = {
   ok: boolean
   clientError: boolean
-  json: any,
+  json: T,
   text: string | undefined,
   status: number
   validationErrors: string[] | null
@@ -30,22 +30,25 @@ type Config = {
   retryOnTransientError?: boolean,
 };
 
-const parseErrors = (errors: any): string[] => {
+const parseErrors = (errors: unknown): string[] => {
+  if (!Array.isArray(errors)) {
+    return [SOMETHING_WENT_WRONG];
+  }
   try {
     return errors.map(
-      (e: any) => (e?.msg ?? SOMETHING_WENT_WRONG).split(",").slice(1).join(",").trim()
+      (e: { msg?: string }) => (e?.msg ?? SOMETHING_WENT_WRONG).split(",").slice(1).join(",").trim()
     );
   } catch {
     return [SOMETHING_WENT_WRONG];
   }
 };
 
-const api = async (
+const api = async <T = unknown>(
   method: string,
   endpoint: string,
   init?: RequestInit,
   config: Config = {},
-): Promise<ApiResponse> => {
+): Promise<ApiResponse<T>> => {
   const {
     timeout,
     maxRetries,
@@ -54,7 +57,7 @@ const api = async (
   } = config;
 
   let response: Response | undefined;
-  let json: any;
+  let json: T | undefined;
   let text: string | undefined;
   let numRetries = 0;
 
@@ -132,7 +135,10 @@ const api = async (
   return {
     ok: response?.ok ?? false,
     clientError: clientError ?? false,
-    json,
+    // The body is parsed dynamically, so its runtime shape can't be proven to
+    // match `T`. Callers assert the expected response type via the type
+    // parameter; this is the single boundary where that contract is trusted.
+    json: json as T,
     text,
     status: response?.status ?? 0,
     validationErrors: validationErrors,
@@ -140,12 +146,12 @@ const api = async (
 };
 
 
-const japi = async (
+const japi = async <T = unknown>(
   method: string,
   endpoint: string,
-  body?: any,
+  body?: unknown,
   config?: Config,
-): Promise<ApiResponse> => {
+): Promise<ApiResponse<T>> => {
   const init = body === undefined ? {} : {
     headers: {
       Accept: 'application/json',
@@ -154,7 +160,7 @@ const japi = async (
     body: JSON.stringify(body)
   }
 
-  return await api(
+  return await api<T>(
     method,
     endpoint,
     init,

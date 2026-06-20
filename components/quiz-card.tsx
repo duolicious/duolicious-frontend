@@ -26,6 +26,7 @@ import { IndeterminateProgressBar } from './indeterminate-progress-bar';
 import { Logo14 } from './logo';
 import { useAppTheme } from '../app-theme/app-theme';
 import { formatCount } from '../util/util';
+import { SearchFilterAnswer } from '../navigation/search-filter-state';
 
 const cardBorders = {
   borderRadius: 10,
@@ -48,6 +49,11 @@ const cardPadding = {
 type CardState = {
   answer: boolean | null,
   public_: boolean,
+}
+
+type SearchFilterAnswerResponse = {
+  error?: string
+  answer?: SearchFilterAnswer[]
 }
 
 const LeftComponent = ({count}: {count: number}) => {
@@ -816,7 +822,7 @@ const SearchQuizCard = ({
       state.acceptUnanswered :
       acceptUnanswered);
 
-    const response = await japi(
+    const response = await japi<SearchFilterAnswerResponse>(
       'post',
       '/search-filter-answer',
       {

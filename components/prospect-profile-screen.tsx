@@ -967,7 +967,7 @@ const CurriedContent = ({navigationRef, navigation, route}: {
       if (isUuid(handle)) {
         setSkipped(handle, { networkState: 'fetching' });
       }
-      const response = await api('get', `/prospect-profile/${handle}`);
+      const response = await api<UserData>('get', `/prospect-profile/${handle}`);
       setData(response?.json);
       setNotFound(response.clientError);
       const canonicalUuid = response?.json?.person_uuid ?? (

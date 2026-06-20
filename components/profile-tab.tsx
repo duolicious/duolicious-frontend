@@ -78,6 +78,21 @@ import { faDownload } from '@fortawesome/free-solid-svg-icons/faDownload'
 import { faUserGroup } from '@fortawesome/free-solid-svg-icons/faUserGroup'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 
+type ProfileInfoResponse = {
+  photo_verification: { [position: string]: boolean }
+  name: string
+  flair: string
+};
+
+type ProfileInfoPatchResponse = {
+  url_slug?: string
+  is_random?: boolean
+};
+
+type ExportDataTokenResponse = {
+  token?: string
+};
+
 const formatHeight = (og: OptionGroup<OptionGroupInputs>): string | undefined => {
   if (!isOptionGroupSlider(og.input)) return '';
 
@@ -91,15 +106,15 @@ const formatHeight = (og: OptionGroup<OptionGroupInputs>): string | undefined =>
   }
 };
 
-const enqueueAbout = async (about: string, cb: (response: ApiResponse) => void) => {
+const enqueueAbout = async (about: string, cb: (response: ApiResponse<ProfileInfoPatchResponse>) => void) => {
   aboutQueue.addTask(
-    async () => cb(await japi('patch', '/profile-info', { about }))
+    async () => cb(await japi<ProfileInfoPatchResponse>('patch', '/profile-info', { about }))
   );
 };
 
-const enqueueName = async (name: string, cb: (response: ApiResponse) => void) => {
+const enqueueName = async (name: string, cb: (response: ApiResponse<ProfileInfoPatchResponse>) => void) => {
   nameQueue.addTask(
-    async () => cb(await japi('patch', '/profile-info', { name }))
+    async () => cb(await japi<ProfileInfoPatchResponse>('patch', '/profile-info', { name }))
   );
 };
 
@@ -221,7 +236,7 @@ const ProfileTab_ = ({navigation}: {navigation: any}) => {
 
   useEffect(() => {
     (async () => {
-      const response = await api('get', '/profile-info');
+      const response = await api<ProfileInfoResponse>('get', '/profile-info');
       if (!response.json) {
         return;
       }
@@ -319,7 +334,7 @@ const DisplayNameAndAboutPerson = ({data}: {data: ProfileInfo}) => {
 
   const responseHandler =
     (stateSetter: (state: State) => void) =>
-    (r: ApiResponse): boolean =>
+    (r: ApiResponse<ProfileInfoPatchResponse>): boolean =>
   {
     if (r.json?.url_slug) {
       setNameSlug(r.json.url_slug);
@@ -358,7 +373,7 @@ const DisplayNameAndAboutPerson = ({data}: {data: ProfileInfo}) => {
   const onChangeNameText = useCallback(async (name: string) => {
     setNameState('saving...');
 
-    const handleResponse = (r: ApiResponse) => {
+    const handleResponse = (r: ApiResponse<ProfileInfoPatchResponse>) => {
       if (name.length <  1) { setNameState('too short'); return; }
       if (name.length > 64) { setNameState('too long'); return; }
 
@@ -568,7 +583,7 @@ const Options = ({ navigation, data }: { navigation: any, data: ProfileInfo }) =
     setDataExportStatus('loading');
 
     const token: string | undefined = (
-      await api('get', '/export-data-token'))?.json?.token;
+      await api<ExportDataTokenResponse>('get', '/export-data-token'))?.json?.token;
 
 
     if (!token) {

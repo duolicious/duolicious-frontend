@@ -149,7 +149,7 @@ const fetchPageWithoutQueue = async (
       ? `&answers=${encodeURIComponent(JSON.stringify(anonymousAnswers))}`
       : '';
 
-  const response = await japi(
+  const response = await japi<PageItem[]>(
     'get',
     (isPublic ? '/public-search' : '/search') +
     `?n=${resultsPerPage}` +

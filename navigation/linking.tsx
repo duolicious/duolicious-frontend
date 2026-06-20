@@ -1,11 +1,60 @@
 import { Platform } from 'react-native';
 import {
+  LinkingOptions,
+  NavigatorScreenParams,
+  PathConfig,
   getPathFromState as rnGetPathFromState,
   getStateFromPath as rnGetStateFromPath,
-  LinkingOptions,
 } from '@react-navigation/native';
 import { UUID_REGEX_SOURCE } from '../util/util';
 import { getSignedInUser, isWebLoggedOut } from '../events/signed-in-user';
+
+type WelcomeParamList = {
+  'Welcome Screen': undefined;
+  'Welcome Email Screen': undefined;
+  'Create Account Or Sign In Screen': undefined;
+};
+
+type SearchFilterParamList = {
+  'Search Filter Tab': undefined;
+  'Search Filter Option Screen': undefined;
+  'Q&A Filter Screen': undefined;
+};
+
+type SearchParamList = {
+  'Search Screen': undefined;
+  'Search Filter Screen': NavigatorScreenParams<SearchFilterParamList>;
+};
+
+type ProfileParamList = {
+  'Profile Tab': undefined;
+  'Profile Option Screen': undefined;
+  'Club Selector': undefined;
+  'Invite Picker': undefined;
+};
+
+type HomeParamList = {
+  'Q&A': undefined;
+  Search: NavigatorScreenParams<SearchParamList>;
+  Feed: undefined;
+  Inbox: undefined;
+  Visitors: undefined;
+  Profile: NavigatorScreenParams<ProfileParamList>;
+};
+
+type ProspectParamList = {
+  'Prospect Profile': { personUuid: string };
+  'Gallery Screen': { photoUuid: string };
+  'In-Depth': { personUuid: string };
+};
+
+type RootParamList = {
+  Welcome: NavigatorScreenParams<WelcomeParamList>;
+  Home: NavigatorScreenParams<HomeParamList>;
+  'Conversation Screen': { personUuid: string };
+  'Prospect Profile Screen': NavigatorScreenParams<ProspectParamList>;
+  'Invite Screen': { clubName: string };
+};
 
 const SLUG_REGEX_SOURCE = '[a-z0-9_-]+';
 
@@ -54,73 +103,89 @@ const focusedRouteIsWizard = (state: any): boolean => {
   return false;
 };
 
-const createLinking = (): LinkingOptions<Record<string, unknown>> => {
+// React Navigation's `PathConfigMap` only infers a child navigator's param
+// list one level deep; past that, `initialRouteName` collapses to `never`.
+// Annotating each navigator's config with its own `PathConfig<…>` keeps every
+// inference one level deep, so the whole tree type-checks without assertions.
+const welcomeConfig: PathConfig<WelcomeParamList> = {
+  path: '',
+  initialRouteName: 'Welcome Screen',
+  screens: {
+    'Welcome Screen': '',
+    'Welcome Email Screen': 'email',
+    'Create Account Or Sign In Screen': 'sign-in',
+  },
+};
+
+const searchFilterConfig: PathConfig<SearchFilterParamList> = {
+  path: 'filters',
+  initialRouteName: 'Search Filter Tab',
+  screens: {
+    'Search Filter Tab': '',
+    'Search Filter Option Screen': 'edit',
+    'Q&A Filter Screen': 'qa',
+  },
+};
+
+const searchConfig: PathConfig<SearchParamList> = {
+  path: 'search',
+  initialRouteName: 'Search Screen',
+  screens: {
+    'Search Screen': '',
+    'Search Filter Screen': searchFilterConfig,
+  },
+};
+
+const profileConfig: PathConfig<ProfileParamList> = {
+  path: 'profile',
+  initialRouteName: 'Profile Tab',
+  screens: {
+    'Profile Tab': '',
+    'Profile Option Screen': 'settings',
+    'Club Selector': 'clubs',
+    'Invite Picker': 'invites',
+  },
+};
+
+const homeConfig: PathConfig<HomeParamList> = {
+  screens: {
+    'Q&A': 'qa',
+    Search: searchConfig,
+    Feed: 'feed',
+    Inbox: 'inbox',
+    Visitors: 'visitors',
+    Profile: profileConfig,
+  },
+};
+
+const prospectConfig: PathConfig<ProspectParamList> = {
+  screens: {
+    'Prospect Profile': `:personUuid(${UUID_REGEX_SOURCE}|${SLUG_REGEX_SOURCE})`,
+    'Gallery Screen': 'gallery/:photoUuid',
+    'In-Depth': `in-depth/:personUuid(${UUID_REGEX_SOURCE})`,
+  },
+};
+
+const linkingConfig: LinkingOptions<RootParamList>['config'] = {
+  screens: {
+    Welcome: welcomeConfig,
+    Home: homeConfig,
+    'Conversation Screen': `chat/:personUuid(${UUID_REGEX_SOURCE})`,
+    'Prospect Profile Screen': prospectConfig,
+    'Invite Screen': 'invite/:clubName',
+  },
+};
+
+const createLinking = () => {
   const prefixes =
     Platform.OS === 'web' && typeof window !== 'undefined' && window.location?.origin
       ? [window.location.origin]
       : [];
 
-  const config = {
-    screens: {
-      Welcome: {
-        path: '',
-        initialRouteName: 'Welcome Screen',
-        screens: {
-          'Welcome Screen': '',
-          'Welcome Email Screen': 'email',
-          'Create Account Or Sign In Screen': 'sign-in',
-        },
-      },
-      Home: {
-        screens: {
-          'Q&A': 'qa',
-          Search: {
-            path: 'search',
-            initialRouteName: 'Search Screen',
-            screens: {
-              'Search Screen': '',
-              'Search Filter Screen': {
-                path: 'filters',
-                initialRouteName: 'Search Filter Tab',
-                screens: {
-                  'Search Filter Tab': '',
-                  'Search Filter Option Screen': 'edit',
-                  'Q&A Filter Screen': 'qa',
-                },
-              },
-            },
-          },
-          Feed: 'feed',
-          Inbox: 'inbox',
-          Visitors: 'visitors',
-          Profile: {
-            path: 'profile',
-            initialRouteName: 'Profile Tab',
-            screens: {
-              'Profile Tab': '',
-              'Profile Option Screen': 'settings',
-              'Club Selector': 'clubs',
-              'Invite Picker': 'invites',
-            },
-          },
-        },
-      },
-      'Conversation Screen': `chat/:personUuid(${UUID_REGEX_SOURCE})`,
-      'Prospect Profile Screen': {
-        screens: {
-          'Prospect Profile': `:personUuid(${UUID_REGEX_SOURCE}|${SLUG_REGEX_SOURCE})`,
-          'Gallery Screen': 'gallery/:photoUuid',
-          'In-Depth': `in-depth/:personUuid(${UUID_REGEX_SOURCE})`,
-        },
-      },
-      'Invite Screen': 'invite/:clubName',
-    },
-  };
-
   return {
     prefixes,
-    config,
-    getStateFromPath: (path: string, options: Record<string, unknown>) => {
+    config: linkingConfig,
+    getStateFromPath: (path: string, options: any) => {
       let normalized = path.replace(/\/{2,}/g, '/');
 
       if (normalized === '/me' || normalized.startsWith('/me/')) normalized = '/';
@@ -153,4 +218,7 @@ const createLinking = (): LinkingOptions<Record<string, unknown>> => {
   };
 };
 
+type Linking = ReturnType<typeof createLinking>;
+
 export { createLinking, isBannerRoute, focusedProspectHandle, focusedRouteIsWizard, getTopRouteName };
+export type { Linking };

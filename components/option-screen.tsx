@@ -249,8 +249,13 @@ const GivenName = forwardRef((props: InputProps<OptionGroupGivenName>, ref) => {
     // but we don't want to nag before the user has entered anything).
     if (!name.trim()) return;
 
+    type OnboardeeInfoResponse = {
+      url_slug?: string,
+      is_random?: boolean,
+    };
+
     const response = await onboardingQueue.addTask(
-      () => japi('patch', '/onboardee-info', { name }));
+      () => japi<OnboardeeInfoResponse>('patch', '/onboardee-info', { name }));
     // Drop a response the user has already typed past: if the input no longer
     // matches the name we checked, a newer check is (or will be) in flight for
     // the current value.

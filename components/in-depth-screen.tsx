@@ -22,6 +22,21 @@ import { CardState } from './quiz-card';
 import { useSignedInUser } from '../events/signed-in-user';
 import { getProspectHint, setProspectHint } from '../navigation/prospect-cache';
 
+type CompareAnswer = {
+  question_id: number,
+  topic: string,
+  prospect_name: string,
+  prospect_answer: string | null,
+  person_answer: string | null,
+  person_public_: boolean | null,
+  question: string,
+};
+
+type ProspectProfileResponse = {
+  person_id: number,
+  name: string,
+};
+
 const sideMargins = {
   marginLeft: 10,
   marginRight: 10,
@@ -173,7 +188,7 @@ const fetchAnswersPage = (
   const resultsPerPage = 10;
   const offset = resultsPerPage * (pageNumber - 1);
 
-  const response = await api(
+  const response = await api<CompareAnswer[]>(
     'get',
     `/compare-answers/${personId}` +
     `?topic=${topic}` +
@@ -296,7 +311,7 @@ const CurredInDepthScreen = ({navigationRef, navigation, route}: {
 
     let cancelled = false;
     (async () => {
-      const response = await api('get', `/prospect-profile/${personUuid}`);
+      const response = await api<ProspectProfileResponse>('get', `/prospect-profile/${personUuid}`);
       if (cancelled) return;
       if (!response.ok) {
         setFetchFailed(true);

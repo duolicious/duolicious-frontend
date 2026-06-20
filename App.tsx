@@ -10,9 +10,11 @@ import {
 } from 'react';
 import {
   DefaultTheme,
+  InitialState,
   NavigationContainer,
   NavigationState,
   ParamListBase,
+  PartialState,
   createNavigationContainerRef,
   getPathFromState as rnGetPathFromState,
 } from '@react-navigation/native';
@@ -70,9 +72,21 @@ verificationWatcher();
 ExpoSplashScreen.preventAutoHideAsync();
 
 type StatusResponse = {
-  api_version: string;
+  api_version: number;
   statuses: string[];
   status_index: number;
+};
+
+type CheckSessionTokenResponse = {
+  onboarded?: boolean;
+  clubs: ClubItem[];
+  person_id: number;
+  person_uuid: string;
+  pending_club: ClubItem | null;
+  units: string;
+  estimated_end_date: string;
+  name: string;
+  has_gold: boolean;
 };
 
 const Stack = createNativeStackNavigator();
@@ -83,13 +97,13 @@ const isImagePickerOpen = { value: false };
 const navigationContainerRef = createNavigationContainerRef<ParamListBase>();
 
 const App = () => {
-  const [initialState, setInitialState] = useState<NavigationState | undefined>(undefined);
+  const [initialState, setInitialState] = useState<InitialState | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
   const [serverStatus, setServerStatus] = useState<ServerStatus>("ok");
   const [signedInUser] = useSignedInUser();
   const [bannerVisible, setBannerVisible] = useState(false);
   const [bannerProspectHandle, setBannerProspectHandle] = useState<string | undefined>(undefined);
-  const pendingPostLoginStateRef = useRef<NavigationState | null>(null);
+  const pendingPostLoginStateRef = useRef<PartialState<NavigationState> | null>(null);
   useAppThemeLoader();
   const { appTheme } = useAppTheme();
 
@@ -166,7 +180,7 @@ const App = () => {
     // Log into XMPP
     login(existingPersonUuid, existingSessionToken);
 
-    const response = await japi(
+    const response = await japi<CheckSessionTokenResponse>(
       'post',
       '/check-session-token',
       undefined,
@@ -185,9 +199,9 @@ const App = () => {
     }
 
     const clubs: ClubItem[] = response?.json?.clubs;
-    const personId = response?.json?.person_id as number;
-    const personUuid = response?.json?.person_uuid as string;
-    const pendingClub = response?.json?.pending_club as ClubItem | null;
+    const personId = response?.json?.person_id;
+    const personUuid = response?.json?.person_uuid;
+    const pendingClub = response?.json?.pending_club;
 
     setSignedInUser({
       personId: personId,
@@ -450,6 +464,14 @@ const App = () => {
     return <UtilityScreen serverStatus={serverStatus} />
   }
 
+  // Mark the restored state as stale so React Navigation rehydrates it
+  // (regenerating keys/indexes). Assigned to a variable first because an
+  // inline object literal would trip the excess-property check against
+  // `InitialState`, which doesn't declare `stale`.
+  const rehydratedInitialState = initialState ?
+    { ...initialState, stale: true as const } :
+    undefined;
+
   return (
     <ErrorBoundary onError={onError}>
       <SafeAreaProvider>
@@ -459,11 +481,7 @@ const App = () => {
             <NavigationContainer
               ref={navigationContainerRef}
               linking={linking}
-              initialState={
-                initialState ?
-                { ...initialState, stale: true } :
-                undefined
-              }
+              initialState={rehydratedInitialState}
               onReady={onNavigationReady}
               onStateChange={onNavigationStateChange}
               theme={{
