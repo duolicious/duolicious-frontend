@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 import {
   getPathFromState as rnGetPathFromState,
   getStateFromPath as rnGetStateFromPath,
+  LinkingOptions,
 } from '@react-navigation/native';
 import { UUID_REGEX_SOURCE } from '../util/util';
 import { getSignedInUser, isWebLoggedOut } from '../events/signed-in-user';
@@ -53,7 +54,7 @@ const focusedRouteIsWizard = (state: any): boolean => {
   return false;
 };
 
-const createLinking = () => {
+const createLinking = (): LinkingOptions<Record<string, unknown>> => {
   const prefixes =
     Platform.OS === 'web' && typeof window !== 'undefined' && window.location?.origin
       ? [window.location.origin]
@@ -119,7 +120,7 @@ const createLinking = () => {
   return {
     prefixes,
     config,
-    getStateFromPath: (path: string, options: any) => {
+    getStateFromPath: (path: string, options: Record<string, unknown>) => {
       let normalized = path.replace(/\/{2,}/g, '/');
 
       if (normalized === '/me' || normalized.startsWith('/me/')) normalized = '/';

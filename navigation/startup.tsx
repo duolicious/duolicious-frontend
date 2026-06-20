@@ -3,9 +3,9 @@ import { lastPath } from '../kv-storage/last-path';
 import { consumeLegacyNavigationState } from '../kv-storage/navigation-state';
 
 type LinkingLike = {
-  config: any;
-  getStateFromPath: (path: string, options: any) => any;
-  getPathFromState: (state: any, options: any) => string;
+  config: Record<string, unknown>;
+  getStateFromPath: (path: string, options: Record<string, unknown>) => Record<string, unknown> | null;
+  getPathFromState: (state: Record<string, unknown>, options: Record<string, unknown>) => string;
 };
 
 const ensureLeadingSlash = (p: string): string => {

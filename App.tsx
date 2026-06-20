@@ -11,6 +11,8 @@ import {
 import {
   DefaultTheme,
   NavigationContainer,
+  NavigationState,
+  ParamListBase,
   createNavigationContainerRef,
   getPathFromState as rnGetPathFromState,
 } from '@react-navigation/native';
@@ -67,21 +69,27 @@ verificationWatcher();
 
 ExpoSplashScreen.preventAutoHideAsync();
 
+type StatusResponse = {
+  api_version: string;
+  statuses: string[];
+  status_index: number;
+};
+
 const Stack = createNativeStackNavigator();
 
 const otpDestination = { value: '' };
 const isImagePickerOpen = { value: false };
 
-const navigationContainerRef = createNavigationContainerRef<any>();
+const navigationContainerRef = createNavigationContainerRef<ParamListBase>();
 
 const App = () => {
-  const [initialState, setInitialState] = useState<any>(undefined);
+  const [initialState, setInitialState] = useState<NavigationState | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
   const [serverStatus, setServerStatus] = useState<ServerStatus>("ok");
   const [signedInUser] = useSignedInUser();
   const [bannerVisible, setBannerVisible] = useState(false);
   const [bannerProspectHandle, setBannerProspectHandle] = useState<string | undefined>(undefined);
-  const pendingPostLoginStateRef = useRef<any | null>(null);
+  const pendingPostLoginStateRef = useRef<NavigationState | null>(null);
   useAppThemeLoader();
   const { appTheme } = useAppTheme();
 
@@ -233,7 +241,7 @@ const App = () => {
     }
   }, []);
 
-  const recomputeBannerVisible = useCallback((state?: any) => {
+  const recomputeBannerVisible = useCallback((state?: NavigationState) => {
     const rootState = state ?? navigationContainerRef.current?.getRootState?.();
     setBannerVisible(isWebLoggedOut() && isBannerRoute(rootState));
     setBannerProspectHandle(focusedProspectHandle(rootState));
@@ -271,7 +279,7 @@ const App = () => {
       return;
     }
 
-    const j: any = await response.json();
+    const j: StatusResponse = await response.json();
     const apiVersion = j.api_version;
     const reportedStatus = j.statuses[j.status_index];
 
@@ -356,7 +364,7 @@ const App = () => {
     loadApp();
   }, []);
 
-  const onNavigationStateChange = useCallback(async (state: any) => {
+  const onNavigationStateChange = useCallback(async (state: NavigationState) => {
     if (!state) return;
 
     recomputeBannerVisible(state);
@@ -397,7 +405,7 @@ const App = () => {
       // on here is that `Home` is always the implicit root of the path tree,
       // so any path produced by getPathFromState round-trips back to a
       // valid state via getStateFromPath.
-      const path = rnGetPathFromState(state, linking.config as any);
+      const path = rnGetPathFromState(state, linking.config);
       if (typeof path === 'string') {
         await lastPath(path.startsWith('/') ? path : `/${path}`);
       }
@@ -418,7 +426,7 @@ const App = () => {
     (stats?.numUnreadChats ?? 0) +
     (stats?.numUnreadIntros ?? 0);
 
-  useNotificationObserverOnMobile((screen: string, params: any) => {
+  useNotificationObserverOnMobile((screen: string, params: Record<string, unknown>) => {
     const navigationContainer = navigationContainerRef.current;
 
     if (!navigationContainer) return;
