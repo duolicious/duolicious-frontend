@@ -7,6 +7,7 @@ import {
   Pressable,
   ScrollView,
   View,
+  ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -96,7 +97,8 @@ import {
   showVerificationCamera,
 } from './verification-camera';
 import { notifyUpdatedVerification } from '../verification/verification';
-import { useNavigation } from '@react-navigation/native';
+import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useAppTheme } from '../app-theme/app-theme';
 import { getSignedInUser } from '../events/signed-in-user';
 import { showPointOfSale } from './modal/point-of-sale-modal';
@@ -110,8 +112,8 @@ import {
 type InputProps<T extends OptionGroupInputs> = {
   input: T,
   isLoading: boolean
-  setIsLoading: any
-  onSubmitSuccess: any
+  setIsLoading: (isLoading: boolean) => void
+  onSubmitSuccess: () => void
   title: string,
   showSkipButton: boolean
   theme?: 'dark' | 'light'
@@ -780,7 +782,9 @@ const CheckChips = forwardRef((props: InputProps<OptionGroupCheckChips>, ref) =>
 });
 
 const RangeSlider = forwardRef((props: InputProps<OptionGroupRangeSlider>, ref) => {
-  const rangeSliderRef = useRef<any>(undefined);
+  const rangeSliderRef = useRef<{
+    setValues: (values: { lowerValue: number | null, upperValue: number | null }) => void
+  } | null>(null);
 
   const lowerValueRef = useRef<number | null>(
     props.input.rangeSlider.currentMin ??
@@ -878,7 +882,7 @@ const VerificationChecker = forwardRef((props: InputProps<OptionGroupVerificatio
   const [numChecks, setNumChecks] = useState(3);
   const [verifiedThings, setVerifiedThings] = useState<string[]>([]);
   const [unverifiedThings, setUnverifiedThings] = useState<string[]>([]);
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<NavigationProp<ParamListBase>>();
 
   const isDone = status === 'success' || status === 'failure';
 
@@ -1154,7 +1158,7 @@ const ColorPickerButton = ({
   lastSetter: React.MutableRefObject<React.Dispatch<React.SetStateAction<string>>>,
   currentColor: string
   setColor: (c: string) => void,
-  style?: any,
+  style?: ViewStyle,
 }) => {
   const opacity = useRef(new Animated.Value(1)).current;
 
@@ -1400,7 +1404,7 @@ const InputElement = forwardRef((props: InputProps<OptionGroupInputs>, ref) => {
   }
 });
 
-const OptionScreen = ({navigation, route}: {navigation: any, route: any}) => {
+const OptionScreen = ({navigation, route}: NativeStackScreenProps<ParamListBase>) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const [isBottom, setIsBottom] = useState(true);
@@ -1442,7 +1446,7 @@ const OptionScreen = ({navigation, route}: {navigation: any, route: any}) => {
   const showSkipButton: boolean = payload?.showSkipButton ?? true;
   const showCloseButton: boolean = payload?.showCloseButton ?? true;
   const showBackButton: boolean = payload?.showBackButton ?? false;
-  const onSubmitSuccess: any | undefined = payload?.onSubmitSuccess;
+  const onSubmitSuccess: (() => void) | undefined = payload?.onSubmitSuccess;
 
   const backgroundColor = payload?.backgroundColor ?? appTheme.primaryColor;
   const color = payload?.color ?? appTheme.secondaryColor;
@@ -1456,7 +1460,7 @@ const OptionScreen = ({navigation, route}: {navigation: any, route: any}) => {
   // history entry that you can pop off.
   const thisOptionGroup = optionGroups[0];
 
-  const inputRef = useRef<any>(undefined);
+  const inputRef = useRef<{ submit?: () => void } | null>(null);
 
   const _onSubmitSuccess = useCallback(async () => {
     onSubmitSuccess && onSubmitSuccess();
