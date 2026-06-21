@@ -6,6 +6,7 @@ import {
   View,
   StyleProp,
   TextStyle,
+  ViewStyle,
 } from 'react-native';
 import {
   createElement,
@@ -510,7 +511,7 @@ const AnswerIcon = ({
   answer: string,
   selected: boolean,
   enabled: boolean,
-  onPress?: any
+  onPress?: () => void
 }) => {
   const { appThemeName } = useAppTheme();
 
@@ -567,7 +568,7 @@ const AnswerIconGroup = ({
 }: {
   answer: boolean | null,
   enabled: boolean,
-  onPress?: any,
+  onPress?: (value: boolean) => void,
 }) => {
   const onPressYes = useCallback(() => onPress && onPress(true),  [onPress]);
   const onPressNo  = useCallback(() => onPress && onPress(false), [onPress]);
@@ -786,7 +787,7 @@ const SearchQuizCard = ({
   topic: string,
   answer: boolean | null,
   initialCheckBoxValue: boolean,
-  onAnswerChange: (answers: any) => void,
+  onAnswerChange: (answers: SearchFilterAnswer[]) => void,
 }) => {
   type State = {
     answer: boolean | null
@@ -953,7 +954,7 @@ const SearchQuizCard = ({
   );
 };
 
-const SkeletonQuizCard = (props: {innerStyle?: any}) => {
+const SkeletonQuizCard = (props: {innerStyle?: ViewStyle}) => {
   return (
     <Animated.View
       style={{
