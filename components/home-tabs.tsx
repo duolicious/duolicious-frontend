@@ -24,7 +24,7 @@ const HomeTabs = () => {
         headerShown: false,
         animation: 'shift',
       }}
-      tabBar={(props: any) => <TabBar {...props} />}
+      tabBar={(props: any) => <TabBar {...props} />} // eslint-disable-line @typescript-eslint/no-explicit-any
 
       // Without this, tabs appear blank about 5% of the time when switching
       // between them. ChatGPT suggests the react-native-screens and

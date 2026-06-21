@@ -19,8 +19,14 @@ import {
   setProfileInfo,
   useProfileInfo,
 } from '../events/profile-info';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { ButtonForOption } from './button/option';
+import {
+  NativeStackScreenProps,
+  createNativeStackNavigator,
+} from '@react-navigation/native-stack';
+import { CompositeScreenProps } from '@react-navigation/native';
+import type { ProfileParamList, RootParamList } from '../navigation/linking';
+import { navigationContainerRef } from '../App';
+import { ButtonForOption, ButtonForOptionProps } from './button/option';
 import { DuoliciousTopNavBar } from './top-nav-bar';
 import { OptionScreen } from './option-screen';
 import { Title } from './title';
@@ -105,6 +111,12 @@ const formatHeight = (og: OptionGroup<OptionGroupInputs>): string | undefined =>
       `${currentValue} cm`;
   }
 };
+
+// A button's `setting` is a display label; only string current values have one.
+const asSettingLabel = (
+  value: ReturnType<typeof getCurrentValue>,
+): string | undefined =>
+  typeof value === 'string' ? value : undefined;
 
 const enqueueAbout = async (about: string, cb: (response: ApiResponse<ProfileInfoPatchResponse>) => void) => {
   aboutQueue.addTask(
@@ -229,7 +241,12 @@ const Images_ = ({data}: {data: ProfileInfo}) => {
   );
 };
 
-const ProfileTab_ = ({navigation}: {navigation: any}) => {
+type ProfileTabScreenProps = CompositeScreenProps<
+  NativeStackScreenProps<ProfileParamList, 'Profile Tab'>,
+  NativeStackScreenProps<RootParamList>
+>;
+
+const ProfileTab_ = ({navigation}: ProfileTabScreenProps) => {
   const { appTheme } = useAppTheme();
   const [signedInUser] = useSignedInUser();
   const data = useProfileInfo();
@@ -471,7 +488,10 @@ const DisplayNameAndAboutPerson = ({data}: {data: ProfileInfo}) => {
 const optionGroupToDataKey = (og: OptionGroup<OptionGroupInputs>) =>
   og.title.toLowerCase().replaceAll(' ', '_');
 
-const Options = ({ navigation, data }: { navigation: any, data: ProfileInfo }) => {
+const Options = ({ navigation, data }: {
+  navigation: ProfileTabScreenProps['navigation'],
+  data: ProfileInfo,
+}) => {
   const [isLoadingSignOut, setIsLoadingSignOut] = useState(false);
   const [dataExportStatus, setDataExportStatus] = useState<
     'error' | 'loading' | 'ok'
@@ -538,7 +558,7 @@ const Options = ({ navigation, data }: { navigation: any, data: ProfileInfo }) =
       const prev = getProfileInfo();
       if (!prev) return;
 
-      const patch: Record<string, any> = {};
+      const patch: Record<string, unknown> = {};
 
       if (v.photos !== undefined)
         patch.photo_verification = {
@@ -554,7 +574,7 @@ const Options = ({ navigation, data }: { navigation: any, data: ProfileInfo }) =
     });
   }, []);
 
-  const Button_ = useCallback((props: any) => {
+  const Button_ = useCallback((props: ButtonForOptionProps) => {
     return <ButtonForOption
       navigation={navigation}
       navigationScreen="Profile Option Screen"
@@ -574,7 +594,7 @@ const Options = ({ navigation, data }: { navigation: any, data: ProfileInfo }) =
       await lastPath(null);
       resetUserScopedClientState();
       setSignedInUser(undefined);
-      navigation.reset({ routes: [ { name: 'Welcome' } ] });
+      navigationContainerRef.reset({ routes: [ { name: 'Welcome' } ] });
     }
     setIsLoadingSignOut(false);
   }, []);
@@ -648,10 +668,12 @@ const Options = ({ navigation, data }: { navigation: any, data: ProfileInfo }) =
       <DisplayNameAndAboutPerson data={data} />
 
       <Title>Voice Bio</Title>
-      <AudioBio
-        initialSavedRecordingUuid={data.audio_bio ?? null}
-        maxDuration={data.audio_bio_max_seconds}
-      />
+      {data.audio_bio_max_seconds !== undefined &&
+        <AudioBio
+          initialSavedRecordingUuid={data.audio_bio ?? null}
+          maxDuration={data.audio_bio_max_seconds}
+        />
+      }
 
       <Title>Basics</Title>
       {
@@ -661,7 +683,7 @@ const Options = ({ navigation, data }: { navigation: any, data: ProfileInfo }) =
             setting={
               og.title === 'Height' ?
                 formatHeight(og) :
-                getCurrentValue(_basicsOptionGroups[i].input)
+                asSettingLabel(getCurrentValue(_basicsOptionGroups[i].input))
             }
             optionGroups={_basicsOptionGroups.slice(i)}
           />
@@ -694,7 +716,7 @@ const Options = ({ navigation, data }: { navigation: any, data: ProfileInfo }) =
             setting={
               og.title === 'Profile Theme'
                 ? ""
-                : getCurrentValue(og.input)
+                : asSettingLabel(getCurrentValue(og.input))
             }
             showSkipButton={og.title !== 'Profile Theme'}
             optionGroups={_themePickerOptionGroups.slice(i)}
@@ -703,17 +725,19 @@ const Options = ({ navigation, data }: { navigation: any, data: ProfileInfo }) =
       }
 
       <ButtonWithCenteredText
-        onPress={() => navigation.navigate(
-          'Prospect Profile Screen',
-          {
-            screen: 'Prospect Profile',
-            // Prefer the username (url_slug) so the previewed URL matches what
-            // others see; fall back to the uuid until the slug is backfilled.
-            params: {
-              personUuid: data?.url_slug ?? signedInUser?.personUuid,
-            },
-          }
-        )}
+        onPress={() => {
+          // Prefer the username (url_slug) so the previewed URL matches what
+          // others see; fall back to the uuid until the slug is backfilled.
+          const personUuid = data?.url_slug ?? signedInUser?.personUuid;
+          if (!personUuid) return;
+          navigation.navigate(
+            'Prospect Profile Screen',
+            {
+              screen: 'Prospect Profile',
+              params: { personUuid },
+            }
+          );
+        }}
         containerStyle={{
           marginTop: 30,
         }}
@@ -740,7 +764,7 @@ const Options = ({ navigation, data }: { navigation: any, data: ProfileInfo }) =
         _notificationSettingsOptionGroups.map((og, i) =>
           <Button_
             key={i}
-            setting={getCurrentValue(og.input)}
+            setting={asSettingLabel(getCurrentValue(og.input))}
             optionGroups={_notificationSettingsOptionGroups.slice(i)}
           />
         )
@@ -750,7 +774,7 @@ const Options = ({ navigation, data }: { navigation: any, data: ProfileInfo }) =
         _visiblePrivacySettingsOptionGroups.map((og, i) =>
           <Button_
             key={i}
-            setting={getCurrentValue(og.input)}
+            setting={asSettingLabel(getCurrentValue(og.input))}
             // Pass the FULL privacy list (not the filtered visible one) so the
             // wizard cascade after submitting Public Profile can include or
             // skip Verification Level / Hide Me From Strangers based on the
@@ -767,7 +791,7 @@ const Options = ({ navigation, data }: { navigation: any, data: ProfileInfo }) =
         _generalSettingsOptionGroups.map((og, i) =>
           <Button_
             key={i}
-            setting={getCurrentValue(og.input)}
+            setting={asSettingLabel(getCurrentValue(og.input))}
             optionGroups={_generalSettingsOptionGroups.slice(i)}
           />
         )

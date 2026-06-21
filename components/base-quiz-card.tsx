@@ -497,7 +497,7 @@ const BaseQuizCard = forwardRef(
         style={[
           // `userSelect` is a web-only text-selection suppression applied to a
           // View; RN's View style type rejects it, so this stays cast.
-          { userSelect: 'none' } as any,
+          { userSelect: 'none' } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
           cardStyle,
           containerStyle
         ]}

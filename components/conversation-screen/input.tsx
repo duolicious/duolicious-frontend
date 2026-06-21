@@ -12,10 +12,12 @@ import {
   TextStyle,
   TextInputProps,
   View,
+  ViewStyle,
   useWindowDimensions,
 } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import Animated, {
+  AnimatedStyle,
   useSharedValue,
   useAnimatedStyle,
   withTiming,
@@ -28,10 +30,22 @@ import Animated, {
   FadeOutDown,
 } from 'react-native-reanimated';
 import {
+  ComposedGesture,
   Gesture,
   GestureDetector,
   Pressable,
 } from 'react-native-gesture-handler';
+
+// `onKeyPress` is declared with React Native's event type, but on web the
+// handler receives a DOM keyboard event. These web-only fields are optional so
+// the RN event type stays assignable to it.
+type KeyPressEvent = {
+  key?: string;
+  ctrlKey?: boolean;
+  altKey?: boolean;
+  shiftKey?: boolean;
+  preventDefault: () => void;
+};
 import { LayoutChangeEvent } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -331,10 +345,10 @@ const CancelOverlay = ({
   formatTime,
 }: {
   isRecording: boolean;
-  animatedTimerStyle: any;
-  animatedCancelMicrophoneStyle: any;
-  animatedCancelTextStyle: any;
-  animatedArrowStyle: any;
+  animatedTimerStyle: AnimatedStyle<ViewStyle>;
+  animatedCancelMicrophoneStyle: AnimatedStyle<ViewStyle>;
+  animatedCancelTextStyle: AnimatedStyle<ViewStyle>;
+  animatedArrowStyle: AnimatedStyle<TextStyle>;
   duration: number;
   formatTime: (s: number) => string;
 }) => {
@@ -367,7 +381,7 @@ const CancelOverlay = ({
 
       <Animated.View style={[styles.cancelTextStyle, animatedCancelTextStyle]}>
         <DefaultText style={styles.recordingText}>Slide to cancel</DefaultText>
-        <DefaultText animated style={[styles.arrowText, animatedArrowStyle]}>←</DefaultText>
+        <DefaultText animated style={styles.arrowText} animatedStyle={animatedArrowStyle}>←</DefaultText>
       </Animated.View>
     </View>
   );
@@ -384,8 +398,8 @@ const IconBar = ({
   handleSendPress,
 }: {
   showHint: boolean;
-  finalGesture: any;
-  animatedRecordingStyle: any;
+  finalGesture: ComposedGesture;
+  animatedRecordingStyle: AnimatedStyle<ViewStyle>;
   textHasContent: boolean;
   handleSendPress: () => void;
 }) => {
@@ -596,7 +610,7 @@ const Input = ({
   // Animated style for the red flashing microphone in the overlay.
   const animatedCancelMicrophoneStyle = useAnimatedStyle(() => ({
     transform: [
-      { rotate: `${micRotation.value}deg` } as any,
+      { rotate: `${micRotation.value}deg` },
       { translateY: micTranslateY.value },
     ],
     opacity: microphoneOpacity.value,
@@ -716,7 +730,7 @@ const Input = ({
     onChange(newText);
   };
 
-  const handleKeyPress = (event: any) => {
+  const handleKeyPress = (event: KeyPressEvent) => {
     if (
       !isMobile() &&
       event.key === 'Enter' &&

@@ -2,8 +2,9 @@ import {
   StyleSheet,
   Text,
   TextProps,
+  TextStyle,
 } from 'react-native';
-import Animated from 'react-native-reanimated';
+import Animated, { AnimatedStyle } from 'react-native-reanimated';
 import { useAppTheme } from '../app-theme/app-theme';
 
 const montserratFontFamily: Record<string, string> = {
@@ -20,9 +21,14 @@ const montserratFontFamily: Record<string, string> = {
 
 const DefaultText = (props: TextProps & {
   animated?: boolean,
-  disableTheme?: boolean
+  disableTheme?: boolean,
+  // An animated style for the `animated` (reanimated) variant; kept separate
+  // from `style` so the plain `style` can still be flattened below.
+  animatedStyle?: AnimatedStyle<TextStyle>,
 }) => {
   const { appTheme } = useAppTheme();
+
+  const { animatedStyle, ...rest } = props;
 
   const flatStyle = StyleSheet.flatten(props.style);
   const fontWeight = flatStyle?.fontWeight;
@@ -32,20 +38,19 @@ const DefaultText = (props: TextProps & {
   const montserratFont: string | undefined = (
     montserratFontFamily[fontWeight ?? ''] || 'MontserratRegular');
 
-  const props_ = {
-    style: [
-      { fontFamily: fontFamily || montserratFont },
-      (disableTheme ? { } : { color: appTheme.secondaryColor }),
-      props.style,
-      { fontWeight: undefined },
-    ]
-  };
+  const baseStyle = [
+    { fontFamily: fontFamily || montserratFont },
+    (disableTheme ? { } : { color: appTheme.secondaryColor }),
+    props.style,
+  ];
 
   if (props.animated) {
+    // `animatedStyle` sits where the caller's `style` does (before the
+    // fontWeight reset), matching the previous single-`style` ordering exactly.
     return (
       <Animated.Text
         selectable={false}
-        {...{...props, ...props_}}
+        {...{...rest, style: [...baseStyle, animatedStyle, { fontWeight: undefined }]}}
       >
         {props.children}
       </Animated.Text>
@@ -54,7 +59,7 @@ const DefaultText = (props: TextProps & {
     return (
       <Text
         selectable={false}
-        {...{...props, ...props_}}
+        {...{...rest, style: [...baseStyle, { fontWeight: undefined }]}}
       >
         {props.children}
       </Text>

@@ -13,7 +13,7 @@ import {
 } from 'react';
 import { DefaultText } from './default-text';
 import { TopNavBar } from './top-nav-bar';
-import { ButtonForOption } from './button/option';
+import { ButtonForOption, ButtonForOptionProps } from './button/option';
 import { Title } from './title';
 import {
   OptionGroup,
@@ -51,12 +51,15 @@ import {
   getSearchFilterAnswers,
 } from '../navigation/search-filter-state';
 import {
+  SearchFilters,
   patchSearchFilters,
   setSearchFilters,
   useSearchFilters,
 } from '../events/search-filters';
 
-const getCurrentValueAsLabel = (og: OptionGroup<OptionGroupInputs> | undefined) => {
+const getCurrentValueAsLabel = (
+  og: OptionGroup<OptionGroupInputs> | undefined,
+): string | undefined => {
   if (!og) return undefined;
 
   const currentValue = getCurrentValue(og.input);
@@ -114,7 +117,9 @@ const getCurrentValueAsLabel = (og: OptionGroup<OptionGroupInputs> | undefined) 
       return `${currentMin ?? 'any'}–${currentMax ?? 'any'}`;
     }
   } else {
-    return currentValue;
+    // The remaining input types (buttons, location, short text) carry a string
+    // current value; anything else has no label.
+    return typeof currentValue === 'string' ? currentValue : undefined;
   }
 };
 
@@ -195,7 +200,7 @@ const SearchFilterScreen_ = ({navigation}: NativeStackScreenProps<SearchFilterPa
     });
   }, []);
 
-  const Button_ = useCallback((props: any) => {
+  const Button_ = useCallback((props: ButtonForOptionProps) => {
     if (isLocked) {
       return <ButtonForOption
         onPress={promptSignUp}
@@ -220,7 +225,7 @@ const SearchFilterScreen_ = ({navigation}: NativeStackScreenProps<SearchFilterPa
     const isImperial = signedInUser?.units === 'Imperial';
 
     if (isOptionGroupCheckChips(og.input)) {
-      const checked: string[] = value ?? [];
+      const checked: string[] = Array.isArray(value) ? value : [];
       return _.merge({}, og, { input: { checkChips: {
         values: og.input.checkChips.values.map((v) => ({
           ...v,
@@ -236,15 +241,19 @@ const SearchFilterScreen_ = ({navigation}: NativeStackScreenProps<SearchFilterPa
       } } });
     }
     if (og.title === 'Age' && isOptionGroupRangeSlider(og.input)) {
+      const ageValue: { min_age?: unknown; max_age?: unknown } =
+        value && typeof value === 'object' ? value : {};
       return _.merge({}, og, { input: { rangeSlider: {
-        currentMin: value?.min_age,
-        currentMax: value?.max_age,
+        currentMin: ageValue.min_age,
+        currentMax: ageValue.max_age,
       } } });
     }
     if (og.title === 'Height' && isOptionGroupRangeSlider(og.input)) {
+      const heightValue: { min_height_cm?: unknown; max_height_cm?: unknown } =
+        value && typeof value === 'object' ? value : {};
       return _.merge({}, og, { input: { rangeSlider: {
-        currentMin: value?.min_height_cm,
-        currentMax: value?.max_height_cm,
+        currentMin: heightValue.min_height_cm,
+        currentMax: heightValue.max_height_cm,
         unitsLabel: isImperial ? "ft'in\"" : 'cm',
         valueRewriter: isImperial ? cmToFeetInchesStr : undefined,
       } } });
@@ -260,7 +269,7 @@ const SearchFilterScreen_ = ({navigation}: NativeStackScreenProps<SearchFilterPa
       return;
     }
     (async () => {
-      const response = await api('get', '/search-filters');
+      const response = await api<SearchFilters>('get', '/search-filters');
       if (response.json) {
         setSearchFilters(response.json);
       }

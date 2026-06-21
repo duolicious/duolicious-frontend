@@ -9,6 +9,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import {
+  Ref,
   createElement,
   memo,
   useCallback,
@@ -16,7 +17,7 @@ import {
   useState,
 } from 'react';
 import { StatelessCheckBox } from './check-box';
-import { BaseQuizCard } from './base-quiz-card';
+import { BaseQuizCard, BaseQuizCardRef, Direction } from './base-quiz-card';
 import { DefaultText } from './default-text';
 import { LinearGradient } from 'expo-linear-gradient';
 import { X, Check, FastForward } from "react-native-feather";
@@ -189,10 +190,23 @@ const QuizCard = ({
   yesCount,
   ...props
 }: {
-  children: React.ReactNode,
+  children: string,
   noCount: number,
   yesCount: number,
-  [key: string]: any,
+  style?: ViewStyle,
+  innerStyle?: ViewStyle,
+  innerRef?: Ref<BaseQuizCardRef>,
+  questionNumber?: number,
+  topic?: string,
+  answerPubliclyValue?: boolean,
+  onChangeAnswerPublicly?: (value: boolean) => void,
+  imageBackgroundStyle?: ViewStyle,
+  nonInteractiveContainerStyle?: Animated.WithAnimatedObject<ViewStyle>,
+  initialPosition?: Direction,
+  preventSwipe?: Direction[],
+  onSwipe?: (direction: Direction) => void,
+  onSwipePrevented?: (direction: Direction) => void,
+  onCardLeftScreen?: (direction: Direction) => void,
 }) => {
   const {
     style,
@@ -239,8 +253,19 @@ const QuizCard = ({
 };
 
 const NonInteractiveQuizCard = ({children, ...props}: {
-  children: any,
-  [key: string]: any,
+  children: string,
+  extraChildren?: React.ReactNode,
+  containerStyle?: Animated.WithAnimatedObject<ViewStyle>,
+  innerStyle?: ViewStyle,
+  fontSize?: number,
+  maxFontSize?: number,
+  answerPubliclyValue?: boolean,
+  onChangeAnswerPublicly?: (value: boolean) => void,
+  questionNumber?: number,
+  topic?: string,
+  imageBackgroundStyle?: ViewStyle,
+  showAnswerPubliclyCheckBox?: boolean,
+  showTutorial?: boolean,
 }) => {
   const {
     extraChildren,
@@ -464,7 +489,7 @@ const NonInteractiveQuizCard = ({children, ...props}: {
           </View>
           {showAnswerPubliclyCheckBox &&
             <StatelessCheckBox
-              value={answerPubliclyValue}
+              value={answerPubliclyValue ?? true}
               labelPosition="left"
               containerStyle={{
                 marginTop: 0,
@@ -472,7 +497,7 @@ const NonInteractiveQuizCard = ({children, ...props}: {
                 marginRight: 30,
                 alignSelf: 'flex-end',
               }}
-              onValueChange={onChangeAnswerPublicly}
+              onValueChange={onChangeAnswerPublicly ?? (() => {})}
             >
               Answer Publicly
             </StatelessCheckBox>
@@ -621,7 +646,7 @@ const AnsweredQuizCard = ({
   answer2Publicly,
   onStateChange,
 }: {
-  children: React.ReactNode,
+  children: string,
   questionNumber: number
   topic: string,
   user1: string,
@@ -782,7 +807,7 @@ const SearchQuizCard = ({
   initialCheckBoxValue,
   onAnswerChange,
 }: {
-  children: React.ReactNode,
+  children: string,
   questionNumber: number,
   topic: string,
   answer: boolean | null,

@@ -8,9 +8,9 @@ import {
 import { LogoActivityIndicator } from './logo/logo-activity-indicator';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  NativeStackNavigationProp,
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
+import type { NavigationProp } from '@react-navigation/native';
 import type { ProfileParamList } from '../navigation/linking';
 import {
   useCallback,
@@ -142,7 +142,7 @@ const InvitePicker = ({navigation}: NativeStackScreenProps<ProfileParamList, 'In
   );
 };
 
-const InviteEntrypoint = ({navigation}: {navigation: NativeStackNavigationProp<ProfileParamList>}) => {
+const InviteEntrypoint = ({navigation}: {navigation: NavigationProp<ProfileParamList>}) => {
   const { appTheme } = useAppTheme();
 
   const opacityLo = 0.2;
