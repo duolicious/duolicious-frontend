@@ -720,7 +720,7 @@ const ConversationScreen = ({navigation, route}: NativeStackScreenProps<RootPara
   }, []);
 
   useLayoutEffect(() => {
-    return listen(
+    return listen<boolean>(
       'chat-is-online',
       (data) => setIsOnline(data ?? false),
       true,
