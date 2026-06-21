@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
+  ForwardedRef,
   forwardRef,
   useCallback,
   useContext,
@@ -118,6 +119,10 @@ type InputProps<T extends OptionGroupInputs> = {
   showSkipButton: boolean
   theme?: 'dark' | 'light'
 };
+
+// Every input component exposes this imperative handle (via
+// `useImperativeHandle`), which OptionScreen calls on "Continue".
+type SubmitHandle = { submit: () => void };
 
 const Buttons = forwardRef((props: InputProps<OptionGroupButtons>, ref) => {
   const [, render] = useState({});
@@ -1370,7 +1375,7 @@ const None = forwardRef((props: InputProps<OptionGroupNone>, ref) => {
   }
 });
 
-const InputElement = forwardRef((props: InputProps<OptionGroupInputs>, ref) => {
+const InputElement = forwardRef((props: InputProps<OptionGroupInputs>, ref: ForwardedRef<SubmitHandle>) => {
   if (isOptionGroupButtons(props.input)) {
     return <Buttons {...{ref, ...props, input: props.input}}/>;
   } else if (isOptionGroupSlider(props.input)) {
@@ -1460,7 +1465,7 @@ const OptionScreen = ({navigation, route}: NativeStackScreenProps<ParamListBase>
   // history entry that you can pop off.
   const thisOptionGroup = optionGroups[0];
 
-  const inputRef = useRef<{ submit?: () => void } | null>(null);
+  const inputRef = useRef<SubmitHandle | null>(null);
 
   const _onSubmitSuccess = useCallback(async () => {
     onSubmitSuccess && onSubmitSuccess();
@@ -1724,3 +1729,4 @@ export {
   noneFontSize,
   descriptionStyle,
 };
+export type { InputProps, SubmitHandle };

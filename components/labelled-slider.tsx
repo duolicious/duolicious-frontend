@@ -1,5 +1,6 @@
 import {
   View,
+  ViewStyle,
 } from 'react-native';
 import {
   forwardRef,
@@ -10,7 +11,7 @@ import {
 } from 'react';
 import { Slider, SliderHandle } from './slider';
 import { DefaultText } from './default-text';
-import { LINEAR_SCALE } from '../scales/scales';
+import { LINEAR_SCALE, Scale } from '../scales/scales';
 
 // TODO: Range slider doesn't adjust thumb
 
@@ -34,11 +35,11 @@ type Props = {
   maximumValue: number
   initialValue: number | null
   onValueChange: (n: number) => void
-  style?: any,
+  style?: ViewStyle,
   addPlusAtMax: boolean | undefined
-  valueRewriter?: (x: any) => any
-  onSlidingComplete?: any
-  scale: any
+  valueRewriter?: (x: number) => number | string
+  onSlidingComplete?: (value: number) => void
+  scale?: Partial<Scale>
   step: number
 };
 
@@ -55,10 +56,13 @@ const LabelledSlider = forwardRef(({label, minimumValue, maximumValue, ...rest}:
     } = {},
   } = rest;
 
-  const descaledInitialValue = descaleValue(initialValue, minimumValue, maximumValue);
+  // The inner Slider needs a concrete number for its position math; an unset
+  // (null) initial value descales to null, so fall back to the minimum.
+  const descaledInitialValue =
+    descaleValue(initialValue, minimumValue, maximumValue) ?? minimumValue;
 
   const sliderRef = useRef<SliderHandle>(null);
-  const labelRef = useRef<any>(null);
+  const labelRef = useRef<{ setLabel: (label: string) => void } | null>(null);
   const valueRef = useRef<number>(descaledInitialValue);
 
   const _onValueChange = (value: number) => {
