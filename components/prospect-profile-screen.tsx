@@ -598,23 +598,32 @@ const BlockButton = ({name, personUuid}: {
   );
 };
 
-const AllClubsItem = ({kind, kids, props}: {
-  kind: string | undefined,
-  kids: ReactNode,
-  props: any,
-}) => {
-  const propsWithoutKey = { ...props };
-  delete propsWithoutKey['key'];
+type AllClubsChild =
+  | { kind: 'Title', kids: ReactNode, props: { style?: TextStyle } }
+  | { kind: 'Club', kids: ReactNode, props: {
+      onPress?: () => void,
+      key: string,
+      name: string,
+      isMutual: boolean,
+      style?: ViewStyle,
+      textStyle?: TextStyle,
+    } };
 
-  if (kind === 'Title') {
-    return <Title {...propsWithoutKey}>{kids}</Title>;
+const AllClubsItem = ({child}: {child: AllClubsChild}) => {
+  if (child.kind === 'Title') {
+    return <Title style={child.props.style}>{child.kids}</Title>;
   }
 
-  if (kind === 'Club') {
-    return <Club {...propsWithoutKey}>{kids}</Club>;
-  }
-
-  throw Error('Unexpected club kind');
+  // `key` is intentionally not forwarded to `Club` (it's only a list key).
+  return (
+    <Club
+      name={child.props.name}
+      isMutual={child.props.isMutual}
+      style={child.props.style}
+      textStyle={child.props.textStyle}
+      onPress={child.props.onPress}
+    />
+  );
 };
 
 const AllClubs = ({
@@ -674,13 +683,13 @@ const AllClubs = ({
     ? (clubName: string) => joinClub(clubName, -1, false)
     : undefined;
 
-  const childData = [
+  const childData: (AllClubsChild | null)[] = [
     state.mutualClubs.length > 0 ? {
       kind: 'Title',
       props: { style: {color: titleColor, width: '100%'}},
       kids: 'Mutual clubs' } : null,
 
-    ...state.mutualClubs.map((clubName) => ({
+    ...state.mutualClubs.map((clubName): AllClubsChild => ({
         kind: 'Club',
         props: {
           onPress: onPressLeave && (() => onPressLeave(clubName)),
@@ -702,7 +711,7 @@ const AllClubs = ({
         props: { style: {color: titleColor, width: '100%'}},
         kids: 'Clubs' } : null,
 
-      ...state.otherClubs.map((clubName) => ({
+      ...state.otherClubs.map((clubName): AllClubsChild => ({
         kind: 'Club',
         props: {
           onPress: onPressJoin && (() => onPressJoin(clubName)),
@@ -713,28 +722,24 @@ const AllClubs = ({
         },
         kids: null,
       })),
-  ].filter(Boolean);
+  ];
 
   return (
     <Clubs>
-      {childData.map((d) =>
+      {childData.filter((c): c is AllClubsChild => c !== null).map((d) =>
         <Reanimated.View
           key={
             JSON.stringify({
-              kind: d?.kind,
-              kids: d?.kids,
-              clubName: d?.props && 'name' in d.props ? d.props.name : undefined,
+              kind: d.kind,
+              kids: d.kids,
+              clubName: d.kind === 'Club' ? d.props.name : undefined,
             })
           }
-          style={d?.kind === 'Title' ? styles.wFull : null}
+          style={d.kind === 'Title' ? styles.wFull : null}
           layout={LinearTransition.easing(Easing.out(Easing.poly(4)))}
           exiting={FadeOut}
         >
-          <AllClubsItem
-            kind={d?.kind}
-            kids={d?.kids}
-            props={d?.props}
-          />
+          <AllClubsItem child={d} />
         </Reanimated.View>
       )}
     </Clubs>
