@@ -27,13 +27,26 @@ import {
   NativeStackScreenProps,
   createNativeStackNavigator,
 } from '@react-navigation/native-stack';
-import type { ProspectParamList } from '../navigation/linking';
+import { CompositeNavigationProp, CompositeScreenProps } from '@react-navigation/native';
+import type { ProspectParamList, RootParamList } from '../navigation/linking';
 
 // The navigation of whichever ProspectParamList screen is focused, stashed in
 // a ref so the shared FloatingBackButton can call `goBack` without being a
 // screen itself.
 type ProspectNavigation = NativeStackNavigationProp<ProspectParamList>;
 type ProspectNavigationRef = MutableRefObject<ProspectNavigation | undefined>;
+
+// These screens are nested under the root stack's `Prospect Profile Screen`,
+// so they navigate to sibling Prospect screens *and* root screens
+// (`Conversation Screen`, `Welcome`).
+type ProspectScreenNavigation = CompositeNavigationProp<
+  NativeStackNavigationProp<ProspectParamList>,
+  NativeStackNavigationProp<RootParamList>
+>;
+type ProspectScreenProps = CompositeScreenProps<
+  NativeStackScreenProps<ProspectParamList, 'Prospect Profile'>,
+  NativeStackScreenProps<RootParamList>
+>;
 import { StatusBarSpacer } from './status-bar-spacer';
 import { LogoActivityIndicator } from './logo/logo-activity-indicator';
 import { DefaultText } from './default-text';
@@ -355,7 +368,7 @@ const FloatingSendIntroButton = ({
   photoUuid,
   photoBlurhash,
 }: {
-  navigation: any,
+  navigation: ProspectScreenNavigation,
   personUuid: string | null | undefined,
   name: string | undefined,
   photoUuid: string | null | undefined,
@@ -392,7 +405,7 @@ const FloatingSendIntroButton = ({
 };
 
 const AnonymousSignInCta = ({navigation, name}: {
-  navigation: any,
+  navigation: ProspectScreenNavigation,
   name: string | undefined,
 }) => {
   const { appTheme } = useAppTheme();
@@ -458,7 +471,7 @@ const AnonymousSignInCta = ({navigation, name}: {
 };
 
 const SeeQAndAButton = ({navigation, personUuid, name}: {
-  navigation: any,
+  navigation: ProspectScreenNavigation,
   personUuid: string | null | undefined,
   name: string | undefined,
 }) => {
@@ -489,6 +502,7 @@ const SeeQAndAButton = ({navigation, personUuid, name}: {
   ).current;
 
   const onPress = useCallback(() => {
+    if (!personUuid) return;
     navigation.navigate('In-Depth', { personUuid });
   }, [personUuid]);
 
@@ -612,9 +626,9 @@ const AllClubs = ({
 }: {
   mutualClubs: string[],
   otherClubs: string[],
-  mutualClubsTheme: any,
-  clubsTheme: any,
-  titleColor: any,
+  mutualClubsTheme: { style?: ViewStyle, textStyle?: TextStyle },
+  clubsTheme: { style?: ViewStyle, textStyle?: TextStyle },
+  titleColor: string | undefined,
 }) => {
   const [signedInUser] = useSignedInUser();
   const [state, setState] = useState({
@@ -709,7 +723,7 @@ const AllClubs = ({
             JSON.stringify({
               kind: d?.kind,
               kids: d?.kids,
-              clubName: d?.props.name,
+              clubName: d?.props && 'name' in d.props ? d.props.name : undefined,
             })
           }
           style={d?.kind === 'Title' ? styles.wFull : null}
@@ -836,7 +850,7 @@ const hasAnyStats = (data: UserData | null | undefined): boolean => {
 };
 
 const Content = (navigationRef: ProspectNavigationRef) =>  {
-  return (props: NativeStackScreenProps<ProspectParamList, 'Prospect Profile'>) => <CurriedContent
+  return (props: ProspectScreenProps) => <CurriedContent
     navigationRef={navigationRef}
     {...props}
   />;
@@ -885,7 +899,7 @@ const ProspectProfileSideAds = ({
   );
 };
 
-const CurriedContent = ({navigationRef, navigation, route}: NativeStackScreenProps<ProspectParamList, 'Prospect Profile'> & {
+const CurriedContent = ({navigationRef, navigation, route}: ProspectScreenProps & {
   navigationRef: ProspectNavigationRef,
 }) => {
   navigationRef.current = navigation;
@@ -1235,7 +1249,7 @@ const ProspectUserDetails = ({
   titleColor,
   bodyColor,
 }: {
-  navigation: any,
+  navigation: ProspectScreenNavigation,
   personId: number | undefined,
   personUuid: string | null | undefined,
   name: string | undefined,
@@ -1250,6 +1264,7 @@ const ProspectUserDetails = ({
   const onPressDonutChart = useCallback(() => {
     if (personId === undefined) return;
     if (name === undefined) return;
+    if (!personUuid) return;
 
     navigation.navigate('In-Depth', { personUuid });
   }, [navigation, personUuid, personId, name]);
@@ -1366,7 +1381,7 @@ const Body = ({
   personUuid,
   data,
 }: {
-  navigation: any,
+  navigation: ProspectScreenNavigation,
   personUuid: string | undefined,
   data: UserData | undefined,
 }) => {
