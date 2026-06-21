@@ -19,6 +19,15 @@ import { useAppTheme } from '../../app-theme/app-theme';
 
 type GifPickedEvent = string;
 
+// The subset of a Tenor search result this component reads.
+type TenorGif = {
+  media: {
+    gif: { url: string },
+    nanogif: { url: string },
+    tinygif: { url: string },
+  }[],
+};
+
 const TENOR_SEARCH_URL = 'https://g.tenor.com/v1/search';
 const NUM_COLS = 3;
 
@@ -70,7 +79,7 @@ const GifPickerModal: React.FC = () => {
   const [isShowing, setIsShowing] = useState(false);
   const [selectedGif, setSelectedGif] = useState<null | string>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [gifResults, setGifResults] = useState<any[]>([]);
+  const [gifResults, setGifResults] = useState<TenorGif[]>([]);
   const [loading, setLoading] = useState(false);
 
   const cancel = useCallback(() => {
@@ -131,7 +140,7 @@ const GifPickerModal: React.FC = () => {
   }
 
   // Divide gifResults equally between three columns
-  const columns = _.times(NUM_COLS, () => []) as any[][];
+  const columns = _.times<TenorGif[]>(NUM_COLS, () => []);
   gifResults.forEach((item, index) => {
     columns[index % NUM_COLS].push(item);
   });

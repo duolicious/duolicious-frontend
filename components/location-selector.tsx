@@ -17,7 +17,7 @@ import { useAppTheme } from '../app-theme/app-theme';
 
 const LocationSelector = ({onChangeText, ...rest}: {
   onChangeText: (text: string) => void,
-  [key: string]: any,
+  currentValue?: string | null,
 }) => {
   const { appTheme } = useAppTheme();
   const [loading, setLoading] = useState(false);
