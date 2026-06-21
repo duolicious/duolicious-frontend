@@ -621,7 +621,7 @@ const AnsweredQuizCard = ({
   answer2Publicly,
   onStateChange,
 }: {
-  children: any,
+  children: React.ReactNode,
   questionNumber: number
   topic: string,
   user1: string,

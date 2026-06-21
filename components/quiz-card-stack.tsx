@@ -7,6 +7,7 @@ import {
 } from 'react-native';
 import {
   MutableRefObject,
+  RefObject,
   createRef,
   memo,
   useCallback,
@@ -20,7 +21,7 @@ import {
   NoMoreCards,
   QuizCard,
 } from './quiz-card';
-import { Direction } from './base-quiz-card';
+import { BaseQuizCardRef, Direction } from './base-quiz-card';
 import { Avatar } from './avatar';
 import { DonutChart } from './donut-chart';
 import { DefaultText } from './default-text';
@@ -232,7 +233,7 @@ type BaseCardState = {
   onChangeAnswerPublicly: ((answerPublicly: boolean) => void) | undefined
   preventSwipe: Direction[]
   scale: Animated.Value
-  ref: any
+  ref: RefObject<BaseQuizCardRef | null>
 };
 
 type UnfetchedCardState = BaseCardState & {
@@ -307,7 +308,7 @@ const unfetchedCard = (): UnfetchedCardState => {
     onChangeAnswerPublicly: undefined,
     preventSwipe: ['up'],
     scale: scale,
-    ref: createRef(),
+    ref: createRef<BaseQuizCardRef>(),
   };
 };
 
@@ -808,7 +809,7 @@ const QuizCardStack_ = ({
 const QuizCardStackMemo = memo(QuizCardStack_);
 
 const QuizCardStack = (props: {
-  innerRef: MutableRefObject<ApiInterface>,
+  innerRef: MutableRefObject<ApiInterface | undefined>,
   onTopCardChanged?: () => void,
   onSwipe: (direction: Direction) => void,
 }) => {
@@ -842,7 +843,7 @@ const QuizCardStack = (props: {
       }
       const topCardRef = topCard.ref.current;
       if (topCardRef) {
-        topCard.ref.current.swipe(direction);
+        topCardRef.swipe(direction);
       }
     }
     async restoreCard() {
@@ -862,7 +863,7 @@ const QuizCardStack = (props: {
         stateRef.topCardIndex - 1
       ];
 
-      previouslySwipedCard.ref.current.restoreCard();
+      previouslySwipedCard.ref.current?.restoreCard();
 
       const previousSwipeDirection = previouslySwipedCard.swipeDirection;
 
