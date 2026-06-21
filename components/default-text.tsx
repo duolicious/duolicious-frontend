@@ -1,4 +1,5 @@
 import {
+  StyleSheet,
   Text,
   TextProps,
 } from 'react-native';
@@ -23,12 +24,13 @@ const DefaultText = (props: TextProps & {
 }) => {
   const { appTheme } = useAppTheme();
 
-  const fontWeight = (props?.style as any)?.fontWeight;
-  const fontFamily = (props?.style as any)?.fontFamily;
+  const flatStyle = StyleSheet.flatten(props.style);
+  const fontWeight = flatStyle?.fontWeight;
+  const fontFamily = flatStyle?.fontFamily;
   const { disableTheme = false } = props;
 
   const montserratFont: string | undefined = (
-    montserratFontFamily[fontWeight] || 'MontserratRegular');
+    montserratFontFamily[fontWeight ?? ''] || 'MontserratRegular');
 
   const props_ = {
     style: [
