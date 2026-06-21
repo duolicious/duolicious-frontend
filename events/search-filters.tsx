@@ -18,7 +18,7 @@ const setSearchFilters = (next: SearchFilters | undefined) => {
   notify<SearchFilters | undefined>(EVENT_KEY, next);
 };
 
-const filterValueChanged = (next: any, prev: any): boolean => {
+const filterValueChanged = (next: unknown, prev: unknown): boolean => {
   if (Array.isArray(next) && Array.isArray(prev)) {
     return _.xorWith(next, prev, _.isEqual).length > 0;
   }

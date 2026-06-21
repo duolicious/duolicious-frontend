@@ -27,7 +27,11 @@ import {
   isOptionGroupRangeSlider,
   isOptionGroupSlider,
 } from '../data/option-groups';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import {
+  NativeStackScreenProps,
+  createNativeStackNavigator,
+} from '@react-navigation/native-stack';
+import type { SearchFilterParamList } from '../navigation/linking';
 import { OptionScreen } from './option-screen';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DefaultTextInput } from './default-text-input';
@@ -161,7 +165,7 @@ const SearchFilterScreen = () => {
   );
 };
 
-const SearchFilterScreen_ = ({navigation}: {navigation: any}) => {
+const SearchFilterScreen_ = ({navigation}: NativeStackScreenProps<SearchFilterParamList, 'Search Filter Tab'>) => {
   const { appTheme } = useAppTheme();
   const [signedInUser] = useSignedInUser();
   const isLocked = useIsWebLoggedOut();
@@ -395,7 +399,7 @@ const SearchFilterScreen_ = ({navigation}: {navigation: any}) => {
   );
 };
 
-const QandQFilterScreen = ({navigation}: {navigation: any}) => {
+const QandQFilterScreen = ({navigation}: NativeStackScreenProps<SearchFilterParamList, 'Q&A Filter Screen'>) => {
   const { appTheme } = useAppTheme();
   const insets = useSafeAreaInsets();
 
