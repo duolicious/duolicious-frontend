@@ -71,7 +71,6 @@ const NavigationItems = ({state, navigation, descriptors}:
     >
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
-        // This navigator's screen options only carry `title`.
         const label =
           options.title !== undefined
             ? options.title

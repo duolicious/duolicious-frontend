@@ -41,8 +41,6 @@ type TabNavigationEventMap = {
   };
 };
 
-// The state/navigation/descriptors the WebBar consumes, derived directly from
-// this navigator's `useNavigationBuilder` so the two can't drift apart.
 type WebNavigatorBuilder = ReturnType<
   typeof useNavigationBuilder<
     TabNavigationState<ParamListBase>,

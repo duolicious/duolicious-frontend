@@ -38,11 +38,6 @@ type ProfileInfoTheme = {
   background_color?: string;
 };
 
-// The profile-info store. The `/profile-info` response is normalized to
-// snake_case and built up incrementally via `patchProfileInfo`, so every field
-// is optional. Known fields read by consumers are typed; the index signature
-// covers the many write-only settings keys (gender, smoking, …) and the dynamic
-// `data[optionGroupToDataKey(og)]` lookups.
 type ProfileInfo = {
   name?: string;
   about?: string;

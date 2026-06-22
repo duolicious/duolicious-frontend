@@ -4,9 +4,6 @@ import { listen, notify, lastEvent } from './events';
 import { markSearchResultsStale } from './stale-search-results';
 import type { SearchFilterAnswer } from '../navigation/search-filter-state';
 
-// Search filters are built up incrementally and read both by known field
-// (`answer`) and via dynamic `filters[optionGroupToDataKey(og)]` lookups, hence
-// the index signature.
 type SearchFilters = {
   answer?: SearchFilterAnswer[];
   [key: string]: unknown;

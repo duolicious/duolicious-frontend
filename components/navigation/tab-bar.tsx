@@ -44,8 +44,6 @@ const Tab = ({ navigation, state, route, descriptors, index, numUnread }: {
   const fadeIn = () => animated.setValue(appThemeName === 'dark' ? 0 : 0.9);
 
   const { options } = descriptors[route.key];
-  // `tabBarLabel` can also be a render function; this navigator's screens only
-  // ever set a string `title`, so fall through to that (then the route name).
   const label =
     typeof options.tabBarLabel === 'string'
       ? options.tabBarLabel

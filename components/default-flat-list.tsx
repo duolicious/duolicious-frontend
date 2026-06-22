@@ -546,8 +546,6 @@ const UntypedDefaultFlashList = <ItemT,>(props: DefaultFlashListProps<ItemT>, re
   );
 };
 
-// The imperative handle these lists expose (see `useImperativeHandle` in
-// `useList`) is `{ refresh }`, not the underlying list instance.
 const TypedDefaultFlatList =
   forwardRef(UntypedDefaultFlatList) as <ItemT>(
     props: DefaultFlatListProps<ItemT> &

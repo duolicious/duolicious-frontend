@@ -5,9 +5,6 @@ import { consumeLegacyNavigationState } from '../kv-storage/navigation-state';
 import { ClubItem } from '../club/club';
 import type { Linking } from './linking';
 
-// The partial navigation states this module passes around: hand-built or
-// produced by `getStateFromPath`, all lacking the keys/index a hydrated state
-// would have.
 type NavState = PartialState<NavigationState>;
 
 const ensureLeadingSlash = (p: string): string => {
@@ -101,8 +98,6 @@ export async function getUrlInitialState(
     if (isRootPath(rawPath)) return null;
 
     const state = linking.getStateFromPath(rawPath as string, linking.config);
-    // `getStateFromPath` can return undefined for an unmatched path; treat that
-    // as "no deep link" (the caller only checks truthiness either way).
     if (!state) return null;
 
     // Some legacy URLs (e.g. `/me`, `/welcome`) normalize down to `/` inside

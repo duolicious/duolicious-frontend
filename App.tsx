@@ -77,8 +77,6 @@ type StatusResponse = {
   status_index: number;
 };
 
-// The body is parsed JSON, so every field is genuinely optional at runtime; the
-// access sites guard accordingly.
 type CheckSessionTokenResponse = {
   onboarded?: boolean;
   clubs?: ClubItem[];
@@ -217,7 +215,6 @@ const App = () => {
       units: json.units === 'Imperial' ? 'Imperial' : 'Metric',
       sessionToken: existingSessionToken,
       pendingClub: pendingClub,
-      // A missing date yields an Invalid Date, matching the prior behaviour.
       estimatedEndDate: new Date(json.estimated_end_date ?? NaN),
       name: json.name ?? null,
       hasGold: json.has_gold ?? false,
@@ -473,10 +470,6 @@ const App = () => {
     return <UtilityScreen serverStatus={serverStatus} />
   }
 
-  // Mark the restored state as stale so React Navigation rehydrates it
-  // (regenerating keys/indexes). Assigned to a variable first because an
-  // inline object literal would trip the excess-property check against
-  // `InitialState`, which doesn't declare `stale`.
   const rehydratedInitialState = initialState ?
     { ...initialState, stale: true as const } :
     undefined;

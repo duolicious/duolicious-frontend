@@ -107,8 +107,6 @@ const settings = {
   swipeThreshold: 0.5 // need to update this threshold for RN (1.5 seems reasonable...?)
 }
 
-// The animation config the spring starter reads. `createSpringStarter` only
-// looks at `duration`; `physics` entries also carry friction/tension.
 type SpringConfig = {
   duration?: number;
   friction?: number;
@@ -497,8 +495,6 @@ const BaseQuizCard = forwardRef(
       <Animated.View
         {...panResponder.panHandlers}
         style={[
-          // `userSelect` is a web-only text-selection suppression applied to a
-          // View; it lives on RN's TextStyle, not ViewStyle, so widen locally.
           noTextSelect,
           cardStyle,
           containerStyle

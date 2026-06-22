@@ -135,9 +135,6 @@ const api = async <T = unknown>(
   return {
     ok: response?.ok ?? false,
     clientError: clientError ?? false,
-    // The body is parsed dynamically, so its runtime shape can't be proven to
-    // match `T`. Callers assert the expected response type via the type
-    // parameter; this is the single boundary where that contract is trusted.
     json: json as T,
     text,
     status: response?.status ?? 0,

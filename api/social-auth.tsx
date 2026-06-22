@@ -14,8 +14,6 @@ import {
   GOOGLE_WEB_CLIENT_ID,
 } from '../env/env';
 
-// `catch` clauses receive `unknown`; these read the conventional error fields
-// off it without assertions (a literal `in` check narrows the object type).
 const errorMessage = (e: unknown): string | undefined =>
   typeof e === 'object' && e !== null && 'message' in e && typeof e.message === 'string'
     ? e.message

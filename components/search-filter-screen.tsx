@@ -117,8 +117,6 @@ const getCurrentValueAsLabel = (
       return `${currentMin ?? 'any'}–${currentMax ?? 'any'}`;
     }
   } else {
-    // The remaining input types (buttons, location, short text) carry a string
-    // current value; anything else has no label.
     return typeof currentValue === 'string' ? currentValue : undefined;
   }
 };

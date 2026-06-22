@@ -19,7 +19,6 @@ import { useAppTheme } from '../../app-theme/app-theme';
 
 type GifPickedEvent = string;
 
-// The subset of a Tenor search result this component reads.
 type TenorGif = {
   media: {
     gif: { url: string },

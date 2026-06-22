@@ -28,8 +28,6 @@ const Icon = ({icon, textStyle}: {
   textStyle?: StyleProp<TextStyle>,
 }) => {
   if (isIconDefinition(icon)) {
-    // FontAwesome's `style` only accepts view styles + `color`; it ignores the
-    // text styling, and renders the icon's colour from the `color` prop.
     const color = StyleSheet.flatten(textStyle)?.color;
     return <FontAwesomeIcon
       icon={icon}

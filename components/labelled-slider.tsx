@@ -56,8 +56,6 @@ const LabelledSlider = forwardRef(({label, minimumValue, maximumValue, ...rest}:
     } = {},
   } = rest;
 
-  // The inner Slider needs a concrete number for its position math; an unset
-  // (null) initial value descales to null, so fall back to the minimum.
   const descaledInitialValue =
     descaleValue(initialValue, minimumValue, maximumValue) ?? minimumValue;
 

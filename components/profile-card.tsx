@@ -68,9 +68,6 @@ const ImageBackground = (
     onLoad,
   } = props;
 
-  // The inner React Native ImageBackground uses RN's own enums/shapes, so map
-  // expo-image's `contentFit`, `transition` and `source` across. In practice
-  // the only values used here are `contentFit="contain"` and a `{ uri }` source.
   const resizeMode: ImageResizeMode =
     contentFit === 'cover' ? 'cover' :
     contentFit === 'fill' ? 'stretch' :

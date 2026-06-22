@@ -72,12 +72,8 @@ const GATED_LOGGED_OUT_PATHS = new Set([
   '/feed', '/inbox', '/visitors', '/profile',
 ]);
 
-// A hydrated root state (from `getRootState`/`onStateChange`) or any of the
-// partial child states nested under it.
 type RouteState = NavigationState | PartialState<NavigationState>;
 
-// Route params are typed `object` by React Navigation; read `personUuid` off
-// them without an assertion (a literal `in` check narrows the object type).
 const readPersonUuid = (params: object | undefined): string | undefined =>
   params && 'personUuid' in params && typeof params.personUuid === 'string'
     ? params.personUuid
@@ -116,10 +112,6 @@ const focusedRouteIsWizard = (state: RouteState | undefined): boolean => {
   return false;
 };
 
-// React Navigation's `PathConfigMap` only infers a child navigator's param
-// list one level deep; past that, `initialRouteName` collapses to `never`.
-// Annotating each navigator's config with its own `PathConfig<…>` keeps every
-// inference one level deep, so the whole tree type-checks without assertions.
 const welcomeConfig: PathConfig<WelcomeParamList> = {
   path: '',
   initialRouteName: 'Welcome Screen',
@@ -195,9 +187,6 @@ const createLinking = () => {
       ? [window.location.origin]
       : [];
 
-  // Typed as the upstream `getStateFromPath` so the returned object stays a
-  // valid `LinkingOptions['getStateFromPath']`; `options` is contextually typed
-  // from that signature.
   const getStateFromPath: typeof rnGetStateFromPath = (path, options) => {
     let normalized = path.replace(/\/{2,}/g, '/');
 

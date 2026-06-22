@@ -112,7 +112,6 @@ const formatHeight = (og: OptionGroup<OptionGroupInputs>): string | undefined =>
   }
 };
 
-// A button's `setting` is a display label; only string current values have one.
 const asSettingLabel = (
   value: ReturnType<typeof getCurrentValue>,
 ): string | undefined =>
@@ -726,8 +725,6 @@ const Options = ({ navigation, data }: {
 
       <ButtonWithCenteredText
         onPress={() => {
-          // Prefer the username (url_slug) so the previewed URL matches what
-          // others see; fall back to the uuid until the slug is backfilled.
           const personUuid = data?.url_slug ?? signedInUser?.personUuid;
           if (!personUuid) return;
           navigation.navigate(

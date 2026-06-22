@@ -79,8 +79,6 @@ const Chart = ({name1, percentage1, name2, percentage2, ...props}: {
     const position_ = position && Math.round(position);
     const extraHeight_ = extraHeight || 0;
 
-    // Only consumed in the `position_ !== undefined` branches below, so the
-    // `?? 0` fallback for the undefined case is never actually rendered.
     const labelPos = position_ ?? 0;
     const labelPosition: {
       left: DimensionValue

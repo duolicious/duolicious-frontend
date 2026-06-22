@@ -88,15 +88,9 @@ import { useAppTheme } from '../app-theme/app-theme';
 import { faChild } from '@fortawesome/free-solid-svg-icons/faChild'
 import { faChildren } from '@fortawesome/free-solid-svg-icons/faChildren'
 
-// The navigation of whichever ProspectParamList screen is focused, stashed in
-// a ref so the shared FloatingBackButton can call `goBack` without being a
-// screen itself.
 type ProspectNavigation = NativeStackNavigationProp<ProspectParamList>;
 type ProspectNavigationRef = MutableRefObject<ProspectNavigation | undefined>;
 
-// These screens are nested under the root stack's `Prospect Profile Screen`,
-// so they navigate to sibling Prospect screens *and* root screens
-// (`Conversation Screen`, `Welcome`).
 type ProspectScreenNavigation = CompositeNavigationProp<
   NativeStackNavigationProp<ProspectParamList>,
   NativeStackNavigationProp<RootParamList>
@@ -614,7 +608,6 @@ const AllClubsItem = ({child}: {child: AllClubsChild}) => {
     return <Title style={child.props.style}>{child.kids}</Title>;
   }
 
-  // `key` is intentionally not forwarded to `Club` (it's only a list key).
   return (
     <Club
       name={child.props.name}

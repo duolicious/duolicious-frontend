@@ -68,9 +68,6 @@ import {
 import { Tooltip } from '../tooltip';
 import { useAppTheme } from '../../app-theme/app-theme';
 
-// `onKeyPress` is declared with React Native's event type, but on web the
-// handler receives a DOM keyboard event. These web-only fields are optional so
-// the RN event type stays assignable to it.
 type KeyPressEvent = {
   key?: string;
   ctrlKey?: boolean;

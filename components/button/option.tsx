@@ -63,9 +63,6 @@ const ButtonForOption = (props: ButtonForOptionProps) => {
   // store-derived values; memoizing would freeze them at first-render values
   // and re-clicking a button would push stale data into the OptionScreen.
   const onPress_ = onPress ?? (() => {
-    // This branch only runs when `onPress` is absent, which (per the invariants
-    // above) means `navigation`, `navigationScreen` and `optionGroups` are all
-    // set; the guard just narrows their types.
     if (!navigation || !navigationScreen || !optionGroups) {
       return;
     }

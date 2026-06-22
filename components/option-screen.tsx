@@ -120,8 +120,6 @@ type InputProps<T extends OptionGroupInputs> = {
   theme?: 'dark' | 'light'
 };
 
-// Every input component exposes this imperative handle (via
-// `useImperativeHandle`), which OptionScreen calls on "Continue".
 type SubmitHandle = { submit: () => void };
 
 const Buttons = forwardRef((props: InputProps<OptionGroupButtons>, ref) => {

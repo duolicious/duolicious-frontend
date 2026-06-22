@@ -22,8 +22,6 @@ const montserratFontFamily: Record<string, string> = {
 const DefaultText = (props: TextProps & {
   animated?: boolean,
   disableTheme?: boolean,
-  // An animated style for the `animated` (reanimated) variant; kept separate
-  // from `style` so the plain `style` can still be flattened below.
   animatedStyle?: AnimatedStyle<TextStyle>,
 }) => {
   const { appTheme } = useAppTheme();
@@ -45,8 +43,6 @@ const DefaultText = (props: TextProps & {
   ];
 
   if (props.animated) {
-    // `animatedStyle` sits where the caller's `style` does (before the
-    // fontWeight reset), matching the previous single-`style` ordering exactly.
     return (
       <Animated.Text
         selectable={false}
