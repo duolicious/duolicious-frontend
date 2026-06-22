@@ -1,13 +1,10 @@
-type Listener<T> = (data?: T) => void;
+/* eslint-disable  @typescript-eslint/no-explicit-any */
 
-// A single store holds the listeners for every event key. Each key's payloads
-// share a type by convention, but the store itself can't express that
-// per-key heterogeneity, so it erases payloads to `unknown`; the public
-// generic functions re-apply the caller's `T` at the boundary (that's what the
-// casts below are - the one place the erasure is bridged).
-type ListenersWithLastEvent = {
-  listeners: Set<Listener<unknown>>
-  lastEvent: unknown
+type Listener<T = any> = (data?: T) => void;
+
+type ListenersWithLastEvent<T = any> = {
+  listeners: Set<Listener<T>>
+  lastEvent: T | undefined
 };
 
 type eventKeyToListenerWithLastEvent = {
@@ -16,48 +13,57 @@ type eventKeyToListenerWithLastEvent = {
 
 const listeners: eventKeyToListenerWithLastEvent = {};
 
-const getOrCreate = (key: string): ListenersWithLastEvent => {
-  listeners[key] = listeners[key] ?? {
-    listeners: new Set<Listener<unknown>>(),
-    lastEvent: undefined,
-  };
-  return listeners[key];
-};
-
-const listen = <T = unknown>(
+const listen = <T = any>(
   key: string,
   listener: Listener<T>,
   notifyOnBind: boolean = false,
 ) => {
-  const entry = getOrCreate(key);
+  // Ensure `listeners[key]` is set
+  listeners[key] = listeners[key] ?? {
+    listeners: new Set<Listener<T>>,
+    lastEvent: undefined,
+  };
 
-  entry.listeners.add(listener as Listener<unknown>);
+  listeners[key].listeners.add(listener);
 
   // Notify new listener of last event
-  const lastEvent = entry.lastEvent;
+  const lastEvent = listeners[key].lastEvent;
   if (notifyOnBind && lastEvent !== undefined) {
-    listener(lastEvent as T);
+    listener(lastEvent);
   }
 
   return () => unlisten(key, listener);
 };
 
-const lastEvent = <T = unknown>(
+const lastEvent = <T = any>(
   key: string,
 ): T | undefined => {
-  return getOrCreate(key).lastEvent as T | undefined;
+  // Ensure `listeners[key]` is set
+  listeners[key] = listeners[key] ?? {
+    listeners: new Set<Listener<T>>,
+    lastEvent: undefined,
+  };
+
+  // Return last event
+  return listeners[key].lastEvent;
 };
 
-const unlisten = <T = unknown>(key: string, listener: Listener<T>) => {
-  listeners[key].listeners.delete(listener as Listener<unknown>);
+const unlisten = (key: string, listener: Listener) => {
+  listeners[key].listeners.delete(listener);
 };
 
-const notify = <T = unknown>(key: string, data?: T) => {
-  const entry = getOrCreate(key);
+const notify = <T = any>(key: string, data?: T) => {
+  // Ensure `listeners[key]` is set
+  listeners[key] = listeners[key] ?? {
+    listeners: new Set<Listener<T>>,
+    lastEvent: undefined,
+  };
 
-  entry.lastEvent = data;
+  listeners[key].lastEvent = data;
 
-  entry.listeners.forEach((listener) => listener(data));
+  listeners[key].listeners.forEach(
+    (listener: Listener) => listener(data)
+  );
 };
 
 export {
