@@ -77,16 +77,18 @@ type StatusResponse = {
   status_index: number;
 };
 
+// The body is parsed JSON, so every field is genuinely optional at runtime; the
+// access sites guard accordingly.
 type CheckSessionTokenResponse = {
   onboarded?: boolean;
-  clubs: ClubItem[];
-  person_id: number;
-  person_uuid: string;
-  pending_club: ClubItem | null;
-  units: string;
-  estimated_end_date: string;
-  name: string;
-  has_gold: boolean;
+  clubs?: ClubItem[];
+  person_id?: number;
+  person_uuid?: string;
+  pending_club?: ClubItem | null;
+  units?: string;
+  estimated_end_date?: string;
+  name?: string | null;
+  has_gold?: boolean;
 };
 
 const Stack = createNativeStackNavigator();
@@ -187,7 +189,15 @@ const App = () => {
       { retryOnTransientError: true }
     );
 
-    if (response.clientError || response?.json?.onboarded === false) {
+    const json = response.json;
+
+    if (
+      response.clientError ||
+      !json ||
+      json.onboarded === false ||
+      json.person_id === undefined ||
+      json.person_uuid === undefined
+    ) {
       await sessionPersonUuid(null);
       await sessionToken(null);
       await lastPath(null);
@@ -198,23 +208,22 @@ const App = () => {
       return;
     }
 
-    const clubs: ClubItem[] = response?.json?.clubs;
-    const personId = response?.json?.person_id;
-    const personUuid = response?.json?.person_uuid;
-    const pendingClub = response?.json?.pending_club;
+    const clubs = json.clubs;
+    const pendingClub = json.pending_club ?? null;
 
     setSignedInUser({
-      personId: personId,
-      personUuid: personUuid,
-      units: response?.json?.units === 'Imperial' ? 'Imperial' : 'Metric',
+      personId: json.person_id,
+      personUuid: json.person_uuid,
+      units: json.units === 'Imperial' ? 'Imperial' : 'Metric',
       sessionToken: existingSessionToken,
       pendingClub: pendingClub,
-      estimatedEndDate: new Date(response?.json?.estimated_end_date),
-      name: response?.json?.name,
-      hasGold: response?.json?.has_gold,
+      // A missing date yields an Invalid Date, matching the prior behaviour.
+      estimatedEndDate: new Date(json.estimated_end_date ?? NaN),
+      name: json.name ?? null,
+      hasGold: json.has_gold ?? false,
     });
 
-    notify<ClubItem[]>('updated-clubs', clubs);
+    notify<ClubItem[] | undefined>('updated-clubs', clubs);
 
     await applyStartupNav(true, pendingClub);
   }, [linking]);

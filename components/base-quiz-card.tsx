@@ -99,6 +99,8 @@ interface Props {
 
 const { height, width } = Dimensions.get('window');
 
+const noTextSelect: ViewStyle & { userSelect?: 'none' } = { userSelect: 'none' };
+
 const settings = {
   maxTilt: 20, // in deg
   rotationPower: 50,
@@ -496,8 +498,8 @@ const BaseQuizCard = forwardRef(
         {...panResponder.panHandlers}
         style={[
           // `userSelect` is a web-only text-selection suppression applied to a
-          // View; RN's View style type rejects it, so this stays cast.
-          { userSelect: 'none' } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+          // View; it lives on RN's TextStyle, not ViewStyle, so widen locally.
+          noTextSelect,
           cardStyle,
           containerStyle
         ]}
