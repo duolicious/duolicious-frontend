@@ -12,6 +12,12 @@ import {
   ButtonWithCenteredTextApi,
 } from './button/centered-text';
 import { ApiInterface, QuizCardStack } from './quiz-card-stack';
+import {
+  Check,
+  FastForward,
+  Rewind,
+  X,
+} from "react-native-feather";
 
 interface UndoNoYesSkipApi {
   setIsUndoEnabled(value: boolean): void
@@ -20,12 +26,6 @@ interface UndoNoYesSkipApi {
   doNoPressAnimation(): void
   doSkipPressAnimation(): void
 }
-import {
-  Check,
-  FastForward,
-  Rewind,
-  X,
-} from "react-native-feather";
 
 const QuizTab = () => {
   const stackRef = useRef<ApiInterface | undefined>(undefined);

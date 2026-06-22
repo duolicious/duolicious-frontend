@@ -24,11 +24,6 @@ import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
 import type { ListRenderItemInfo } from 'react-native';
 import type { HomeParamList, SearchParamList } from '../navigation/linking';
-
-type SearchScreenProps = CompositeScreenProps<
-  NativeStackScreenProps<SearchParamList, 'Search Screen'>,
-  BottomTabScreenProps<HomeParamList>
->;
 import { ProfileCard }  from './profile-card';
 import { DuoliciousTopNavBar } from './top-nav-bar';
 import { SearchFilterScreen } from './search-filter-screen';
@@ -50,6 +45,11 @@ import { useAppTheme } from '../app-theme/app-theme';
 import { useIsWebLoggedOut } from '../events/signed-in-user';
 import { anonymousAnswers } from '../events/anonymous-answers';
 import { consumeStaleSearchResults } from '../events/stale-search-results';
+
+type SearchScreenProps = CompositeScreenProps<
+  NativeStackScreenProps<SearchParamList, 'Search Screen'>,
+  BottomTabScreenProps<HomeParamList>
+>;
 
 const styles = StyleSheet.create({
   safeAreaView: {

@@ -12,12 +12,12 @@ import { DefaultText } from './default-text';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
-
-type IoniconsName = ComponentProps<typeof Ionicons>['name'];
-type BasicIcon = IconDefinition | IoniconsName;
 import { useShake } from '../animation/animation';
 import { showPointOfSale } from './modal/point-of-sale-modal';
 import { useSignedInUser } from '../events/signed-in-user';
+
+type IoniconsName = ComponentProps<typeof Ionicons>['name'];
+type BasicIcon = IconDefinition | IoniconsName;
 
 const isIconDefinition = (x: any): x is IconDefinition => { // eslint-disable-line @typescript-eslint/no-explicit-any
   return x.iconName !== undefined;

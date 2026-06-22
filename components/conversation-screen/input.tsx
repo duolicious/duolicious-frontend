@@ -35,17 +35,6 @@ import {
   GestureDetector,
   Pressable,
 } from 'react-native-gesture-handler';
-
-// `onKeyPress` is declared with React Native's event type, but on web the
-// handler receives a DOM keyboard event. These web-only fields are optional so
-// the RN event type stays assignable to it.
-type KeyPressEvent = {
-  key?: string;
-  ctrlKey?: boolean;
-  altKey?: boolean;
-  shiftKey?: boolean;
-  preventDefault: () => void;
-};
 import { LayoutChangeEvent } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -78,6 +67,17 @@ import {
 } from './quote';
 import { Tooltip } from '../tooltip';
 import { useAppTheme } from '../../app-theme/app-theme';
+
+// `onKeyPress` is declared with React Native's event type, but on web the
+// handler receives a DOM keyboard event. These web-only fields are optional so
+// the RN event type stays assignable to it.
+type KeyPressEvent = {
+  key?: string;
+  ctrlKey?: boolean;
+  altKey?: boolean;
+  shiftKey?: boolean;
+  preventDefault: () => void;
+};
 
 // ────────────────────────────────────────────────────────────────
 // Behaviour-tuning constants – change these to tweak UX quickly

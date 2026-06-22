@@ -29,24 +29,6 @@ import {
 } from '@react-navigation/native-stack';
 import { CompositeNavigationProp, CompositeScreenProps } from '@react-navigation/native';
 import type { ProspectParamList, RootParamList } from '../navigation/linking';
-
-// The navigation of whichever ProspectParamList screen is focused, stashed in
-// a ref so the shared FloatingBackButton can call `goBack` without being a
-// screen itself.
-type ProspectNavigation = NativeStackNavigationProp<ProspectParamList>;
-type ProspectNavigationRef = MutableRefObject<ProspectNavigation | undefined>;
-
-// These screens are nested under the root stack's `Prospect Profile Screen`,
-// so they navigate to sibling Prospect screens *and* root screens
-// (`Conversation Screen`, `Welcome`).
-type ProspectScreenNavigation = CompositeNavigationProp<
-  NativeStackNavigationProp<ProspectParamList>,
-  NativeStackNavigationProp<RootParamList>
->;
-type ProspectScreenProps = CompositeScreenProps<
-  NativeStackScreenProps<ProspectParamList, 'Prospect Profile'>,
-  NativeStackScreenProps<RootParamList>
->;
 import { StatusBarSpacer } from './status-bar-spacer';
 import { LogoActivityIndicator } from './logo/logo-activity-indicator';
 import { DefaultText } from './default-text';
@@ -105,6 +87,24 @@ import { Flair } from './badges';
 import { useAppTheme } from '../app-theme/app-theme';
 import { faChild } from '@fortawesome/free-solid-svg-icons/faChild'
 import { faChildren } from '@fortawesome/free-solid-svg-icons/faChildren'
+
+// The navigation of whichever ProspectParamList screen is focused, stashed in
+// a ref so the shared FloatingBackButton can call `goBack` without being a
+// screen itself.
+type ProspectNavigation = NativeStackNavigationProp<ProspectParamList>;
+type ProspectNavigationRef = MutableRefObject<ProspectNavigation | undefined>;
+
+// These screens are nested under the root stack's `Prospect Profile Screen`,
+// so they navigate to sibling Prospect screens *and* root screens
+// (`Conversation Screen`, `Welcome`).
+type ProspectScreenNavigation = CompositeNavigationProp<
+  NativeStackNavigationProp<ProspectParamList>,
+  NativeStackNavigationProp<RootParamList>
+>;
+type ProspectScreenProps = CompositeScreenProps<
+  NativeStackScreenProps<ProspectParamList, 'Prospect Profile'>,
+  NativeStackScreenProps<RootParamList>
+>;
 
 const PROFILE_CONTENT_MAX_WIDTH = 600;
 const SIDE_AD_GAP = 20;
